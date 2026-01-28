@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+---
+description: ALWAYS follow these Luxselle Dashboard repo rules.
+alwaysApply: true
+---
+
+## Repo reality (do not change)
+- NPM workspaces (NOT pnpm). Root scripts use npm --workspace.
+- Frontend: React + Vite + Tailwind in /src
+- Backend: Express API in /server/src
+- Shared: Zod schemas in /shared/src/schemas
+
+## Iteration 4 goal (priority order)
+1) Docs: PLAN.md accurate + root README setup/env/dev/seed/test/e2e
+2) Backend: consistent API error JSON + status transition validation + unit tests
+3) Frontend: toast (no alert), loading/empty states, (optional) apiPost/apiPut/apiDelete helpers
+4) QA: keep e2e smoke passing
+
+## Non-negotiables
+- No large refactors. Small, targeted changes.
+- Prefer types inferred from shared Zod schemas; avoid `any`.
+- Every work chunk must output:
+  1) changed files list
+  2) how to test (exact commands)
+  3) demo path (1–2 bullets)

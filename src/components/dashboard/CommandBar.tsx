@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Sparkles } from 'lucide-react'
 
 type CommandIntent =
   | { type: 'inventory'; query: string; brand?: string; model?: string }
@@ -48,7 +49,7 @@ const getIntent = (query: string): CommandIntent => {
   return { type: 'inventory', query: trimmed, brand, model }
 }
 
-export default function CommandBar() {
+export default function CommandBar({ className = '' }: { className?: string }) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -67,7 +68,7 @@ export default function CommandBar() {
     if (intent.type === 'suppliers') {
       const params = new URLSearchParams()
       if (intent.focusImport) params.set('focus', 'import')
-      navigate(`/suppliers${params.toString() ? `?${params.toString()}` : ''}`)
+      navigate(`/supplier-hub${params.toString() ? `?${params.toString()}` : ''}`)
       return
     }
 
@@ -82,7 +83,7 @@ export default function CommandBar() {
       const params = new URLSearchParams()
       if (intent.brand) params.set('brand', intent.brand)
       if (intent.model) params.set('model', intent.model)
-      navigate(`/evaluator${params.toString() ? `?${params.toString()}` : ''}`)
+      navigate(`/buy-box${params.toString() ? `?${params.toString()}` : ''}`)
       return
     }
 
@@ -94,35 +95,33 @@ export default function CommandBar() {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <h2 className="text-sm font-medium text-gray-900 mb-2">Ask Luxselle...</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input
-            type="text"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder='Try "Chanel Classic Flap" or "supplier import"'
-            aria-label="Command bar input"
-            className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-          >
-            Go
-          </button>
+    <div className={`w-full ${className}`}>
+      <form onSubmit={handleSubmit} className="relative group">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Sparkles className="h-5 w-5 text-indigo-400" />
         </div>
-        {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-600">
-            {error}
-          </div>
-        )}
-        <div className="text-xs text-gray-500">
-          Routes inventory searches, evaluator requests, supplier actions, and sourcing
-          status filters.
-        </div>
+        
+        <input
+          type="text"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Ask Luxselle or search inventory..."
+          aria-label="Command bar input"
+          className="w-full rounded-2xl border-0 bg-white py-4 pl-12 pr-14 text-lg shadow-soft-lg ring-1 ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 transition-shadow"
+        />
+        
+        <button
+          type="submit"
+          className="absolute right-2 top-2 bottom-2 aspect-square rounded-xl bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-transform active:scale-95"
+        >
+          <ArrowRight className="h-5 w-5" />
+        </button>
       </form>
+      {error && (
+        <div className="mt-2 text-center text-sm text-red-600 animate-fade-in">
+          {error}
+        </div>
+      )}
     </div>
   )
 }

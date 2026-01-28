@@ -1,0 +1,24 @@
+---
+alwaysApply: true
+---
+
+---
+description: Backend work in server/ and shared/. Add error shape + validation + unit tests.
+globs:
+  - server/**
+  - shared/**
+alwaysApply: false
+---
+
+## Contracts
+- Standard API error shape:
+  { "error": { "code": string, "message": string, "details"?: object } }
+
+## Requirements
+- Add Express error middleware; ensure async route errors reach it.
+- Enforce sourcing status transition validation on PUT /api/sourcing/:id.
+- Add unit tests:
+  - FX conversion (USD->EUR logic used by pricing)
+  - status transitions (valid + invalid)
+  - CSV import mapping (parse + required headers)
+- Keep backwards compatibility for successful responses.

@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+---
+description: Docs-only work (PLAN/ARCH/README). No code changes.
+globs:
+  - docs/**
+  - README.md
+alwaysApply: false
+---
+
+- Edit docs/ and README.md only.
+- Make PLAN match implemented reality (Phases 1–6 complete; Phase 7 remaining).
+- Keep setup instructions executable with existing npm scripts.

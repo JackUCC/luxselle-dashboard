@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { Tag, Calculator, Sparkles } from 'lucide-react'
+import { apiPost } from '../../lib/api'
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-GB', {
@@ -73,22 +76,11 @@ export default function EvaluatorView() {
     setError(null)
 
     try {
-      const response = await fetch('/api/pricing/analyse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          askPriceEur: formData.askPriceEur ? Number(formData.askPriceEur) : undefined,
-        }),
+      const { data } = await apiPost<{ data: AnalysisResult }>('/pricing/analyse', {
+        ...formData,
+        askPriceEur: formData.askPriceEur ? Number(formData.askPriceEur) : undefined,
       })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || 'Analysis failed')
-      }
-
-      const data = await response.json()
-      setResult(data.data)
+      setResult(data)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Analysis failed'
       setError(message)
@@ -102,30 +94,19 @@ export default function EvaluatorView() {
 
     setIsAddingToBuyList(true)
     try {
-      const response = await fetch('/api/buying-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceType: 'evaluator',
-          evaluationId: result.evaluationId,
-          brand: formData.brand,
-          model: formData.model,
-          category: formData.category,
-          condition: formData.condition,
-          colour: formData.colour,
-          targetBuyPriceEur: result.maxBuyPriceEur,
-          status: 'pending',
-          notes: formData.notes,
-        }),
+      await apiPost('/buying-list', {
+        sourceType: 'evaluator',
+        evaluationId: result.evaluationId,
+        brand: formData.brand,
+        model: formData.model,
+        category: formData.category,
+        condition: formData.condition,
+        colour: formData.colour,
+        targetBuyPriceEur: result.maxBuyPriceEur,
+        status: 'pending',
+        notes: formData.notes,
       })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || 'Failed to add to buying list')
-      }
-
-      alert('Added to buying list!')
-      // Reset form
+      toast.success('Added to buying list!')
       setFormData({
         brand: '',
         model: '',
@@ -138,211 +119,201 @@ export default function EvaluatorView() {
       setResult(null)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to add to buying list'
-      alert(message)
+      toast.error(message)
     } finally {
       setIsAddingToBuyList(false)
     }
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Evaluator</h1>
-        <p className="text-sm text-gray-500">
-          Analyse item pricing and add to buying list
+    <section className="mx-auto max-w-5xl space-y-8">
+      <div className="text-center">
+        <h1 className="text-2xl font-display font-bold text-gray-900">Item Evaluator</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Instant pricing intelligence for potential buys.
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2">
         {/* Input Form */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-lg font-medium text-gray-900">Item Details</h2>
-          <form onSubmit={handleAnalyse} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brand *
-                </label>
-                <input
-                  type="text"
-                  name="brand"
-                  value={formData.brand}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Model *
-                </label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                />
-              </div>
+        <div className="lux-card p-6 h-fit">
+          <div className="flex items-center gap-2 mb-6 text-sm font-semibold text-gray-900 uppercase tracking-wide">
+            <Tag className="h-4 w-4" />
+            Product Details
+          </div>
+          
+          <form onSubmit={handleAnalyse} className="space-y-5">
+            <div>
+              <label htmlFor="brand-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Brand
+              </label>
+              <select
+                id="brand-select"
+                name="brand"
+                value={formData.brand}
+                onChange={handleChange}
+                required
+                className="lux-input"
+              >
+                <option value="">Select Brand</option>
+                <option value="Chanel">Chanel</option>
+                <option value="Hermès">Hermès</option>
+                <option value="Louis Vuitton">Louis Vuitton</option>
+                <option value="Gucci">Gucci</option>
+                <option value="Prada">Prada</option>
+                <option value="Dior">Dior</option>
+              </select>
             </div>
 
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Model
+              </label>
+              <input
+                type="text"
+                name="model"
+                value={formData.model}
+                onChange={handleChange}
+                required
+                placeholder="e.g. Classic Flap"
+                className="lux-input"
+              />
+            </div>
+            
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category *
-                </label>
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., handbag, tote, clutch"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Condition *
+                <label htmlFor="condition-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Condition
                 </label>
                 <select
+                  id="condition-select"
                   name="condition"
                   value={formData.condition}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                  className="lux-input"
                 >
-                  <option value="">Select condition</option>
+                  <option value="">Grade</option>
                   <option value="new">New</option>
-                  <option value="excellent">Excellent</option>
-                  <option value="good">Good</option>
-                  <option value="fair">Fair</option>
+                  <option value="excellent">Grade A</option>
+                  <option value="good">Grade B</option>
+                  <option value="fair">Grade C</option>
                 </select>
               </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Colour
+                <label htmlFor="colour-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Color
                 </label>
                 <input
+                  id="colour-input"
                   type="text"
                   name="colour"
                   value={formData.colour}
                   onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Supplier Ask Price (EUR)
-                </label>
-                <input
-                  type="number"
-                  name="askPriceEur"
-                  value={formData.askPriceEur}
-                  onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                  required
+                  placeholder="e.g. Black"
+                  className="lux-input"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
+              <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Category
               </label>
-              <textarea
-                name="notes"
-                value={formData.notes}
+              <input
+                type="text"
+                name="category"
+                value={formData.category}
                 onChange={handleChange}
-                rows={3}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                required
+                placeholder="e.g. Handbag"
+                className="lux-input"
               />
             </div>
 
             <button
               type="submit"
               disabled={isAnalysing}
-              className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+              className="w-full rounded-lg bg-gray-500 py-3 text-sm font-medium text-white hover:bg-gray-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
-              {isAnalysing ? 'Analysing...' : 'Analyse'}
+              <Sparkles className="h-4 w-4" />
+              {isAnalysing ? 'Analyzing Market...' : 'Analyze Market'}
             </button>
-
+            
             {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <div className="text-xs text-red-600 text-center mt-2">
                 {error}
               </div>
             )}
           </form>
         </div>
 
-        {/* Results */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-lg font-medium text-gray-900">Analysis Results</h2>
+        {/* Results / Empty State */}
+        <div className={`lux-card relative min-h-[400px] ${!result ? 'border-dashed border-2' : ''}`}>
           {!result ? (
-            <div className="text-center text-sm text-gray-500 py-12">
-              Fill in the form and click "Analyse" to see results
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+              <Calculator className="h-12 w-12 mb-4 opacity-20" />
+              <p className="text-lg font-medium">Ready to evaluate</p>
+              <p className="text-sm opacity-60">Enter product details to begin</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-gray-50 p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+            <div className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-medium text-gray-900">Analysis Results</h2>
+                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
+                  {(result.confidence * 100).toFixed(0)}% Confidence
+                </span>
+              </div>
+
+              <div className="rounded-xl bg-gray-50 p-6 text-center">
+                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">
                   Estimated Retail Price
                 </div>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-4xl font-display font-bold text-gray-900">
                   {formatCurrency(result.estimatedRetailEur)}
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 p-4">
+                <div className="rounded-xl border border-gray-100 p-4 bg-white shadow-sm">
                   <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                    Max Buy Price (35% margin)
+                    Max Buy Price
                   </div>
-                  <div className="text-2xl font-semibold text-green-600">
+                  <div className="text-xl font-bold text-gray-900">
                     {formatCurrency(result.maxBuyPriceEur)}
                   </div>
+                  <div className="text-xs text-green-600 mt-1">Target 35% Margin</div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 p-4">
+                <div className="rounded-xl border border-gray-100 p-4 bg-white shadow-sm">
                   <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                    Historical Avg Paid
+                    Avg Paid History
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900">
+                  <div className="text-xl font-bold text-gray-900">
                     {result.historyAvgPaidEur
                       ? formatCurrency(result.historyAvgPaidEur)
-                      : 'N/A'}
+                      : '—'}
                   </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                  Confidence: {(result.confidence * 100).toFixed(0)}% · Provider:{' '}
-                  {result.provider}
                 </div>
               </div>
 
               {result.comps.length > 0 && (
-                <div className="rounded-lg border border-gray-200 p-4">
-                  <div className="text-sm font-medium text-gray-900 mb-2">
-                    Comparables
+                <div>
+                  <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+                    Recent Comparables
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {result.comps.map((comp, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between text-sm"
+                        className="flex items-center justify-between text-sm py-2 border-b border-gray-100 last:border-0"
                       >
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {comp.title}
-                          </div>
-                          <div className="text-xs text-gray-500">{comp.source}</div>
+                        <div className="font-medium text-gray-900 truncate pr-4">
+                          {comp.title}
                         </div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-mono text-gray-600 whitespace-nowrap">
                           {formatCurrency(comp.price)}
                         </div>
                       </div>
@@ -355,7 +326,7 @@ export default function EvaluatorView() {
                 type="button"
                 onClick={handleAddToBuyList}
                 disabled={isAddingToBuyList}
-                className="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                className="w-full rounded-lg bg-gray-900 py-3 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors mt-4"
               >
                 {isAddingToBuyList ? 'Adding...' : 'Add to Buying List'}
               </button>

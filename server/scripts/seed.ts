@@ -102,6 +102,9 @@ async function seed() {
     fxUsdToEur: 0.92,
   })
 
+  const regions = ['Japan', 'France', 'Italy', 'USA']
+  const statuses = ['active', 'inactive', 'error'] as const
+
   const suppliers = await Promise.all(
     Array.from({ length: 10 }).map((_, index) =>
       supplierRepo.create({
@@ -111,6 +114,10 @@ async function seed() {
         email: `supplier${index + 1}@example.com`,
         phone: `+33 6 00 00 00 ${index + 1}`,
         notes: 'Seeded supplier',
+        status: statuses[index % statuses.length],
+        region: regions[index % regions.length],
+        itemCount: 40 + index * 12,
+        heroImageUrl: `https://placehold.co/600x400?text=Supplier+${index + 1}`,
       }),
     ),
   )

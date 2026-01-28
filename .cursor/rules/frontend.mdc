@@ -1,0 +1,21 @@
+---
+alwaysApply: true
+---
+
+---
+description: Frontend polish in src/. Toast + loading/empty states + optional API helpers.
+globs:
+  - src/**
+  - shared/**
+alwaysApply: false
+---
+
+## UX requirements
+- Replace any alert() in main flows with toasts.
+- Add consistent loading + empty states to Inventory, Buying List, Supplier Hub, Sourcing, Evaluator.
+
+## API usage
+- Reads use apiGet. (Optional) add apiPost/apiPut/apiDelete and refactor 2 flows as template.
+
+## Scope discipline
+- Do not touch server/ unless explicitly asked by the parent agent.

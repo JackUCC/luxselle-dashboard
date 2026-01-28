@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { 
+  Plus, 
+  FileText, 
+  ChevronDown, 
+  ChevronUp, 
+  ExternalLink, 
+  MapPin, 
+  AlertCircle,
+  CheckCircle,
+  FileSpreadsheet
+} from 'lucide-react'
 import type { Supplier, SupplierItem } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
 
@@ -30,6 +42,7 @@ export default function SupplierHubView() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [importResult, setImportResult] = useState<string | null>(null)
+  const [isImportExpanded, setIsImportExpanded] = useState(false)
   const [searchParams] = useSearchParams()
   const importRef = useRef<HTMLDivElement | null>(null)
   const highlightImport = searchParams.get('focus') === 'import'
@@ -39,8 +52,11 @@ export default function SupplierHubView() {
   }, [])
 
   useEffect(() => {
-    if (highlightImport && importRef.current) {
-      importRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (highlightImport) {
+      setIsImportExpanded(true)
+      setTimeout(() => {
+        importRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
     }
   }, [highlightImport])
 
@@ -73,7 +89,7 @@ export default function SupplierHubView() {
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!csvFile || !selectedSupplierId) {
-      alert('Please select a supplier and file')
+      toast.error('Please select a supplier and file')
       return
     }
 
@@ -98,212 +114,178 @@ export default function SupplierHubView() {
       const data = await response.json()
       setImportResult(data.message || 'Import completed')
       setCsvFile(null)
-      
-      // Reload items
       await loadData()
+      toast.success('Import completed successfully')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Import failed'
       setImportResult(`Error: ${message}`)
+      toast.error(message)
     } finally {
       setIsImporting(false)
     }
   }
 
-  const handleAddToBuyList = async (item: SupplierItemWithId) => {
-    if (!confirm(`Add ${item.title} to buying list?`)) return
-
-    try {
-      const response = await fetch('/api/buying-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceType: 'supplier',
-          supplierId: item.supplierId,
-          supplierItemId: item.id,
-          brand: item.brand,
-          model: item.title,
-          category: 'handbag',
-          condition: item.conditionRank,
-          colour: '',
-          targetBuyPriceEur: item.askPriceEur,
-          status: 'pending',
-          notes: `From supplier item: ${item.externalId}`,
-        }),
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || 'Failed to add to buying list')
-      }
-
-      alert('Added to buying list!')
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to add to buying list'
-      alert(message)
-    }
-  }
-
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Supplier Hub</h1>
-        <p className="text-sm text-gray-500">
-          Manage suppliers and import supplier items
-        </p>
+        <h1 className="text-2xl font-display font-bold text-gray-900">Connected Sources</h1>
+        <p className="text-sm text-gray-500 mt-1">Manage external inventory feeds and integrations.</p>
       </div>
 
-      {/* CSV Import */}
-      <div
-        ref={importRef}
-        className={`rounded-lg border border-gray-200 bg-white p-6 ${
-          highlightImport ? 'ring-2 ring-gray-900/20' : ''
-        }`}
-      >
-        <h2 className="mb-4 text-lg font-medium text-gray-900">
-          Import Brand Street Tokyo CSV
-        </h2>
-        <form onSubmit={handleImport} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Supplier *
-              </label>
-              <select
-                value={selectedSupplierId}
-                onChange={(e) => setSelectedSupplierId(e.target.value)}
-                required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-              >
-                <option value="">Select supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                CSV File *
-              </label>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-              />
+      {isLoading ? (
+        <div className="text-center py-12 text-gray-500">Loading sources...</div>
+      ) : error ? (
+        <div className="rounded-lg bg-red-50 p-4 text-red-600">{error}</div>
+      ) : (
+        <>
+          {/* Connected Sources Grid */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {suppliers.map((supplier) => (
+              <div key={supplier.id} className="lux-card p-6 flex flex-col justify-between group hover:shadow-md transition-all">
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-2 rounded-lg ${
+                      supplier.status === 'error' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                    }`}>
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${
+                      supplier.status === 'active' ? 'bg-green-100 text-green-700' : 
+                      supplier.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {supplier.status}
+                    </span>
+                  </div>
+                  
+                  <h3 className="font-bold text-gray-900 mb-1">{supplier.name}</h3>
+                  <p className="text-sm text-gray-500 line-clamp-2 min-h-[2.5em]">{supplier.notes}</p>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
+                  <div className="text-xs font-medium text-gray-500">
+                    {supplier.itemCount || 0} ITEMS
+                  </div>
+                  <button className="flex items-center gap-1 text-xs font-bold text-gray-900 uppercase tracking-wide hover:text-blue-600 transition-colors">
+                    Catalog
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Connect New Source Card */}
+            <button className="lux-card p-6 flex flex-col items-center justify-center text-center border-dashed border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all group">
+              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-gray-900 transition-colors mb-3">
+                <Plus className="h-6 w-6" />
+              </div>
+              <h3 className="font-medium text-gray-900">Connect Source</h3>
+              <p className="text-xs text-gray-500 mt-1">Add a new supplier feed</p>
+            </button>
+          </div>
+
+          {/* Gallery / Feed */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-medium text-gray-900">Recent Arrivals</h2>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+              {items.slice(0, 10).map((item) => (
+                <div key={item.id} className="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                  <img 
+                    src={item.imageUrl || `https://placehold.co/400x400?text=${item.brand}`} 
+                    alt={item.title}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                    <div className="text-white text-xs font-bold">{item.brand}</div>
+                    <div className="text-white/80 text-[10px] truncate">{item.title}</div>
+                    <div className="text-white font-mono text-xs mt-1">{formatCurrency(item.askPriceEur)}</div>
+                  </div>
+                  <div className="absolute top-2 right-2">
+                     <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full bg-white/90 shadow-sm text-[10px] font-bold ${
+                        item.brand === 'Hermès' ? 'text-orange-600' : 'text-gray-900'
+                     }`}>
+                        {item.brand[0]}
+                     </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={isImporting}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-          >
-            {isImporting ? 'Importing...' : 'Import CSV'}
-          </button>
-          {importResult && (
-            <div
-              className={`rounded-md border p-3 text-sm ${
-                importResult.startsWith('Error')
-                  ? 'border-red-200 bg-red-50 text-red-600'
-                  : 'border-green-200 bg-green-50 text-green-600'
-              }`}
+
+          {/* Admin / Import Section */}
+          <div ref={importRef} className="border-t border-gray-200 pt-8">
+            <button 
+              onClick={() => setIsImportExpanded(!isImportExpanded)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
             >
-              {importResult}
-            </div>
-          )}
-        </form>
-      </div>
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>Admin / Data Import</span>
+              {isImportExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </button>
 
-      {/* Supplier Items Feed */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-medium text-gray-900">
-          Supplier Items ({items.length})
-        </h2>
-        {isLoading ? (
-          <div className="text-sm text-gray-500">Loading items...</div>
-        ) : error ? (
-          <div className="text-sm text-red-600">{error}</div>
-        ) : items.length === 0 ? (
-          <div className="text-center text-sm text-gray-500 py-6">
-            No supplier items yet. Import a CSV to get started.
+            {isImportExpanded && (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 animate-fade-in">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-base font-semibold text-gray-900">Import Supplier CSV</h2>
+                  <a href="#" className="text-xs text-blue-600 hover:underline">Download template</a>
+                </div>
+                
+                <form onSubmit={handleImport} className="space-y-4 max-w-lg">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                      Select Supplier
+                    </label>
+                    <select
+                      value={selectedSupplierId}
+                      onChange={(e) => setSelectedSupplierId(e.target.value)}
+                      required
+                      className="lux-input"
+                    >
+                      <option value="">Choose a supplier...</option>
+                      {suppliers.map((supplier) => (
+                        <option key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                      CSV File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileChange}
+                      required
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isImporting}
+                      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                    >
+                      {isImporting ? 'Processing Import...' : 'Run Import'}
+                    </button>
+                  </div>
+
+                  {importResult && (
+                    <div className={`rounded-lg p-3 text-sm flex items-center gap-2 ${
+                      importResult.startsWith('Error') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+                    }`}>
+                      {importResult.startsWith('Error') ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                      {importResult}
+                    </div>
+                  )}
+                </form>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">
-                    Item
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">
-                    SKU
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">
-                    Condition
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">
-                    Ask Price
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">
-                        {item.title}
-                      </div>
-                      <div className="text-xs text-gray-500">{item.brand}</div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{item.sku}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {item.conditionRank}
-                    </td>
-                    <td className="px-4 py-3 text-gray-900 font-medium">
-                      {formatCurrency(item.askPriceEur)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
-                          item.availability === 'uploaded'
-                            ? 'bg-green-100 text-green-800'
-                            : item.availability === 'sold'
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {item.availability}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.availability === 'uploaded' ? (
-                        <button
-                          type="button"
-                          onClick={() => handleAddToBuyList(item)}
-                          className="rounded-md bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-800"
-                        >
-                          Add to Buy List
-                        </button>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </section>
   )
 }

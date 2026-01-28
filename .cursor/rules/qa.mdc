@@ -1,0 +1,10 @@
+---
+description: QA: run tests/e2e and fix regressions with minimal changes.
+globs:
+  - "**"
+alwaysApply: false
+---
+
+- Run npm run test and npm run test:e2e.
+- Fix regressions with minimal changes; no scope creep.
+- Output: pass confirmation + fixes + changed files.
