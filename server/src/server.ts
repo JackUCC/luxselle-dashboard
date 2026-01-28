@@ -8,12 +8,17 @@ import { pricingRouter } from './routes/pricing'
 import { suppliersRouter } from './routes/suppliers'
 import { dashboardRouter } from './routes/dashboard'
 import { sourcingRouter } from './routes/sourcing'
+import { jobsRouter } from './routes/jobs'
 import { API_ERROR_CODES, formatApiError } from './lib/errors'
+import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 
 const app = express()
 
 app.use(cors())
 app.use(express.json({ limit: '2mb' }))
+// Add request ID and structured logging
+app.use(requestId as express.RequestHandler)
+app.use(requestLogger as express.RequestHandler)
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
@@ -25,13 +30,23 @@ app.use('/api/pricing', pricingRouter)
 app.use('/api/suppliers', suppliersRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/sourcing', sourcingRouter)
+app.use('/api/jobs', jobsRouter)
 
-app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const requestId = (req as RequestWithId).requestId
+  
   if (err instanceof ZodError) {
+    errorTracker.track('validation')
+    logger.warn('validation_error', {
+      requestId,
+      errors: err.flatten(),
+    })
     res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'Validation error', err.flatten() as unknown as object))
     return
   }
-  console.error(err)
+  
+  errorTracker.track('internal')
+  logger.error('unhandled_error', err, { requestId })
   res.status(500).json(formatApiError(API_ERROR_CODES.INTERNAL, 'Internal server error'))
 })
 

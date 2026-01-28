@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Plus, Search, Filter, Pencil, X } from 'lucide-react'
+import { Plus, Search, Filter, Pencil, X, Loader2, Users } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut } from '../../lib/api'
 
@@ -257,12 +257,19 @@ export default function SourcingView() {
       {/* Requests List */}
       <div className="lux-card overflow-hidden">
         {isLoading ? (
-          <div className="p-12 text-center text-gray-500">Loading requests...</div>
+          <div className="flex items-center justify-center gap-2 p-12 text-gray-500">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading requests...</span>
+          </div>
         ) : error ? (
           <div className="p-6 text-red-600 bg-red-50">{error}</div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
-            No sourcing requests found.
+          <div className="p-12 text-center">
+            <Users className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+            <p className="text-gray-500 font-medium">No sourcing requests found</p>
+            <p className="text-sm text-gray-400 mt-1">
+              {statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Create a new request to start sourcing items for customers.'}
+            </p>
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-100">

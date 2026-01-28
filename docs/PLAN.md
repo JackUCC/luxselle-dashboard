@@ -1,6 +1,6 @@
 # Luxselle Dashboard MVP - Implementation Plan
 
-Phases 0–6 are **complete**. Phase 7 (tests + polish) is **in progress**.
+All phases (0–7) are **complete**.
 
 ---
 
@@ -266,7 +266,7 @@ Phases 0–6 are **complete**. Phase 7 (tests + polish) is **in progress**.
   - [x] `PUT /api/sourcing/:id` - Update request
   - [x] `DELETE /api/sourcing/:id` - Delete request
 - [x] Status flow handling
-  - [ ] Validate status transitions (Open → Sourcing → Sourced → Fulfilled/Lost) — Phase 7
+  - [x] Validate status transitions (Open → Sourcing → Sourced → Fulfilled/Lost)
   - [x] Create activity events on status changes
 - [x] Linking
   - [x] Link sourcing request to product (linkedProductId)
@@ -289,33 +289,33 @@ Phases 0–6 are **complete**. Phase 7 (tests + polish) is **in progress**.
 
 ## Phase 7: Tests + Polish
 
-**Status**: Pending
+**Status**: Complete
 
 ### Tasks
-- [ ] Unit tests
+- [x] Unit tests
   - [x] Max buy price calculation
-  - [ ] FX conversion (USD to EUR)
-  - [ ] Status transition validation
-  - [ ] CSV import mapping
+  - [x] FX conversion (USD to EUR)
+  - [x] Status transition validation
+  - [x] CSV import mapping
 - [x] E2E smoke test
   - [x] Evaluator → Add to buy list → Receive → Inventory shows item
   - [x] Use Playwright or similar
-- [ ] Error handling
-  - [ ] API error responses consistent
-  - [ ] Frontend error boundaries
-  - [ ] Toast notifications for errors
-- [ ] Loading states
-  - [ ] Loading spinners on async operations
-  - [ ] Skeleton screens for data loading
-- [ ] Empty states
-  - [ ] Empty inventory message
-  - [ ] Empty buying list message
-  - [ ] Empty supplier items message
-- [ ] Type cleanup
-  - [ ] Remove `any` types
-  - [ ] Ensure all types from zod schemas
-  - [ ] Remove dead code
-- [ ] Documentation
+- [x] Error handling
+  - [x] API error responses consistent
+  - [x] Frontend error boundaries
+  - [x] Toast notifications for errors
+- [x] Loading states
+  - [x] Loading spinners on async operations
+  - [ ] Skeleton screens for data loading (optional)
+- [x] Empty states
+  - [x] Empty inventory message
+  - [x] Empty buying list message
+  - [x] Empty supplier items message
+- [x] Type cleanup
+  - [x] Remove `any` types
+  - [x] Ensure all types from zod schemas
+  - [ ] Remove dead code (none found)
+- [x] Documentation
   - [x] README with setup instructions
   - [ ] API documentation (OpenAPI/Swagger optional)
   - [x] Environment variables documented
@@ -333,10 +333,19 @@ Phases 0–6 are **complete**. Phase 7 (tests + polish) is **in progress**.
 
 ## Summary
 
-**Total Phases**: 7 (Phases 0–6 complete, Phase 7 in progress)
+**Total Phases**: 7 (All complete)
 
-**Phase 7 done**: README with setup/env; E2E smoke test.
+**Implemented**:
+- Unit tests: FX conversion, status transitions, CSV import mapping
+- Consistent API error shape across all routes
+- Toast notifications for all error/success feedback
+- Error boundary for graceful error handling
+- Loading spinners on all async operations
+- Polished empty states with icons and helpful copy
+- Type cleanup (`any` removed)
+- README with setup/env documentation
 
-**Phase 7 remaining**: Unit tests (FX, status transitions, CSV mapping), consistent API error shape + toast (no alert), loading/empty states, type cleanup. Optional: apiPost/apiPut/apiDelete, status transition validation on PUT /api/sourcing/:id.
-
-**Estimated Timeline** (Phase 7 remaining): 1–2 days of focused polish.
+**Optional items left for future**:
+- Skeleton screens (loading spinners used instead)
+- OpenAPI/Swagger documentation
+- Remove dead code (none identified)

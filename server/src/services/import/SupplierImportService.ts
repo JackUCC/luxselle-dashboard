@@ -57,7 +57,7 @@ export class SupplierImportService {
         try {
           const item = this.mapBrandStreetTokyoRow(
             supplierId,
-            row,
+            row as Record<string, string>,
             fxUsdToEur,
             now
           )
@@ -86,6 +86,16 @@ export class SupplierImportService {
           result.errors > 0
             ? `${result.errors} errors occurred`
             : '',
+        retryCount: 0,
+        maxRetries: 3,
+        progress: {
+          total: result.total,
+          processed: result.total,
+          created: result.success,
+          updated: 0,
+          skipped: 0,
+          errors: result.errorMessages.map((msg, idx) => ({ index: idx, message: msg })),
+        },
       })
 
       // Create activity event
@@ -113,7 +123,7 @@ export class SupplierImportService {
 
   private mapBrandStreetTokyoRow(
     supplierId: string,
-    row: any,
+    row: Record<string, string>,
     fxUsdToEur: number,
     now: string
   ) {

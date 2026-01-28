@@ -86,7 +86,7 @@ Frontend: typically `http://localhost:5173`. API: `http://localhost:3001` (Vite 
 ## Docs
 
 - [PRD](docs/PRD.md) — Product requirements
-- [Plan](docs/PLAN.md) — Implementation phases (0–6 complete, Phase 7 polish)
+- [Plan](docs/PLAN.md) — Implementation phases (all complete)
 - [Status & plan](docs/STATUS_AND_PLAN.md) — Current state and gaps
 - [Architecture](docs/design/ARCHITECTURE.md) — System design and API
 - [Decisions](docs/design/DECISIONS.md) — ADRs

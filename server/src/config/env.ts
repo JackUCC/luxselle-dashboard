@@ -25,6 +25,8 @@ const EnvSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   BASE_CURRENCY: z.string().default('EUR'),
   TARGET_MARGIN_PCT: z.coerce.number().default(35),
+  // Auth settings - set SKIP_AUTH=true to disable auth in development
+  SKIP_AUTH: z.string().optional(),
 })
 
 export const env = EnvSchema.parse(process.env)

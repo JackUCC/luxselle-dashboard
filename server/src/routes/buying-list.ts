@@ -12,6 +12,7 @@ import { BuyingListItemRepo } from '../repos/BuyingListItemRepo'
 import { ProductRepo } from '../repos/ProductRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
+import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
 const buyingListRepo = new BuyingListItemRepo()
@@ -51,7 +52,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     const item = await buyingListRepo.getById(req.params.id)
     if (!item) {
-      res.status(404).json({ error: 'Buying list item not found' })
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Buying list item not found'))
       return
     }
     res.json({ data: item })
@@ -128,84 +129,106 @@ router.delete('/:id', async (req, res, next) => {
 })
 
 // Receive buying list item (creates product, transaction, updates status)
+// Uses atomic Firestore transaction to ensure data consistency
 router.post('/:id/receive', async (req, res, next) => {
   try {
-    const item = await buyingListRepo.getById(req.params.id)
-    if (!item) {
-      res.status(404).json({ error: 'Buying list item not found' })
-      return
-    }
-
-    if (item.status === 'received') {
-      res.status(400).json({ error: 'Item already received' })
-      return
-    }
-
+    const { id } = req.params
     const now = new Date().toISOString()
+    
+    // Use Firestore transaction for atomic writes
+    const db = buyingListRepo.getFirestore()
+    
+    const result = await db.runTransaction(async (transaction) => {
+      // 1. Get and validate buying list item
+      const itemDoc = await transaction.get(db.collection('buying_list_items').doc(id))
+      if (!itemDoc.exists) {
+        throw new Error('NOT_FOUND')
+      }
+      
+      const item = itemDoc.data()!
+      if (item.status === 'received') {
+        throw new Error('ALREADY_RECEIVED')
+      }
 
-    // 1. Create product in inventory
-    const product = ProductSchema.parse({
-      organisationId: DEFAULT_ORG_ID,
-      createdAt: now,
-      updatedAt: now,
-      brand: item.brand,
-      model: item.model,
-      category: item.category,
-      condition: item.condition,
-      colour: item.colour,
-      costPriceEur: item.targetBuyPriceEur,
-      sellPriceEur: item.targetBuyPriceEur * 1.5, // Simple markup for now
-      currency: 'EUR',
-      status: 'in_stock',
-      quantity: 1,
-      imageUrls: [],
-      notes: `Received from buying list: ${item.id}`,
-    })
-    const createdProduct = await productRepo.create(product)
-
-    // 2. Create transaction (purchase)
-    const transaction = TransactionSchema.parse({
-      organisationId: DEFAULT_ORG_ID,
-      createdAt: now,
-      updatedAt: now,
-      type: 'purchase',
-      productId: createdProduct.id,
-      buyingListItemId: item.id,
-      amountEur: item.targetBuyPriceEur,
-      occurredAt: now,
-      notes: `Purchase: ${item.brand} ${item.model}`,
-    })
-    await transactionRepo.create(transaction)
-
-    // 3. Create activity event
-    await activityRepo.create({
-      organisationId: DEFAULT_ORG_ID,
-      createdAt: now,
-      updatedAt: now,
-      actor: 'system',
-      eventType: 'buylist_received',
-      entityType: 'buying_list_item',
-      entityId: item.id,
-      payload: {
+      // 2. Create product document
+      const productRef = db.collection('products').doc()
+      const productData = ProductSchema.parse({
+        organisationId: DEFAULT_ORG_ID,
+        createdAt: now,
+        updatedAt: now,
         brand: item.brand,
         model: item.model,
-        productId: createdProduct.id,
-      },
+        category: item.category || '',
+        condition: item.condition || '',
+        colour: item.colour || '',
+        costPriceEur: item.targetBuyPriceEur,
+        sellPriceEur: item.targetBuyPriceEur * 1.5,
+        currency: 'EUR',
+        status: 'in_stock',
+        quantity: 1,
+        imageUrls: [],
+        images: [],
+        notes: `Received from buying list: ${id}`,
+      })
+      transaction.set(productRef, productData)
+
+      // 3. Create transaction (purchase) document
+      const txRef = db.collection('transactions').doc()
+      const txData = TransactionSchema.parse({
+        organisationId: DEFAULT_ORG_ID,
+        createdAt: now,
+        updatedAt: now,
+        type: 'purchase',
+        productId: productRef.id,
+        buyingListItemId: id,
+        amountEur: item.targetBuyPriceEur,
+        occurredAt: now,
+        notes: `Purchase: ${item.brand} ${item.model}`,
+      })
+      transaction.set(txRef, txData)
+
+      // 4. Create activity event document
+      const activityRef = db.collection('activity_events').doc()
+      const activityData = {
+        organisationId: DEFAULT_ORG_ID,
+        createdAt: now,
+        updatedAt: now,
+        actor: 'system',
+        eventType: 'buylist_received',
+        entityType: 'buying_list_item',
+        entityId: id,
+        payload: {
+          brand: item.brand,
+          model: item.model,
+          productId: productRef.id,
+        },
+      }
+      transaction.set(activityRef, activityData)
+
+      // 5. Update buying list item status
+      transaction.update(db.collection('buying_list_items').doc(id), {
+        status: 'received',
+        updatedAt: now,
+      })
+
+      return {
+        buyingListItem: { id, ...item, status: 'received', updatedAt: now },
+        product: { id: productRef.id, ...productData },
+      }
     })
 
-    // 4. Update buying list item status
-    const updatedItem = await buyingListRepo.set(req.params.id, {
-      status: 'received',
-      updatedAt: now,
-    })
-
-    res.json({
-      data: {
-        buyingListItem: updatedItem,
-        product: createdProduct,
-      },
-    })
+    res.json({ data: result })
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'NOT_FOUND') {
+        res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Buying list item not found'))
+        return
+      }
+      if (error.message === 'ALREADY_RECEIVED') {
+        res.status(400).json(formatApiError(API_ERROR_CODES.BAD_REQUEST, 'Item already received'))
+        return
+      }
+    }
     next(error)
   }
 })

@@ -57,3 +57,18 @@ export function apiPut<T>(path: string, body: unknown) {
 export function apiDelete(path: string) {
   return request<undefined>(path, { method: 'DELETE' })
 }
+
+/**
+ * POST request with FormData (for file uploads)
+ */
+export async function apiPostFormData<T>(path: string, formData: FormData): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!response.ok) {
+    const message = await getErrorMessage(response)
+    throw new ApiError(message, response.status)
+  }
+  return response.json() as Promise<T>
+}

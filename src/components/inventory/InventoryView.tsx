@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { 
   Search, 
   LayoutList, 
   LayoutGrid, 
   Plus, 
-  Filter, 
   MoreVertical,
-  ChevronDown
+  ChevronDown,
+  Loader2,
+  Package,
+  Download
 } from 'lucide-react'
 import type { Product } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
+import ProductDetailDrawer from './ProductDetailDrawer'
 
 type ProductWithId = Product & { id: string }
 
@@ -53,6 +57,25 @@ export default function InventoryView() {
   const query = (searchParams.get('q') ?? '').trim()
   const brandFilter = (searchParams.get('brand') ?? '').trim()
   const statusFilter = (searchParams.get('status') ?? '').trim()
+  const selectedProductId = searchParams.get('product')
+
+  const openProductDrawer = useCallback((productId: string) => {
+    const newParams = new URLSearchParams(searchParams)
+    newParams.set('product', productId)
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
+
+  const closeProductDrawer = useCallback(() => {
+    const newParams = new URLSearchParams(searchParams)
+    newParams.delete('product')
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
+
+  const handleProductUpdated = useCallback((updated: ProductWithId) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updated.id ? updated : p))
+    )
+  }, [])
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -68,6 +91,38 @@ export default function InventoryView() {
     })
   }, [products, query, brandFilter, statusFilter])
 
+  const handleExportCSV = useCallback(() => {
+    const headers = ['Brand', 'Model', 'Category', 'Condition', 'Colour', 'Cost EUR', 'Sell EUR', 'Status', 'Quantity']
+    const rows = filteredProducts.map(p => [
+      p.brand,
+      p.model,
+      p.category || '',
+      p.condition || '',
+      p.colour || '',
+      p.costPriceEur,
+      p.sellPriceEur,
+      p.status,
+      p.quantity
+    ])
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `luxselle-inventory-${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    
+    toast.success(`Exported ${filteredProducts.length} items to CSV`)
+  }, [filteredProducts])
+
   useEffect(() => {
     let active = true
     setIsLoading(true)
@@ -81,6 +136,7 @@ export default function InventoryView() {
         if (!active) return
         const message = err instanceof Error ? err.message : 'Failed to load products'
         setError(message)
+        toast.error(message)
       })
       .finally(() => {
         if (active) setIsLoading(false)
@@ -142,10 +198,20 @@ export default function InventoryView() {
             </div>
           </div>
 
-          <button className="lux-btn-primary flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Item
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCSV}
+              disabled={filteredProducts.length === 0}
+              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </button>
+            <button className="lux-btn-primary flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -191,12 +257,19 @@ export default function InventoryView() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">Loading inventory...</div>
+        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading inventory...</span>
+        </div>
       ) : error ? (
         <div className="rounded-lg bg-red-50 p-4 text-red-600">{error}</div>
       ) : filteredProducts.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
-          No items found matching your filters.
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+          <Package className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+          <p className="text-gray-500 font-medium">No items found</p>
+          <p className="text-sm text-gray-400 mt-1">
+            {query || brandFilter || statusFilter ? 'Try adjusting your filters.' : 'Add your first inventory item to get started.'}
+          </p>
         </div>
       ) : viewMode === 'table' ? (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -214,7 +287,11 @@ export default function InventoryView() {
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="group hover:bg-gray-50/50 transition-colors">
+                <tr
+                  key={product.id}
+                  onClick={() => openProductDrawer(product.id)}
+                  className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
@@ -251,7 +328,13 @@ export default function InventoryView() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Menu will be added later
+                      }}
+                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </td>
@@ -263,7 +346,11 @@ export default function InventoryView() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {filteredProducts.map((product) => (
-            <div key={product.id} className="group relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div
+              key={product.id}
+              onClick={() => openProductDrawer(product.id)}
+              className="group relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            >
               <div className="aspect-[4/3] bg-gray-100 relative">
                 {product.imageUrls?.[0] && (
                   <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" />
@@ -292,6 +379,15 @@ export default function InventoryView() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Product Detail Drawer */}
+      {selectedProductId && (
+        <ProductDetailDrawer
+          productId={selectedProductId}
+          onClose={closeProductDrawer}
+          onProductUpdated={handleProductUpdated}
+        />
       )}
     </section>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { 
@@ -7,13 +7,15 @@ import {
   ChevronDown, 
   ChevronUp, 
   ExternalLink, 
-  MapPin, 
   AlertCircle,
   CheckCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Loader2,
+  Filter,
+  X
 } from 'lucide-react'
 import type { Supplier, SupplierItem } from '@shared/schemas'
-import { apiGet } from '../../lib/api'
+import { apiGet, apiPostFormData } from '../../lib/api'
 
 type SupplierWithId = Supplier & { id: string }
 type SupplierItemWithId = SupplierItem & { id: string }
@@ -38,14 +40,59 @@ export default function SupplierHubView() {
   const [items, setItems] = useState<SupplierItemWithId[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string>('')
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [importResult, setImportResult] = useState<string | null>(null)
   const [isImportExpanded, setIsImportExpanded] = useState(false)
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const importRef = useRef<HTMLDivElement | null>(null)
+  
+  // URL param filters
   const highlightImport = searchParams.get('focus') === 'import'
+  const supplierFilter = searchParams.get('supplier') ?? ''
+  const brandFilter = searchParams.get('brand') ?? ''
+  const availabilityFilter = searchParams.get('availability') ?? ''
+  const importSupplierId = searchParams.get('importSupplier') ?? ''
+
+  const hasActiveFilters = supplierFilter || brandFilter || availabilityFilter
+
+  const setFilter = useCallback((key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (value) {
+      newParams.set(key, value)
+    } else {
+      newParams.delete(key)
+    }
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
+
+  const clearFilters = useCallback(() => {
+    const newParams = new URLSearchParams(searchParams)
+    newParams.delete('supplier')
+    newParams.delete('brand')
+    newParams.delete('availability')
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
+
+  // Get unique brands from items for filter dropdown
+  const brands = useMemo(() => {
+    return Array.from(new Set(items.map(item => item.brand))).sort()
+  }, [items])
+
+  // Filter items based on URL params
+  const filteredItems = useMemo(() => {
+    let filtered = items
+    if (supplierFilter) {
+      filtered = filtered.filter(item => item.supplierId === supplierFilter)
+    }
+    if (brandFilter) {
+      filtered = filtered.filter(item => item.brand.toLowerCase().includes(brandFilter.toLowerCase()))
+    }
+    if (availabilityFilter) {
+      filtered = filtered.filter(item => item.availability === availabilityFilter)
+    }
+    return filtered
+  }, [items, supplierFilter, brandFilter, availabilityFilter])
 
   useEffect(() => {
     loadData()
@@ -88,7 +135,7 @@ export default function SupplierHubView() {
 
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!csvFile || !selectedSupplierId) {
+    if (!csvFile || !importSupplierId) {
       toast.error('Please select a supplier and file')
       return
     }
@@ -99,19 +146,9 @@ export default function SupplierHubView() {
     try {
       const formData = new FormData()
       formData.append('file', csvFile)
-      formData.append('supplierId', selectedSupplierId)
+      formData.append('supplierId', importSupplierId)
 
-      const response = await fetch('/api/suppliers/import', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || 'Import failed')
-      }
-
-      const data = await response.json()
+      const data = await apiPostFormData<{ message?: string; data?: unknown }>('/suppliers/import', formData)
       setImportResult(data.message || 'Import completed')
       setCsvFile(null)
       await loadData()
@@ -133,7 +170,10 @@ export default function SupplierHubView() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">Loading sources...</div>
+        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading sources...</span>
+        </div>
       ) : error ? (
         <div className="rounded-lg bg-red-50 p-4 text-red-600">{error}</div>
       ) : (
@@ -185,30 +225,118 @@ export default function SupplierHubView() {
 
           {/* Gallery / Feed */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">Recent Arrivals</h2>
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-              {items.slice(0, 10).map((item) => (
-                <div key={item.id} className="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img 
-                    src={item.imageUrl || `https://placehold.co/400x400?text=${item.brand}`} 
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                    <div className="text-white text-xs font-bold">{item.brand}</div>
-                    <div className="text-white/80 text-[10px] truncate">{item.title}</div>
-                    <div className="text-white font-mono text-xs mt-1">{formatCurrency(item.askPriceEur)}</div>
-                  </div>
-                  <div className="absolute top-2 right-2">
-                     <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full bg-white/90 shadow-sm text-[10px] font-bold ${
-                        item.brand === 'Hermès' ? 'text-orange-600' : 'text-gray-900'
-                     }`}>
-                        {item.brand[0]}
-                     </span>
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">
+                Recent Arrivals
+                {hasActiveFilters && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    ({filteredItems.length} items)
+                  </span>
+                )}
+              </h2>
             </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <Filter className="h-4 w-4" />
+                <span>Filter:</span>
+              </div>
+              
+              {/* Supplier Filter */}
+              <div className="relative">
+                <select
+                  value={supplierFilter}
+                  onChange={(e) => setFilter('supplier', e.target.value)}
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">All Suppliers</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Brand Filter */}
+              <div className="relative">
+                <select
+                  value={brandFilter}
+                  onChange={(e) => setFilter('brand', e.target.value)}
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">All Brands</option>
+                  {brands.map(brand => (
+                    <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Availability Filter */}
+              <div className="relative">
+                <select
+                  value={availabilityFilter}
+                  onChange={(e) => setFilter('availability', e.target.value)}
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">All Status</option>
+                  <option value="uploaded">Uploaded</option>
+                  <option value="sold">Sold</option>
+                  <option value="waiting">Waiting</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {filteredItems.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+                <FileText className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+                <p className="text-gray-500 font-medium">
+                  {hasActiveFilters ? 'No items match your filters' : 'No supplier items yet'}
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
+                  {hasActiveFilters 
+                    ? 'Try adjusting your filters or clear them to see all items.' 
+                    : 'Connect a source and run an import to see items here.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+                {filteredItems.slice(0, 20).map((item) => (
+                  <div key={item.id} className="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <img 
+                      src={item.imageUrl || `https://placehold.co/400x400?text=${item.brand}`} 
+                      alt={item.title}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                      <div className="text-white text-xs font-bold">{item.brand}</div>
+                      <div className="text-white/80 text-[10px] truncate">{item.title}</div>
+                      <div className="text-white font-mono text-xs mt-1">{formatCurrency(item.askPriceEur)}</div>
+                    </div>
+                    <div className="absolute top-2 right-2">
+                       <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full bg-white/90 shadow-sm text-[10px] font-bold ${
+                          item.brand === 'Hermès' ? 'text-orange-600' : 'text-gray-900'
+                       }`}>
+                          {item.brand[0]}
+                       </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Admin / Import Section */}
@@ -235,8 +363,8 @@ export default function SupplierHubView() {
                       Select Supplier
                     </label>
                     <select
-                      value={selectedSupplierId}
-                      onChange={(e) => setSelectedSupplierId(e.target.value)}
+                      value={importSupplierId}
+                      onChange={(e) => setFilter('importSupplier', e.target.value)}
                       required
                       className="lux-input"
                     >

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { 
   Download, 
@@ -8,7 +9,12 @@ import {
   Layers, 
   Store, 
   Copy,
-  Receipt
+  Receipt,
+  Loader2,
+  ClipboardList,
+  ChevronDown,
+  Mail,
+  Phone
 } from 'lucide-react'
 import type { BuyingListItem, Supplier } from '@shared/schemas'
 import { apiGet, apiPost } from '../../lib/api'
@@ -43,9 +49,32 @@ export default function BuyingListView() {
   const [suppliers, setSuppliers] = useState<Record<string, SupplierWithId>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [receivingId, setReceivingId] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'list' | 'bulk'>('list')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // URL param state
+  const statusFilter = searchParams.get('status') ?? 'all'
+  const viewMode = (searchParams.get('view') ?? 'list') as 'list' | 'bulk'
+
+  const setStatusFilter = useCallback((status: string) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (status === 'all') {
+      newParams.delete('status')
+    } else {
+      newParams.set('status', status)
+    }
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
+
+  const setViewMode = useCallback((mode: 'list' | 'bulk') => {
+    const newParams = new URLSearchParams(searchParams)
+    if (mode === 'list') {
+      newParams.delete('view')
+    } else {
+      newParams.set('view', mode)
+    }
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -73,12 +102,12 @@ export default function BuyingListView() {
   }, [])
 
   const handleReceive = async (id: string) => {
-    if (!confirm('Receive this item into inventory?')) return
-
     setReceivingId(id)
     try {
       await apiPost(`/buying-list/${id}/receive`, {})
-      toast.success('Item received into inventory')
+      toast.success('Item received into inventory', {
+        icon: '📦',
+      })
       loadData()
     } catch (err: unknown) {
       const message =
@@ -90,9 +119,8 @@ export default function BuyingListView() {
   }
 
   const handleClearList = async () => {
-    if (!confirm('Are you sure you want to clear all cancelled/received items?')) return
-    // Mock implementation for now
-    toast.success('List cleared')
+    // TODO: Implement clear list endpoint
+    toast.error('Clear list not yet implemented')
   }
 
   const handleExportPO = () => {
@@ -151,6 +179,23 @@ export default function BuyingListView() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Status Filter */}
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="ordered">Ordered</option>
+              <option value="received">Received</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
+
+          {/* View Mode Toggle */}
           <div className="flex rounded-lg border border-gray-200 bg-white p-1">
             <button
               onClick={() => setViewMode('list')}
@@ -191,12 +236,19 @@ export default function BuyingListView() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">Loading buying list...</div>
+        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading buying list...</span>
+        </div>
       ) : error ? (
         <div className="rounded-lg bg-red-50 p-6 text-red-600">{error}</div>
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
-          No items in buying list
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+          <ClipboardList className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+          <p className="text-gray-500 font-medium">No items in buying list</p>
+          <p className="text-sm text-gray-400 mt-1">
+            {statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Use the Evaluator to add items to your buying list.'}
+          </p>
         </div>
       ) : viewMode === 'list' ? (
         <>
@@ -302,6 +354,18 @@ export default function BuyingListView() {
               const supplierItems = itemsBySupplier[supplierId]
               const supplier = suppliers[supplierId]
               const message = generateBulkMessage(supplierId, supplierItems)
+              const totalCost = supplierItems.reduce((sum, item) => sum + item.targetBuyPriceEur, 0)
+              
+              // Generate WhatsApp URL
+              const whatsappNumber = supplier?.whatsappNumber || supplier?.phone?.replace(/[^0-9]/g, '')
+              const whatsappUrl = whatsappNumber 
+                ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+                : null
+              
+              // Generate Email URL
+              const emailUrl = supplier?.email 
+                ? `mailto:${supplier.email}?subject=${encodeURIComponent(`Bulk Order Inquiry - ${new Date().toLocaleDateString()}`)}&body=${encodeURIComponent(message)}`
+                : null
               
               return (
                  <div key={supplierId} className="lux-card flex flex-col overflow-hidden">
@@ -319,26 +383,61 @@ export default function BuyingListView() {
                              )}
                           </div>
                        </div>
-                       <span className="rounded-full bg-white border border-gray-200 px-2 py-1 text-xs font-bold text-gray-700">
-                          {supplierItems.length} Items
-                       </span>
+                       <div className="text-right">
+                          <span className="rounded-full bg-white border border-gray-200 px-2 py-1 text-xs font-bold text-gray-700">
+                             {supplierItems.length} Items
+                          </span>
+                          <div className="text-xs font-mono text-gray-500 mt-1">
+                             {formatCurrency(totalCost)}
+                          </div>
+                       </div>
                     </div>
                     
                     <div className="p-4 flex-1">
                        <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Message Preview</div>
-                       <div className="rounded-lg bg-gray-50 p-4 text-xs font-mono text-gray-600 whitespace-pre-wrap leading-relaxed border border-gray-100">
+                       <div className="rounded-lg bg-gray-50 p-4 text-xs font-mono text-gray-600 whitespace-pre-wrap leading-relaxed border border-gray-100 max-h-48 overflow-y-auto">
                           {message}
                        </div>
                     </div>
                     
-                    <div className="bg-gray-900 p-4">
+                    <div className="border-t border-gray-100 p-4 space-y-2">
+                       {/* Primary action: Copy */}
                        <button 
                           onClick={() => copyBulkMessage(supplier?.name || 'Supplier', message)}
-                          className="flex w-full items-center justify-center gap-2 text-sm font-medium text-white hover:text-gray-200 transition-colors"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
                        >
                           <Copy className="h-4 w-4" />
-                          Copy Bulk Message
+                          Copy Message
                        </button>
+                       
+                       {/* Secondary actions: WhatsApp & Email */}
+                       <div className="flex gap-2">
+                          {whatsappUrl && (
+                             <a
+                                href={whatsappUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors"
+                             >
+                                <Phone className="h-4 w-4" />
+                                WhatsApp
+                             </a>
+                          )}
+                          {emailUrl && (
+                             <a
+                                href={emailUrl}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                             >
+                                <Mail className="h-4 w-4" />
+                                Email
+                             </a>
+                          )}
+                          {!whatsappUrl && !emailUrl && (
+                             <div className="flex-1 text-center text-xs text-gray-400 py-2">
+                                No contact info available
+                             </div>
+                          )}
+                       </div>
                     </div>
                  </div>
               )

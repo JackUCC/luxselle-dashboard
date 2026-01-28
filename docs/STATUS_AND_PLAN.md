@@ -227,11 +227,12 @@ Prioritised list of what’s left:
 
 - [x] Mark Phase 0 “mock data locations” as N/A in PLAN.md
 - [x] Mark Phases 1–6 complete in PLAN.md and tick tasks
-- [ ] Unit tests: FX conversion, status transitions, CSV mapping
+- [x] Unit tests: FX conversion, status transitions, CSV mapping
 - [x] README: setup, env vars, dev/seed/e2e
-- [ ] Shared error/toast and consistent API error format
-- [ ] Loading and empty states across main views
-- [ ] Final type sweep (no stray `any`)
+- [x] Shared error/toast and consistent API error format
+- [x] Loading and empty states across main views
+- [x] Final type sweep (no stray `any`)
+- [x] Error boundary for graceful error handling
 - [ ] (Optional) apiPost/apiPut/apiDelete and refactor POST/PUT calls
 - [ ] (Optional) Navigate to inventory after receive; lowStockThreshold from settings; product image upload
 

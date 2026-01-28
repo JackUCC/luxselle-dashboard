@@ -5,6 +5,7 @@ import { DEFAULT_ORG_ID, SupplierSchema } from '@shared/schemas'
 import { SupplierRepo } from '../repos/SupplierRepo'
 import { SupplierItemRepo } from '../repos/SupplierItemRepo'
 import { SupplierImportService } from '../services/import/SupplierImportService'
+import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
 const supplierRepo = new SupplierRepo()
@@ -40,9 +41,26 @@ router.get('/', async (_req, res, next) => {
 })
 
 // List all supplier items (unified feed) — must be before /:id to avoid "items" as id
-router.get('/items/all', async (_req, res, next) => {
+// Supports filters: ?supplier={id}&brand={brand}&availability={uploaded|sold|waiting}
+router.get('/items/all', async (req, res, next) => {
   try {
-    const items = await supplierItemRepo.list()
+    const { supplier, brand, availability } = req.query
+    let items = await supplierItemRepo.list()
+    
+    // Apply filters
+    if (supplier && typeof supplier === 'string') {
+      items = items.filter(item => item.supplierId === supplier)
+    }
+    if (brand && typeof brand === 'string') {
+      items = items.filter(item => item.brand.toLowerCase().includes(brand.toLowerCase()))
+    }
+    if (availability && typeof availability === 'string') {
+      items = items.filter(item => item.availability === availability)
+    }
+    
+    // Sort by createdAt desc (most recent first)
+    items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    
     res.json({ data: items })
   } catch (error) {
     next(error)
@@ -54,7 +72,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     const supplier = await supplierRepo.getById(req.params.id)
     if (!supplier) {
-      res.status(404).json({ error: 'Supplier not found' })
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Supplier not found'))
       return
     }
     res.json({ data: supplier })
@@ -125,20 +143,20 @@ router.delete('/:id', async (req, res, next) => {
 router.post('/import', upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: 'No file uploaded' })
+      res.status(400).json(formatApiError(API_ERROR_CODES.BAD_REQUEST, 'No file uploaded'))
       return
     }
 
     const supplierId = req.body.supplierId
     if (!supplierId) {
-      res.status(400).json({ error: 'supplierId is required' })
+      res.status(400).json(formatApiError(API_ERROR_CODES.BAD_REQUEST, 'supplierId is required'))
       return
     }
 
     // Check if supplier exists
     const supplier = await supplierRepo.getById(supplierId)
     if (!supplier) {
-      res.status(404).json({ error: 'Supplier not found' })
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Supplier not found'))
       return
     }
 

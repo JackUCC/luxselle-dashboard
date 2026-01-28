@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 export const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'luxselle-dashboard',
   storageBucket:

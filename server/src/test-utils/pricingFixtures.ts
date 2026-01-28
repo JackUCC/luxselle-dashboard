@@ -48,6 +48,7 @@ export const makeProduct = (
     status: 'in_stock',
     quantity: 1,
     imageUrls: [],
+    images: [],
     notes: '',
   }
 }

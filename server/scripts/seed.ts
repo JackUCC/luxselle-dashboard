@@ -188,6 +188,7 @@ async function seed() {
       status: i % 5 === 0 ? 'reserved' : i % 7 === 0 ? 'sold' : 'in_stock',
       quantity: i % 4 === 0 ? 2 : 1,
       imageUrls: ['https://placehold.co/600x600.png'],
+      images: [],
       notes: 'Seeded product',
     })
     products.push(product)
@@ -295,14 +296,17 @@ async function seed() {
     lastRunAt: isoAt(0),
     lastSuccessAt: isoAt(0),
     lastError: '',
+    retryCount: 0,
+    maxRetries: 3,
   })
   await systemJobRepo.create({
     ...withBase(1),
     jobType: 'supplier_import',
     status: 'fail',
     lastRunAt: isoAt(-1),
-    lastSuccessAt: undefined,
     lastError: 'Connection timeout (seeded)',
+    retryCount: 0,
+    maxRetries: 3,
   })
 
   console.log('Seed complete')

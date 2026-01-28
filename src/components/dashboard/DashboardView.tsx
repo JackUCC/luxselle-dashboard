@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { 
   DollarSign, 
   ClipboardList, 
@@ -10,7 +11,9 @@ import {
   Activity,
   Package,
   Calculator,
-  User
+  User,
+  Loader2,
+  TrendingUp
 } from 'lucide-react'
 import type { ActivityEvent } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
@@ -23,6 +26,15 @@ interface KPIs {
   pendingBuyListValue: number
   activeSourcingPipeline: number
   lowStockAlerts: number
+}
+
+interface ProfitSummary {
+  totalCost: number
+  totalRevenue: number
+  totalProfit: number
+  marginPct: number
+  itemsSold: number
+  avgMarginPct: number
 }
 
 interface SystemStatus {
@@ -61,6 +73,7 @@ const formatDate = (dateStr: string) => {
 
 export default function DashboardView() {
   const [kpis, setKpis] = useState<KPIs | null>(null)
+  const [profit, setProfit] = useState<ProfitSummary | null>(null)
   const [activity, setActivity] = useState<ActivityEventWithId[]>([])
   const [status, setStatus] = useState<SystemStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -73,12 +86,14 @@ export default function DashboardView() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [kpisRes, activityRes, statusRes] = await Promise.all([
+      const [kpisRes, profitRes, activityRes, statusRes] = await Promise.all([
         apiGet<{ data: KPIs }>('/dashboard/kpis'),
+        apiGet<{ data: ProfitSummary }>('/dashboard/profit-summary'),
         apiGet<{ data: ActivityEventWithId[] }>('/dashboard/activity?limit=5'),
         apiGet<{ data: SystemStatus }>('/dashboard/status'),
       ])
       setKpis(kpisRes.data)
+      setProfit(profitRes.data)
       setActivity(activityRes.data)
       setStatus(statusRes.data)
       setError(null)
@@ -86,6 +101,7 @@ export default function DashboardView() {
       const message =
         err instanceof Error ? err.message : 'Failed to load dashboard'
       setError(message)
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -110,7 +126,7 @@ export default function DashboardView() {
         )
       case 'supplier_import':
         return (
-          <span>Supplier import completed: <span className="font-medium text-gray-900">{p?.success ?? 0} items</span></span>
+          <span>Supplier import completed: <span className="font-medium text-gray-900">{String(p?.success ?? 0)} items</span></span>
         )
       case 'sourcing_created':
         return (
@@ -180,7 +196,10 @@ export default function DashboardView() {
       </div>
 
       {isLoading ? (
-        <div className="w-full text-center py-12 text-gray-400">Loading dashboard data...</div>
+        <div className="flex items-center justify-center gap-2 w-full py-12 text-gray-400">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading dashboard data...</span>
+        </div>
       ) : error ? (
         <div className="w-full max-w-4xl rounded-lg bg-red-50 p-4 text-center text-red-600">{error}</div>
       ) : (
@@ -242,6 +261,44 @@ export default function DashboardView() {
                 {kpis ? kpis.lowStockAlerts : '—'}
               </div>
               <div className="text-sm text-gray-500">Low Stock Alerts</div>
+            </div>
+          </div>
+
+          {/* Profit Summary */}
+          <div className="lux-card p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <TrendingUp className="h-5 w-5 text-gray-400" />
+              <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Profit Summary</h3>
+            </div>
+            
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Total Revenue</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {profit ? formatCurrency(profit.totalRevenue) : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Total Cost</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {profit ? formatCurrency(profit.totalCost) : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Total Profit</div>
+                <div className={`text-2xl font-bold ${profit && profit.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {profit ? formatCurrency(profit.totalProfit) : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Avg Margin</div>
+                <div className={`text-2xl font-bold ${profit && profit.avgMarginPct >= 20 ? 'text-green-600' : profit && profit.avgMarginPct >= 10 ? 'text-orange-600' : 'text-red-600'}`}>
+                  {profit ? `${profit.avgMarginPct}%` : '—'}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {profit ? `${profit.itemsSold} items sold` : ''}
+                </div>
+              </div>
             </div>
           </div>
 

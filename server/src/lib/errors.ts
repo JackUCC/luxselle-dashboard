@@ -4,6 +4,8 @@ export const API_ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
   INTERNAL: 'INTERNAL_ERROR',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
 } as const
 
 export function formatApiError(

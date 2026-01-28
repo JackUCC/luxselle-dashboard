@@ -17,7 +17,8 @@ export class SettingsRepo extends BaseRepo<Settings> {
       return this.set(DEFAULT_ORG_ID, data)
     }
     const parsed = SettingsSchema.parse(data)
-    await this.collection.doc(DEFAULT_ORG_ID).set(parsed)
+    const collection = this.getCollection()
+    await collection.doc(DEFAULT_ORG_ID).set(parsed)
     return { id: DEFAULT_ORG_ID, ...parsed }
   }
 }

@@ -10,6 +10,7 @@ import {
   Bell 
 } from 'lucide-react'
 
+import { ErrorBoundary } from './components/ErrorBoundary'
 import InventoryView from './components/inventory/InventoryView'
 import BuyingListView from './components/buying-list/BuyingListView'
 import EvaluatorView from './components/evaluator/EvaluatorView'
@@ -86,18 +87,20 @@ const LuxselleApp = () => {
         }} />
         
         <main className="mx-auto max-w-8xl px-6 py-8">
-          <Routes>
-            <Route path="/" element={<DashboardView />} />
-            <Route path="/inventory" element={<InventoryView />} />
-            <Route path="/buy-box" element={<EvaluatorView />} />
-            <Route path="/supplier-hub" element={<SupplierHubView />} />
-            <Route path="/buying-list" element={<BuyingListView />} />
-            <Route path="/sourcing" element={<SourcingView />} />
-            
-            {/* Redirects for legacy routes */}
-            <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-            <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<DashboardView />} />
+              <Route path="/inventory" element={<InventoryView />} />
+              <Route path="/buy-box" element={<EvaluatorView />} />
+              <Route path="/supplier-hub" element={<SupplierHubView />} />
+              <Route path="/buying-list" element={<BuyingListView />} />
+              <Route path="/sourcing" element={<SourcingView />} />
+              
+              {/* Redirects for legacy routes */}
+              <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
+              <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
+            </Routes>
+          </ErrorBoundary>
         </main>
       </div>
     </BrowserRouter>
