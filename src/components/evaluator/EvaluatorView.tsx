@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Tag, Calculator, Sparkles } from 'lucide-react'
-import { apiPost } from '../../lib/api'
+import { Tag, Calculator, Sparkles, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { apiPost, apiGet } from '../../lib/api'
+import type { Product } from '@shared/schemas'
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-GB', {
@@ -10,6 +11,27 @@ const formatCurrency = (value: number) =>
     currency: 'EUR',
     maximumFractionDigits: 0,
   }).format(value)
+
+// Brand and model database for luxury items
+const BRAND_MODELS: Record<string, string[]> = {
+  'Chanel': ['Classic Flap', '2.55', 'Boy', 'Gabrielle', '19', 'Coco Handle', 'Vanity Case'],
+  'Hermès': ['Birkin', 'Kelly', 'Constance', 'Evelyne', 'Picotin', 'Lindy', 'Garden Party'],
+  'Louis Vuitton': ['Speedy', 'Neverfull', 'Pochette Metis', 'Alma', 'Capucines', 'OnTheGo', 'Twist'],
+  'Gucci': ['Marmont', 'Dionysus', 'Jackie', 'Horsebit 1955', 'Ophidia', 'Bamboo', 'Soho Disco'],
+  'Prada': ['Galleria', 'Cahier', 'Cleo', 'Re-Edition 2005', 'Hobo', 'Sidonie'],
+  'Dior': ['Lady Dior', 'Saddle', 'Book Tote', '30 Montaigne', 'Diorama', 'Miss Dior'],
+  'Bottega Veneta': ['Pouch', 'Cassette', 'Jodie', 'Arco', 'Cabat', 'Intrecciato'],
+  'Fendi': ['Baguette', 'Peekaboo', 'By The Way', 'Kan I', 'Mon Tresor'],
+  'Givenchy': ['Antigona', 'Pandora', 'GV3', 'Cut Out'],
+  'Loewe': ['Puzzle', 'Hammock', 'Barcelona', 'Gate', 'Flamenco'],
+}
+
+const COMMON_COLORS = [
+  'Black', 'White', 'Beige', 'Navy', 'Brown', 'Burgundy', 'Red', 
+  'Pink', 'Grey', 'Tan', 'Camel', 'Gold', 'Silver'
+]
+
+const YEARS = Array.from({ length: 25 }, (_, i) => (new Date().getFullYear() - i).toString())
 
 interface AnalysisResult {
   estimatedRetailEur: number
@@ -26,6 +48,8 @@ interface AnalysisResult {
   evaluationId: string
 }
 
+type ProductWithId = Product & { id: string }
+
 export default function EvaluatorView() {
   const [formData, setFormData] = useState({
     brand: '',
@@ -33,6 +57,7 @@ export default function EvaluatorView() {
     category: '',
     condition: '',
     colour: '',
+    year: '',
     notes: '',
     askPriceEur: '',
   })
@@ -41,6 +66,46 @@ export default function EvaluatorView() {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isAddingToBuyList, setIsAddingToBuyList] = useState(false)
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [products, setProducts] = useState<ProductWithId[]>([])
+
+  // Fetch products for learning model/brand combinations
+  useEffect(() => {
+    apiGet<{ data: ProductWithId[] }>('/products')
+      .then((response) => {
+        setProducts(response.data)
+      })
+      .catch(() => {
+        // Silently fail - we have fallback brand/model data
+      })
+  }, [])
+
+  // Get available models for selected brand (from products + predefined list)
+  const availableModels = useMemo(() => {
+    const { brand } = formData
+    if (!brand) return []
+    
+    // Combine predefined models with models from actual products
+    const predefinedModels = BRAND_MODELS[brand] || []
+    const productModels = products
+      .filter(p => p.brand === brand)
+      .map(p => p.model)
+    
+    return Array.from(new Set([...predefinedModels, ...productModels])).sort()
+  }, [formData.brand, products])
+
+  // Reset model when brand changes
+  useEffect(() => {
+    if (formData.brand && formData.model) {
+      // Check if current model is valid for selected brand
+      if (!availableModels.includes(formData.model)) {
+        setFormData(prev => ({ ...prev, model: '' }))
+      }
+    }
+  }, [formData.brand, formData.model, availableModels])
 
   useEffect(() => {
     const brand = searchParams.get('brand')
@@ -68,6 +133,76 @@ export default function EvaluatorView() {
       ...formData,
       [e.target.name]: e.target.value,
     })
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be less than 10MB')
+      return
+    }
+
+    setUploadedImage(file)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleAnalyzeImage = async () => {
+    if (!uploadedImage) return
+
+    setIsAnalyzingImage(true)
+    try {
+      // Create FormData with the image
+      const formData = new FormData()
+      formData.append('image', uploadedImage)
+
+      // Call AI vision endpoint to analyze the image
+      const response = await fetch('/api/pricing/analyze-image', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Image analysis failed')
+      }
+
+      const { data } = await response.json()
+      
+      // Auto-fill form with AI-detected attributes
+      setFormData(prev => ({
+        ...prev,
+        brand: data.brand || prev.brand,
+        model: data.model || prev.model,
+        category: data.category || prev.category,
+        condition: data.condition || prev.condition,
+        colour: data.colour || prev.colour,
+      }))
+
+      toast.success('Image analyzed! Check the pre-filled details.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to analyze image'
+      toast.error(message)
+    } finally {
+      setIsAnalyzingImage(false)
+    }
   }
 
   const handleAnalyse = async (e: React.FormEvent) => {
@@ -113,10 +248,12 @@ export default function EvaluatorView() {
         category: '',
         condition: '',
         colour: '',
+        year: '',
         notes: '',
         askPriceEur: '',
       })
       setResult(null)
+      handleRemoveImage()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to add to buying list'
       toast.error(message)
@@ -137,15 +274,80 @@ export default function EvaluatorView() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Input Form */}
         <div className="lux-card p-6 h-fit">
-          <div className="flex items-center gap-2 mb-6 text-sm font-semibold text-gray-900 uppercase tracking-wide">
-            <Tag className="h-4 w-4" />
-            Product Details
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide">
+              <Tag className="h-4 w-4" />
+              Product Details
+            </div>
+            {uploadedImage && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+              >
+                Clear Image
+              </button>
+            )}
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
+              Product Image (Optional)
+            </label>
+            
+            {imagePreview ? (
+              <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 mb-3">
+                <img src={imagePreview} alt="Upload preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 text-gray-600 hover:text-red-600 shadow-sm transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600">Click to upload product image</p>
+                <p className="text-xs text-gray-400 mt-1">AI will analyze the image</p>
+              </label>
+            )}
+
+            {uploadedImage && (
+              <button
+                type="button"
+                onClick={handleAnalyzeImage}
+                disabled={isAnalyzingImage}
+                className="w-full mt-3 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {isAnalyzingImage ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analyzing image...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="h-4 w-4" />
+                    Analyze with AI
+                  </>
+                )}
+              </button>
+            )}
           </div>
           
           <form onSubmit={handleAnalyse} className="space-y-5">
             <div>
               <label htmlFor="brand-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Brand
+                Brand *
               </label>
               <select
                 id="brand-select"
@@ -156,34 +358,53 @@ export default function EvaluatorView() {
                 className="lux-input"
               >
                 <option value="">Select Brand</option>
-                <option value="Chanel">Chanel</option>
-                <option value="Hermès">Hermès</option>
-                <option value="Louis Vuitton">Louis Vuitton</option>
-                <option value="Gucci">Gucci</option>
-                <option value="Prada">Prada</option>
-                <option value="Dior">Dior</option>
+                {Object.keys(BRAND_MODELS).sort().map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Model
+              <label htmlFor="model-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Model *
               </label>
-              <input
-                type="text"
-                name="model"
-                value={formData.model}
-                onChange={handleChange}
-                required
-                placeholder="e.g. Classic Flap"
-                className="lux-input"
-              />
+              {availableModels.length > 0 ? (
+                <select
+                  id="model-select"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleChange}
+                  required
+                  className="lux-input"
+                  disabled={!formData.brand}
+                >
+                  <option value="">Select Model</option>
+                  {availableModels.map(model => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                  <option value="__custom__">Other (type manually)</option>
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. Classic Flap"
+                  className="lux-input"
+                  disabled={!formData.brand}
+                />
+              )}
+              <p className="text-xs text-gray-400 mt-1">
+                {formData.brand ? `${availableModels.length} models available for ${formData.brand}` : 'Select a brand first'}
+              </p>
             </div>
             
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label htmlFor="condition-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Condition
+                  Condition *
                 </label>
                 <select
                   id="condition-select"
@@ -194,43 +415,109 @@ export default function EvaluatorView() {
                   className="lux-input"
                 >
                   <option value="">Grade</option>
-                  <option value="new">New</option>
-                  <option value="excellent">Grade A</option>
-                  <option value="good">Grade B</option>
-                  <option value="fair">Grade C</option>
+                  <option value="new">New / Pristine</option>
+                  <option value="excellent">Excellent (A)</option>
+                  <option value="good">Good (B)</option>
+                  <option value="fair">Fair (C)</option>
+                  <option value="used">Used</option>
                 </select>
               </div>
               
               <div>
-                <label htmlFor="colour-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Color
+                <label htmlFor="colour-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Color *
                 </label>
-                <input
-                  id="colour-input"
-                  type="text"
+                <select
+                  id="colour-select"
                   name="colour"
                   value={formData.colour}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Black"
                   className="lux-input"
-                />
+                >
+                  <option value="">Select Color</option>
+                  {COMMON_COLORS.map(color => (
+                    <option key={color} value={color}>{color}</option>
+                  ))}
+                  <option value="__custom__">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="year-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Year
+                </label>
+                <select
+                  id="year-select"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                  className="lux-input"
+                >
+                  <option value="">Unknown</option>
+                  {YEARS.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Category
+              <label htmlFor="category-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Category *
               </label>
-              <input
-                type="text"
+              <select
+                id="category-input"
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 required
-                placeholder="e.g. Handbag"
                 className="lux-input"
+              >
+                <option value="">Select Category</option>
+                <option value="Handbag">Handbag</option>
+                <option value="Wallet">Wallet</option>
+                <option value="Shoes">Shoes</option>
+                <option value="Watch">Watch</option>
+                <option value="Jewelry">Jewelry</option>
+                <option value="Accessory">Accessory</option>
+                <option value="Clothing">Clothing</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="notes-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Additional Notes
+              </label>
+              <textarea
+                id="notes-input"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                placeholder="Size, material, special features..."
+                rows={2}
+                className="lux-input resize-none"
               />
+            </div>
+
+            <div>
+              <label htmlFor="ask-price-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                Asking Price (EUR)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                <input
+                  id="ask-price-input"
+                  type="number"
+                  name="askPriceEur"
+                  value={formData.askPriceEur}
+                  onChange={handleChange}
+                  placeholder="0"
+                  step="0.01"
+                  className="lux-input pl-7"
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Optional - helps calibrate analysis</p>
             </div>
 
             <button

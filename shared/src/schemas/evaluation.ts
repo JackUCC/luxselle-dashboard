@@ -7,6 +7,7 @@ export const EvaluationSchema = BaseDocSchema.extend({
   category: z.string().optional().default(''),
   condition: z.string().optional().default(''),
   colour: z.string().optional().default(''),
+  year: z.string().optional(),
   notes: z.string().optional().default(''),
   askPriceEur: z.number().optional(),
   estimatedRetailEur: z.number(),
@@ -15,6 +16,7 @@ export const EvaluationSchema = BaseDocSchema.extend({
   comps: z.array(z.any()).default([]),
   confidence: z.number().min(0).max(1),
   provider: EvaluationProviderSchema,
+  imageUrl: z.string().optional(), // If analysis included an image
 })
 
 export type Evaluation = z.infer<typeof EvaluationSchema>
