@@ -72,9 +72,9 @@ export default function ProductDetailDrawer({
     setEditedFields({})
     setHasChanges(false)
     
-    apiGet<ProductWithId>(`/products/${productId}`)
-      .then((data) => {
-        setProduct(data)
+    apiGet<{ data: ProductWithId }>(`/products/${productId}`)
+      .then((response) => {
+        setProduct(response.data)
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : 'Failed to load product'
@@ -96,14 +96,14 @@ export default function ProductDetailDrawer({
 
     setIsSaving(true)
     try {
-      const updated = await apiPut<ProductWithId>(`/products/${product.id}`, {
+      const response = await apiPut<{ data: ProductWithId }>(`/products/${product.id}`, {
         ...product,
         ...editedFields,
       })
-      setProduct(updated)
+      setProduct(response.data)
       setEditedFields({})
       setHasChanges(false)
-      onProductUpdated?.(updated)
+      onProductUpdated?.(response.data)
       toast.success('Product updated')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to update product'
@@ -237,9 +237,9 @@ export default function ProductDetailDrawer({
                   sellPrice={product.sellPriceEur}
                   onProductUpdated={() => {
                     // Refetch product to get updated status
-                    apiGet<ProductWithId>(`/products/${product.id}`).then((updated) => {
-                      setProduct(updated)
-                      onProductUpdated?.(updated)
+                    apiGet<{ data: ProductWithId }>(`/products/${product.id}`).then((response) => {
+                      setProduct(response.data)
+                      onProductUpdated?.(response.data)
                     })
                   }}
                 />
