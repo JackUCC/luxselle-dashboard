@@ -37,11 +37,68 @@ const BuyingListItemInputSchema = z.object({
 
 const BuyingListItemUpdateSchema = BuyingListItemInputSchema.partial()
 
-// List buying list items
+// List buying list items with optional query params
+// Supports: q (search), status, supplier, limit, cursor, sort, dir
 router.get('/', async (req, res, next) => {
   try {
-    const items = await buyingListRepo.list()
-    res.json({ data: items })
+    const { q, status, supplier, limit, cursor, sort, dir } = req.query
+    let items = await buyingListRepo.list()
+    
+    // Text search
+    if (q && typeof q === 'string') {
+      const query = q.toLowerCase()
+      items = items.filter(item => 
+        item.brand.toLowerCase().includes(query) ||
+        item.model.toLowerCase().includes(query)
+      )
+    }
+    
+    // Status filter
+    if (status && typeof status === 'string') {
+      items = items.filter(item => item.status === status)
+    }
+    
+    // Supplier filter
+    if (supplier && typeof supplier === 'string') {
+      items = items.filter(item => item.supplierId === supplier)
+    }
+    
+    // Sort
+    const sortField = (sort as string) || 'createdAt'
+    const sortDir = dir === 'asc' ? 1 : -1
+    items.sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sortField]
+      const bVal = (b as Record<string, unknown>)[sortField]
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal) * sortDir
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return (aVal - bVal) * sortDir
+      }
+      return 0
+    })
+    
+    // Cursor pagination
+    const limitNum = limit ? parseInt(String(limit)) : 50
+    let startIndex = 0
+    
+    if (cursor && typeof cursor === 'string') {
+      const cursorIndex = items.findIndex(item => item.id === cursor)
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1
+      }
+    }
+    
+    const paginated = items.slice(startIndex, startIndex + limitNum)
+    const nextCursor = paginated.length === limitNum && startIndex + limitNum < items.length
+      ? paginated[paginated.length - 1]?.id
+      : null
+    
+    res.json({
+      data: paginated,
+      nextCursor,
+      total: items.length,
+    })
   } catch (error) {
     next(error)
   }

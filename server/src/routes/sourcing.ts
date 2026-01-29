@@ -28,11 +28,69 @@ const SourcingRequestInputSchema = z.object({
 
 const SourcingRequestUpdateSchema = SourcingRequestInputSchema.partial()
 
-// List sourcing requests
-router.get('/', async (_req, res, next) => {
+// List sourcing requests with optional query params
+// Supports: q (search), status, priority, limit, cursor, sort, dir
+router.get('/', async (req, res, next) => {
   try {
-    const requests = await sourcingRepo.list()
-    res.json({ data: requests })
+    const { q, status, priority, limit, cursor, sort, dir } = req.query
+    let requests = await sourcingRepo.list()
+    
+    // Text search
+    if (q && typeof q === 'string') {
+      const query = q.toLowerCase()
+      requests = requests.filter(r => 
+        r.customerName.toLowerCase().includes(query) ||
+        r.queryText.toLowerCase().includes(query) ||
+        (r.brand && r.brand.toLowerCase().includes(query))
+      )
+    }
+    
+    // Status filter
+    if (status && typeof status === 'string') {
+      requests = requests.filter(r => r.status === status)
+    }
+    
+    // Priority filter
+    if (priority && typeof priority === 'string') {
+      requests = requests.filter(r => r.priority === priority)
+    }
+    
+    // Sort
+    const sortField = (sort as string) || 'createdAt'
+    const sortDir = dir === 'asc' ? 1 : -1
+    requests.sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sortField]
+      const bVal = (b as Record<string, unknown>)[sortField]
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal) * sortDir
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return (aVal - bVal) * sortDir
+      }
+      return 0
+    })
+    
+    // Cursor pagination
+    const limitNum = limit ? parseInt(String(limit)) : 50
+    let startIndex = 0
+    
+    if (cursor && typeof cursor === 'string') {
+      const cursorIndex = requests.findIndex(r => r.id === cursor)
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1
+      }
+    }
+    
+    const paginated = requests.slice(startIndex, startIndex + limitNum)
+    const nextCursor = paginated.length === limitNum && startIndex + limitNum < requests.length
+      ? paginated[paginated.length - 1]?.id
+      : null
+    
+    res.json({
+      data: paginated,
+      nextCursor,
+      total: requests.length,
+    })
   } catch (error) {
     next(error)
   }

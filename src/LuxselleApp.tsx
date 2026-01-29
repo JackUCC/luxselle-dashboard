@@ -1,4 +1,5 @@
 import { Toaster } from 'react-hot-toast'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, NavLink, Route, Routes, Navigate } from 'react-router-dom'
 import { 
   LayoutGrid, 
@@ -7,7 +8,8 @@ import {
   Globe, 
   Users, 
   ClipboardList, 
-  Bell 
+  Bell,
+  FileSpreadsheet
 } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -17,6 +19,8 @@ import EvaluatorView from './components/evaluator/EvaluatorView'
 import SupplierHubView from './components/supplier/SupplierHubView'
 import DashboardView from './components/dashboard/DashboardView'
 import SourcingView from './components/sourcing/SourcingView'
+import JobsView from './components/jobs/JobsView'
+import { queryClient } from './lib/queryClient'
 
 const navItems = [
   { label: 'Overview', path: '/', icon: LayoutGrid },
@@ -25,12 +29,14 @@ const navItems = [
   { label: 'Supplier Hub', path: '/supplier-hub', icon: Globe },
   { label: 'Sourcing', path: '/sourcing', icon: Users },
   { label: 'Buying List', path: '/buying-list', icon: ClipboardList },
+  { label: 'Jobs', path: '/jobs', icon: FileSpreadsheet },
 ]
 
 const LuxselleApp = () => {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
         <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
           <div className="mx-auto flex h-16 max-w-8xl items-center justify-between px-6">
             {/* Brand */}
@@ -95,6 +101,7 @@ const LuxselleApp = () => {
               <Route path="/supplier-hub" element={<SupplierHubView />} />
               <Route path="/buying-list" element={<BuyingListView />} />
               <Route path="/sourcing" element={<SourcingView />} />
+              <Route path="/jobs" element={<JobsView />} />
               
               {/* Redirects for legacy routes */}
               <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
@@ -102,8 +109,9 @@ const LuxselleApp = () => {
             </Routes>
           </ErrorBoundary>
         </main>
-      </div>
-    </BrowserRouter>
+        </div>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 

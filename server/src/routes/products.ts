@@ -6,12 +6,14 @@ import { randomUUID } from 'crypto'
 import { DEFAULT_ORG_ID, ProductSchema, ProductStatusSchema, type ProductImage } from '@shared/schemas'
 import { ProductRepo } from '../repos/ProductRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
+import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
 const productRepo = new ProductRepo()
 const transactionRepo = new TransactionRepo()
+const activityRepo = new ActivityEventRepo()
 
 // Multer config for image uploads (10MB max)
 const upload = multer({
@@ -131,9 +133,26 @@ router.post('/', async (req, res, next) => {
       sellPriceEur: input.sellPriceEur,
       quantity: input.quantity ?? 1,
       imageUrls: input.imageUrls ?? [],
+      images: [],
       notes: input.notes ?? '',
     })
     const created = await productRepo.create(product)
+    
+    // Create activity event
+    await activityRepo.create({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      actor: 'system',
+      eventType: 'product_created',
+      entityType: 'product',
+      entityId: created.id,
+      payload: {
+        brand: created.brand,
+        model: created.model,
+      },
+    })
+    
     res.status(201).json({ data: created })
   } catch (error) {
     next(error)
@@ -349,6 +368,23 @@ router.post('/:id/transactions', async (req, res, next) => {
         updatedAt: now,
       })
     }
+    
+    // Create activity event
+    await activityRepo.create({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      actor: 'system',
+      eventType: input.type === 'sale' ? 'product_sold' : 'product_adjusted',
+      entityType: 'product',
+      entityId: id,
+      payload: {
+        brand: product.brand,
+        model: product.model,
+        amountEur: input.amountEur,
+        type: input.type,
+      },
+    })
     
     res.status(201).json({ data: transaction })
   } catch (error) {

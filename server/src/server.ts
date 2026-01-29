@@ -11,6 +11,8 @@ import { sourcingRouter } from './routes/sourcing'
 import { jobsRouter } from './routes/jobs'
 import { API_ERROR_CODES, formatApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
+// Auth middleware available but not applied yet (deferred to Iteration 6)
+// import { requireAuth, requireRole } from './middleware/auth'
 
 const app = express()
 

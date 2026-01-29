@@ -30,24 +30,85 @@ const SupplierInputSchema = z.object({
 
 const SupplierUpdateSchema = SupplierInputSchema.partial()
 
-// List suppliers
-router.get('/', async (_req, res, next) => {
+// List suppliers with optional query params
+// Supports: q (search), status, limit, cursor, sort, dir
+router.get('/', async (req, res, next) => {
   try {
-    const suppliers = await supplierRepo.list()
-    res.json({ data: suppliers })
+    const { q, status, limit, cursor, sort, dir } = req.query
+    let suppliers = await supplierRepo.list()
+    
+    // Text search
+    if (q && typeof q === 'string') {
+      const query = q.toLowerCase()
+      suppliers = suppliers.filter(s => 
+        s.name.toLowerCase().includes(query) ||
+        (s.contactName && s.contactName.toLowerCase().includes(query))
+      )
+    }
+    
+    // Status filter
+    if (status && typeof status === 'string') {
+      suppliers = suppliers.filter(s => s.status === status)
+    }
+    
+    // Sort
+    const sortField = (sort as string) || 'name'
+    const sortDir = dir === 'asc' ? 1 : -1
+    suppliers.sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sortField]
+      const bVal = (b as Record<string, unknown>)[sortField]
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal) * sortDir
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return (aVal - bVal) * sortDir
+      }
+      return 0
+    })
+    
+    // Cursor pagination
+    const limitNum = limit ? parseInt(String(limit)) : 50
+    let startIndex = 0
+    
+    if (cursor && typeof cursor === 'string') {
+      const cursorIndex = suppliers.findIndex(s => s.id === cursor)
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1
+      }
+    }
+    
+    const paginated = suppliers.slice(startIndex, startIndex + limitNum)
+    const nextCursor = paginated.length === limitNum && startIndex + limitNum < suppliers.length
+      ? paginated[paginated.length - 1]?.id
+      : null
+    
+    res.json({
+      data: paginated,
+      nextCursor,
+      total: suppliers.length,
+    })
   } catch (error) {
     next(error)
   }
 })
 
 // List all supplier items (unified feed) — must be before /:id to avoid "items" as id
-// Supports filters: ?supplier={id}&brand={brand}&availability={uploaded|sold|waiting}
+// Supports: q, supplier, brand, availability, limit, cursor, sort, dir
 router.get('/items/all', async (req, res, next) => {
   try {
-    const { supplier, brand, availability } = req.query
+    const { q, supplier, brand, availability, limit, cursor, sort, dir } = req.query
     let items = await supplierItemRepo.list()
     
-    // Apply filters
+    // Text search
+    if (q && typeof q === 'string') {
+      const query = q.toLowerCase()
+      items = items.filter(item => 
+        item.title.toLowerCase().includes(query) ||
+        item.brand.toLowerCase().includes(query)
+      )
+    }
+    
+    // Filters
     if (supplier && typeof supplier === 'string') {
       items = items.filter(item => item.supplierId === supplier)
     }
@@ -58,10 +119,42 @@ router.get('/items/all', async (req, res, next) => {
       items = items.filter(item => item.availability === availability)
     }
     
-    // Sort by createdAt desc (most recent first)
-    items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    // Sort
+    const sortField = (sort as string) || 'createdAt'
+    const sortDir = dir === 'asc' ? 1 : -1
+    items.sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sortField]
+      const bVal = (b as Record<string, unknown>)[sortField]
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal) * sortDir
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return (aVal - bVal) * sortDir
+      }
+      return 0
+    })
     
-    res.json({ data: items })
+    // Cursor pagination
+    const limitNum = limit ? parseInt(String(limit)) : 50
+    let startIndex = 0
+    
+    if (cursor && typeof cursor === 'string') {
+      const cursorIndex = items.findIndex(item => item.id === cursor)
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1
+      }
+    }
+    
+    const paginated = items.slice(startIndex, startIndex + limitNum)
+    const nextCursor = paginated.length === limitNum && startIndex + limitNum < items.length
+      ? paginated[paginated.length - 1]?.id
+      : null
+    
+    res.json({
+      data: paginated,
+      nextCursor,
+      total: items.length,
+    })
   } catch (error) {
     next(error)
   }

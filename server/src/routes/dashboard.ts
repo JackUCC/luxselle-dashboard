@@ -6,6 +6,7 @@ import { SourcingRequestRepo } from '../repos/SourcingRequestRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { SystemJobRepo } from '../repos/SystemJobRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
+import { SettingsRepo } from '../repos/SettingsRepo'
 
 const router = Router()
 const productRepo = new ProductRepo()
@@ -14,14 +15,16 @@ const sourcingRepo = new SourcingRequestRepo()
 const activityRepo = new ActivityEventRepo()
 const systemJobRepo = new SystemJobRepo()
 const transactionRepo = new TransactionRepo()
+const settingsRepo = new SettingsRepo()
 
 // Get KPIs
 router.get('/kpis', async (_req, res, next) => {
   try {
-    const [products, buyingListItems, sourcingRequests] = await Promise.all([
+    const [products, buyingListItems, sourcingRequests, settings] = await Promise.all([
       productRepo.list(),
       buyingListRepo.list(),
       sourcingRepo.list(),
+      settingsRepo.getSettings(),
     ])
 
     // Total Inventory Value (sum cost where status=in_stock)
@@ -41,8 +44,8 @@ router.get('/kpis', async (_req, res, next) => {
       )
       .reduce((sum, req) => sum + req.budget, 0)
 
-    // Low Stock Alerts (count where quantity < threshold)
-    const lowStockThreshold = 2 // Could get from settings
+    // Low Stock Alerts (count where quantity < threshold from settings)
+    const lowStockThreshold = settings?.lowStockThreshold ?? 2
     const lowStockAlerts = products.filter(
       (p) => p.status === 'in_stock' && p.quantity < lowStockThreshold
     ).length

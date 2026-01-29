@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import toast from 'react-hot-toast'
 import { 
   Search, 
@@ -150,6 +151,18 @@ export default function InventoryView() {
     Array.from(new Set(products.map(p => p.brand))).sort()
   , [products])
 
+  // Virtualization for large tables (>50 items)
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const shouldVirtualize = filteredProducts.length > 50
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredProducts.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 72, // Approximate row height in pixels
+    overscan: 5,
+    enabled: shouldVirtualize && viewMode === 'table',
+  })
+
   return (
     <section className="space-y-6">
       {/* Header & Controls */}
@@ -272,9 +285,13 @@ export default function InventoryView() {
           </p>
         </div>
       ) : viewMode === 'table' ? (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div 
+          ref={shouldVirtualize ? tableContainerRef : null}
+          className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+          style={shouldVirtualize ? { maxHeight: '600px', overflow: 'auto' } : undefined}
+        >
           <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50/50">
+            <thead className="bg-gray-50/50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
@@ -286,7 +303,70 @@ export default function InventoryView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
-              {filteredProducts.map((product) => (
+              {shouldVirtualize ? (
+                <>
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const product = filteredProducts[virtualRow.index]
+                    return (
+                      <tr
+                        key={product.id}
+                        onClick={() => openProductDrawer(product.id)}
+                        className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        style={{
+                          height: `${virtualRow.size}px`,
+                        }}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                              {product.imageUrls?.[0] && (
+                                <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{product.brand} {product.model}</div>
+                              <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                            {product.quantity} units
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-gray-400 w-8">PAID</span>
+                              <span className="font-medium text-gray-900">{formatCurrency(product.costPriceEur)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-gray-400 w-8">SELL</span>
+                              <span className="font-medium text-gray-900">{formatCurrency(product.sellPriceEur)}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)} border-current/10`}>
+                            {getStatusLabel(product.status)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                            }}
+                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </>
+              ) : (
+                filteredProducts.map((product) => (
                 <tr
                   key={product.id}
                   onClick={() => openProductDrawer(product.id)}
@@ -339,7 +419,8 @@ export default function InventoryView() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
