@@ -26,7 +26,7 @@ Iteration 5 is **COMPLETE** with all planned features implemented plus significa
 ### Phase 2: Buying List Enhancement ✅
 - [x] Group by supplier view (Bulk Order)
 - [x] Message generator (WhatsApp & Email links)
-- [ ] Post-receive navigation (optional UX polish - deferred)
+- [x] Post-receive navigation (navigate to /inventory after receive)
 
 ### Phase 3: Inventory and Reporting ✅
 - [x] Product Detail Drawer (5 tabs)
@@ -85,7 +85,7 @@ Iteration 5 is **COMPLETE** with all planned features implemented plus significa
 - *Backend auth infrastructure already complete*
 
 ### Optional Polish
-- Post-receive auto-navigation to inventory
+- ~~Post-receive auto-navigation to inventory~~ ✅ Done
 - Inline table cell editing (currently via drawer)
 - Additional E2E test coverage
 - Performance monitoring dashboard

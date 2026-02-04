@@ -39,7 +39,7 @@ All core features from the original plan are implemented and working:
 **Phase 2 - Buying List:**
 - ✅ Group by supplier view (Bulk Order mode)
 - ✅ Message generator (WhatsApp + Email links)
-- ⏭️ Post-receive navigation (optional UX polish)
+- ✅ Post-receive navigation (navigate to /inventory after receive)
 
 **Phase 3 - Inventory & Reporting:**
 - ✅ Product Detail Drawer (5 tabs: Images, Details, Financials, History, Notes)
@@ -188,7 +188,7 @@ All endpoints support standard query params: `q` (search), `sort`, `dir`, `limit
 - *Backend infrastructure already in place*
 
 ### Optional Polish
-- Post-receive auto-navigation
+- ~~Post-receive auto-navigation~~ ✅ Done
 - Inline table cell editing
 - Additional E2E test coverage
 - Performance monitoring dashboard

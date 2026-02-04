@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { 
   Download, 
@@ -45,6 +45,7 @@ const statusColors = {
 }
 
 export default function BuyingListView() {
+  const navigate = useNavigate()
   const [items, setItems] = useState<BuyingListItemWithId[]>([])
   const [suppliers, setSuppliers] = useState<Record<string, SupplierWithId>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -108,7 +109,7 @@ export default function BuyingListView() {
       toast.success('Item received into inventory', {
         icon: '📦',
       })
-      loadData()
+      navigate('/inventory')
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to receive item'
@@ -181,9 +182,12 @@ export default function BuyingListView() {
         <div className="flex items-center gap-3">
           {/* Status Filter */}
           <div className="relative">
+            <label htmlFor="buying-list-status-filter" className="sr-only">Filter by status</label>
             <select
+              id="buying-list-status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
               className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
             >
               <option value="all">All Status</option>

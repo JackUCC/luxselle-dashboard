@@ -13,7 +13,8 @@ import {
   Calculator,
   User,
   Loader2,
-  TrendingUp
+  TrendingUp,
+  RefreshCw
 } from 'lucide-react'
 import type { ActivityEvent } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
@@ -77,14 +78,26 @@ export default function DashboardView() {
   const [activity, setActivity] = useState<ActivityEventWithId[]>([])
   const [status, setStatus] = useState<SystemStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
   }, [])
 
-  const loadData = async () => {
-    setIsLoading(true)
+  const handleRefresh = async () => {
+    if (isRefreshing) return
+    setIsRefreshing(true)
+    try {
+      await loadData(true)
+      toast.success('Dashboard refreshed')
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const loadData = async (isRefresh = false) => {
+    if (!isRefresh) setIsLoading(true)
     try {
       const [kpisRes, profitRes, activityRes, statusRes] = await Promise.all([
         apiGet<{ data: KPIs }>('/dashboard/kpis'),
@@ -103,7 +116,7 @@ export default function DashboardView() {
       setError(message)
       toast.error(message)
     } finally {
-      setIsLoading(false)
+      if (!isRefresh) setIsLoading(false)
     }
   }
 
@@ -162,9 +175,21 @@ export default function DashboardView() {
     <div className="flex flex-col items-center space-y-12 py-8">
       {/* Hero Section */}
       <div className="w-full max-w-2xl text-center space-y-8">
-        <h1 className="text-4xl font-display font-bold text-gray-900">
-          Good afternoon, Jack
-        </h1>
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="text-4xl font-display font-bold text-gray-900">
+            Good afternoon, Jack
+          </h1>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isLoading || isRefreshing}
+            className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors disabled:opacity-50"
+            title="Refresh data"
+            aria-label="Refresh dashboard data"
+          >
+            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
         
         <div className="w-full">
           <CommandBar />

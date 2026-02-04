@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   TrendingUp,
   Calendar,
+  ChevronDown,
 } from 'lucide-react'
 import type { SystemJob } from '@shared/schemas'
 import { apiGet, apiPost } from '../../lib/api'
@@ -99,6 +100,17 @@ export default function JobsView() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const selectedJobId = searchParams.get('job')
+  const statusFilter = searchParams.get('status') ?? 'all'
+
+  const setStatusFilter = useCallback((status: string) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (status === 'all') {
+      newParams.delete('status')
+    } else {
+      newParams.set('status', status)
+    }
+    setSearchParams(newParams)
+  }, [searchParams, setSearchParams])
 
   const loadJobs = useCallback(async () => {
     setIsLoading(true)
@@ -147,23 +159,49 @@ export default function JobsView() {
 
   const selectedJob = jobs.find(j => j.id === selectedJobId)
 
+  const normalizedStatus = (s: string) =>
+    s === 'success' ? 'succeeded' : s === 'fail' ? 'failed' : s
+  const filteredJobs =
+    statusFilter === 'all'
+      ? jobs
+      : jobs.filter((job) => normalizedStatus(job.status) === statusFilter)
+
   return (
     <section className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-gray-900">System Jobs</h1>
           <p className="text-sm text-gray-500 mt-1">
             Monitor imports, background tasks, and system operations.
           </p>
         </div>
-        <button
-          onClick={loadJobs}
-          disabled={isLoading}
-          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <label htmlFor="jobs-status-filter" className="sr-only">Filter by status</label>
+            <select
+              id="jobs-status-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            >
+              <option value="all">All Status</option>
+              <option value="queued">Queued</option>
+              <option value="running">Running</option>
+              <option value="succeeded">Succeeded</option>
+              <option value="failed">Failed</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
+          <button
+            onClick={loadJobs}
+            disabled={isLoading}
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {isLoading && jobs.length === 0 ? (
@@ -179,6 +217,14 @@ export default function JobsView() {
           <p className="text-gray-500 font-medium">No jobs yet</p>
           <p className="text-sm text-gray-400 mt-1">
             Jobs will appear here when you run imports or background tasks.
+          </p>
+        </div>
+      ) : filteredJobs.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
+          <FileSpreadsheet className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+          <p className="text-gray-500 font-medium">No jobs match this status</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Try a different status filter or refresh the list.
           </p>
         </div>
       ) : (
@@ -207,7 +253,7 @@ export default function JobsView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
-              {jobs.map((job) => {
+              {filteredJobs.map((job) => {
                 const statusConfig = getStatusConfig(job.status)
                 const StatusIcon = statusConfig.icon
                 const duration = formatDuration(job.startedAt || job.lastRunAt, job.completedAt)

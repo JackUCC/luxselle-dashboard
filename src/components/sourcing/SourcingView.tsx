@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Plus, Search, Filter, Pencil, X, Loader2, Users } from 'lucide-react'
+import { Plus, Search, Filter, Pencil, X, Loader2, Users, ChevronDown } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut } from '../../lib/api'
 
@@ -33,8 +33,8 @@ export default function SourcingView() {
   const [requests, setRequests] = useState<SourcingRequestWithId[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchParams] = useSearchParams()
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [statusFilter, setStatusFilterState] = useState<string>('all')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [formData, setFormData] = useState({
     customerName: '',
@@ -77,8 +77,18 @@ export default function SourcingView() {
       'lost',
     ])
     const status = searchParams.get('status') ?? 'all'
-    setStatusFilter(allowedStatuses.has(status) ? status : 'all')
+    setStatusFilterState(allowedStatuses.has(status) ? status : 'all')
   }, [searchParams])
+
+  const setStatusFilter = (status: string) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (status === 'all') {
+      newParams.delete('status')
+    } else {
+      newParams.set('status', status)
+    }
+    setSearchParams(newParams)
+  }
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -127,22 +137,42 @@ export default function SourcingView() {
 
   return (
     <section className="space-y-6">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-gray-900">Sourcing</h1>
           <p className="text-sm text-gray-500 mt-1">
             Customer requests pipeline.
           </p>
         </div>
-        
-        <button
-          type="button"
-          onClick={() => setShowCreateForm(true)}
-          className="lux-btn-primary flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          New Request
-        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <label htmlFor="sourcing-status-filter" className="sr-only">Filter by status</label>
+            <select
+              id="sourcing-status-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            >
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="sourcing">Sourcing</option>
+              <option value="sourced">Sourced</option>
+              <option value="fulfilled">Fulfilled</option>
+              <option value="lost">Lost</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="lux-btn-primary flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Request
+          </button>
+        </div>
       </div>
 
       {/* Create Form Overlay */}

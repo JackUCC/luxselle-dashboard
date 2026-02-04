@@ -15,7 +15,7 @@ All features from Iteration 5 have been implemented and significantly enhanced b
 | **lowStockThreshold from Settings** | Use settings value | ✅ Dashboard KPIs fetch from settings | ✅ Complete |
 | **Buying List Group-by-Supplier** | Group view | ✅ Bulk Order view with supplier grouping | ✅ Complete |
 | **Message Generator** | Copy message | ✅ WhatsApp & Email links with pre-filled messages | ✅ Enhanced |
-| **Post-receive Navigation** | Navigate to inventory | ⏭️ Deferred (UX enhancement) | Optional |
+| **Post-receive Navigation** | Navigate to inventory | ✅ After receive, navigate to /inventory | Complete |
 | **Product Detail Drawer** | Basic drawer | ✅ Full-featured with 5 tabs: Images, Details, Financials, History, Notes | ✅ Enhanced |
 | **Transaction History** | List transactions | ✅ GET endpoint + UI with Record Sale/Adjustment modals | ✅ Enhanced |
 | **Inline Editing** | Edit in table | ✅ Full editing via drawer Details tab | ✅ Complete |
@@ -58,7 +58,7 @@ We've also implemented production-ready infrastructure:
 Iteration 5 is complete. Iteration 6 (Authentication UI) is ready when needed - the backend infrastructure is already in place.
 
 ### Optional Polish Items:
-- Post-receive auto-navigation to inventory
+- ~~Post-receive auto-navigation to inventory~~ ✅ Done
 - Inline table editing (currently via drawer)
 - Additional unit test coverage
 - E2E tests for new features
