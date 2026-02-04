@@ -10,8 +10,8 @@ alwaysApply: true
 ## Repo reality (do not change)
 - NPM workspaces (NOT pnpm). Root scripts use npm --workspace.
 - Frontend: React + Vite + Tailwind in /src
-- Backend: Express API in /server/src
-- Shared: Zod schemas in /shared/src/schemas
+- Backend: Express API in packages/server/src
+- Shared: Zod schemas in packages/shared/src/schemas
 
 ## Iteration 4 goal (priority order)
 1) Docs: PLAN.md accurate + root README setup/env/dev/seed/test/e2e

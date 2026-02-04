@@ -1,0 +1,37 @@
+{
+  "name": "@luxselle/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "seed": "tsx scripts/seed.ts",
+    "test": "vitest --config ../../config/vitest.config.ts --run",
+    "test:watch": "vitest --config ../../config/vitest.config.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@luxselle/shared": "*",
+    "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "firebase-admin": "^12.5.0",
+    "multer": "^2.0.2",
+    "openai": "^6.17.0",
+    "sharp": "^0.34.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^22.9.0",
+    "@types/sharp": "^0.31.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

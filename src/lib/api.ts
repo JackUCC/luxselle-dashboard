@@ -1,3 +1,9 @@
+/**
+ * API client: apiGet, apiPost, apiPut, apiDelete, apiPostFormData; base /api; ApiError with status.
+ * Parses backend error shape { error: { code, message, details? } } for user-facing messages.
+ * @see docs/CODE_REFERENCE.md
+ * References: Fetch API
+ */
 export class ApiError extends Error {
   status: number
 
@@ -13,6 +19,7 @@ interface ApiErrorBody {
   error?: { code?: string; message?: string; details?: unknown }
 }
 
+/** Extract user-facing message from API error JSON or response text. */
 async function getErrorMessage(response: Response): Promise<string> {
   const text = await response.text()
   try {
@@ -24,6 +31,7 @@ async function getErrorMessage(response: Response): Promise<string> {
   return text || 'Request failed'
 }
 
+/** Shared fetch wrapper: throws ApiError on !ok; returns JSON or undefined for 204. */
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, options)
   if (!response.ok) {

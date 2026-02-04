@@ -3,10 +3,10 @@ alwaysApply: true
 ---
 
 ---
-description: Backend work in server/ and shared/. Add error shape + validation + unit tests.
+description: Backend work in packages/server and packages/shared. Add error shape + validation + unit tests.
 globs:
-  - server/**
-  - shared/**
+  - packages/server/**
+  - packages/shared/**
 alwaysApply: false
 ---
 

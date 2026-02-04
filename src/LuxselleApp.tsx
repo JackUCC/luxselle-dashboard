@@ -1,3 +1,9 @@
+/**
+ * App shell: React Query, React Router, nav, Toaster, ErrorBoundary, route definitions.
+ * Legacy redirects: /evaluator → /buy-box, /suppliers → /supplier-hub.
+ * @see docs/CODE_REFERENCE.md
+ * References: react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react
+ */
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, NavLink, Route, Routes, Navigate } from 'react-router-dom'
@@ -13,13 +19,13 @@ import {
 } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
-import InventoryView from './components/inventory/InventoryView'
-import BuyingListView from './components/buying-list/BuyingListView'
-import EvaluatorView from './components/evaluator/EvaluatorView'
-import SupplierHubView from './components/supplier/SupplierHubView'
-import DashboardView from './components/dashboard/DashboardView'
-import SourcingView from './components/sourcing/SourcingView'
-import JobsView from './components/jobs/JobsView'
+import DashboardView from './pages/Dashboard/DashboardView'
+import InventoryView from './pages/Inventory/InventoryView'
+import EvaluatorView from './pages/BuyBox/EvaluatorView'
+import SupplierHubView from './pages/SupplierHub/SupplierHubView'
+import SourcingView from './pages/Sourcing/SourcingView'
+import BuyingListView from './pages/BuyingList/BuyingListView'
+import JobsView from './pages/Jobs/JobsView'
 import { queryClient } from './lib/queryClient'
 
 const navItems = [

@@ -3,20 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "server",
-    "shared"
+    "packages/server",
+    "packages/shared"
   ],
   "scripts": {
     "dev": "concurrently -k \"npm run emulators\" \"npm run dev --workspace=@luxselle/server\" \"npm run dev:client\"",
-    "dev:client": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "emulators": "firebase emulators:start --only firestore,storage",
+    "dev:client": "vite --config config/vite.config.ts",
+    "build": "vite build --config config/vite.config.ts",
+    "preview": "vite preview --config config/vite.config.ts",
+    "emulators": "firebase emulators:start --only firestore,storage --config firebase/firebase.json",
     "seed": "npm run seed --workspace=@luxselle/server",
-    "test": "vitest --run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test": "vitest --run --config config/vitest.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "test:e2e": "playwright test --config config/playwright.config.ts",
+    "test:e2e:ui": "playwright test --ui --config config/playwright.config.ts"
   },
   "dependencies": {
     "@luxselle/shared": "*",

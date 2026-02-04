@@ -1,3 +1,8 @@
+/**
+ * TanStack Query client and shared query keys for cache consistency.
+ * @see docs/CODE_REFERENCE.md
+ * References: @tanstack/react-query
+ */
 import { QueryClient } from '@tanstack/react-query'
 
 /**

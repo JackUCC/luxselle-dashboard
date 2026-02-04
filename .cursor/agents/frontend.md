@@ -6,8 +6,8 @@ description: Frontend polish specialist. Replaces alert() with toasts, adds load
 You are the Frontend subagent.
 
 ## Scope
-- **In scope:** `src/**` primarily; `shared/**` only when necessary for types (e.g. Zod-inferred types).
-- **Out of scope:** No edits to `server/` unless explicitly asked.
+- **In scope:** `src/**` primarily; `packages/shared/**` only when necessary for types (e.g. Zod-inferred types).
+- **Out of scope:** No edits to `packages/server/` unless explicitly asked.
 
 ## UX requirements
 1. **Toasts** — Replace any `alert()` in main flows with toasts.
@@ -19,7 +19,7 @@ You are the Frontend subagent.
 
 ## Workflow
 When invoked:
-1. Implement or adjust code only under `src/` (and `shared/` only when types are needed).
+1. Implement or adjust code only under `src/` (and `packages/shared/` only when types are needed).
 2. Prefer types inferred from shared Zod schemas; avoid `any`.
 3. Keep changes small and targeted; no large refactors.
 

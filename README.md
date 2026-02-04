@@ -54,6 +54,18 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
 
 Frontend: typically `http://localhost:5173`. API: `http://localhost:3001` (Vite proxies `/api` to backend).
 
+## Project structure (where to find things)
+
+| Location | Purpose |
+|----------|---------|
+| **config/** | Build and test configs (Vite, Vitest, Playwright). See [config/README.md](config/README.md). |
+| **docs/** | All documentation (planning, design, Firebase, iterations). See [docs/README.md](docs/README.md). |
+| **firebase/** | Firebase project: rules and indexes. See [firebase/README.md](firebase/README.md). |
+| **packages/** | NPM workspaces: `server` (Express API), `shared` (Zod schemas). See [packages/README.md](packages/README.md). |
+| **src/** | Frontend app: `pages/` (one folder per page), `components/` (shared UI), `lib/` (API, Firebase, query client), `styles/` (global CSS). |
+| **tests/** | E2E tests (Playwright). Unit tests live next to server source in `packages/server/src`. See [tests/README.md](tests/README.md). |
+| **Root** | `package.json`, `index.html`, `.env.example`, `tsconfig.json`, `tailwind.config.js`, `postcss.config.js`, `.firebaserc`. |
+
 ## Tests
 
 - **Unit tests** (Vitest):
@@ -69,7 +81,7 @@ Frontend: typically `http://localhost:5173`. API: `http://localhost:3001` (Vite 
   npx playwright install   # once, if browsers are missing
   npm run test:e2e
   ```
-  Or with UI: `npm run test:e2e:ui`. Playwright can also start the server automatically (see `playwright.config.ts`); ensure emulators and backend are up if you rely on that.
+  Or with UI: `npm run test:e2e:ui`. Playwright can also start the server automatically (see `config/playwright.config.ts`); ensure emulators and backend are up if you rely on that.
 
 ## Scripts summary
 
@@ -85,10 +97,10 @@ Frontend: typically `http://localhost:5173`. API: `http://localhost:3001` (Vite 
 
 ## Docs
 
-- [PRD](docs/PRD.md) — Product requirements
-- [Plan](docs/PLAN.md) — Implementation phases (all complete)
-- [Status & plan](docs/STATUS_AND_PLAN.md) — Current state and gaps
+- [Documentation index](docs/README.md) — All docs (planning, design, Firebase, iterations)
+- [Code reference](docs/CODE_REFERENCE.md) — Index of documented code: what each file does, where it lives, and external references; use with in-code comments that explain behaviour
+- [PRD](docs/planning/PRD.md) — Product requirements
+- [Plan](docs/planning/PLAN.md) — Implementation phases (all complete)
+- [Status & plan](docs/planning/STATUS_AND_PLAN.md) — Current state and gaps
 - [Architecture](docs/design/ARCHITECTURE.md) — System design and API
-- [Decisions](docs/design/DECISIONS.md) — ADRs
 - [Firebase setup](docs/firebase/FIREBASE_SETUP.md) — Firebase and emulator guide
-- [Firebase quick ref](docs/firebase/FIREBASE_QUICK_REF.md) — Commands and URLs

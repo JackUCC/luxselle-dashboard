@@ -6,7 +6,7 @@ alwaysApply: true
 description: Frontend polish in src/. Toast + loading/empty states + optional API helpers.
 globs:
   - src/**
-  - shared/**
+  - packages/shared/**
 alwaysApply: false
 ---
 
@@ -18,4 +18,4 @@ alwaysApply: false
 - Reads use apiGet. (Optional) add apiPost/apiPut/apiDelete and refactor 2 flows as template.
 
 ## Scope discipline
-- Do not touch server/ unless explicitly asked by the parent agent.
+- Do not touch packages/server/ unless explicitly asked by the parent agent.

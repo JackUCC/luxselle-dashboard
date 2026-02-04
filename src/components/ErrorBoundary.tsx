@@ -1,3 +1,8 @@
+/**
+ * Error boundary: catches render errors in child tree and shows fallback UI with reload.
+ * @see docs/CODE_REFERENCE.md
+ * References: React error boundaries, lucide-react
+ */
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 
