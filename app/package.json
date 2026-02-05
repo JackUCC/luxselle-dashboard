@@ -1,0 +1,8 @@
+{
+  "name": "luxselle-dashboard-app",
+  "private": true,
+  "scripts": {
+    "install": "cd .. && npm install",
+    "build": "cd .. && npm run build && cp -r dist app/dist"
+  }
+}

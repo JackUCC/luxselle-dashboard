@@ -2,6 +2,7 @@
   "name": "luxselle-dashboard",
   "version": "1.0.0",
   "private": true,
+  "engines": { "node": "18.x || 20.x" },
   "workspaces": [
     "packages/server",
     "packages/shared"
