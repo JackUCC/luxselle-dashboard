@@ -43,6 +43,10 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
   ```bash
   npm run dev
   ```
+- **Seed the database** so the UI shows products, KPIs, and activity (run once after emulator is up, or when you see empty data):
+  ```bash
+  npm run seed
+  ```
 - **Frontend only** (if backend/emulators already running):
   ```bash
   npm run dev:client
