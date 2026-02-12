@@ -2,13 +2,13 @@
   "name": "luxselle-dashboard",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": "18.x || 20.x" },
+  "engines": { "node": "18.x || 20.x || 22.x || 24.x" },
   "workspaces": [
     "packages/server",
     "packages/shared"
   ],
   "scripts": {
-    "dev": "concurrently -k \"npm run emulators\" \"npm run dev --workspace=@luxselle/server\" \"npm run dev:client\"",
+    "dev": "npx concurrently -k \"npm run emulators\" \"npm run dev --workspace=@luxselle/server\" \"npm run dev:client\"",
     "dev:client": "vite --config config/vite.config.ts",
     "build": "vite build --config config/vite.config.ts",
     "preview": "vite preview --config config/vite.config.ts",
@@ -17,7 +17,8 @@
     "test": "vitest --run --config config/vitest.config.ts",
     "test:watch": "vitest --config config/vitest.config.ts",
     "test:e2e": "playwright test --config config/playwright.config.ts",
-    "test:e2e:ui": "playwright test --ui --config config/playwright.config.ts"
+    "test:e2e:ui": "playwright test --ui --config config/playwright.config.ts",
+    "auto-commit": "node scripts/auto-commit.js"
   },
   "dependencies": {
     "@luxselle/shared": "*",

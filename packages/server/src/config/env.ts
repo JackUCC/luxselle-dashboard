@@ -27,6 +27,7 @@ const EnvSchema = z.object({
   FIRESTORE_EMULATOR_HOST: z.string().optional(),
   FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+  GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string().optional(),
   AI_PROVIDER: z.enum(['mock', 'openai', 'gemini']).default('mock'),
   OPENAI_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),

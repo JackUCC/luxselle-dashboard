@@ -58,6 +58,22 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
 
 Frontend: typically `http://localhost:5173`. API: `http://localhost:3001` (Vite proxies `/api` to backend).
 
+## Production Deployment
+
+Deploy frontend to Vercel, backend to Railway, using Firebase for database/storage.
+
+**Quick Start**: Follow the [Production Deployment Checklist](docs/deploy/QUICK_START_CHECKLIST.md) (~60 min setup)
+
+**Detailed Guides**:
+- [Complete Production Setup](docs/deploy/PRODUCTION_SETUP.md) - End-to-end guide
+- [Railway Backend Deployment](docs/deploy/RAILWAY.md) - Express API on Railway
+- [Vercel Frontend Deployment](docs/deploy/VERCEL.md) - React/Vite on Vercel
+
+**Key Requirements**:
+- **Frontend (Vercel)**: Set `VITE_API_BASE` to your Railway backend URL
+- **Backend (Railway)**: Set Firebase service account credentials
+- **Firebase**: Enable Firestore + Storage, deploy rules, configure CORS
+
 ## Project structure (where to find things)
 
 | Location | Purpose |

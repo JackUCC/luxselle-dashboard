@@ -84,6 +84,25 @@ VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
 # GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccount.json
 ```
 
+### Production: Storage bucket and CORS
+
+For production, the frontend (e.g. on Vercel) loads product images from Firebase Storage via public URLs. Ensure:
+
+1. **Same bucket name everywhere**: Backend and frontend must use the same bucket (`FIREBASE_STORAGE_BUCKET` on the API host and `VITE_FIREBASE_STORAGE_BUCKET` in the Vercel build). Otherwise uploaded image URLs won’t match what the client requests.
+
+2. **Storage CORS**: The Storage bucket must allow GET requests from your frontend origin(s). Otherwise the browser may block image loads (e.g. 403 or CORS errors). Configure CORS on the bucket (e.g. via [Firebase Console](https://console.firebase.google.com) → Storage → … → CORS, or `gsutil cors`). Example `cors.json`:
+   ```json
+   [
+     {
+       "origin": ["https://your-app.vercel.app", "https://*.vercel.app"],
+       "method": ["GET"],
+       "responseHeader": ["Content-Type", "Content-Length"],
+       "maxAgeSeconds": 3600
+     }
+   ]
+   ```
+   Apply with: `gsutil cors set cors.json gs://your-bucket-name.appspot.com` (see [Configure CORS on Cloud Storage](https://cloud.google.com/storage/docs/configuring-cors)).
+
 ---
 
 ## Adding Firebase SDKs to Your Web Application

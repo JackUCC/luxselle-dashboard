@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import type { Product } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
+import { PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE_SMALL } from '../../lib/placeholder'
 import ProductDetailDrawer from './ProductDetailDrawer'
 
 type ProductWithId = Product & { id: string }
@@ -324,7 +325,7 @@ export default function InventoryView() {
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
                               {product.imageUrls?.[0] && (
-                                <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" />
+                                <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }} />
                               )}
                             </div>
                             <div>
@@ -380,7 +381,7 @@ export default function InventoryView() {
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
                         {product.imageUrls?.[0] && (
-                          <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" />
+                          <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }} />
                         )}
                       </div>
                       <div>
@@ -438,7 +439,7 @@ export default function InventoryView() {
             >
               <div className="aspect-[4/3] bg-gray-100 relative">
                 {product.imageUrls?.[0] && (
-                  <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" />
+                  <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }} />
                 )}
                 <div className="absolute top-3 right-3">
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase bg-white/90 backdrop-blur-sm shadow-sm border border-gray-200 text-gray-900`}>

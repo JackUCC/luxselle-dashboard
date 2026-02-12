@@ -13,7 +13,8 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE = '/api'
+/** In production set VITE_API_BASE to your backend URL (e.g. Vercel serverless or other host). */
+export const API_BASE = import.meta.env.VITE_API_BASE ?? '/api'
 
 interface ApiErrorBody {
   error?: { code?: string; message?: string; details?: unknown }
@@ -34,11 +35,19 @@ async function getErrorMessage(response: Response): Promise<string> {
 /** Shared fetch wrapper: throws ApiError on !ok; returns JSON or undefined for 204. */
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, options)
+  const contentType = response.headers.get('content-type') ?? ''
+  const isJson = contentType.includes('application/json')
   if (!response.ok) {
     const message = await getErrorMessage(response)
     throw new ApiError(message, response.status)
   }
   if (response.status === 204) return undefined as T
+  if (!isJson) {
+    const text = await response.text()
+    if (/^\s*<!doctype/i.test(text))
+      throw new ApiError('API returned HTML instead of JSON. Set VITE_API_BASE to your backend URL in production.', response.status)
+    throw new ApiError(text || 'Invalid response', response.status)
+  }
   return response.json() as Promise<T>
 }
 
@@ -77,6 +86,13 @@ export async function apiPostFormData<T>(path: string, formData: FormData): Prom
   if (!response.ok) {
     const message = await getErrorMessage(response)
     throw new ApiError(message, response.status)
+  }
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    const text = await response.text()
+    if (/^\s*<!doctype/i.test(text))
+      throw new ApiError('API returned HTML instead of JSON. Set VITE_API_BASE to your backend URL in production.', response.status)
+    throw new ApiError(text || 'Invalid response', response.status)
   }
   return response.json() as Promise<T>
 }

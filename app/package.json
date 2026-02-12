@@ -1,8 +1,9 @@
 {
   "name": "luxselle-dashboard-app",
   "private": true,
+  "engines": { "node": "18.x || 20.x || 22.x || 24.x" },
   "scripts": {
     "install": "cd .. && npm install",
-    "build": "cd .. && npm run build && cp -r dist app/dist"
+    "build": "cd .. && npm run build && mkdir -p app/dist && cp -r dist/. app/dist/"
   }
 }

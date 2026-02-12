@@ -321,9 +321,10 @@ export default function SupplierHubView() {
                 {filteredItems.slice(0, 20).map((item) => (
                   <div key={item.id} className="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
                     <img 
-                      src={item.imageUrl || `https://placehold.co/400x400?text=${item.brand}`} 
+                      src={item.imageUrl || `https://placehold.co/400x400?text=${encodeURIComponent(item.brand)}`} 
                       alt={item.title}
                       className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      onError={(e) => { e.currentTarget.src = `https://placehold.co/400x400?text=${encodeURIComponent(item.brand)}` }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                       <div className="text-white text-xs font-bold">{item.brand}</div>

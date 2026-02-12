@@ -100,6 +100,7 @@ async function seed() {
     targetMarginPct: 35,
     lowStockThreshold: 2,
     fxUsdToEur: 0.92,
+    vatRatePct: 20,
   })
 
   const regions = ['Japan', 'France', 'Italy', 'USA']

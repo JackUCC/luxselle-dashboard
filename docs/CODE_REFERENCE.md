@@ -41,6 +41,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/lib/errors.ts` | API error codes and `formatApiError()` for standard `{ error: { code, message, details? } }` shape. | — |
 | `packages/server/src/lib/fx.ts` | `usdToEur(usd, rate)` for pricing/import; used by pricing service and CSV import. | — |
 | `packages/server/src/lib/sourcingStatus.ts` | Sourcing status state machine: `isValidSourcingTransition`, `getValidNextStatuses`; uses shared `SourcingStatusSchema`. | @shared/schemas |
+| `packages/server/src/lib/vat.ts` | VAT helpers: `vatFromNet(netEur, ratePct)`, `vatFromGross(grossEur, ratePct)`; used by VAT API and invoices. | — |
 
 ### Middleware
 
@@ -65,6 +66,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/repos/ActivityEventRepo.ts` | Activity/audit events. | BaseRepo, ActivityEventSchema |
 | `packages/server/src/repos/SourcingRequestRepo.ts` | Sourcing requests. | BaseRepo, SourcingRequestSchema |
 | `packages/server/src/repos/SettingsRepo.ts` | Org/user settings. | BaseRepo, SettingsSchema |
+| `packages/server/src/repos/InvoiceRepo.ts` | Invoices; getNextInvoiceNumber(orgId). | BaseRepo, InvoiceSchema |
 | `packages/server/src/repos/SystemJobRepo.ts` | System jobs (e.g. import). | BaseRepo, SystemJobSchema |
 
 ### Routes (API)
@@ -78,6 +80,8 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/routes/dashboard.ts` | Dashboard aggregates (counts, recent activity). | Express, repos |
 | `packages/server/src/routes/sourcing.ts` | CRUD sourcing requests; PUT enforces valid status transitions via `sourcingStatus`. | Express, sourcingStatus lib |
 | `packages/server/src/routes/jobs.ts` | List system jobs (e.g. import jobs). | Express, SystemJobRepo |
+| `packages/server/src/routes/vat.ts` | VAT calculation: GET/POST `/api/vat/calculate` (amountEur, inclVat, optional ratePct); returns netEur, vatEur, grossEur, ratePct; rate from settings if not provided. | vat.ts, SettingsRepo |
+| `packages/server/src/routes/invoices.ts` | Invoices: POST (from-sale or full body), GET list (limit, cursor, from, to), GET :id. | InvoiceRepo, SettingsRepo, vat |
 
 ### Services
 
@@ -106,7 +110,8 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/shared/src/schemas/transaction.ts` | Transaction schema. | base |
 | `packages/shared/src/schemas/evaluation.ts` | Evaluation schema. | base |
 | `packages/shared/src/schemas/activityEvent.ts` | Activity event schema. | base |
-| `packages/shared/src/schemas/settings.ts` | Settings schema. | base |
+| `packages/shared/src/schemas/settings.ts` | Settings schema (org/user; FX rate, optional vatRatePct). | base |
+| `packages/shared/src/schemas/invoice.ts` | Invoice and InvoiceLineItem schemas (for accounting). | base |
 | `packages/shared/src/schemas/systemJob.ts` | System job schema. | base |
 | `packages/shared/src/schemas/index.ts` | Re-exports all schemas. | — |
 
@@ -119,14 +124,15 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | File | Purpose | References |
 |------|--------|------------|
 | `src/main.tsx` | React root; mounts `LuxselleApp` with StrictMode; imports global styles. | React, Vite |
-| `src/LuxselleApp.tsx` | App shell: React Query, React Router, nav, Toaster, ErrorBoundary, route definitions; legacy redirects (/evaluator → /buy-box, /suppliers → /supplier-hub). | react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react |
+| `src/LuxselleApp.tsx` | App shell: React Query, React Router, nav, Toaster, ErrorBoundary, route definitions; legacy redirects; on init calls `GET /api/dashboard/status` and shows "Backend not configured" banner if API returns HTML or fails. | react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react |
 
 ### Lib
 
 | File | Purpose | References |
 |------|--------|------------|
-| `src/lib/api.ts` | `apiGet`, `apiPost`, `apiPut`, `apiDelete`, `apiPostFormData`; base `/api`; `ApiError`; parses API error body for message. | Fetch API |
+| `src/lib/api.ts` | `apiGet`, `apiPost`, `apiPut`, `apiDelete`, `apiPostFormData`; `API_BASE` (from `VITE_API_BASE` or `/api`); `ApiError`; parses API error body for message. | Fetch API |
 | `src/lib/firebase.ts` | Firebase client init (config from env); used for auth/storage in frontend if needed. | Firebase JS SDK |
+| `src/lib/placeholder.ts` | `PLACEHOLDER_IMAGE`, `PLACEHOLDER_IMAGE_SMALL`; fallback URLs for broken product/supplier images (used in `img` onError). | — |
 | `src/lib/queryClient.ts` | TanStack Query client (default options). | @tanstack/react-query |
 
 ### Components
@@ -148,12 +154,21 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `src/pages/Sourcing/SourcingView.tsx` | Sourcing requests list and status. | apiGet, apiPut |
 | `src/pages/BuyingList/BuyingListView.tsx` | Buying list CRUD. | apiGet, apiPost, apiPut, apiDelete |
 | `src/pages/Jobs/JobsView.tsx` | System jobs list. | apiGet |
+| `src/pages/Invoices/InvoicesView.tsx` | Invoices list and detail; view/print for accounting. | apiGet |
 
 ### Styles
 
 | File | Purpose | References |
 |------|--------|------------|
 | `src/styles/index.css` | Global styles, Tailwind directives, custom utilities. | Tailwind CSS |
+
+---
+
+## Docs — docs/
+
+| File | Purpose |
+|------|---------|
+| `docs/deploy/VERCEL.md` | Vercel deploy: env vars (VITE_*), root directory, production API, how to test. |
 
 ---
 
@@ -176,7 +191,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/lib/sourcingStatus.test.ts` | Unit tests for sourcing status transitions. | Vitest |
 | `packages/server/src/services/pricing/PricingService.test.ts` | Pricing service tests. | Vitest |
 | `packages/server/src/services/import/SupplierImportService.test.ts` | CSV import and mapping tests. | Vitest |
-| `tests/e2e/evaluator.spec.ts` | E2E smoke (e.g. evaluator/buy-box). | Playwright |
+| `tests/e2e/evaluator.spec.ts` | E2E smoke (evaluator, buying list, invoices page). | Playwright |
 
 ---
 

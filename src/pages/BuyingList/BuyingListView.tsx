@@ -279,9 +279,10 @@ export default function BuyingListView() {
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-100 border border-gray-200">
                           <img 
-                            src={`https://placehold.co/100x100?text=${item.brand}`} 
+                            src={`https://placehold.co/100x100?text=${encodeURIComponent(item.brand)}`} 
                             alt="" 
                             className="h-full w-full object-cover" 
+                            onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100?text=No+image' }}
                           />
                         </div>
                         <div>

@@ -9,6 +9,10 @@ The Luxselle Dashboard is a full-stack application built with:
 - **Storage**: Firebase Storage
 - **Local Development**: Firebase Emulator Suite
 
+## Production deployment
+
+The frontend is built as a **static Vite app** and is typically deployed to **Vercel** (or any static host). Only the client bundle is deployed; there is **no backend on Vercel**. The Express API must run elsewhere (e.g. Railway, Render, or a separate serverless project). Build-time env vars (`VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_API_BASE`) are baked into the client; `VITE_API_BASE` must point to the live API URL so that all `/api` requests go to the backend. Image flow: product images are uploaded via the API (multer + sharp) to **Firebase Storage**; the API returns public URLs (`https://storage.googleapis.com/{bucket}/{path}`). The frontend displays those URLs; for production, the Storage bucket must have CORS configured to allow the frontend origin. See [docs/deploy/VERCEL.md](../deploy/VERCEL.md) and [docs/firebase/FIREBASE_SETUP.md](../firebase/FIREBASE_SETUP.md).
+
 ## Architecture Diagram
 
 ```

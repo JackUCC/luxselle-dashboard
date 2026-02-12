@@ -20,7 +20,8 @@ import {
   Trash2,
 } from 'lucide-react'
 import type { Product, ProductImage } from '@shared/schemas'
-import { apiGet, apiPut, apiPost, apiDelete } from '../../lib/api'
+import { apiGet, apiPut, apiPost, apiDelete, apiPostFormData, ApiError } from '../../lib/api'
+import { PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE_SMALL } from '../../lib/placeholder'
 
 type ProductWithId = Product & { id: string }
 
@@ -151,6 +152,7 @@ export default function ProductDetailDrawer({
                 src={product.imageUrls[0]}
                 alt=""
                 className="h-10 w-10 rounded-lg object-cover border border-gray-200"
+                onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }}
               />
             ) : (
               <div className="h-10 w-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
@@ -176,8 +178,10 @@ export default function ProductDetailDrawer({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            aria-label="Close drawer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -323,22 +327,15 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
     try {
       const formData = new FormData()
       formData.append('image', file)
-      
-      const response = await fetch(`/api/products/${product.id}/images`, {
-        method: 'POST',
-        body: formData,
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error?.message || 'Upload failed')
-      }
-      
-      const { product: updated } = await response.json()
-      onProductUpdated(updated)
+
+      const { product: updatedProduct } = await apiPostFormData<{ product: ProductWithId }>(
+        `/products/${product.id}/images`,
+        formData,
+      )
+      if (updatedProduct) onProductUpdated(updatedProduct)
       toast.success('Image uploaded')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to upload image'
+      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to upload image'
       toast.error(message)
     } finally {
       setIsUploading(false)
@@ -434,6 +431,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
                 src={img.thumbnailUrl ?? img.url}
                 alt="Product"
                 className="h-full w-full object-cover"
+                onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button
@@ -461,6 +459,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
                 src={url}
                 alt={`Product image ${index + 1}`}
                 className="h-full w-full object-cover"
+                onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }}
               />
             </div>
           ))}
@@ -601,6 +600,19 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
   const sellPrice = getCurrentValue('sellPriceEur') ?? 0
   const margin = sellPrice - costPrice
   const marginPct = sellPrice > 0 ? (margin / sellPrice) * 100 : 0
+  const [vatInfo, setVatInfo] = useState<{ ratePct: number; vatEur: number } | null>(null)
+
+  useEffect(() => {
+    if (!(sellPrice > 0)) {
+      setVatInfo(null)
+      return
+    }
+    apiGet<{ ratePct: number; vatEur: number }>(
+      `/vat/calculate?amountEur=${encodeURIComponent(sellPrice)}&inclVat=true`
+    )
+      .then((res) => setVatInfo({ ratePct: res.ratePct, vatEur: res.vatEur }))
+      .catch(() => setVatInfo(null))
+  }, [sellPrice])
 
   return (
     <div className="space-y-6">
@@ -634,6 +646,16 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
           </div>
         </div>
       </div>
+
+      {/* VAT (from settings rate) */}
+      {sellPrice > 0 && vatInfo && (
+        <div className="rounded-lg bg-amber-50/50 border border-amber-200/50 p-3">
+          <div className="text-sm text-gray-700">
+            VAT (at {vatInfo.ratePct}%): <span className="font-semibold text-gray-900">{formatCurrency(vatInfo.vatEur)}</span>
+            <span className="text-gray-500 ml-1">— sell price treated as gross</span>
+          </div>
+        </div>
+      )}
 
       {/* Margin Summary */}
       <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
@@ -686,6 +708,8 @@ interface Transaction {
   notes?: string
 }
 
+type SaleForInvoice = { transactionId: string; amountEur: number; productId: string }
+
 function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -693,6 +717,11 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [saleForInvoice, setSaleForInvoice] = useState<SaleForInvoice | null>(null)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [invoiceCustomerName, setInvoiceCustomerName] = useState('')
+  const [invoiceCustomerEmail, setInvoiceCustomerEmail] = useState('')
+  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false)
 
   const fetchTransactions = useCallback(() => {
     setIsLoading(true)
@@ -729,7 +758,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
     
     setIsSubmitting(true)
     try {
-      await apiPost(`/products/${productId}/transactions`, {
+      const res = await apiPost<{ data: { id: string; amountEur: number } }>(`/products/${productId}/transactions`, {
         type: showModal,
         amountEur: parseFloat(amount),
         notes: notes || undefined,
@@ -738,11 +767,43 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
       handleCloseModal()
       fetchTransactions()
       onProductUpdated?.()
+      if (showModal === 'sale' && res?.data) {
+        setSaleForInvoice({
+          transactionId: res.data.id,
+          amountEur: res.data.amountEur,
+          productId,
+        })
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create transaction'
       toast.error(message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleCreateInvoice = async () => {
+    if (!saleForInvoice) return
+    setInvoiceSubmitting(true)
+    try {
+      await apiPost('/invoices', {
+        fromSale: true,
+        transactionId: saleForInvoice.transactionId,
+        productId: saleForInvoice.productId,
+        amountEur: saleForInvoice.amountEur,
+        customerName: invoiceCustomerName || undefined,
+        customerEmail: invoiceCustomerEmail || undefined,
+        description: 'Sale',
+      })
+      toast.success('Invoice created')
+      setSaleForInvoice(null)
+      setShowInvoiceModal(false)
+      setInvoiceCustomerName('')
+      setInvoiceCustomerEmail('')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create invoice')
+    } finally {
+      setInvoiceSubmitting(false)
     }
   }
 
@@ -776,6 +837,30 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
           </button>
         </div>
       </div>
+
+      {saleForInvoice && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 flex items-center justify-between gap-4">
+          <span className="text-sm text-amber-800">
+            Sale recorded ({formatCurrency(saleForInvoice.amountEur)}). Create an invoice for accounting?
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSaleForInvoice(null)}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Dismiss
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowInvoiceModal(true)}
+              className="lux-btn-primary text-sm"
+            >
+              Create invoice
+            </button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
@@ -884,6 +969,68 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
                     <Save className="h-4 w-4" />
                   )}
                   {showModal === 'sale' ? 'Record Sale' : 'Record Adjustment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Create invoice modal (after sale) */}
+      {showInvoiceModal && saleForInvoice && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setShowInvoiceModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Create invoice for this sale</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="Close invoice modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-500">
+                Amount: {formatCurrency(saleForInvoice.amountEur)} (VAT will be calculated from settings)
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer name (optional)</label>
+                <input
+                  type="text"
+                  value={invoiceCustomerName}
+                  onChange={(e) => setInvoiceCustomerName(e.target.value)}
+                  placeholder="e.g. John Smith"
+                  className="lux-input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer email (optional)</label>
+                <input
+                  type="email"
+                  value={invoiceCustomerEmail}
+                  onChange={(e) => setInvoiceCustomerEmail(e.target.value)}
+                  placeholder="customer@example.com"
+                  className="lux-input w-full"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setShowInvoiceModal(false)}
+                  disabled={invoiceSubmitting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateInvoice}
+                  disabled={invoiceSubmitting}
+                  className="lux-btn-primary flex items-center gap-2"
+                >
+                  {invoiceSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Create invoice
                 </button>
               </div>
             </div>

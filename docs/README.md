@@ -19,6 +19,11 @@ Central place for all project documentation. Use this index for audits and onboa
 ## iterations/
 
 - **[ITERATION_4_COMPLETE](iterations/ITERATION_4_COMPLETE.md)** — Iteration 4 completion summary
+- **[ITERATION_5_COMPLETE](iterations/ITERATION_5_COMPLETE.md)** — Iteration 5 (Vercel, images, VAT, invoices, UI)
+
+## deploy/
+
+- **[VERCEL](deploy/VERCEL.md)** — Vercel env vars and production deploy
 
 ## design/
 

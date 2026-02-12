@@ -52,6 +52,13 @@ interface SystemStatus {
   } | null
 }
 
+interface VatResult {
+  netEur: number
+  vatEur: number
+  grossEur: number
+  ratePct: number
+}
+
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-GB', {
     style: 'currency',
@@ -84,6 +91,11 @@ export default function DashboardView() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [vatAmount, setVatAmount] = useState('')
+  const [vatInclVat, setVatInclVat] = useState(false)
+  const [vatRateOverride, setVatRateOverride] = useState('')
+  const [vatResult, setVatResult] = useState<VatResult | null>(null)
+  const [vatLoading, setVatLoading] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -157,6 +169,27 @@ export default function DashboardView() {
         return <span>System database seeded</span>
       default:
         return <span>{event.eventType}</span>
+    }
+  }
+
+  const handleVatCalculate = async () => {
+    const amount = parseFloat(vatAmount)
+    if (!Number.isFinite(amount) || amount < 0) {
+      toast.error('Enter a valid amount')
+      return
+    }
+    setVatLoading(true)
+    try {
+      const rateParam = vatRateOverride.trim() ? `&ratePct=${encodeURIComponent(vatRateOverride)}` : ''
+      const res = await apiGet<VatResult>(
+        `/vat/calculate?amountEur=${encodeURIComponent(amount)}&inclVat=${vatInclVat}${rateParam}`
+      )
+      setVatResult(res)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'VAT calculation failed')
+      setVatResult(null)
+    } finally {
+      setVatLoading(false)
     }
   }
 
@@ -329,6 +362,80 @@ export default function DashboardView() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* VAT Calculator */}
+          <div className="lux-card p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Calculator className="h-5 w-5 text-gray-400" />
+              <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">VAT compliance calculator</h3>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (EUR)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={vatAmount}
+                  onChange={(e) => setVatAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="lux-input w-full"
+                  aria-label="Amount in EUR"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="vat-incl"
+                  checked={vatInclVat}
+                  onChange={(e) => setVatInclVat(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="vat-incl" className="text-sm text-gray-700">Amount includes VAT</label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">VAT rate % (optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={vatRateOverride}
+                  onChange={(e) => setVatRateOverride(e.target.value)}
+                  placeholder="From settings"
+                  className="lux-input w-full"
+                  aria-label="VAT rate percentage override"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={handleVatCalculate}
+                  disabled={vatLoading || !vatAmount.trim()}
+                  className="lux-btn-primary w-full sm:w-auto flex items-center justify-center gap-2"
+                >
+                  {vatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
+                  Calculate
+                </button>
+              </div>
+            </div>
+            {vatResult && (
+              <div className="mt-6 pt-6 border-t border-gray-200 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Net (EUR)</div>
+                  <div className="text-lg font-semibold text-gray-900">{formatCurrency(vatResult.netEur)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">VAT ({vatResult.ratePct}%)</div>
+                  <div className="text-lg font-semibold text-gray-900">{formatCurrency(vatResult.vatEur)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Gross (EUR)</div>
+                  <div className="text-lg font-semibold text-gray-900">{formatCurrency(vatResult.grossEur)}</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Activity & Status Grid */}

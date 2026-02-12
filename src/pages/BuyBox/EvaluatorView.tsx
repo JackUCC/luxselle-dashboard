@@ -6,7 +6,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Tag, Calculator, Sparkles, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
-import { apiPost, apiGet } from '../../lib/api'
+import { apiPost, apiGet, apiPostFormData, ApiError } from '../../lib/api'
 import type { Product } from '@shared/schemas'
 
 const formatCurrency = (value: number) =>
@@ -174,35 +174,26 @@ export default function EvaluatorView() {
 
     setIsAnalyzingImage(true)
     try {
-      // Create FormData with the image
       const formData = new FormData()
       formData.append('image', uploadedImage)
 
-      // Call AI vision endpoint to analyze the image
-      const response = await fetch('/api/pricing/analyze-image', {
-        method: 'POST',
-        body: formData,
-      })
+      const { data } = await apiPostFormData<{ data: { brand?: string; model?: string; category?: string; condition?: string; colour?: string } }>(
+        '/pricing/analyze-image',
+        formData,
+      )
 
-      if (!response.ok) {
-        throw new Error('Image analysis failed')
-      }
-
-      const { data } = await response.json()
-      
-      // Auto-fill form with AI-detected attributes
       setFormData(prev => ({
         ...prev,
-        brand: data.brand || prev.brand,
-        model: data.model || prev.model,
-        category: data.category || prev.category,
-        condition: data.condition || prev.condition,
-        colour: data.colour || prev.colour,
+        brand: data?.brand ?? prev.brand,
+        model: data?.model ?? prev.model,
+        category: data?.category ?? prev.category,
+        condition: data?.condition ?? prev.condition,
+        colour: data?.colour ?? prev.colour,
       }))
 
       toast.success('Image analyzed! Check the pre-filled details.')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to analyze image'
+      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to analyze image'
       toast.error(message)
     } finally {
       setIsAnalyzingImage(false)

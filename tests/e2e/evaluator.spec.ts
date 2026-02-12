@@ -170,3 +170,11 @@ test('buying list bulk order view renders correctly', async ({ page, request }) 
   await expect(page.getByText('Message Preview')).toBeVisible()
   await expect(page.getByText('Copy Bulk Message')).toBeVisible()
 })
+
+test('invoices page loads and shows list or empty state', async ({ page }) => {
+  await page.goto('/invoices')
+  await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible()
+  await expect(
+    page.getByText(/No invoices yet|All invoices|Create invoices from sales/)
+  ).toBeVisible()
+})

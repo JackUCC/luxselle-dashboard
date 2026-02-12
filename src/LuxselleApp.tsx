@@ -1,12 +1,17 @@
 /**
  * App shell: React Query, React Router, nav, Toaster, ErrorBoundary, route definitions.
  * Legacy redirects: /evaluator → /buy-box, /suppliers → /supplier-hub.
+ * On init, checks API health and shows a banner if backend is not configured (e.g. missing VITE_API_BASE in production).
  * @see docs/CODE_REFERENCE.md
  * References: react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react
  */
+import { useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, NavLink, Route, Routes, Navigate } from 'react-router-dom'
+import { AlertCircle } from 'lucide-react'
+
+import { API_BASE } from './lib/api'
 import { 
   LayoutGrid, 
   Package, 
@@ -15,7 +20,8 @@ import {
   Users, 
   ClipboardList, 
   Bell,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -26,6 +32,7 @@ import SupplierHubView from './pages/SupplierHub/SupplierHubView'
 import SourcingView from './pages/Sourcing/SourcingView'
 import BuyingListView from './pages/BuyingList/BuyingListView'
 import JobsView from './pages/Jobs/JobsView'
+import InvoicesView from './pages/Invoices/InvoicesView'
 import { queryClient } from './lib/queryClient'
 
 const navItems = [
@@ -35,14 +42,38 @@ const navItems = [
   { label: 'Supplier Hub', path: '/supplier-hub', icon: Globe },
   { label: 'Sourcing', path: '/sourcing', icon: Users },
   { label: 'Buying List', path: '/buying-list', icon: ClipboardList },
+  { label: 'Invoices', path: '/invoices', icon: FileText },
   { label: 'Jobs', path: '/jobs', icon: FileSpreadsheet },
 ]
 
 const LuxselleApp = () => {
+  const [backendMissing, setBackendMissing] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${API_BASE}/dashboard/status`)
+      .then((res) => {
+        if (cancelled) return
+        const ct = res.headers.get('content-type') ?? ''
+        if (!res.ok || ct.includes('text/html')) setBackendMissing(true)
+        else setBackendMissing(false)
+      })
+      .catch(() => {
+        if (!cancelled) setBackendMissing(true)
+      })
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
+        {backendMissing === true && (
+          <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center gap-2 text-amber-800 text-sm font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>Backend not configured. Set VITE_API_BASE to your backend URL and redeploy.</span>
+          </div>
+        )}
         <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
           <div className="mx-auto flex h-16 max-w-8xl items-center justify-between px-6">
             {/* Brand */}
@@ -108,6 +139,7 @@ const LuxselleApp = () => {
               <Route path="/buying-list" element={<BuyingListView />} />
               <Route path="/sourcing" element={<SourcingView />} />
               <Route path="/jobs" element={<JobsView />} />
+              <Route path="/invoices" element={<InvoicesView />} />
               
               {/* Redirects for legacy routes */}
               <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
