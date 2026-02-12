@@ -23,7 +23,7 @@ const EnvSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().default('luxselle-dashboard-95977150'),
   FIREBASE_STORAGE_BUCKET: z
     .string()
-    .default('luxselle-dashboard-95977150.appspot.com'),
+    .default('luxselle-dashboard.firebasestorage.app'),
   FIRESTORE_EMULATOR_HOST: z.string().optional(),
   FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
