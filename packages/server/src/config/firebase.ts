@@ -33,14 +33,19 @@ if (!useEmulator) {
   if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
     // Option 1: JSON string from environment variable (recommended for Railway/Vercel)
     try {
+      console.log('Parsing Firebase service account credentials...')
       const serviceAccount = JSON.parse(env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+      console.log('Firebase service account parsed successfully. Project:', serviceAccount.project_id)
       credential = cert(serviceAccount)
     } catch (error) {
       console.error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:', error)
+      console.error('JSON length:', env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.length)
+      console.error('First 100 chars:', env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.substring(0, 100))
       throw new Error('Invalid service account JSON')
     }
   } else if (env.GOOGLE_APPLICATION_CREDENTIALS) {
     // Option 2: File path to service account JSON
+    console.log('Using Firebase credentials from file path:', env.GOOGLE_APPLICATION_CREDENTIALS)
     credential = cert(env.GOOGLE_APPLICATION_CREDENTIALS)
   } else {
     // Option 3: Try Application Default Credentials (works in Google Cloud environments)
@@ -49,8 +54,17 @@ if (!useEmulator) {
 }
 
 // Reuse existing app if already initialized (e.g. in tests)
-const adminApp =
-  getApps().length > 0
+let adminApp
+let db
+let storage
+
+try {
+  console.log('Initializing Firebase Admin SDK...')
+  console.log('Project ID:', projectId)
+  console.log('Storage Bucket:', storageBucket)
+  console.log('Use Emulator:', useEmulator)
+
+  adminApp = getApps().length > 0
     ? getApps()[0]
     : initializeApp({
         credential,
@@ -58,10 +72,18 @@ const adminApp =
         storageBucket,
       })
 
-const db = getFirestore(adminApp)
-// Allow writing docs with undefined fields (they are omitted)
-db.settings({ ignoreUndefinedProperties: true })
+  console.log('Firebase Admin initialized successfully')
 
-const storage = getStorage(adminApp)
+  db = getFirestore(adminApp)
+  // Allow writing docs with undefined fields (they are omitted)
+  db.settings({ ignoreUndefinedProperties: true })
+  console.log('Firestore initialized')
+
+  storage = getStorage(adminApp)
+  console.log('Storage initialized')
+} catch (error) {
+  console.error('FATAL: Failed to initialize Firebase:', error)
+  throw error
+}
 
 export { adminApp, db, storage }
