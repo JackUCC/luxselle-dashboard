@@ -28,7 +28,7 @@ const CreateInvoiceFromSaleSchema = z.object({
 })
 
 const CreateInvoiceFullSchema = z.object({
-  fromSale: z.optional().default(false),
+  fromSale: z.boolean().optional().default(false),
   invoiceNumber: z.string().optional(),
   customerName: z.string().optional().default(''),
   customerEmail: z.string().email().optional(),
