@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { FileText, Loader2, Printer, X } from 'lucide-react'
+import { ExternalLink, FileText, Loader2, Printer, X } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
 
@@ -92,6 +92,18 @@ export default function InvoicesView() {
               <div className="flex items-start justify-between mb-6 no-print">
                 <h2 className="font-semibold text-gray-900">Invoice detail</h2>
                 <div className="flex gap-2">
+                  {selected.pdfUrl && (
+                    <a
+                      href={selected.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                      aria-label="View PDF"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      View PDF
+                    </a>
+                  )}
                   <button
                     type="button"
                     onClick={handlePrint}

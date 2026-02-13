@@ -1,6 +1,11 @@
 /** Evaluation schema (e.g. buy-box). @see docs/CODE_REFERENCE.md */
 import { z } from 'zod'
 import { BaseDocSchema, EvaluationProviderSchema } from './base'
+import {
+  LandedCostSnapshotSchema,
+  PricingComparableSchema,
+  PricingMarketSummarySchema,
+} from './pricing'
 
 export const EvaluationSchema = BaseDocSchema.extend({
   brand: z.string(),
@@ -14,10 +19,12 @@ export const EvaluationSchema = BaseDocSchema.extend({
   estimatedRetailEur: z.number(),
   maxBuyPriceEur: z.number(),
   historyAvgPaidEur: z.number(),
-  comps: z.array(z.any()).default([]),
+  comps: z.array(PricingComparableSchema).default([]),
   confidence: z.number().min(0).max(1),
   provider: EvaluationProviderSchema,
   imageUrl: z.string().optional(), // If analysis included an image
+  marketSummary: PricingMarketSummarySchema.optional(),
+  landedCostSnapshot: LandedCostSnapshotSchema.optional(),
 })
 
 export type Evaluation = z.infer<typeof EvaluationSchema>

@@ -6,16 +6,22 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import multer from 'multer'
-import { DEFAULT_ORG_ID, SupplierSchema } from '@shared/schemas'
+import {
+  DEFAULT_ORG_ID,
+  SupplierImportTemplateSchema,
+  SupplierSchema,
+} from '@shared/schemas'
 import { SupplierRepo } from '../repos/SupplierRepo'
 import { SupplierItemRepo } from '../repos/SupplierItemRepo'
 import { SupplierImportService } from '../services/import/SupplierImportService'
+import { SupplierEmailSyncService } from '../services/import/SupplierEmailSyncService'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
 const supplierRepo = new SupplierRepo()
 const supplierItemRepo = new SupplierItemRepo()
 const importService = new SupplierImportService()
+const emailSyncService = new SupplierEmailSyncService()
 
 // Configure multer for file uploads
 const upload = multer({
@@ -28,12 +34,21 @@ const upload = multer({
 const SupplierInputSchema = z.object({
   name: z.string(),
   contactName: z.string().optional(),
-  email: z.string().optional(),
+  email: z.string().email().optional(),
   phone: z.string().optional(),
   notes: z.string().optional(),
+  sourceEmails: z.array(z.string().email()).optional(),
+  importTemplate: SupplierImportTemplateSchema.optional(),
 })
 
 const SupplierUpdateSchema = SupplierInputSchema.partial()
+const SupplierImportTemplateUpdateSchema = z.object({
+  sourceEmails: z.array(z.string().email()).default([]),
+  importTemplate: SupplierImportTemplateSchema,
+})
+const SupplierEmailSyncSchema = z.object({
+  lookbackDays: z.coerce.number().int().positive().max(365).optional(),
+})
 
 // List with filters: q (search), status; cursor pagination; sort/dir
 router.get('/', async (req, res, next) => {
@@ -164,6 +179,44 @@ router.get('/items/all', async (req, res, next) => {
   }
 })
 
+router.get('/email/status', async (_req, res, next) => {
+  try {
+    const status = await emailSyncService.getStatus()
+    res.json({ data: status })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/email/sync', async (req, res, next) => {
+  try {
+    const input = SupplierEmailSyncSchema.parse(req.body ?? {})
+    const result = await emailSyncService.sync(input)
+    res.json({ data: result })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Parse CSV/XLSX and return headers + sample rows to configure import templates.
+router.post('/import/preview', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.BAD_REQUEST, 'No file uploaded'))
+      return
+    }
+
+    const preview = importService.previewImportFile(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+    )
+    res.json({ data: preview })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Get single supplier
 router.get('/:id', async (req, res, next) => {
   try {
@@ -189,6 +242,27 @@ router.get('/:id/items', async (req, res, next) => {
   }
 })
 
+// Save/update per-supplier import template and source emails for email matching.
+router.put('/:id/import-template', async (req, res, next) => {
+  try {
+    const input = SupplierImportTemplateUpdateSchema.parse(req.body)
+    const existing = await supplierRepo.getById(req.params.id)
+    if (!existing) {
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Supplier not found'))
+      return
+    }
+
+    const updated = await supplierRepo.set(req.params.id, {
+      sourceEmails: input.sourceEmails,
+      importTemplate: input.importTemplate,
+      updatedAt: new Date().toISOString(),
+    })
+    res.json({ data: updated })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Create supplier
 router.post('/', async (req, res, next) => {
   try {
@@ -203,6 +277,8 @@ router.post('/', async (req, res, next) => {
       email: input.email ?? '',
       phone: input.phone ?? '',
       notes: input.notes ?? '',
+      sourceEmails: input.sourceEmails ?? [],
+      importTemplate: input.importTemplate,
     })
     const created = await supplierRepo.create(supplier)
     res.status(201).json({ data: created })
@@ -257,12 +333,25 @@ router.post('/import', upload.single('file'), async (req, res, next) => {
       return
     }
 
-    // Parse CSV content
-    const csvContent = req.file.buffer.toString('utf-8')
-    const result = await importService.importBrandStreetTokyoCSV(
-      supplierId,
-      csvContent
-    )
+    let result
+    if (supplier.importTemplate) {
+      const parsed = importService.parseImportFile(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+      )
+      result = await importService.importWithTemplate(
+        supplierId,
+        parsed.rows,
+        supplier.importTemplate,
+      )
+    } else {
+      const csvContent = req.file.buffer.toString('utf-8')
+      result = await importService.importBrandStreetTokyoCSV(
+        supplierId,
+        csvContent,
+      )
+    }
 
     res.json({
       data: result,

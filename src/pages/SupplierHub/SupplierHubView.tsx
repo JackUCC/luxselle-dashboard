@@ -16,10 +16,13 @@ import {
   FileSpreadsheet,
   Loader2,
   Filter,
-  X
+  X,
+  Mail,
+  RefreshCw,
+  ShieldCheck
 } from 'lucide-react'
-import type { Supplier, SupplierItem } from '@shared/schemas'
-import { apiGet, apiPostFormData } from '../../lib/api'
+import type { Supplier, SupplierItem, SupplierImportTemplate } from '@shared/schemas'
+import { apiGet, apiPost, apiPostFormData, apiPut } from '../../lib/api'
 
 type SupplierWithId = Supplier & { id: string }
 type SupplierItemWithId = SupplierItem & { id: string }
@@ -31,6 +34,56 @@ type SuppliersResponse = {
 type SupplierItemsResponse = {
   data: SupplierItemWithId[]
 }
+
+type SupplierEmailStatusResponse = {
+  data: {
+    enabled: boolean
+    connected: boolean
+    mailbox: string
+    lastSyncAt: string | null
+    lastSyncStatus: string | null
+    lastError: string
+  }
+}
+
+type SupplierEmailSyncResponse = {
+  data: {
+    jobId: string
+    processedEmails: number
+    importedItems: number
+    skippedAttachments: number
+    errors: string[]
+  }
+}
+
+type ImportPreviewResponse = {
+  data: {
+    headers: string[]
+    rows: Record<string, string>[]
+    fileType: 'csv' | 'xlsx'
+    sheetNames?: string[]
+  }
+}
+
+const TEMPLATE_FIELD_LABELS: Array<{
+  key: keyof SupplierImportTemplate['columnMap']
+  label: string
+}> = [
+  { key: 'externalId', label: 'External ID' },
+  { key: 'title', label: 'Title' },
+  { key: 'brand', label: 'Brand' },
+  { key: 'sku', label: 'SKU' },
+  { key: 'conditionRank', label: 'Condition Rank' },
+  { key: 'askPriceUsd', label: 'Ask Price USD' },
+  { key: 'askPriceEur', label: 'Ask Price EUR' },
+  { key: 'sellingPriceUsd', label: 'Selling Price USD' },
+  { key: 'sellingPriceEur', label: 'Selling Price EUR' },
+  { key: 'availability', label: 'Availability/Status' },
+  { key: 'imageUrl', label: 'Image URL' },
+  { key: 'sourceUrl', label: 'Source URL' },
+]
+
+const emptyColumnMap: SupplierImportTemplate['columnMap'] = {}
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-GB', {
@@ -47,6 +100,16 @@ export default function SupplierHubView() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [importResult, setImportResult] = useState<string | null>(null)
+  const [emailStatus, setEmailStatus] = useState<SupplierEmailStatusResponse['data'] | null>(null)
+  const [isSyncingInbox, setIsSyncingInbox] = useState(false)
+  const [templateSupplierId, setTemplateSupplierId] = useState('')
+  const [templateSourceEmails, setTemplateSourceEmails] = useState('')
+  const [templateColumnMap, setTemplateColumnMap] = useState<SupplierImportTemplate['columnMap']>(emptyColumnMap)
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
+  const [previewHeaders, setPreviewHeaders] = useState<string[]>([])
+  const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([])
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
   const [isImportExpanded, setIsImportExpanded] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const importRef = useRef<HTMLDivElement | null>(null)
@@ -103,6 +166,18 @@ export default function SupplierHubView() {
   }, [])
 
   useEffect(() => {
+    if (!templateSupplierId) {
+      setTemplateSourceEmails('')
+      setTemplateColumnMap(emptyColumnMap)
+      return
+    }
+    const supplier = suppliers.find((item) => item.id === templateSupplierId)
+    if (!supplier) return
+    setTemplateSourceEmails((supplier.sourceEmails ?? []).join('\n'))
+    setTemplateColumnMap(supplier.importTemplate?.columnMap ?? emptyColumnMap)
+  }, [templateSupplierId, suppliers])
+
+  useEffect(() => {
     if (highlightImport) {
       setIsImportExpanded(true)
       setTimeout(() => {
@@ -120,6 +195,12 @@ export default function SupplierHubView() {
       ])
       setSuppliers(suppliersRes.data)
       setItems(itemsRes.data)
+      try {
+        const status = await apiGet<SupplierEmailStatusResponse>('/suppliers/email/status')
+        setEmailStatus(status.data)
+      } catch {
+        setEmailStatus(null)
+      }
       setError(null)
     } catch (err: unknown) {
       const message =
@@ -163,6 +244,143 @@ export default function SupplierHubView() {
       toast.error(message)
     } finally {
       setIsImporting(false)
+    }
+  }
+
+  const handleSyncInbox = async () => {
+    setIsSyncingInbox(true)
+    try {
+      const response = await apiPost<SupplierEmailSyncResponse>('/suppliers/email/sync', { lookbackDays: 30 })
+      const summary = response.data
+      toast.success(
+        `Inbox sync: ${summary.importedItems} imported, ${summary.skippedAttachments} skipped`,
+      )
+      if (summary.errors.length > 0) {
+        toast.error(`Sync completed with ${summary.errors.length} warnings`)
+      }
+      await loadData()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to sync inbox'
+      toast.error(message)
+    } finally {
+      setIsSyncingInbox(false)
+    }
+  }
+
+  const handlePreviewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setPreviewFile(file)
+    setPreviewHeaders([])
+    setPreviewRows([])
+  }
+
+  const guessColumnMap = useCallback((headers: string[]) => {
+    const lowerHeaders = headers.map((value) => value.toLowerCase())
+    const findHeader = (candidates: string[]) => {
+      const index = lowerHeaders.findIndex((header) =>
+        candidates.some((candidate) => header.includes(candidate)),
+      )
+      return index >= 0 ? headers[index] : ''
+    }
+
+    const guessed: SupplierImportTemplate['columnMap'] = {
+      externalId: findHeader(['external', 'id', 'item id']),
+      title: findHeader(['title', 'product', 'name', 'model']),
+      brand: findHeader(['brand']),
+      sku: findHeader(['sku']),
+      conditionRank: findHeader(['condition', 'rank', 'grade']),
+      askPriceUsd: findHeader(['ask usd', 'for you in usd', 'price usd']),
+      askPriceEur: findHeader(['ask eur', 'price eur']),
+      sellingPriceUsd: findHeader(['selling price usd', 'selling usd']),
+      sellingPriceEur: findHeader(['selling price eur', 'selling eur']),
+      availability: findHeader(['status', 'availability']),
+      imageUrl: findHeader(['image', 'photo']),
+      sourceUrl: findHeader(['source', 'link', 'url']),
+    }
+
+    setTemplateColumnMap((prev) => {
+      const next = { ...guessed, ...prev }
+      for (const key of Object.keys(prev) as Array<keyof SupplierImportTemplate['columnMap']>) {
+        if (!prev[key]) {
+          next[key] = guessed[key]
+        } else {
+          next[key] = prev[key]
+        }
+      }
+      return next
+    })
+  }, [])
+
+  const handleLoadPreview = async () => {
+    if (!previewFile) {
+      toast.error('Select a file for preview first')
+      return
+    }
+    setIsLoadingPreview(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', previewFile)
+      const preview = await apiPostFormData<ImportPreviewResponse>('/suppliers/import/preview', formData)
+      setPreviewHeaders(preview.data.headers)
+      setPreviewRows(preview.data.rows)
+      guessColumnMap(preview.data.headers)
+      toast.success(`Loaded ${preview.data.fileType.toUpperCase()} preview`)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Preview failed'
+      toast.error(message)
+    } finally {
+      setIsLoadingPreview(false)
+    }
+  }
+
+  const handleTemplateColumnChange = (
+    key: keyof SupplierImportTemplate['columnMap'],
+    value: string,
+  ) => {
+    setTemplateColumnMap((prev) => ({
+      ...prev,
+      [key]: value || undefined,
+    }))
+  }
+
+  const handleSaveTemplate = async () => {
+    if (!templateSupplierId) {
+      toast.error('Select a supplier to save template')
+      return
+    }
+
+    setIsSavingTemplate(true)
+    try {
+      const sourceEmails = templateSourceEmails
+        .split(/[\n,; ]+/)
+        .map((value) => value.trim())
+        .filter(Boolean)
+
+      const columnMap = Object.fromEntries(
+        Object.entries(templateColumnMap).filter(([, value]) => Boolean(value)),
+      ) as SupplierImportTemplate['columnMap']
+
+      await apiPut(`/suppliers/${templateSupplierId}/import-template`, {
+        sourceEmails,
+        importTemplate: {
+          columnMap,
+          availabilityMap: {
+            UPLOADED: 'uploaded',
+            SOLD: 'sold',
+            WAITING: 'waiting',
+          },
+          defaultAvailability: 'uploaded',
+          trimValues: true,
+        },
+      })
+
+      toast.success('Supplier import template saved')
+      await loadData()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save template'
+      toast.error(message)
+    } finally {
+      setIsSavingTemplate(false)
     }
   }
 
@@ -356,64 +574,231 @@ export default function SupplierHubView() {
             </button>
 
             {isImportExpanded && (
-              <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 animate-fade-in">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-base font-semibold text-gray-900">Import Supplier CSV</h2>
-                  <a href="#" className="text-xs text-blue-600 hover:underline">Download template</a>
-                </div>
-                
-                <form onSubmit={handleImport} className="space-y-4 max-w-lg">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                      Select Supplier
-                    </label>
-                    <select
-                      value={importSupplierId}
-                      onChange={(e) => setFilter('importSupplier', e.target.value)}
-                      required
-                      className="lux-input"
+              <div className="mt-4 space-y-5 animate-fade-in">
+                <div className="rounded-xl border border-gray-200 bg-white p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`rounded-lg p-2 ${
+                        emailStatus?.enabled && emailStatus.connected
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-amber-50 text-amber-600'
+                      }`}>
+                        <Mail className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">Shared Inbox Sync</h3>
+                        <p className="text-xs text-gray-500">
+                          {emailStatus?.enabled
+                            ? emailStatus.connected
+                              ? `Connected as ${emailStatus.mailbox || 'shared inbox'}`
+                              : 'Enabled but Gmail credentials are incomplete'
+                            : 'Email sync is disabled'}
+                        </p>
+                        {emailStatus?.lastSyncAt && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Last sync: {new Date(emailStatus.lastSyncAt).toLocaleString()}
+                          </p>
+                        )}
+                        {emailStatus?.lastError && (
+                          <p className="text-xs text-red-600 mt-1">{emailStatus.lastError}</p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSyncInbox}
+                      disabled={!emailStatus?.enabled || isSyncingInbox}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
                     >
-                      <option value="">Choose a supplier...</option>
-                      {suppliers.map((supplier) => (
-                        <option key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </option>
-                      ))}
-                    </select>
+                      {isSyncingInbox ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                      Sync inbox now
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-base font-semibold text-gray-900">Import Supplier File</h2>
+                    <span className="text-xs text-gray-500">CSV fallback stays available</span>
+                  </div>
+
+                  <form onSubmit={handleImport} className="space-y-4 max-w-lg">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                        Select Supplier
+                      </label>
+                      <select
+                        value={importSupplierId}
+                        onChange={(e) => setFilter('importSupplier', e.target.value)}
+                        required
+                        className="lux-input"
+                      >
+                        <option value="">Choose a supplier...</option>
+                        {suppliers.map((supplier) => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                        CSV / XLSX File
+                      </label>
+                      <input
+                        type="file"
+                        accept=".csv,.xlsx,.xls"
+                        onChange={handleFileChange}
+                        required
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isImporting}
+                        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                      >
+                        {isImporting ? 'Processing Import...' : 'Run Import'}
+                      </button>
+                    </div>
+
+                    {importResult && (
+                      <div className={`rounded-lg p-3 text-sm flex items-center gap-2 ${
+                        importResult.startsWith('Error') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+                      }`}>
+                        {importResult.startsWith('Error') ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                        {importResult}
+                      </div>
+                    )}
+                  </form>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-gray-500" />
+                    <h2 className="text-base font-semibold text-gray-900">Supplier Mapping Template</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Configure sender email aliases and file column mappings for auto-import from Gmail.
+                  </p>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                        Supplier
+                      </label>
+                      <select
+                        value={templateSupplierId}
+                        onChange={(e) => setTemplateSupplierId(e.target.value)}
+                        className="lux-input"
+                      >
+                        <option value="">Choose a supplier...</option>
+                        {suppliers.map((supplier) => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                        Supplier File Preview
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="file"
+                          accept=".csv,.xlsx,.xls"
+                          onChange={handlePreviewFileChange}
+                          className="block w-full text-sm text-gray-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleLoadPreview}
+                          disabled={!previewFile || isLoadingPreview}
+                          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
+                        >
+                          {isLoadingPreview ? 'Loading...' : 'Preview'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                      CSV File
+                      Source Emails (one per line)
                     </label>
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleFileChange}
-                      required
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800"
+                    <textarea
+                      rows={3}
+                      value={templateSourceEmails}
+                      onChange={(e) => setTemplateSourceEmails(e.target.value)}
+                      placeholder="supplier@source.com"
+                      className="lux-input resize-y"
                     />
                   </div>
 
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={isImporting}
-                      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors"
-                    >
-                      {isImporting ? 'Processing Import...' : 'Run Import'}
-                    </button>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    {TEMPLATE_FIELD_LABELS.map((field) => (
+                      <div key={field.key}>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          {field.label}
+                        </label>
+                        <select
+                          value={templateColumnMap[field.key] ?? ''}
+                          onChange={(e) => handleTemplateColumnChange(field.key, e.target.value)}
+                          className="lux-input"
+                        >
+                          <option value="">Not mapped</option>
+                          {previewHeaders.map((header) => (
+                            <option key={header} value={header}>
+                              {header}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
                   </div>
 
-                  {importResult && (
-                    <div className={`rounded-lg p-3 text-sm flex items-center gap-2 ${
-                      importResult.startsWith('Error') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
-                    }`}>
-                      {importResult.startsWith('Error') ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                      {importResult}
+                  {previewRows.length > 0 && (
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="min-w-full text-xs">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            {previewHeaders.slice(0, 6).map((header) => (
+                              <th key={header} className="px-3 py-2 text-left font-medium text-gray-600">
+                                {header}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {previewRows.slice(0, 3).map((row, index) => (
+                            <tr key={index} className="border-t border-gray-100">
+                              {previewHeaders.slice(0, 6).map((header) => (
+                                <td key={header} className="px-3 py-2 text-gray-700 max-w-[160px] truncate">
+                                  {row[header]}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
-                </form>
+
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSaveTemplate}
+                      disabled={!templateSupplierId || isSavingTemplate}
+                      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                    >
+                      {isSavingTemplate ? 'Saving...' : 'Save Supplier Template'}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

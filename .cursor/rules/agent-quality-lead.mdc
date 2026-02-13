@@ -1,0 +1,11 @@
+---
+description: Quality lead context for release-readiness orchestration across tests, data pipeline, and docs.
+globs:
+  - AGENTS.md
+  - docs/planning/**
+alwaysApply: false
+---
+
+## Focus
+- Orchestrate QA + docs work across specialized agents.
+- Prioritize blockers and produce release-readiness verdict.

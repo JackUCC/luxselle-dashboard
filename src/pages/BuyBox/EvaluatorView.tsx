@@ -7,7 +7,12 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Tag, Calculator, Sparkles, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { apiPost, apiGet, apiPostFormData, ApiError } from '../../lib/api'
-import type { Product } from '@shared/schemas'
+import type {
+  AuctionPlatformProfile,
+  LandedCostSnapshot,
+  Product,
+  Settings,
+} from '@shared/schemas'
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-GB', {
@@ -45,11 +50,24 @@ interface AnalysisResult {
     title: string
     price: number
     source: string
-    url?: string
+    sourceUrl?: string
+    marketCountry?: string
+    marketScope?: 'IE' | 'EU_FALLBACK'
   }>
   confidence: number
   provider: string
   evaluationId: string
+  marketSummary?: {
+    marketCountry: 'IE'
+    marketMode: 'ie_first_eu_fallback'
+    ieCount: number
+    euFallbackCount: number
+    fallbackUsed: boolean
+  }
+}
+
+interface AuctionLandedCostResponse {
+  data: LandedCostSnapshot
 }
 
 type ProductWithId = Product & { id: string }
@@ -73,6 +91,22 @@ export default function EvaluatorView() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
+  const [settings, setSettings] = useState<Settings | null>(null)
+  const [landedCostInput, setLandedCostInput] = useState({
+    platformId: '',
+    hammerEur: '',
+    buyerPremiumPct: '',
+    platformFeePct: '',
+    fixedFeeEur: '',
+    paymentFeePct: '',
+    shippingEur: '',
+    insuranceEur: '',
+    customsDutyPct: '',
+    importVatPct: '',
+  })
+  const [landedCostResult, setLandedCostResult] = useState<LandedCostSnapshot | null>(null)
+  const [isCalculatingLandedCost, setIsCalculatingLandedCost] = useState(false)
+  const [saveLandedCostSnapshot, setSaveLandedCostSnapshot] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [products, setProducts] = useState<ProductWithId[]>([])
 
@@ -85,7 +119,47 @@ export default function EvaluatorView() {
       .catch(() => {
         // Silently fail - we have fallback brand/model data
       })
+
+    apiGet<{ data: Settings }>('/settings')
+      .then((response) => {
+        setSettings(response.data)
+      })
+      .catch(() => {
+        // Silently fail - calculator can still run with manual entries
+      })
   }, [])
+
+  const selectedAuctionPlatform = useMemo(() => {
+    if (!settings?.auctionPlatforms?.length) return null
+    return (
+      settings.auctionPlatforms.find((platform) => platform.id === landedCostInput.platformId) ??
+      settings.auctionPlatforms.find((platform) => platform.enabled) ??
+      settings.auctionPlatforms[0]
+    )
+  }, [settings, landedCostInput.platformId])
+
+  useEffect(() => {
+    if (!settings) return
+    const defaultPlatform =
+      settings.auctionPlatforms.find((platform) => platform.enabled) ??
+      settings.auctionPlatforms[0]
+
+    setLandedCostInput((prev) => ({
+      ...prev,
+      platformId: prev.platformId || defaultPlatform?.id || '',
+      buyerPremiumPct: prev.buyerPremiumPct || String(defaultPlatform?.buyerPremiumPct ?? 0),
+      platformFeePct: prev.platformFeePct || String(defaultPlatform?.platformFeePct ?? 0),
+      fixedFeeEur: prev.fixedFeeEur || String(defaultPlatform?.fixedFeeEur ?? 0),
+      paymentFeePct: prev.paymentFeePct || String(defaultPlatform?.paymentFeePct ?? 0),
+      shippingEur: prev.shippingEur || String(defaultPlatform?.defaultShippingEur ?? 0),
+      insuranceEur: prev.insuranceEur || String(defaultPlatform?.defaultInsuranceEur ?? 0),
+      customsDutyPct:
+        prev.customsDutyPct || String(defaultPlatform?.defaultCustomsDutyPct ?? 0),
+      importVatPct:
+        prev.importVatPct ||
+        String(defaultPlatform?.defaultImportVatPct ?? settings.importVatPctDefault ?? 23),
+    }))
+  }, [settings])
 
   // Get available models for selected brand (from products + predefined list)
   const availableModels = useMemo(() => {
@@ -209,6 +283,9 @@ export default function EvaluatorView() {
       const { data } = await apiPost<{ data: AnalysisResult }>('/pricing/analyse', {
         ...formData,
         askPriceEur: formData.askPriceEur ? Number(formData.askPriceEur) : undefined,
+        marketCountry: 'IE',
+        marketMode: 'ie_first_eu_fallback',
+        landedCostSnapshot: saveLandedCostSnapshot ? landedCostResult ?? undefined : undefined,
       })
       setResult(data)
     } catch (err: unknown) {
@@ -235,6 +312,7 @@ export default function EvaluatorView() {
         targetBuyPriceEur: result.maxBuyPriceEur,
         status: 'pending',
         notes: formData.notes,
+        landedCostSnapshot: saveLandedCostSnapshot ? landedCostResult ?? undefined : undefined,
       })
       toast.success('Added to buying list!')
       setFormData({
@@ -249,11 +327,75 @@ export default function EvaluatorView() {
       })
       setResult(null)
       handleRemoveImage()
+      setLandedCostResult(null)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to add to buying list'
       toast.error(message)
     } finally {
       setIsAddingToBuyList(false)
+    }
+  }
+
+  const handlePlatformChange = (platform: AuctionPlatformProfile | null) => {
+    if (!platform) {
+      setLandedCostInput((prev) => ({ ...prev, platformId: '' }))
+      return
+    }
+    setLandedCostInput((prev) => ({
+      ...prev,
+      platformId: platform.id,
+      buyerPremiumPct: String(platform.buyerPremiumPct),
+      platformFeePct: String(platform.platformFeePct),
+      fixedFeeEur: String(platform.fixedFeeEur),
+      paymentFeePct: String(platform.paymentFeePct),
+      shippingEur: String(platform.defaultShippingEur),
+      insuranceEur: String(platform.defaultInsuranceEur),
+      customsDutyPct: String(platform.defaultCustomsDutyPct),
+      importVatPct: String(platform.defaultImportVatPct),
+    }))
+  }
+
+  const handleLandedCostInputChange = (field: keyof typeof landedCostInput, value: string) => {
+    setLandedCostInput((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleCalculateLandedCost = async () => {
+    const hammerValue = Number(landedCostInput.hammerEur)
+    if (!hammerValue || hammerValue <= 0) {
+      toast.error('Enter a hammer price to calculate landed cost')
+      return
+    }
+
+    setIsCalculatingLandedCost(true)
+    try {
+      const payload = {
+        platformId: landedCostInput.platformId || undefined,
+        hammerEur: hammerValue,
+        buyerPremiumPct: Number(landedCostInput.buyerPremiumPct || 0),
+        platformFeePct: Number(landedCostInput.platformFeePct || 0),
+        fixedFeeEur: Number(landedCostInput.fixedFeeEur || 0),
+        paymentFeePct: Number(landedCostInput.paymentFeePct || 0),
+        shippingEur: Number(landedCostInput.shippingEur || 0),
+        insuranceEur: Number(landedCostInput.insuranceEur || 0),
+        customsDutyPct: Number(landedCostInput.customsDutyPct || 0),
+        importVatPct: Number(landedCostInput.importVatPct || settings?.importVatPctDefault || 23),
+      }
+
+      const response = await apiPost<AuctionLandedCostResponse>(
+        '/pricing/auction-landed-cost',
+        payload,
+      )
+      setLandedCostResult(response.data)
+    } catch (err: unknown) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+          ? err.message
+          : 'Failed to calculate landed cost'
+      toast.error(message)
+    } finally {
+      setIsCalculatingLandedCost(false)
     }
   }
 
@@ -515,6 +657,217 @@ export default function EvaluatorView() {
               <p className="text-xs text-gray-400 mt-1">Optional - helps calibrate analysis</p>
             </div>
 
+            <div className="rounded-lg border border-gray-200 p-4 space-y-4 bg-gray-50/60">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+                    Auction Landed Cost
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Includes platform fees, customs duty, and VAT.
+                  </p>
+                </div>
+                <span className="text-[11px] px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
+                  Ireland import basis
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Auction Platform
+                </label>
+                <select
+                  value={landedCostInput.platformId}
+                  onChange={(e) => {
+                    const nextPlatform =
+                      settings?.auctionPlatforms.find((item) => item.id === e.target.value) ?? null
+                    handlePlatformChange(nextPlatform)
+                  }}
+                  className="lux-input"
+                >
+                  <option value="">Manual</option>
+                  {(settings?.auctionPlatforms ?? []).map((platform) => (
+                    <option key={platform.id} value={platform.id}>
+                      {platform.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedAuctionPlatform && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Defaults loaded from {selectedAuctionPlatform.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Hammer Price (€)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.hammerEur}
+                    onChange={(e) => handleLandedCostInputChange('hammerEur', e.target.value)}
+                    className="lux-input"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Buyer Premium %</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.buyerPremiumPct}
+                    onChange={(e) => handleLandedCostInputChange('buyerPremiumPct', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Platform Fee %</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.platformFeePct}
+                    onChange={(e) => handleLandedCostInputChange('platformFeePct', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Fixed Fee (€)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.fixedFeeEur}
+                    onChange={(e) => handleLandedCostInputChange('fixedFeeEur', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Payment Fee %</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.paymentFeePct}
+                    onChange={(e) => handleLandedCostInputChange('paymentFeePct', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Shipping (€)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.shippingEur}
+                    onChange={(e) => handleLandedCostInputChange('shippingEur', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Insurance (€)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.insuranceEur}
+                    onChange={(e) => handleLandedCostInputChange('insuranceEur', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Customs Duty %</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={landedCostInput.customsDutyPct}
+                    onChange={(e) => handleLandedCostInputChange('customsDutyPct', e.target.value)}
+                    className="lux-input"
+                  />
+                  <div className="mt-2 flex items-center gap-2 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => handleLandedCostInputChange('customsDutyPct', '0')}
+                      className="rounded-full border border-gray-200 bg-white px-2 py-1 text-gray-600 hover:bg-gray-50"
+                    >
+                      EU preset 0%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLandedCostInputChange('customsDutyPct', '3')}
+                      className="rounded-full border border-gray-200 bg-white px-2 py-1 text-gray-600 hover:bg-gray-50"
+                    >
+                      Japan preset 3%
+                    </button>
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Import VAT %</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={landedCostInput.importVatPct}
+                    onChange={(e) => handleLandedCostInputChange('importVatPct', e.target.value)}
+                    className="lux-input"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCalculateLandedCost}
+                disabled={isCalculatingLandedCost}
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+              >
+                {isCalculatingLandedCost ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Calculating landed cost...
+                  </>
+                ) : (
+                  <>
+                    <Calculator className="h-4 w-4" />
+                    Calculate landed cost
+                  </>
+                )}
+              </button>
+
+              {landedCostResult && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+                  <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">
+                    Landed Cost Summary
+                  </div>
+                  <div className="text-lg font-semibold text-emerald-900">
+                    {formatCurrency(landedCostResult.landedCostEur)}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-emerald-800">
+                    <div>Customs duty</div>
+                    <div className="text-right">{formatCurrency(landedCostResult.customsDutyEur)}</div>
+                    <div>Import VAT</div>
+                    <div className="text-right">{formatCurrency(landedCostResult.importVatEur)}</div>
+                    <div>Pre-import subtotal</div>
+                    <div className="text-right">{formatCurrency(landedCostResult.preImportSubtotalEur)}</div>
+                  </div>
+                </div>
+              )}
+
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={saveLandedCostSnapshot}
+                  onChange={(e) => setSaveLandedCostSnapshot(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Save landed cost snapshot with this evaluation
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={isAnalysing}
@@ -544,9 +897,19 @@ export default function EvaluatorView() {
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium text-gray-900">Analysis Results</h2>
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
-                  {(result.confidence * 100).toFixed(0)}% Confidence
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-full font-medium">
+                    Ireland market
+                  </span>
+                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
+                    {(result.confidence * 100).toFixed(0)}% Confidence
+                  </span>
+                  {result.marketSummary?.fallbackUsed && (
+                    <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded-full font-medium">
+                      EU fallback used
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="rounded-xl bg-gray-50 p-6 text-center">
@@ -556,6 +919,14 @@ export default function EvaluatorView() {
                 <div className="text-4xl font-display font-bold text-gray-900">
                   {formatCurrency(result.estimatedRetailEur)}
                 </div>
+                {result.marketSummary && (
+                  <div className="text-xs text-gray-500 mt-2">
+                    {result.marketSummary.ieCount} IE comps
+                    {result.marketSummary.euFallbackCount > 0
+                      ? ` + ${result.marketSummary.euFallbackCount} EU fallback`
+                      : ''}
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -592,8 +963,26 @@ export default function EvaluatorView() {
                         key={idx}
                         className="flex items-center justify-between text-sm py-2 border-b border-gray-100 last:border-0"
                       >
-                        <div className="font-medium text-gray-900 truncate pr-4">
-                          {comp.title}
+                        <div className="pr-4 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">
+                            {comp.sourceUrl ? (
+                              <a
+                                href={comp.sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:text-blue-700 underline-offset-2 hover:underline"
+                              >
+                                {comp.title}
+                              </a>
+                            ) : (
+                              comp.title
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {comp.source}
+                            {comp.marketCountry ? ` · ${comp.marketCountry}` : ''}
+                            {comp.marketScope === 'EU_FALLBACK' ? ' · fallback' : ''}
+                          </div>
                         </div>
                         <div className="font-mono text-gray-600 whitespace-nowrap">
                           {formatCurrency(comp.price)}

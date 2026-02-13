@@ -1,0 +1,10 @@
+---
+description: Frontend flow QA context for Buy Box, Supplier Hub, and cross-page regressions.
+globs:
+  - src/**
+alwaysApply: false
+---
+
+## Focus
+- Validate loading/error/empty states and cross-page flows.
+- Catch regressions in evaluate -> buy list -> receive style journeys.

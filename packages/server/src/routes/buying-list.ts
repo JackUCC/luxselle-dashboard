@@ -9,6 +9,7 @@ import {
   DEFAULT_ORG_ID,
   BuyingListItemSchema,
   BuyingListStatusSchema,
+  LandedCostSnapshotSchema,
   ProductSchema,
   TransactionSchema,
   ActivityEventSchema,
@@ -38,6 +39,7 @@ const BuyingListItemInputSchema = z.object({
   targetBuyPriceEur: z.coerce.number(),
   status: BuyingListStatusSchema.optional().default('pending'),
   notes: z.string().optional(),
+  landedCostSnapshot: LandedCostSnapshotSchema.optional(),
 })
 
 const BuyingListItemUpdateSchema = BuyingListItemInputSchema.partial()
@@ -143,6 +145,7 @@ router.post('/', async (req, res, next) => {
       targetBuyPriceEur: input.targetBuyPriceEur,
       status: input.status ?? 'pending',
       notes: input.notes ?? '',
+      landedCostSnapshot: input.landedCostSnapshot,
     })
     const created = await buyingListRepo.create(item)
 

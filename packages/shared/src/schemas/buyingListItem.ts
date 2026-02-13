@@ -1,6 +1,7 @@
 /** Buying list item schema. @see docs/CODE_REFERENCE.md */
 import { z } from 'zod'
 import { BaseDocSchema, BuyingListStatusSchema } from './base'
+import { LandedCostSnapshotSchema } from './pricing'
 
 export const BuyingListItemSchema = BaseDocSchema.extend({
   sourceType: z.enum(['manual', 'evaluator', 'supplier']),
@@ -15,6 +16,7 @@ export const BuyingListItemSchema = BaseDocSchema.extend({
   targetBuyPriceEur: z.number(),
   status: BuyingListStatusSchema,
   notes: z.string().optional().default(''),
+  landedCostSnapshot: LandedCostSnapshotSchema.optional(),
 })
 
 export type BuyingListItem = z.infer<typeof BuyingListItemSchema>

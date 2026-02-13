@@ -1,0 +1,18 @@
+---
+description: Evaluator (Buy Box) page agent context. Pricing analysis, add-to-buy-list.
+globs:
+  - src/pages/BuyBox/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/BuyBox/**, shared components used by Evaluator.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- POST /api/pricing/analyse, POST /api/buying-list, GET /api/products
+
+## Jarvis behaviours
+- One-tap add to buy list after analyse
+- Pre-fill from clipboard or last evaluation
+- Suggest condition from image upload before user fills form

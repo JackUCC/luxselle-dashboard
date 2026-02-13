@@ -1,19 +1,30 @@
 /**
- * Invoices API: create (from sale or full), list, get by id.
+ * Invoices API: create (from sale or full), list, get by id, upload PDF.
  * @see docs/CODE_REFERENCE.md
  */
 import { Router } from 'express'
+import multer from 'multer'
 import { z } from 'zod'
-import { DEFAULT_ORG_ID, InvoiceSchema, InvoiceLineItemSchema } from '@shared/schemas'
+import { DEFAULT_ORG_ID, InvoiceLineItemSchema } from '@shared/schemas'
 import type { Invoice, InvoiceLineItem } from '@shared/schemas'
 import { InvoiceRepo } from '../repos/InvoiceRepo'
 import { SettingsRepo } from '../repos/SettingsRepo'
 import { vatFromGross } from '../lib/vat'
+import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
 const invoiceRepo = new InvoiceRepo()
 const settingsRepo = new SettingsRepo()
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true)
+    else cb(new Error('Only PDF files are allowed'))
+  },
+})
 
 const CreateInvoiceFromSaleSchema = z.object({
   fromSale: z.literal(true),
@@ -113,6 +124,80 @@ router.post('/', async (req, res, next) => {
       currency: 'EUR',
       issuedAt: now,
       notes: notes ?? '',
+    }
+    const created = await invoiceRepo.create(invoiceData)
+    res.status(201).json(created)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/invoices/upload — upload PDF, create invoice record with pdfUrl
+router.post('/upload', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No PDF file provided'))
+      return
+    }
+    const invoiceNumber = (req.body?.invoiceNumber ?? '').trim()
+    const customerName = (req.body?.customerName ?? '').trim()
+    const customerEmail = req.body?.customerEmail?.trim()
+    if (!invoiceNumber) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'invoiceNumber is required'))
+      return
+    }
+
+    const bucket = storage.bucket()
+    const safeName = `${invoiceNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}_${Date.now()}.pdf`
+    const path = `invoices/${safeName}`
+    const file = bucket.file(path)
+    await file.save(req.file.buffer, {
+      contentType: 'application/pdf',
+      metadata: { cacheControl: 'public, max-age=31536000' },
+    })
+    await file.makePublic()
+    const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${path}`
+
+    const ratePct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
+    const amountEur = parseFloat(req.body?.amountEur) || 0
+    const description = (req.body?.description ?? `Invoice ${invoiceNumber}`).trim()
+    const now = new Date().toISOString()
+
+    const lineItem: InvoiceLineItem = amountEur > 0
+      ? {
+          description,
+          quantity: 1,
+          unitPriceEur: amountEur,
+          vatPct: ratePct,
+          amountEur,
+        }
+      : {
+          description: description || `Invoice ${invoiceNumber}`,
+          quantity: 1,
+          unitPriceEur: 0,
+          vatPct: ratePct,
+          amountEur: 0,
+        }
+
+    const subtotalEur = lineItem.amountEur
+    const vatEur = lineItem.amountEur * (lineItem.vatPct / 100)
+    const totalEur = subtotalEur + vatEur
+
+    const invoiceData: Invoice = {
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      invoiceNumber,
+      customerName,
+      customerEmail: customerEmail || undefined,
+      lineItems: [lineItem],
+      subtotalEur,
+      vatEur,
+      totalEur,
+      currency: 'EUR',
+      issuedAt: now,
+      notes: (req.body?.notes ?? '').trim() || '',
+      pdfUrl,
     }
     const created = await invoiceRepo.create(invoiceData)
     res.status(201).json(created)

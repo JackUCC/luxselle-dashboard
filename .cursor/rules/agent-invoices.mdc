@@ -1,0 +1,18 @@
+---
+description: Invoices page agent context. Invoices list, creation, PDF export.
+globs:
+  - src/pages/Invoices/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/Invoices/**, shared components used by Invoices.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- GET /api/invoices
+
+## Jarvis behaviours
+- Proactive: "N sold items have no invoice — create?"
+- From Inventory drawer: "Create invoice" flows into Invoices
+- Empty state: "Create invoices from sold products in Inventory"

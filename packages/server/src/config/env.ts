@@ -34,6 +34,13 @@ const EnvSchema = z.object({
   BASE_CURRENCY: z.string().default('EUR'),
   TARGET_MARGIN_PCT: z.coerce.number().default(35),
   SKIP_AUTH: z.string().optional(), // set to 'true' to disable auth in development
+  SUPPLIER_EMAIL_ENABLED: booleanFromEnv.default(false),
+  GMAIL_CLIENT_ID: z.string().optional(),
+  GMAIL_CLIENT_SECRET: z.string().optional(),
+  GMAIL_REFRESH_TOKEN: z.string().optional(),
+  GMAIL_USER: z.string().optional(),
+  SUPPLIER_EMAIL_DEFAULT_QUERY: z.string().default('has:attachment newer_than:30d'),
+  SUPPLIER_EMAIL_MAX_ATTACHMENT_MB: z.coerce.number().default(10),
 })
 
 // Parse and validate on load; throws if required/env shape is invalid

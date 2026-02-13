@@ -6,15 +6,23 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import multer from 'multer'
-import { DEFAULT_ORG_ID, EvaluationSchema } from '@shared/schemas'
+import {
+  DEFAULT_ORG_ID,
+  EvaluationSchema,
+  LandedCostSnapshotSchema,
+  PricingMarketCountrySchema,
+  PricingMarketModeSchema,
+} from '@shared/schemas'
 import { PricingService } from '../services/pricing/PricingService'
 import { EvaluationRepo } from '../repos/EvaluationRepo'
+import { SettingsRepo } from '../repos/SettingsRepo'
 import { env } from '../config/env'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
 const pricingService = new PricingService()
 const evaluationRepo = new EvaluationRepo()
+const settingsRepo = new SettingsRepo()
 
 // Multer config for image uploads
 const upload = multer({
@@ -39,6 +47,23 @@ const PricingAnalysisInputSchema = z.object({
   notes: z.string().optional().default(''),
   askPriceEur: z.coerce.number().optional(),
   imageUrl: z.string().optional(), // If image was uploaded
+  marketCountry: PricingMarketCountrySchema.optional(),
+  marketMode: PricingMarketModeSchema.optional(),
+  landedCostSnapshot: LandedCostSnapshotSchema.optional(),
+})
+
+const AuctionLandedCostInputSchema = z.object({
+  platformId: z.string().optional(),
+  platformName: z.string().optional(),
+  hammerEur: z.coerce.number().min(0),
+  buyerPremiumPct: z.coerce.number().min(0).optional(),
+  platformFeePct: z.coerce.number().min(0).optional(),
+  fixedFeeEur: z.coerce.number().min(0).optional(),
+  paymentFeePct: z.coerce.number().min(0).optional(),
+  shippingEur: z.coerce.number().min(0).optional(),
+  insuranceEur: z.coerce.number().min(0).optional(),
+  customsDutyPct: z.coerce.number().min(0).optional(),
+  importVatPct: z.coerce.number().min(0).max(100).optional(),
 })
 
 // Analyse pricing
@@ -68,6 +93,8 @@ router.post('/analyse', async (req, res, next) => {
       confidence: result.confidence,
       provider: result.provider as 'mock' | 'openai' | 'gemini',
       imageUrl: input.imageUrl,
+      marketSummary: result.marketSummary,
+      landedCostSnapshot: input.landedCostSnapshot,
     })
     const savedEvaluation = await evaluationRepo.create(evaluation)
 
@@ -77,6 +104,36 @@ router.post('/analyse', async (req, res, next) => {
         evaluationId: savedEvaluation.id,
       },
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/auction-landed-cost', async (req, res, next) => {
+  try {
+    const input = AuctionLandedCostInputSchema.parse(req.body)
+    const settings = await settingsRepo.getSettings()
+    const platform = settings?.auctionPlatforms?.find((profile) => profile.id === input.platformId)
+
+    const result = pricingService.calculateAuctionLandedCost({
+      platformId: input.platformId ?? platform?.id,
+      platformName: input.platformName ?? platform?.name,
+      hammerEur: input.hammerEur,
+      buyerPremiumPct: input.buyerPremiumPct ?? platform?.buyerPremiumPct ?? 0,
+      platformFeePct: input.platformFeePct ?? platform?.platformFeePct ?? 0,
+      fixedFeeEur: input.fixedFeeEur ?? platform?.fixedFeeEur ?? 0,
+      paymentFeePct: input.paymentFeePct ?? platform?.paymentFeePct ?? 0,
+      shippingEur: input.shippingEur ?? platform?.defaultShippingEur ?? 0,
+      insuranceEur: input.insuranceEur ?? platform?.defaultInsuranceEur ?? 0,
+      customsDutyPct: input.customsDutyPct ?? platform?.defaultCustomsDutyPct ?? 0,
+      importVatPct:
+        input.importVatPct ??
+        platform?.defaultImportVatPct ??
+        settings?.importVatPctDefault ??
+        23,
+    })
+
+    res.json({ data: result })
   } catch (error) {
     next(error)
   }

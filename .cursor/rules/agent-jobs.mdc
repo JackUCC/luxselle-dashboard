@@ -1,0 +1,18 @@
+---
+description: Jobs page agent context. System jobs, import status, retries.
+globs:
+  - src/pages/Jobs/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/Jobs/**, shared components used by Jobs.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- GET /api/jobs, POST /api/jobs/:id/retry
+
+## Jarvis behaviours
+- Proactive: "Last import failed — retry?" toast or banner
+- Progress for long-running imports
+- Empty/healthy: "All systems operational"

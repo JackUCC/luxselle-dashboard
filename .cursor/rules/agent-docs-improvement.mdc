@@ -1,0 +1,12 @@
+---
+description: Docs quality context for keeping README/deploy/runbooks aligned with implementation.
+globs:
+  - README.md
+  - AGENTS.md
+  - docs/**
+alwaysApply: false
+---
+
+## Focus
+- Ensure docs match current implementation and scripts.
+- Surface missing owner inputs and rollout prerequisites.

@@ -37,6 +37,13 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
    npm run seed
    ```
 
+4. **Import inventory from Excel (optional)**
+   - To load stock from the Luxselle BST/TBC Excel sheets into products, start the emulator (or use real Firebase), then run:
+   ```bash
+   npm run import-excel -- "path/to/Luxselle Inventory Managment sheet.xlsx" "path/to/Luxselle_Inventory_With_Formulas (2).xlsx"
+   ```
+   - If you omit paths, the script uses default paths under `~/Desktop/Luxselle docs/Invoices from BST/Exel sheet for luxselle examples/`. You can also set `LUXSELLE_EXCEL_1` and `LUXSELLE_EXCEL_2` in `.env`.
+
 ## Development
 
 - **Start everything** (Firebase emulators + backend + frontend):

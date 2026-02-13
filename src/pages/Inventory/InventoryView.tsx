@@ -63,6 +63,7 @@ export default function InventoryView() {
   const query = (searchParams.get('q') ?? '').trim()
   const brandFilter = (searchParams.get('brand') ?? '').trim()
   const statusFilter = (searchParams.get('status') ?? '').trim()
+  const lowStockFilter = searchParams.get('lowStock') === '1'
   const selectedProductId = searchParams.get('product')
 
   const openProductDrawer = useCallback((productId: string) => {
@@ -83,6 +84,8 @@ export default function InventoryView() {
     )
   }, [])
 
+  const LOW_STOCK_THRESHOLD = 2 // matches settings.lowStockThreshold default
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const brand = product.brand.toLowerCase()
@@ -93,9 +96,14 @@ export default function InventoryView() {
       if (normalizedQuery && !composite.includes(normalizedQuery)) return false
       if (brandFilter && !brand.includes(brandFilter.toLowerCase())) return false
       if (statusFilter && product.status !== statusFilter) return false
+      // Low stock filter: in_stock and quantity below threshold (from Dashboard link)
+      if (lowStockFilter) {
+        if (product.status !== 'in_stock') return false
+        if (product.quantity >= LOW_STOCK_THRESHOLD) return false
+      }
       return true
     })
-  }, [products, query, brandFilter, statusFilter])
+  }, [products, query, brandFilter, statusFilter, lowStockFilter])
 
   const handleExportCSV = useCallback(() => {
     const headers = ['Brand', 'Model', 'Category', 'Condition', 'Colour', 'Cost EUR', 'Sell EUR', 'Status', 'Quantity']
@@ -231,6 +239,26 @@ export default function InventoryView() {
             </button>
           </div>
         </div>
+
+        {/* Low stock banner (from Dashboard link) */}
+        {lowStockFilter && (
+          <div className="flex items-center justify-between rounded-lg bg-orange-50 border border-orange-200 px-4 py-3">
+            <p className="text-sm font-medium text-orange-800">
+              Showing low stock items (quantity &lt; {LOW_STOCK_THRESHOLD})
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const newParams = new URLSearchParams(searchParams)
+                newParams.delete('lowStock')
+                setSearchParams(newParams)
+              }}
+              className="text-sm font-medium text-orange-600 hover:text-orange-800"
+            >
+              Clear filter
+            </button>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex items-center gap-3">

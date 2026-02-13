@@ -91,6 +91,9 @@ TARGET_MARGIN_PCT=35
 AI_PROVIDER=mock
 ```
 
+- [ ] If enabling supplier email ingestion + Ireland Buy Box policy, complete:
+  `docs/deploy/PRODUCTION_INPUTS_SUPPLIER_EMAIL_AND_PRICING.md`
+
 - [ ] All variables set in Railway
 
 ### Step 7: Deploy Backend

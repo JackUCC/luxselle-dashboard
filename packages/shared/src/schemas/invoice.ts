@@ -25,6 +25,7 @@ export const InvoiceSchema = BaseDocSchema.extend({
   transactionId: z.string().optional(),
   productId: z.string().optional(),
   notes: z.string().optional().default(''),
+  pdfUrl: z.string().url().optional(),
 })
 
 export type Invoice = z.infer<typeof InvoiceSchema>

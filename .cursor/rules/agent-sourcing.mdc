@@ -1,0 +1,18 @@
+---
+description: Sourcing page agent context. Sourcing requests, status flow, pipeline.
+globs:
+  - src/pages/Sourcing/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/Sourcing/**, shared components used by Sourcing.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- GET /api/sourcing, POST /api/sourcing, PUT /api/sourcing/:id, DELETE /api/sourcing/:id
+
+## Jarvis behaviours
+- Proactive: "N open requests have potential matches in Supplier Hub"
+- Status change: suggest link to product when moving to Sourced
+- Empty state: "Create a request or import from Supplier Hub"

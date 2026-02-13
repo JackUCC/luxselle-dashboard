@@ -1,0 +1,19 @@
+---
+description: Buying List page agent context. Buy list items, receive flow, messages.
+globs:
+  - src/pages/BuyingList/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/BuyingList/**, shared components used by Buying List.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- GET /api/buying-list, POST /api/buying-list, PUT /api/buying-list/:id
+- POST /api/buying-list/:id/receive
+
+## Jarvis behaviours
+- Proactive: "N items ready to receive — one click to inventory"
+- Message generator: pre-fill WhatsApp/Email with item details
+- Empty state: "Add from Evaluator or Supplier Hub"

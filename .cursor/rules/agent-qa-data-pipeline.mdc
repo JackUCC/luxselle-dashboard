@@ -1,0 +1,14 @@
+---
+description: Data pipeline QA context for Gmail supplier ingestion, mappings, dedupe, and cron readiness.
+globs:
+  - packages/server/src/services/import/**
+  - packages/server/src/routes/suppliers.ts
+  - packages/server/src/config/env.ts
+  - packages/server/scripts/supplier-email-sync.ts
+  - docs/deploy/**
+alwaysApply: false
+---
+
+## Focus
+- Validate import pipeline reliability and operational readiness.
+- Ensure observability and owner inputs are clearly documented.

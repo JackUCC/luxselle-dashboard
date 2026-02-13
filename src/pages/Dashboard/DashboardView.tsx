@@ -313,17 +313,23 @@ export default function DashboardView() {
               <div className="text-sm text-gray-500">Active Sourcing Pipeline</div>
             </div>
 
-            <div className="lux-card p-6">
+            <Link
+              to="/inventory?lowStock=1"
+              className="lux-card p-6 block transition-shadow hover:shadow-md hover:ring-2 hover:ring-orange-200 rounded-xl cursor-pointer"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="rounded-lg bg-orange-50 p-2 text-orange-600">
                   <AlertCircle className="h-5 w-5" />
                 </div>
+                {kpis && kpis.lowStockAlerts > 0 && (
+                  <span className="text-xs font-medium text-orange-600">View</span>
+                )}
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-1">
                 {kpis ? kpis.lowStockAlerts : '—'}
               </div>
               <div className="text-sm text-gray-500">Low Stock Alerts</div>
-            </div>
+            </Link>
           </div>
 
           {/* Profit Summary */}

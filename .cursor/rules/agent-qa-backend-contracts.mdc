@@ -1,0 +1,11 @@
+---
+description: Backend contract QA context for server/shared APIs, schema safety, and deterministic services.
+globs:
+  - packages/server/**
+  - packages/shared/**
+alwaysApply: false
+---
+
+## Focus
+- Validate endpoint contracts and schema backward compatibility.
+- Prioritize deterministic logic correctness and regression tests.

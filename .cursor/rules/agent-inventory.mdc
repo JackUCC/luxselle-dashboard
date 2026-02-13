@@ -1,0 +1,20 @@
+---
+description: Inventory page agent context. Products, drawer, transactions, VAT, filters.
+globs:
+  - src/pages/Inventory/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/Inventory/**, shared components used by Inventory.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- GET /api/products, GET /api/products/:id, PUT /api/products/:id
+- GET /api/products/:id/transactions, POST /api/products/:id/transactions
+- GET /api/vat/calculate, POST /api/invoices
+
+## Jarvis behaviours
+- Filter by lowStock query param when linked from Dashboard
+- Pre-fill sell price suggestion from comps when editing
+- Empty state: "Add from Evaluator or receive from Buying List"

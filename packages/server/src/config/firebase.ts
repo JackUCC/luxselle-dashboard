@@ -44,7 +44,11 @@ if (!useEmulator) {
 // Reuse existing app if already initialized (e.g. in tests)
 const adminApp = getApps().length > 0
   ? getApps()[0]
-  : initializeApp({ credential, projectId, storageBucket })
+  : initializeApp({
+      ...(credential && { credential }),
+      projectId,
+      storageBucket,
+    })
 
 const db = getFirestore(adminApp)
 db.settings({ ignoreUndefinedProperties: true })

@@ -1,0 +1,19 @@
+---
+description: Dashboard page agent context. KPIs, activity feed, command bar, cross-page insights.
+globs:
+  - src/pages/Dashboard/**
+alwaysApply: false
+---
+
+## Scope
+- In scope: src/pages/Dashboard/**, shared components used by Dashboard.
+- Out of scope: packages/server/ unless explicitly asked.
+
+## Current APIs
+- GET /api/dashboard/kpis, /dashboard/profit-summary, /dashboard/activity, /dashboard/status
+- GET /api/vat/calculate
+
+## Jarvis behaviours
+- Low stock KPI clickable → navigate to /inventory?lowStock=1
+- Command bar: parse intent, navigate + pre-filter
+- Pending buy list value alerts when threshold crossed

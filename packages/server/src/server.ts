@@ -17,6 +17,7 @@ import { sourcingRouter } from './routes/sourcing'
 import { jobsRouter } from './routes/jobs'
 import { vatRouter } from './routes/vat'
 import { invoicesRouter } from './routes/invoices'
+import { settingsRouter } from './routes/settings'
 import { API_ERROR_CODES, formatApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 // Auth middleware available but not applied yet (deferred to Iteration 6)
@@ -49,6 +50,7 @@ app.use('/api/sourcing', sourcingRouter)
 app.use('/api/jobs', jobsRouter)
 app.use('/api/vat', vatRouter)
 app.use('/api/invoices', invoicesRouter)
+app.use('/api/settings', settingsRouter)
 
 // Global error handler: Zod validation → 400 with error body; all other errors → 500
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {

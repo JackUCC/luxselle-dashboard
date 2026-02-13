@@ -9,6 +9,9 @@
     "build": "echo 'Using tsx - no build needed'",
     "start": "tsx src/server.ts",
     "seed": "tsx scripts/seed.ts",
+    "import-excel": "tsx scripts/import-inventory-from-excel.ts",
+    "import-invoice-pdfs": "tsx scripts/import-invoice-pdfs.ts",
+    "supplier-email-sync": "tsx scripts/supplier-email-sync.ts",
     "test": "vitest --config ../../config/vitest.config.ts --run",
     "test:watch": "vitest --config ../../config/vitest.config.ts"
   },
@@ -20,9 +23,11 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "firebase-admin": "^12.5.0",
+    "googleapis": "^140.0.1",
     "multer": "^2.0.2",
     "openai": "^6.17.0",
     "sharp": "^0.34.5",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

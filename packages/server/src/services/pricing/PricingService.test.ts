@@ -7,6 +7,7 @@ import {
 
 const listMock = vi.fn()
 const productListMock = vi.fn()
+const settingsGetMock = vi.fn()
 
 const defaultEnv = {
   NODE_ENV: 'test',
@@ -27,6 +28,8 @@ const loadPricingService = async (overrides: Partial<typeof defaultEnv> = {}) =>
   vi.resetModules()
   listMock.mockReset()
   productListMock.mockReset()
+  settingsGetMock.mockReset()
+  settingsGetMock.mockResolvedValue(null)
 
   vi.doMock('../../config/env', () => ({
     env: { ...defaultEnv, ...overrides },
@@ -41,6 +44,12 @@ const loadPricingService = async (overrides: Partial<typeof defaultEnv> = {}) =>
   vi.doMock('../../repos/ProductRepo', () => ({
     ProductRepo: class {
       list = productListMock
+    },
+  }))
+
+  vi.doMock('../../repos/SettingsRepo', () => ({
+    SettingsRepo: class {
+      getSettings = settingsGetMock
     },
   }))
 
@@ -212,5 +221,82 @@ describe('PricingService', () => {
     const result = await service.analyse(basePricingInput)
 
     expect(result.provider).toBe('gemini')
+  })
+
+  it('applies IE-first market policy with EU fallback', async () => {
+    const PricingService = await loadPricingService()
+    const { MockPricingProvider } = await import('./providers/MockPricingProvider')
+    vi.spyOn(MockPricingProvider.prototype, 'analyse').mockResolvedValue({
+      estimatedRetailEur: 3000,
+      confidence: 0.82,
+      comps: [
+        {
+          title: 'IE Comp',
+          price: 2900,
+          source: 'adverts.ie',
+          sourceUrl: 'https://adverts.ie/item',
+          marketCountry: 'IE',
+        },
+        {
+          title: 'EU Comp 1',
+          price: 3050,
+          source: 'Vestiaire',
+          sourceUrl: 'https://vestiairecollective.com/item',
+          marketCountry: 'EU',
+        },
+        {
+          title: 'EU Comp 2',
+          price: 2950,
+          source: 'Rebag',
+          sourceUrl: 'https://rebag.com/item',
+          marketCountry: 'EU',
+        },
+      ],
+    })
+
+    settingsGetMock.mockResolvedValueOnce({
+      pricingIeSourceAllowlist: ['adverts.ie'],
+      pricingMarketCountryDefault: 'IE',
+      pricingMarketMode: 'ie_first_eu_fallback',
+    })
+    listMock.mockResolvedValueOnce([])
+    productListMock.mockResolvedValueOnce([])
+
+    const service = new PricingService()
+    const result = await service.analyse(basePricingInput)
+
+    expect(result.marketSummary.marketCountry).toBe('IE')
+    expect(result.marketSummary.ieCount).toBe(1)
+    expect(result.marketSummary.fallbackUsed).toBe(true)
+    expect(result.comps.some((comp) => comp.marketScope === 'IE')).toBe(true)
+    expect(result.comps.some((comp) => comp.marketScope === 'EU_FALLBACK')).toBe(true)
+  })
+
+  it('calculates auction landed cost breakdown deterministically', async () => {
+    const PricingService = await loadPricingService()
+    const service = new PricingService()
+    const result = service.calculateAuctionLandedCost({
+      hammerEur: 1000,
+      buyerPremiumPct: 10,
+      platformFeePct: 5,
+      fixedFeeEur: 20,
+      paymentFeePct: 2,
+      shippingEur: 40,
+      insuranceEur: 10,
+      customsDutyPct: 4,
+      importVatPct: 23,
+      platformId: 'test',
+      platformName: 'Test Auction',
+    })
+
+    expect(result.buyerPremiumEur).toBe(100)
+    expect(result.platformFeeEur).toBe(70)
+    expect(result.paymentFeeEur).toBe(23.4)
+    expect(result.preImportSubtotalEur).toBe(1193.4)
+    expect(result.customsValueEur).toBe(1243.4)
+    expect(result.customsDutyEur).toBe(49.74)
+    expect(result.vatBaseEur).toBe(1293.14)
+    expect(result.importVatEur).toBe(297.42)
+    expect(result.landedCostEur).toBe(1590.56)
   })
 })

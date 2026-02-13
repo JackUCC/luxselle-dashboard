@@ -17,17 +17,23 @@ export class MockPricingProvider implements IPricingProvider {
       {
         title: `${input.brand} ${input.model} - Similar`,
         price: Math.round(estimatedRetailEur * 0.95),
-        source: 'Mock Source 1',
+        source: 'Designer Exchange',
+        sourceUrl: 'https://www.designerexchange.ie/',
+        marketCountry: 'IE',
       },
       {
         title: `${input.brand} ${input.model} - Like New`,
         price: Math.round(estimatedRetailEur * 1.05),
-        source: 'Mock Source 2',
+        source: 'Luxury Exchange',
+        sourceUrl: 'https://www.luxuryexchange.ie/',
+        marketCountry: 'IE',
       },
       {
         title: `${input.brand} ${input.model} - ${input.condition}`,
         price: Math.round(estimatedRetailEur * 1.02),
-        source: 'Mock Source 3',
+        source: 'Vestiaire Collective',
+        sourceUrl: 'https://www.vestiairecollective.com/',
+        marketCountry: 'EU',
       },
     ]
 
