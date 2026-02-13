@@ -1,4 +1,4 @@
-/* Global styles: Tailwind directives, shell tokens, and shared utility classes. @see docs/CODE_REFERENCE.md */
+/* Global styles: Apple-inspired Light Theme. @see docs/CODE_REFERENCE.md */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,18 +6,44 @@
 :root {
   --font-display: 'Sora', sans-serif;
   --font-body: 'Manrope', sans-serif;
-  --lux-canvas: #f5f7fa;
-  --lux-surface: #ffffff;
-  --lux-border: #e5e7eb;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Apple Light Palette */
+  --lux-canvas: #F5F5F7;
+  /* Off-white background */
+  --lux-surface: rgba(255, 255, 255, 0.72);
+  /* High blur glass */
+  --lux-surface-hover: rgba(255, 255, 255, 0.85);
+  --lux-border: rgba(0, 0, 0, 0.05);
+  --lux-border-hover: rgba(0, 0, 0, 0.1);
+  --lux-text: #1D1D1F;
+  /* Apple Primary Text */
+  --lux-text-secondary: #86868B;
+  /* Apple Secondary Text */
+  --lux-primary: #007AFF;
+  /* Apple Blue */
 }
 
 body {
   margin: 0;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: radial-gradient(1200px 500px at 15% -10%, #eef2ff 0%, transparent 50%), var(--lux-canvas);
-  color: #1e293b;
+  -moz-osx-font-smoothing: gray;
+  background: var(--lux-canvas);
+  color: var(--lux-text);
+  line-height: 1.5;
+}
+
+/* Subtle grain overlay (optional, for texture) or just clean */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 50%, rgba(0, 122, 255, 0.03), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(88, 86, 214, 0.03), transparent 25%);
+  pointer-events: none;
 }
 
 h1,
@@ -27,26 +53,70 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display);
+  color: var(--lux-text);
+  letter-spacing: -0.02em;
 }
 
+/* ─── Apple Glass Card ─── */
 .lux-card {
-  @apply rounded-xl border border-gray-100 bg-white shadow-soft;
+  @apply rounded-2xl border border-white/50 bg-white/60 shadow-glass;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
+.lux-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* ─── Apple Form Inputs ─── */
 .lux-input {
-  @apply w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900;
+  @apply w-full rounded-xl border border-gray-200 bg-white/50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 font-medium;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.lux-input:focus {
+  @apply outline-none bg-white border-blue-500/50;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.lux-input:disabled {
+  @apply bg-gray-100 text-gray-400 cursor-not-allowed border-transparent;
+}
+
+/* ─── Buttons ─── */
 .lux-btn-primary {
-  @apply rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800;
+  @apply rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-md;
+  background: #007AFF;
+}
+
+.lux-btn-primary:hover {
+  background: #006ADC;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.lux-btn-primary:active {
+  transform: translateY(0);
+  background: #005BB5;
 }
 
 .lux-btn-secondary {
-  @apply rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50;
+  @apply rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all shadow-sm;
 }
 
+.lux-btn-secondary:hover {
+  @apply border-gray-300 bg-gray-50 text-gray-900;
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Skeleton (Light) ─── */
 .lux-skeleton {
-  @apply relative overflow-hidden bg-gray-200/80;
+  @apply relative overflow-hidden rounded-xl bg-gray-200;
 }
 
 .lux-skeleton::after {
@@ -54,46 +124,22 @@ h6 {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
-  animation: lux-shimmer 1.4s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: lux-shimmer 2s infinite;
 }
 
+/* ─── Sparkline ─── */
+.lux-sparkline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ─── Animations ─── */
 @keyframes lux-shimmer {
   100% {
     transform: translateX(100%);
-  }
-}
-
-@keyframes lux-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes lux-slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes lux-slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
@@ -105,23 +151,5 @@ h6 {
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
-  }
-
-  .animate-fade-in {
-    animation: lux-fade-in 180ms ease-out both;
-  }
-
-  .animate-in {
-    animation-duration: 260ms;
-    animation-fill-mode: both;
-    animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .slide-in-from-right {
-    animation-name: lux-slide-in-right;
-  }
-
-  .slide-in-from-left {
-    animation-name: lux-slide-in-left;
   }
 }

@@ -35,9 +35,9 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
   const activeRoute = useMemo(() => getRouteMeta(location.pathname), [location.pathname])
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] text-gray-900 font-sans">
+    <div className="min-h-screen bg-lux-50 text-gray-900 font-sans">
       {backendMissing === true && (
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-900">
+        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>Backend not configured. Set `VITE_API_BASE` to your backend URL and redeploy.</span>
@@ -45,17 +45,17 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
         </div>
       )}
 
-      <div className="2xl:flex">
+      <div className="xl:flex">
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/90 backdrop-blur">
+          <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
             <div className="mx-auto max-w-8xl px-4 sm:px-6">
               <div className="flex h-16 items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <button
                     type="button"
-                    className="rounded-lg border border-gray-200 bg-white p-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 lg:hidden"
+                    className="rounded-xl border border-gray-200 bg-white p-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 xl:hidden"
                     onClick={() => setMobileNavOpen(true)}
                     aria-label="Open navigation menu"
                     data-testid="mobile-nav-toggle"
@@ -63,31 +63,30 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
                     <Menu className="h-5 w-5" />
                   </button>
 
-                  <div className="flex items-center gap-2 lg:hidden">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-xs font-bold text-white">
+                  <div className="flex items-center gap-2 xl:hidden">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
                       L
                     </div>
                     <span className="font-display text-sm font-semibold tracking-tight text-gray-900">Luxselle</span>
                   </div>
 
-                  <div className="hidden min-w-0 items-center gap-2 2xl:flex">
-                    <p className="truncate text-sm font-medium text-gray-700">
+                  <div className="hidden min-w-0 items-center gap-2 xl:flex">
+                    <p className="truncate text-sm font-medium text-gray-500">
                       {activeRoute?.label ?? 'Dashboard'}
                     </p>
                   </div>
                 </div>
 
-                <nav className="hidden flex-1 items-center gap-1 overflow-x-auto no-scrollbar lg:flex 2xl:hidden">
+                <nav className="hidden flex-1 items-center gap-1 overflow-x-auto no-scrollbar lg:flex xl:hidden">
                   {appRoutes.map((route) => (
                     <NavLink
                       key={route.path}
                       to={route.path}
                       end={route.path === '/'}
                       className={({ isActive }) =>
-                        `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                          isActive
-                            ? 'bg-gray-900 text-white shadow-soft'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        `flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive
+                          ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
+                          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 border border-transparent'
                         }`
                       }
                     >
@@ -99,18 +98,18 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
 
                 <div className="flex items-center gap-2 sm:gap-3">
                   <button
-                    className="relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                    className="relative rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                     aria-label="Notifications"
                   >
                     <Bell className="h-5 w-5" />
-                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 shadow-sm ring-2 ring-white animate-pulse" />
                   </button>
 
-                  <div className="hidden rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-600 md:block">
+                  <div className="hidden rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-500 md:block">
                     Control Center
                   </div>
 
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 ring-2 ring-white">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-xs font-bold text-white shadow-sm ring-2 ring-white">
                     JK
                   </div>
                 </div>
@@ -123,7 +122,7 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
           <Toaster
             position="top-center"
             toastOptions={{
-              className: 'text-sm font-medium',
+              className: 'text-sm font-medium !bg-white !text-gray-900 !border !border-gray-100 !shadow-lg',
               duration: 4000,
             }}
           />

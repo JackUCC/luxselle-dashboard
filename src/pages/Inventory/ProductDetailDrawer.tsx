@@ -50,10 +50,10 @@ const formatCurrency = (value: number) =>
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'in_stock': return 'bg-green-100 text-green-700 border-green-200'
+    case 'in_stock': return 'bg-emerald-100 text-emerald-700 border-emerald-200'
     case 'sold': return 'bg-gray-100 text-gray-700 border-gray-200'
-    case 'reserved': return 'bg-orange-100 text-orange-700 border-orange-200'
-    default: return 'bg-gray-100 text-gray-600 border-gray-200'
+    case 'reserved': return 'bg-amber-100 text-amber-700 border-amber-200'
+    default: return 'bg-gray-100 text-gray-700 border-gray-200'
   }
 }
 
@@ -72,11 +72,11 @@ export default function ProductDetailDrawer({
   // Fetch product data
   useEffect(() => {
     if (!productId) return
-    
+
     setIsLoading(true)
     setEditedFields({})
     setHasChanges(false)
-    
+
     apiGet<{ data: ProductWithId }>(`/products/${productId}`)
       .then((response) => {
         setProduct(response.data)
@@ -136,17 +136,18 @@ export default function ProductDetailDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-gray-500/20 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+      {/* Drawer */}
+      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 border-l border-gray-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-3">
             {isLoading ? (
-              <div className="h-10 w-10 rounded-lg bg-gray-200 animate-pulse" />
+              <div className="h-10 w-10 rounded-lg bg-gray-100 animate-pulse" />
             ) : product?.imageUrls?.[0] ? (
               <img
                 src={product.imageUrls[0]}
@@ -162,8 +163,8 @@ export default function ProductDetailDrawer({
             <div>
               {isLoading ? (
                 <>
-                  <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-3 w-20 bg-gray-100 rounded animate-pulse mt-1" />
+                  <div className="h-5 w-32 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-gray-50 rounded animate-pulse mt-1" />
                 </>
               ) : (
                 <>
@@ -193,11 +194,10 @@ export default function ProductDetailDrawer({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
+                }`}
             >
               <tab.icon className="h-4 w-4" />
               {tab.label}
@@ -264,11 +264,11 @@ export default function ProductDetailDrawer({
 
         {/* Footer */}
         {hasChanges && !isLoading && (
-          <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex items-center justify-end gap-3">
+          <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex items-center justify-end gap-3">
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -311,13 +311,13 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return
-    
+
     const file = files[0]
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file')
       return
     }
-    
+
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Image must be less than 10MB')
       return
@@ -405,14 +405,13 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-          isDragOver
-            ? 'border-gray-900 bg-gray-50'
-            : 'border-gray-200 hover:border-gray-300'
-        } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+        className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${isDragOver
+          ? 'border-blue-500 bg-blue-50'
+          : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+          } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <Upload className="mx-auto h-6 w-6 text-gray-400 mb-2" />
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-600">
           {isUploading ? 'Uploading...' : 'Drag and drop an image, or click Upload'}
         </p>
         <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
@@ -437,7 +436,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
                 <button
                   onClick={() => handleDelete(img.id)}
                   disabled={deletingId === img.id}
-                  className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5 border border-transparent shadow-sm"
                 >
                   {deletingId === img.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -542,22 +541,22 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <label className="block text-sm font-medium text-gray-400 mb-1">Status</label>
           <div className="relative">
             <select
               value={getCurrentValue('status')}
               onChange={(e) => onFieldChange('status', e.target.value)}
-              className="lux-input appearance-none pr-10"
+              className="lux-input appearance-none pr-10 w-full"
             >
               <option value="in_stock">In Stock</option>
               <option value="sold">Sold</option>
               <option value="reserved">Reserved</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+          <label className="block text-sm font-medium text-gray-400 mb-1">Quantity</label>
           <input
             type="number"
             min="0"
@@ -649,7 +648,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
 
       {/* VAT (from settings rate) */}
       {sellPrice > 0 && vatInfo && (
-        <div className="rounded-lg bg-amber-50/50 border border-amber-200/50 p-3">
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
           <div className="text-sm text-gray-700">
             VAT (at {vatInfo.ratePct}%): <span className="font-semibold text-gray-900">{formatCurrency(vatInfo.vatEur)}</span>
             <span className="text-gray-500 ml-1">— sell price treated as gross</span>
@@ -755,7 +754,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
 
   const handleSubmit = async () => {
     if (!showModal || !amount) return
-    
+
     setIsSubmitting(true)
     try {
       const res = await apiPost<{ data: { id: string; amountEur: number } }>(`/products/${productId}/transactions`, {
@@ -839,7 +838,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
       </div>
 
       {saleForInvoice && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 flex items-center justify-between gap-4">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-center justify-between gap-4">
           <span className="text-sm text-amber-800">
             Sale recorded ({formatCurrency(saleForInvoice.amountEur)}). Create an invoice for accounting?
           </span>
@@ -868,10 +867,10 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
           <span>Loading history...</span>
         </div>
       ) : transactions.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center">
+        <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center bg-gray-50">
           <History className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-          <p className="text-sm text-gray-500 font-medium">No transactions yet</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-sm text-gray-900 font-medium">No transactions yet</p>
+          <p className="text-xs text-gray-500 mt-1">
             Record a sale or adjustment to track this product's history
           </p>
         </div>

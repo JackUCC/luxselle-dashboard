@@ -2,7 +2,9 @@
   "name": "luxselle-dashboard",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": "18.x || 20.x || 22.x || 24.x" },
+  "engines": {
+    "node": "18.x || 20.x || 22.x || 24.x"
+  },
   "workspaces": [
     "packages/server",
     "packages/shared"
@@ -43,6 +45,7 @@
     "firebase-tools": "^13.20.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "vite-tsconfig-paths": "^6.0.5",

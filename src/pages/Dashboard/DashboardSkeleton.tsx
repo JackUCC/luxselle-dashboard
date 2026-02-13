@@ -64,14 +64,14 @@ export default function DashboardSkeleton() {
           ))}
         </div>
 
-        <div className="rounded-xl bg-gray-900 p-6 space-y-4">
-          <Skeleton className="h-7 w-32 bg-gray-700/80" />
-          <Skeleton className="h-4 w-40 bg-gray-700/70" />
+        <div className="lux-card p-6 space-y-4">
+          <Skeleton className="h-7 w-32" />
+          <Skeleton className="h-4 w-40" />
           <div className="space-y-3">
-            <Skeleton variant="rect" className="h-14 w-full rounded-lg bg-gray-800/80" />
-            <Skeleton variant="rect" className="h-14 w-full rounded-lg bg-gray-800/80" />
+            <Skeleton variant="rect" className="h-14 w-full rounded-lg" />
+            <Skeleton variant="rect" className="h-14 w-full rounded-lg" />
           </div>
-          <Skeleton variant="rect" className="h-10 w-full rounded-lg bg-gray-800/80" />
+          <Skeleton variant="rect" className="h-10 w-full rounded-lg" />
         </div>
       </div>
     </div>

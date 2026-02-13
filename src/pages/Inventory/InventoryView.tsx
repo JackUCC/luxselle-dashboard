@@ -15,13 +15,16 @@ import {
   ChevronDown,
   Loader2,
   Package,
-  Download
+  Download,
+  Upload
 } from 'lucide-react'
 import { apiGet } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE_SMALL } from '../../lib/placeholder'
 import type { ProductWithId } from '../../types/dashboard'
 import ProductDetailDrawer from './ProductDetailDrawer'
+import AddProductDrawer from './AddProductDrawer'
+import ImportInventoryDrawer from './ImportInventoryDrawer'
 
 interface ProductsResponse {
   data: ProductWithId[]
@@ -31,10 +34,10 @@ interface ProductsResponse {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'in_stock': return 'bg-green-100 text-green-700'
-    case 'sold': return 'bg-gray-100 text-gray-700'
-    case 'reserved': return 'bg-orange-100 text-orange-700'
-    default: return 'bg-gray-100 text-gray-600'
+    case 'in_stock': return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+    case 'sold': return 'bg-gray-100 text-gray-600 border-gray-200'
+    case 'reserved': return 'bg-amber-100 text-amber-700 border-amber-200'
+    default: return 'bg-gray-100 text-gray-600 border-gray-200'
   }
 }
 
@@ -52,6 +55,8 @@ export default function InventoryView() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [showAddDrawer, setShowAddDrawer] = useState(false)
+  const [showImportDrawer, setShowImportDrawer] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const query = (searchParams.get('q') ?? '').trim()
@@ -131,28 +136,26 @@ export default function InventoryView() {
     toast.success(`Exported ${filteredProducts.length} items to CSV`)
   }, [filteredProducts])
 
-  useEffect(() => {
-    let active = true
+  const fetchProducts = useCallback(() => {
     setIsLoading(true)
     apiGet<ProductsResponse>('/products')
       .then((response) => {
-        if (!active) return
         setProducts(response.data)
         setError(null)
       })
       .catch((err: unknown) => {
-        if (!active) return
         const message = err instanceof Error ? err.message : 'Failed to load products'
         setError(message)
         toast.error(message)
       })
       .finally(() => {
-        if (active) setIsLoading(false)
+        setIsLoading(false)
       })
-    return () => {
-      active = false
-    }
   }, [])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const brands = useMemo(() =>
     Array.from(new Set(products.map(p => p.brand))).sort()
@@ -173,19 +176,28 @@ export default function InventoryView() {
   return (
     <section className="space-y-6">
       {/* Header & Controls */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Inventory</h1>
-          <p className="text-sm text-gray-500">Manage stock levels and product details.</p>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-display font-bold tracking-tight text-gray-900">Inventory</h1>
+            <p className="text-base text-gray-500 mt-1">Manage stock levels and product details.</p>
+          </div>
+          <button
+            onClick={() => setShowAddDrawer(true)}
+            className="lux-btn-primary flex items-center gap-2 shadow-lg shadow-blue-500/20"
+          >
+            <Plus className="h-5 w-5" />
+            Add Product
+          </button>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3 flex-1">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Filter inventory..."
+                placeholder="Search..."
                 value={query}
                 onChange={(e) => {
                   const newParams = new URLSearchParams(searchParams)
@@ -193,22 +205,22 @@ export default function InventoryView() {
                   else newParams.delete('q')
                   setSearchParams(newParams)
                 }}
-                className="lux-input pl-10"
+                className="lux-input pl-10 w-full shadow-sm"
               />
             </div>
 
             {/* View Toggles */}
-            <div className="flex rounded-lg border border-gray-200 bg-white p-1">
+            <div className="flex rounded-lg border border-gray-200 bg-gray-100/50 p-1">
               <button
                 onClick={() => setViewMode('table')}
-                className={`rounded p-1.5 transition-colors ${viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                className={`rounded p-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
                   }`}
               >
                 <LayoutList className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`rounded p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                className={`rounded p-2 transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
                   }`}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -220,22 +232,25 @@ export default function InventoryView() {
             <button
               onClick={handleExportCSV}
               disabled={filteredProducts.length === 0}
-              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="lux-btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
               Export
             </button>
-            <button className="lux-btn-primary flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Item
+            <button
+              onClick={() => setShowImportDrawer(true)}
+              className="lux-btn-secondary flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Import
             </button>
           </div>
         </div>
 
         {/* Low stock banner (from Dashboard link) */}
         {lowStockFilter && (
-          <div className="flex items-center justify-between rounded-lg bg-orange-50 border border-orange-200 px-4 py-3">
-            <p className="text-sm font-medium text-orange-800">
+          <div className="flex items-center justify-between rounded-xl bg-orange-50 border border-orange-100 px-4 py-3">
+            <p className="text-sm font-medium text-orange-700">
               Showing low stock items (quantity &lt; {LOW_STOCK_THRESHOLD})
             </p>
             <button
@@ -245,7 +260,7 @@ export default function InventoryView() {
                 newParams.delete('lowStock')
                 setSearchParams(newParams)
               }}
-              className="text-sm font-medium text-orange-600 hover:text-orange-800"
+              className="text-sm font-medium text-orange-600 hover:text-orange-800 transition-colors"
             >
               Clear filter
             </button>
@@ -256,7 +271,7 @@ export default function InventoryView() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <select
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
               value={brandFilter}
               onChange={(e) => {
                 const newParams = new URLSearchParams(searchParams)
@@ -275,7 +290,7 @@ export default function InventoryView() {
 
           <div className="relative">
             <select
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
               value={statusFilter}
               onChange={(e) => {
                 const newParams = new URLSearchParams(searchParams)
@@ -284,7 +299,7 @@ export default function InventoryView() {
                 setSearchParams(newParams)
               }}
             >
-              <option value="">All Status</option>
+              <option value="">All Statuses</option>
               <option value="in_stock">In Stock</option>
               <option value="sold">Sold</option>
               <option value="reserved">Reserved</option>
@@ -300,23 +315,25 @@ export default function InventoryView() {
           <span>Loading inventory...</span>
         </div>
       ) : error ? (
-        <div className="rounded-lg bg-red-50 p-4 text-red-600">{error}</div>
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-red-400">{error}</div>
       ) : filteredProducts.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
-          <Package className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-          <p className="text-gray-500 font-medium">No items found</p>
-          <p className="text-sm text-gray-400 mt-1">
+        <div className="rounded-2xl border border-dashed border-gray-200 bg-white/50 p-12 text-center">
+          <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <Package className="h-6 w-6 text-gray-400" />
+          </div>
+          <p className="text-gray-900 font-semibold mb-1">No items found</p>
+          <p className="text-sm text-gray-500">
             {query || brandFilter || statusFilter ? 'Try adjusting your filters.' : 'Add your first inventory item to get started.'}
           </p>
         </div>
       ) : viewMode === 'table' ? (
         <div
           ref={shouldVirtualize ? tableContainerRef : null}
-          className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
           style={shouldVirtualize ? { maxHeight: '600px', overflow: 'auto' } : undefined}
         >
           <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50/50 sticky top-0 z-10">
+            <thead className="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
@@ -327,7 +344,7 @@ export default function InventoryView() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y divide-gray-100 bg-transparent">
               {shouldVirtualize ? (
                 <>
                   {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -336,26 +353,26 @@ export default function InventoryView() {
                       <tr
                         key={product.id}
                         onClick={() => openProductDrawer(product.id)}
-                        className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        className="group hover:bg-blue-50/30 transition-colors cursor-pointer"
                         style={{
                           height: `${virtualRow.size}px`,
                         }}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200 shadow-sm">
                               {product.imageUrls?.[0] && (
                                 <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }} />
                               )}
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{product.brand} {product.model}</div>
+                              <div className="font-semibold text-gray-900">{product.brand} {product.model}</div>
                               <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                          <span className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
                             {product.quantity} units
                           </span>
                         </td>
@@ -363,7 +380,7 @@ export default function InventoryView() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 text-xs">
                               <span className="text-gray-400 w-8">PAID</span>
-                              <span className="font-medium text-gray-900">{formatCurrency(product.costPriceEur)}</span>
+                              <span className="font-medium text-gray-700">{formatCurrency(product.costPriceEur)}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs">
                               <span className="text-gray-400 w-8">SELL</span>
@@ -372,7 +389,7 @@ export default function InventoryView() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)} border-current/10`}>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)}`}>
                             {getStatusLabel(product.status)}
                           </span>
                         </td>
@@ -381,37 +398,38 @@ export default function InventoryView() {
                             onClick={(e) => {
                               e.stopPropagation()
                             }}
-                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-all p-2 hover:bg-gray-100 rounded-full"
                           >
-                            <MoreVertical className="h-5 w-5" />
+                            <MoreVertical className="h-4 w-4" />
                           </button>
                         </td>
                       </tr>
                     )
                   })}
                 </>
+
               ) : (
                 filteredProducts.map((product) => (
                   <tr
                     key={product.id}
                     onClick={() => openProductDrawer(product.id)}
-                    className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    className="group hover:bg-blue-50/30 transition-colors cursor-pointer"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200 shadow-sm">
                           {product.imageUrls?.[0] && (
                             <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }} />
                           )}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{product.brand} {product.model}</div>
+                          <div className="font-semibold text-gray-900">{product.brand} {product.model}</div>
                           <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                      <span className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
                         {product.quantity} units
                       </span>
                     </td>
@@ -419,7 +437,7 @@ export default function InventoryView() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-xs">
                           <span className="text-gray-400 w-8">PAID</span>
-                          <span className="font-medium text-gray-900">{formatCurrency(product.costPriceEur)}</span>
+                          <span className="font-medium text-gray-700">{formatCurrency(product.costPriceEur)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <span className="text-gray-400 w-8">SELL</span>
@@ -428,7 +446,7 @@ export default function InventoryView() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)} border-current/10`}>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)}`}>
                         {getStatusLabel(product.status)}
                       </span>
                     </td>
@@ -438,9 +456,9 @@ export default function InventoryView() {
                           e.stopPropagation()
                           // Menu will be added later
                         }}
-                        className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-all p-2 hover:bg-gray-100 rounded-full"
                       >
-                        <MoreVertical className="h-5 w-5" />
+                        <MoreVertical className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
@@ -450,35 +468,35 @@ export default function InventoryView() {
           </table>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
               onClick={() => openProductDrawer(product.id)}
-              className="group relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              className="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
             >
-              <div className="aspect-[4/3] bg-gray-100 relative">
+              <div className="aspect-[4/3] bg-gray-50 relative overflow-hidden">
                 {product.imageUrls?.[0] && (
-                  <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }} />
+                  <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }} />
                 )}
                 <div className="absolute top-3 right-3">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase bg-white/90 backdrop-blur-sm shadow-sm border border-gray-200 text-gray-900`}>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase border text-white shadow-sm ${getStatusColor(product.status).replace('bg-emerald-100', 'bg-emerald-500').replace('text-emerald-700', 'text-white')}`}>
                     {getStatusLabel(product.status)}
                   </span>
                 </div>
               </div>
-              <div className="p-4">
-                <div className="mb-1 text-xs font-medium text-gray-500">{product.brand}</div>
-                <h3 className="font-semibold text-gray-900 text-sm mb-4 line-clamp-1">{product.model}</h3>
+              <div className="p-5">
+                <div className="mb-1 text-xs font-bold text-blue-600 uppercase tracking-wide">{product.brand}</div>
+                <h3 className="font-bold text-gray-900 text-base mb-4 line-clamp-1">{product.model}</h3>
 
-                <div className="flex items-end justify-between">
+                <div className="flex items-end justify-between border-t border-gray-100 pt-4">
                   <div>
-                    <div className="text-[10px] text-gray-400 uppercase tracking-wide">Price</div>
-                    <div className="font-mono text-sm font-medium text-gray-900">{formatCurrency(product.sellPriceEur)}</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">Price</div>
+                    <div className="font-mono text-lg font-bold text-gray-900">{formatCurrency(product.sellPriceEur)}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] text-gray-400 uppercase tracking-wide">Qty</div>
-                    <div className="text-sm font-medium text-gray-900">{product.quantity}</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">Qty</div>
+                    <div className="text-sm font-medium text-gray-600">{product.quantity}</div>
                   </div>
                 </div>
               </div>
@@ -493,6 +511,20 @@ export default function InventoryView() {
           productId={selectedProductId}
           onClose={closeProductDrawer}
           onProductUpdated={handleProductUpdated}
+        />
+      )}
+
+      {showAddDrawer && (
+        <AddProductDrawer
+          onClose={() => setShowAddDrawer(false)}
+          onProductAdded={fetchProducts}
+        />
+      )}
+
+      {showImportDrawer && (
+        <ImportInventoryDrawer
+          onClose={() => setShowImportDrawer(false)}
+          onImportComplete={fetchProducts}
         />
       )}
     </section>

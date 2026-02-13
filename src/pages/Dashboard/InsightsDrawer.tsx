@@ -167,24 +167,24 @@ export default function InsightsDrawer({
     <>
       <button
         type="button"
-        className="fixed inset-0 z-40 bg-gray-900/30 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-label="Close insights drawer"
       />
 
       <aside
         ref={panelRef}
-        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-hidden border-l border-gray-200 bg-white shadow-2xl animate-in slide-in-from-right duration-300"
+        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-hidden border-l border-white/[0.06] bg-gray-950/95 backdrop-blur-xl shadow-2xl animate-in slide-in-from-right duration-300"
         role="dialog"
         aria-modal="true"
         aria-labelledby="insights-drawer-title"
         data-testid="dashboard-insights-drawer"
       >
-        <header className="border-b border-gray-200 bg-gray-50/70 px-5 py-4">
+        <header className="border-b border-white/[0.06] bg-white/[0.03] px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500">Insights</p>
-              <h2 id="insights-drawer-title" className="font-display text-xl font-semibold text-gray-900">
+              <h2 id="insights-drawer-title" className="font-display text-xl font-semibold text-gray-100">
                 {insightLabelMap[source]}
               </h2>
             </div>
@@ -192,7 +192,7 @@ export default function InsightsDrawer({
               ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-white/[0.06] hover:text-gray-300"
               aria-label="Close insights"
             >
               <X className="h-4 w-4" />
@@ -201,27 +201,27 @@ export default function InsightsDrawer({
         </header>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <section className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-3 flex items-center gap-2 text-gray-700">
+          <section className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
+            <div className="mb-3 flex items-center gap-2 text-indigo-400">
               <Sparkles className="h-4 w-4" />
               <p className="text-sm font-semibold">What matters now</p>
             </div>
             <ul className="space-y-3">
               {bullets.map((bullet, index) => (
-                <li key={index} className="flex gap-2 text-sm text-gray-600">
-                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
+                <li key={index} className="flex gap-2 text-sm text-gray-400">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
                   <span>{bullet}</span>
                 </li>
               ))}
             </ul>
           </section>
 
-          <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <div className="mb-2 flex items-center gap-2 text-amber-700">
+          <section className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <div className="mb-2 flex items-center gap-2 text-amber-400">
               <AlertTriangle className="h-4 w-4" />
               <p className="text-sm font-semibold">Suggested Action</p>
             </div>
-            <p className="text-sm text-amber-800">
+            <p className="text-sm text-amber-300/80">
               Review this insight and execute one follow-up action to keep operations ahead of demand.
             </p>
           </section>
@@ -233,7 +233,7 @@ export default function InsightsDrawer({
                 <Link
                   key={action.to}
                   to={action.to}
-                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                  className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-gray-300 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.1]"
                 >
                   <span>{action.label}</span>
                   <ChevronRight className="h-4 w-4" />

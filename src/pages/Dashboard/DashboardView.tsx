@@ -1,8 +1,9 @@
 /**
- * Dashboard overview: KPIs, recent activity, status and profit widgets; uses apiGet and CommandBar.
+ * Dashboard overview: Premium dark glassmorphism with bento grid layout,
+ * animated KPI cards, sparklines, and 6 market widgets.
  * @see docs/CODE_REFERENCE.md
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -16,9 +17,11 @@ import {
   Package,
   RefreshCw,
   TrendingUp,
+  TrendingDown,
   User,
   Users,
   Zap,
+  Sparkles,
 } from 'lucide-react'
 import { apiGet } from '../../lib/api'
 import { formatCurrency, formatRelativeDate } from '../../lib/formatters'
@@ -27,7 +30,14 @@ import { isInsightSource, type InsightSource } from '../../components/layout/rou
 import CommandBar from './CommandBar'
 import DashboardSkeleton from './DashboardSkeleton'
 import InsightsDrawer from './InsightsDrawer'
-import { CurrencyWidget, HolidaysWidget, MarketResearchWidget, NewsWidget } from '../../components/widgets'
+import {
+  CurrencyWidget,
+  HolidaysWidget,
+  MarketResearchWidget,
+  NewsWidget,
+  WeatherWidget,
+  CryptoWidget,
+} from '../../components/widgets'
 
 interface VatResult {
   netEur: number
@@ -36,10 +46,89 @@ interface VatResult {
   ratePct: number
 }
 
+// ─── Animated Counter ───
+function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
+  const [display, setDisplay] = useState('—')
+  const ref = useRef<HTMLSpanElement>(null)
 
+  useEffect(() => {
+    if (value === null || value === undefined) return
+    const numVal = typeof value === 'string' ? parseFloat(value) : value
+    if (!Number.isFinite(numVal)) { setDisplay(String(value)); return }
+
+    const duration = 1000
+    const start = performance.now()
+    let raf: number
+
+    const animate = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3) // ease-out cubic
+      const current = numVal * eased
+
+      if (numVal >= 1000) {
+        setDisplay(`${prefix}${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}${suffix}`)
+      } else if (numVal >= 1) {
+        setDisplay(`${prefix}${current.toFixed(1)}${suffix}`)
+      } else {
+        setDisplay(`${prefix}${current.toFixed(2)}${suffix}`)
+      }
+
+      if (progress < 1) raf = requestAnimationFrame(animate)
+    }
+
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [value, prefix, suffix])
+
+  return <span ref={ref} className="tabular-nums">{display}</span>
+}
+
+// ─── Mini Sparkline for KPIs ───
+function KPISparkline({ color = '#818CF8' }: { color?: string }) {
+  // Mock 7-point trend data
+  const data = [40, 55, 45, 60, 50, 65, 58]
+  const w = 60; const h = 20
+  const min = Math.min(...data); const max = Math.max(...data)
+  const range = max - min || 1
+
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
+
+  return (
+    <svg width={w} height={h} className="opacity-50">
+      <defs>
+        <linearGradient id={`kpi-grad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`M0,${h} L${points.replace(/ /g, ' L')} L${w},${h} Z`} fill={`url(#kpi-grad-${color.replace('#', '')})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+// ─── Profit Bar ───
+function ProfitBar({ label, value, maxValue, color }: { label: string; value: number; maxValue: number; color: string }) {
+  const pct = maxValue > 0 ? (Math.abs(value) / maxValue) * 100 : 0
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-gray-400">{label}</span>
+        <span className={`font-bold font-mono ${color}`}>{formatCurrency(value)}</span>
+      </div>
+      <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-1000 ease-out"
+          style={{ width: `${Math.min(pct, 100)}%`, background: `linear-gradient(90deg, ${color === 'text-emerald-400' ? '#34D399' : color === 'text-rose-400' ? '#FB7185' : '#818CF8'}, ${color === 'text-emerald-400' ? '#10B981' : color === 'text-rose-400' ? '#E11D48' : '#6366F1'})` }}
+        />
+      </div>
+    </div>
+  )
+}
 
 const insightButtonClass =
-  'inline-flex items-center rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900'
+  'inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-gray-200 hover:border-white/[0.12]'
 
 export default function DashboardView() {
   const [kpis, setKpis] = useState<KPIs | null>(null)
@@ -118,7 +207,7 @@ export default function DashboardView() {
         return (
           <span>
             Added{' '}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-gray-200">
               {str('brand')} {str('model')}
             </span>{' '}
             to inventory
@@ -128,7 +217,7 @@ export default function DashboardView() {
         return (
           <span>
             Added to buying list:{' '}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-gray-200">
               {str('brand')} {str('model')}
             </span>
           </span>
@@ -137,7 +226,7 @@ export default function DashboardView() {
         return (
           <span>
             Received stock:{' '}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-gray-200">
               {str('brand')} {str('model')}
             </span>
           </span>
@@ -146,19 +235,19 @@ export default function DashboardView() {
         return (
           <span>
             Supplier import completed:{' '}
-            <span className="font-medium text-gray-900">{String(p?.success ?? 0)} items</span>
+            <span className="font-medium text-gray-200">{String(p?.success ?? 0)} items</span>
           </span>
         )
       case 'sourcing_created':
         return (
           <span>
-            New request from <span className="font-medium text-gray-900">{str('customerName')}</span>
+            New request from <span className="font-medium text-gray-200">{str('customerName')}</span>
           </span>
         )
       case 'sourcing_status_changed':
         return (
           <span>
-            Sourcing update for <span className="font-medium text-gray-900">{str('customerName')}</span>
+            Sourcing update for <span className="font-medium text-gray-200">{str('customerName')}</span>
           </span>
         )
       case 'seed':
@@ -193,28 +282,39 @@ export default function DashboardView() {
     switch (type) {
       case 'product_created':
       case 'buylist_received':
-        return 'bg-green-500'
+        return 'bg-emerald-500'
       case 'sourcing_created':
       case 'sourcing_status_changed':
         return 'bg-violet-500'
       case 'supplier_import':
         return 'bg-blue-500'
       default:
-        return 'bg-gray-400'
+        return 'bg-gray-500'
     }
+  }
+
+  // Get time-aware greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 18) return 'Good afternoon'
+    return 'Good evening'
   }
 
   return (
     <>
       <div className="flex flex-col items-center space-y-10 py-4 sm:py-6">
+        {/* ─── Hero Greeting ─── */}
         <div className="w-full max-w-2xl space-y-6 text-center">
           <div className="flex items-center justify-center gap-3">
-            <h1 className="text-3xl font-display font-bold text-gray-900 sm:text-4xl">Good afternoon, Jack</h1>
+            <h1 className="text-3xl font-display font-bold sm:text-4xl lux-gradient-text">
+              {getGreeting()}, Jack
+            </h1>
             <button
               type="button"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="rounded-full border border-gray-200 bg-white p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+              className="rounded-full border border-white/[0.08] bg-white/[0.04] p-2 text-gray-500 transition-all hover:bg-white/[0.08] hover:text-gray-300 disabled:opacity-50"
               title="Refresh data"
               aria-label="Refresh dashboard data"
             >
@@ -229,26 +329,27 @@ export default function DashboardView() {
           <div className="flex flex-wrap justify-center gap-2.5">
             <Link
               to="/inventory"
-              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-soft transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12] hover:shadow-glow-indigo"
             >
               <Package className="h-4 w-4" />
               View Stock
             </Link>
             <Link
               to="/buy-box"
-              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-soft transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12] hover:shadow-glow-indigo"
             >
               <Calculator className="h-4 w-4" />
               Evaluate Item
             </Link>
             <Link
               to="/sourcing"
-              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-soft transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12] hover:shadow-glow-indigo"
             >
               <User className="h-4 w-4" />
               Sourcing List
             </Link>
             <button type="button" onClick={() => openInsights('overview')} className={insightButtonClass}>
+              <Sparkles className="h-3 w-3 mr-1" />
               Insights
             </button>
           </div>
@@ -257,85 +358,91 @@ export default function DashboardView() {
         {isLoading ? (
           <DashboardSkeleton />
         ) : error ? (
-          <div className="w-full max-w-4xl rounded-lg border border-red-100 bg-red-50 p-5 text-center text-red-700">
+          <div className="w-full max-w-4xl rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5 text-center text-rose-300">
             <p>{error}</p>
             <button
               type="button"
               onClick={handleRefresh}
-              className="mt-3 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50"
+              className="mt-3 rounded-xl border border-rose-500/20 bg-white/[0.04] px-3 py-2 text-sm font-medium text-rose-300 transition-colors hover:bg-white/[0.08]"
             >
               Retry
             </button>
           </div>
         ) : (
           <div className="w-full space-y-8">
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="lux-card p-6">
+            {/* ─── KPI Cards ─── */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Inventory Value */}
+              <div className="lux-card p-6 gradient-border animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
                 <div className="mb-4 flex items-start justify-between">
-                  <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+                  <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-400 border border-blue-500/20">
                     <DollarSign className="h-5 w-5" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openInsights('overview')}
-                    className={insightButtonClass}
-                    aria-label="Open inventory value insights"
-                  >
+                  <button type="button" onClick={() => openInsights('overview')} className={insightButtonClass} aria-label="Open inventory value insights">
                     Insight
                   </button>
                 </div>
-                <div className="mb-1 text-2xl font-bold text-gray-900">
-                  {kpis ? formatCurrency(kpis.totalInventoryValue) : '—'}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
+                      <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
+                    </div>
+                    <div className="text-sm text-gray-500">Total Inventory Value</div>
+                  </div>
+                  <KPISparkline color="#60A5FA" />
                 </div>
-                <div className="text-sm text-gray-500">Total Inventory Value</div>
               </div>
 
-              <div className="lux-card p-6">
+              {/* Pending Buy List */}
+              <div className="lux-card p-6 gradient-border animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
                 <div className="mb-4 flex items-start justify-between">
-                  <div className="rounded-lg bg-rose-50 p-2 text-rose-600">
+                  <div className="rounded-xl bg-rose-500/10 p-2.5 text-rose-400 border border-rose-500/20">
                     <ClipboardList className="h-5 w-5" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openInsights('overview')}
-                    className={insightButtonClass}
-                    aria-label="Open pending buy list insights"
-                  >
+                  <button type="button" onClick={() => openInsights('overview')} className={insightButtonClass} aria-label="Open pending buy list insights">
                     Insight
                   </button>
                 </div>
-                <div className="mb-1 text-2xl font-bold text-gray-900">
-                  {kpis ? formatCurrency(kpis.pendingBuyListValue) : '—'}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
+                      <AnimatedNumber value={kpis?.pendingBuyListValue ?? 0} prefix="€" />
+                    </div>
+                    <div className="text-sm text-gray-500">Pending Buy List</div>
+                  </div>
+                  <KPISparkline color="#FB7185" />
                 </div>
-                <div className="text-sm text-gray-500">Pending Buy List</div>
               </div>
 
-              <div className="lux-card p-6">
+              {/* Active Sourcing Pipeline */}
+              <div className="lux-card p-6 gradient-border animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
                 <div className="mb-4 flex items-start justify-between">
-                  <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600">
+                  <div className="rounded-xl bg-indigo-500/10 p-2.5 text-indigo-400 border border-indigo-500/20">
                     <Users className="h-5 w-5" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openInsights('activity')}
-                    className={insightButtonClass}
-                    aria-label="Open sourcing pipeline insights"
-                  >
+                  <button type="button" onClick={() => openInsights('activity')} className={insightButtonClass} aria-label="Open sourcing pipeline insights">
                     Insight
                   </button>
                 </div>
-                <div className="mb-1 text-2xl font-bold text-gray-900">
-                  {kpis ? formatCurrency(kpis.activeSourcingPipeline) : '—'}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
+                      <AnimatedNumber value={kpis?.activeSourcingPipeline ?? 0} prefix="€" />
+                    </div>
+                    <div className="text-sm text-gray-500">Active Sourcing Pipeline</div>
+                  </div>
+                  <KPISparkline color="#818CF8" />
                 </div>
-                <div className="text-sm text-gray-500">Active Sourcing Pipeline</div>
               </div>
 
+              {/* Low Stock Alerts */}
               <Link
                 to="/inventory?lowStock=1"
-                className="lux-card block cursor-pointer rounded-xl p-6 transition-shadow hover:shadow-md hover:ring-2 hover:ring-orange-200"
+                className="lux-card block cursor-pointer p-6 transition-all hover:shadow-glow-rose hover:border-rose-500/20 gradient-border animate-bento-enter"
+                style={{ '--stagger': 3 } as React.CSSProperties}
               >
                 <div className="mb-4 flex items-start justify-between">
-                  <div className="rounded-lg bg-orange-50 p-2 text-orange-600">
+                  <div className="rounded-xl bg-amber-500/10 p-2.5 text-amber-400 border border-amber-500/20">
                     <AlertCircle className="h-5 w-5" />
                   </div>
                   <button
@@ -351,71 +458,70 @@ export default function DashboardView() {
                     Insight
                   </button>
                 </div>
-                <div className="mb-1 text-2xl font-bold text-gray-900">{kpis ? kpis.lowStockAlerts : '—'}</div>
-                <div className="text-sm text-gray-500">Low Stock Alerts</div>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
+                      <AnimatedNumber value={kpis?.lowStockAlerts ?? 0} />
+                    </div>
+                    <div className="text-sm text-gray-500">Low Stock Alerts</div>
+                  </div>
+                  <KPISparkline color="#FBBF24" />
+                </div>
               </Link>
             </div>
 
-            <div className="lux-card p-6">
+            {/* ─── Profit Summary (with animated bars) ─── */}
+            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
               <div className="mb-6 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-gray-400" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Profit Summary</h3>
+                  <TrendingUp className="h-5 w-5 text-emerald-400" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Profit Summary</h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => openInsights('profit')}
-                  className={insightButtonClass}
-                  aria-label="Open profit insights"
-                >
+                <button type="button" onClick={() => openInsights('profit')} className={insightButtonClass} aria-label="Open profit insights">
                   Insight
                 </button>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <div className="mb-1 text-sm text-gray-500">Total Revenue</div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {profit ? formatCurrency(profit.totalRevenue) : '—'}
+                <ProfitBar
+                  label="Total Revenue"
+                  value={profit?.totalRevenue ?? 0}
+                  maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
+                  color="text-indigo-400"
+                />
+                <ProfitBar
+                  label="Total Cost"
+                  value={profit?.totalCost ?? 0}
+                  maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
+                  color="text-rose-400"
+                />
+                <ProfitBar
+                  label="Total Profit"
+                  value={profit?.totalProfit ?? 0}
+                  maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
+                  color="text-emerald-400"
+                />
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Avg Margin</span>
+                    <span className={`font-bold font-mono ${profit && profit.avgMarginPct >= 20 ? 'text-emerald-400' : profit && profit.avgMarginPct >= 10 ? 'text-amber-400' : 'text-rose-400'}`}>
+                      <AnimatedNumber value={profit?.avgMarginPct ?? 0} suffix="%" />
+                    </span>
                   </div>
-                </div>
-                <div>
-                  <div className="mb-1 text-sm text-gray-500">Total Cost</div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {profit ? formatCurrency(profit.totalCost) : '—'}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-1 text-sm text-gray-500">Total Profit</div>
-                  <div className={`text-2xl font-bold ${profit && profit.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {profit ? formatCurrency(profit.totalProfit) : '—'}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-1 text-sm text-gray-500">Avg Margin</div>
-                  <div
-                    className={`text-2xl font-bold ${profit && profit.avgMarginPct >= 20
-                      ? 'text-green-600'
-                      : profit && profit.avgMarginPct >= 10
-                        ? 'text-orange-600'
-                        : 'text-red-600'
-                      }`}
-                  >
-                    {profit ? `${profit.avgMarginPct}%` : '—'}
-                  </div>
-                  <div className="mt-1 text-xs text-gray-400">{profit ? `${profit.itemsSold} items sold` : ''}</div>
+                  <div className="text-xs text-gray-600">{profit ? `${profit.itemsSold} items sold` : ''}</div>
                 </div>
               </div>
             </div>
 
-            <div className="lux-card p-6">
+            {/* ─── VAT Calculator ─── */}
+            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
               <div className="mb-6 flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-gray-400" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-900">VAT compliance calculator</h3>
+                <Calculator className="h-5 w-5 text-indigo-400" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">VAT Compliance Calculator</h3>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Amount (EUR)</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-400">Amount (EUR)</label>
                   <input
                     type="number"
                     min="0"
@@ -433,14 +539,14 @@ export default function DashboardView() {
                     id="vat-incl"
                     checked={vatInclVat}
                     onChange={(e) => setVatInclVat(e.target.checked)}
-                    className="rounded border-gray-300"
+                    className="rounded border-white/20 bg-white/[0.04] text-indigo-500 focus:ring-indigo-500/30"
                   />
-                  <label htmlFor="vat-incl" className="text-sm text-gray-700">
+                  <label htmlFor="vat-incl" className="text-sm text-gray-400">
                     Amount includes VAT
                   </label>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">VAT rate % (optional)</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-400">VAT rate % (optional)</label>
                   <input
                     type="number"
                     min="0"
@@ -466,58 +572,69 @@ export default function DashboardView() {
                 </div>
               </div>
               {vatResult && (
-                <div className="mt-6 grid gap-4 border-t border-gray-200 pt-6 sm:grid-cols-3">
+                <div className="mt-6 grid gap-4 border-t border-white/[0.06] pt-6 sm:grid-cols-3">
                   <div>
                     <div className="text-xs uppercase tracking-wider text-gray-500">Net (EUR)</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatCurrency(vatResult.netEur)}</div>
+                    <div className="text-lg font-semibold text-gray-200 font-mono">{formatCurrency(vatResult.netEur)}</div>
                   </div>
                   <div>
                     <div className="text-xs uppercase tracking-wider text-gray-500">VAT ({vatResult.ratePct}%)</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatCurrency(vatResult.vatEur)}</div>
+                    <div className="text-lg font-semibold text-gray-200 font-mono">{formatCurrency(vatResult.vatEur)}</div>
                   </div>
                   <div>
                     <div className="text-xs uppercase tracking-wider text-gray-500">Gross (EUR)</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatCurrency(vatResult.grossEur)}</div>
+                    <div className="text-lg font-semibold text-gray-200 font-mono">{formatCurrency(vatResult.grossEur)}</div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Market & Logistics Section */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <CurrencyWidget />
-              <HolidaysWidget />
-              <MarketResearchWidget />
-              <NewsWidget />
+            {/* ─── Market & Logistics Bento Grid ─── */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="animate-bento-enter" style={{ '--stagger': 6 } as React.CSSProperties}>
+                <CurrencyWidget />
+              </div>
+              <div className="animate-bento-enter" style={{ '--stagger': 7 } as React.CSSProperties}>
+                <CryptoWidget />
+              </div>
+              <div className="animate-bento-enter" style={{ '--stagger': 8 } as React.CSSProperties}>
+                <WeatherWidget />
+              </div>
+              <div className="animate-bento-enter" style={{ '--stagger': 9 } as React.CSSProperties}>
+                <HolidaysWidget />
+              </div>
+              <div className="animate-bento-enter" style={{ '--stagger': 10 } as React.CSSProperties}>
+                <MarketResearchWidget />
+              </div>
+              <div className="animate-bento-enter" style={{ '--stagger': 11 } as React.CSSProperties}>
+                <NewsWidget />
+              </div>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 lux-card p-6">
+            {/* ─── Activity & System Status ─── */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Recent Activity */}
+              <div className="lg:col-span-2 lux-card p-6 animate-bento-enter" style={{ '--stagger': 12 } as React.CSSProperties}>
                 <div className="mb-6 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-gray-400" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Recent Activity</h3>
+                    <Activity className="h-5 w-5 text-indigo-400" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Recent Activity</h3>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openInsights('activity')}
-                    className={insightButtonClass}
-                    aria-label="Open activity insights"
-                  >
+                  <button type="button" onClick={() => openInsights('activity')} className={insightButtonClass} aria-label="Open activity insights">
                     Insight
                   </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {activity.length === 0 ? (
                     <p className="text-sm text-gray-500">No recent activity</p>
                   ) : (
                     activity.map((event) => (
-                      <div key={event.id} className="flex gap-4">
-                        <div className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${getEventIcon(event.eventType)}`} />
+                      <div key={event.id} className="flex gap-4 group">
+                        <div className={`mt-1.5 h-2.5 w-2.5 flex-shrink-0 rounded-full ${getEventIcon(event.eventType)} shadow-[0_0_8px_rgba(255,255,255,0.15)]`} />
                         <div className="flex-1 space-y-1">
-                          <div className="text-sm text-gray-600">{getEventDescription(event)}</div>
-                          <div className="text-xs text-gray-400">{formatRelativeDate(event.createdAt)}</div>
+                          <div className="text-sm text-gray-400">{getEventDescription(event)}</div>
+                          <div className="text-xs text-gray-600">{formatRelativeDate(event.createdAt)}</div>
                         </div>
                       </div>
                     ))
@@ -525,16 +642,17 @@ export default function DashboardView() {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-gray-900 p-6 text-white shadow-soft-lg">
+              {/* System Status */}
+              <div className="lux-card p-6 bg-gradient-to-br from-indigo-500/5 to-violet-500/5 animate-bento-enter" style={{ '--stagger': 13 } as React.CSSProperties}>
                 <div className="mb-6 flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="mb-1 text-lg font-display font-bold">System Status</h3>
-                    <p className="text-sm text-gray-400">All systems operational.</p>
+                    <h3 className="mb-1 text-lg font-display font-bold text-gray-100">System Status</h3>
+                    <p className="text-sm text-gray-500">All systems operational</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => openInsights('system')}
-                    className="inline-flex items-center rounded-full border border-gray-700 px-2.5 py-1 text-xs font-medium text-gray-200 transition-colors hover:bg-gray-800"
+                    className={insightButtonClass}
                     aria-label="Open system insights"
                   >
                     Insight
@@ -542,25 +660,25 @@ export default function DashboardView() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
                     <div className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium">Supplier Feeds</span>
+                      <Globe className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-300">Supplier Feeds</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                      <span className="text-xs font-medium text-emerald-500">Live</span>
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] animate-pulse" />
+                      <span className="text-xs font-medium text-emerald-400">Live</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
                     <div className="flex items-center gap-3">
-                      <Zap className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium">AI Engine</span>
+                      <Zap className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-300">AI Engine</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                      <span className="text-xs font-medium text-emerald-500">Ready</span>
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] animate-pulse" />
+                      <span className="text-xs font-medium text-emerald-400">Ready</span>
                     </div>
                   </div>
                 </div>
@@ -568,7 +686,7 @@ export default function DashboardView() {
                 <button
                   type="button"
                   onClick={() => openInsights('system')}
-                  className="mt-6 w-full rounded-lg bg-gray-800 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+                  className="mt-6 w-full rounded-xl bg-white/[0.04] border border-white/[0.08] py-3 text-sm font-medium text-gray-300 transition-all hover:bg-white/[0.08] hover:text-white"
                 >
                   Run Diagnostics
                 </button>
