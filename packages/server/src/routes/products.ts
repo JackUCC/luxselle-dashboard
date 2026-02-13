@@ -51,146 +51,59 @@ const ProductInputSchema = z.object({
 })
 const ProductUpdateSchema = ProductInputSchema.partial()
 
-// GET /api/products - List products with optional cursor pagination
-// Query params: limit (default 50), cursor, sort (default createdAt), dir (asc/desc)
-router.get('/', async (req, res, next) => {
-  try {
-    const { limit, cursor, sort, dir, q } = req.query
-    let products = await productRepo.list()
-
-    // Text search (simple client-side for now)
-    if (q && typeof q === 'string') {
-      const query = q.toLowerCase()
-      products = products.filter(p =>
-        p.brand.toLowerCase().includes(query) ||
-        p.model.toLowerCase().includes(query)
-      )
+/** Parse CSV string (with quoted fields) into array of objects. First line = headers. */
+function parseCsvToRows(csvStr: string): Record<string, unknown>[] {
+  const lines: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < csvStr.length; i++) {
+    const c = csvStr[i]
+    if (c === '"') {
+      inQuotes = !inQuotes
+    } else if ((c === '\n' && !inQuotes) || (c === '\r' && !inQuotes)) {
+      if (current.trim() || lines.length > 0) lines.push(current)
+      current = ''
+      if (c === '\r' && csvStr[i + 1] === '\n') i++
+    } else {
+      current += c
     }
+  }
+  if (current.trim() || lines.length > 0) lines.push(current)
 
-    // Sort
-    const sortField = (sort as string) || 'createdAt'
-    const sortDir = dir === 'asc' ? 1 : -1
-    products.sort((a, b) => {
-      const aVal = (a as Record<string, unknown>)[sortField]
-      const bVal = (b as Record<string, unknown>)[sortField]
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return aVal.localeCompare(bVal) * sortDir
-      }
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return (aVal - bVal) * sortDir
-      }
-      return 0
-    })
-
-    // Cursor pagination
-    const limitNum = limit ? parseInt(String(limit)) : 50
-    let startIndex = 0
-
-    if (cursor && typeof cursor === 'string') {
-      const cursorIndex = products.findIndex(p => p.id === cursor)
-      if (cursorIndex !== -1) {
-        startIndex = cursorIndex + 1
+  const parseLine = (line: string): string[] => {
+    const out: string[] = []
+    let field = ''
+    let inQuotes = false
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i]
+      if (c === '"') {
+        inQuotes = !inQuotes
+      } else if (c === ',' && !inQuotes) {
+        out.push(field.trim())
+        field = ''
+      } else {
+        field += c
       }
     }
+    out.push(field.trim())
+    return out
+  }
 
-    const paginatedProducts = products.slice(startIndex, startIndex + limitNum)
-    const nextCursor = paginatedProducts.length === limitNum && startIndex + limitNum < products.length
-      ? paginatedProducts[paginatedProducts.length - 1]?.id
-      : null
-
-    res.json({
-      data: paginatedProducts,
-      nextCursor,
-      total: products.length,
+  if (lines.length < 2) return []
+  const headers = parseLine(lines[0])
+  const rows: Record<string, unknown>[] = []
+  for (let r = 1; r < lines.length; r++) {
+    const values = parseLine(lines[r])
+    const obj: Record<string, unknown> = {}
+    headers.forEach((h, i) => {
+      obj[h] = values[i] ?? ''
     })
-  } catch (error) {
-    next(error)
+    rows.push(obj)
   }
-})
+  return rows
+}
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const product = await productRepo.getById(req.params.id)
-    if (!product) {
-      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Product not found'))
-      return
-    }
-    res.json({ data: product })
-  } catch (error) {
-    next(error)
-  }
-})
-
-router.post('/', async (req, res, next) => {
-  try {
-    const input = ProductInputSchema.parse(req.body)
-    const now = new Date().toISOString()
-    const product = ProductSchema.parse({
-      organisationId: DEFAULT_ORG_ID,
-      createdAt: now,
-      updatedAt: now,
-      currency: 'EUR',
-      status: input.status,
-      brand: input.brand,
-      model: input.model,
-      category: input.category ?? '',
-      condition: input.condition ?? '',
-      colour: input.colour ?? '',
-      costPriceEur: input.costPriceEur,
-      sellPriceEur: input.sellPriceEur,
-      quantity: input.quantity ?? 1,
-      imageUrls: input.imageUrls ?? [],
-      images: [],
-      notes: input.notes ?? '',
-    })
-    const created = await productRepo.create(product)
-
-    // Create activity event
-    await activityRepo.create({
-      organisationId: DEFAULT_ORG_ID,
-      createdAt: now,
-      updatedAt: now,
-      actor: 'system',
-      eventType: 'product_created',
-      entityType: 'product',
-      entityId: created.id,
-      payload: {
-        brand: created.brand,
-        model: created.model,
-      },
-    })
-
-    res.status(201).json({ data: created })
-  } catch (error) {
-    next(error)
-  }
-})
-
-router.put('/:id', async (req, res, next) => {
-  try {
-    const input = ProductUpdateSchema.parse(req.body)
-    const now = new Date().toISOString()
-    const updated = await productRepo.set(req.params.id, {
-      ...input,
-      updatedAt: now,
-    })
-    res.json({ data: updated })
-  } catch (error) {
-    next(error)
-  }
-})
-
-router.delete('/:id', async (req, res, next) => {
-  try {
-    await productRepo.remove(req.params.id)
-    res.status(204).send()
-  } catch (error) {
-    next(error)
-  }
-})
-
-// --- Import from Excel/CSV (must be before /:id routes so POST /import is not matched by /:id/images) ---
-
+// --- Import from Excel/CSV (must be before /:id so POST /import is not matched by /:id/images) ---
 const importUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -210,10 +123,15 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
     let rows: Record<string, unknown>[]
     if (isCsv) {
       const str = req.file.buffer.toString('utf8').replace(/^\uFEFF/, '')
-      const wb = XLSX.read(str, { type: 'string' })
-      const sheetName = wb.SheetNames[0]
-      const ws = wb.Sheets[sheetName]
-      rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
+      const parsed = parseCsvToRows(str)
+      if (parsed.length > 0) {
+        rows = parsed
+      } else {
+        const wb = XLSX.read(str, { type: 'string' })
+        const sheetName = wb.SheetNames[0]
+        const ws = wb.Sheets[sheetName]
+        rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
+      }
     } else {
       const wb = XLSX.read(req.file.buffer, { type: 'buffer' })
       const sheetName = wb.SheetNames[0]
@@ -259,7 +177,7 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
       return 0
     }
 
-    // Optional AI column mapping: map our field names to CSV column names (normalized)
+    // Optional AI column mapping
     type ColumnMapping = Partial<Record<string, string>>
     let aiMapping: ColumnMapping | null = null
     const headers = rows.length > 0 ? Object.keys(rows[0]) : []
@@ -405,6 +323,144 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
         productIdsWithMissingInfo,
       },
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/products - List products with optional cursor pagination
+// Query params: limit (default 50), cursor, sort (default createdAt), dir (asc/desc)
+router.get('/', async (req, res, next) => {
+  try {
+    const { limit, cursor, sort, dir, q } = req.query
+    let products = await productRepo.list()
+
+    // Text search (simple client-side for now)
+    if (q && typeof q === 'string') {
+      const query = q.toLowerCase()
+      products = products.filter(p =>
+        p.brand.toLowerCase().includes(query) ||
+        p.model.toLowerCase().includes(query)
+      )
+    }
+
+    // Sort
+    const sortField = (sort as string) || 'createdAt'
+    const sortDir = dir === 'asc' ? 1 : -1
+    products.sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sortField]
+      const bVal = (b as Record<string, unknown>)[sortField]
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal) * sortDir
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return (aVal - bVal) * sortDir
+      }
+      return 0
+    })
+
+    // Cursor pagination
+    const limitNum = limit ? parseInt(String(limit)) : 50
+    let startIndex = 0
+
+    if (cursor && typeof cursor === 'string') {
+      const cursorIndex = products.findIndex(p => p.id === cursor)
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1
+      }
+    }
+
+    const paginatedProducts = products.slice(startIndex, startIndex + limitNum)
+    const nextCursor = paginatedProducts.length === limitNum && startIndex + limitNum < products.length
+      ? paginatedProducts[paginatedProducts.length - 1]?.id
+      : null
+
+    res.json({
+      data: paginatedProducts,
+      nextCursor,
+      total: products.length,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/:id', async (req, res, next) => {
+  try {
+    const product = await productRepo.getById(req.params.id)
+    if (!product) {
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Product not found'))
+      return
+    }
+    res.json({ data: product })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/', async (req, res, next) => {
+  try {
+    const input = ProductInputSchema.parse(req.body)
+    const now = new Date().toISOString()
+    const product = ProductSchema.parse({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      currency: 'EUR',
+      status: input.status,
+      brand: input.brand,
+      model: input.model,
+      category: input.category ?? '',
+      condition: input.condition ?? '',
+      colour: input.colour ?? '',
+      costPriceEur: input.costPriceEur,
+      sellPriceEur: input.sellPriceEur,
+      quantity: input.quantity ?? 1,
+      imageUrls: input.imageUrls ?? [],
+      images: [],
+      notes: input.notes ?? '',
+    })
+    const created = await productRepo.create(product)
+
+    // Create activity event
+    await activityRepo.create({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      actor: 'system',
+      eventType: 'product_created',
+      entityType: 'product',
+      entityId: created.id,
+      payload: {
+        brand: created.brand,
+        model: created.model,
+      },
+    })
+
+    res.status(201).json({ data: created })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.put('/:id', async (req, res, next) => {
+  try {
+    const input = ProductUpdateSchema.parse(req.body)
+    const now = new Date().toISOString()
+    const updated = await productRepo.set(req.params.id, {
+      ...input,
+      updatedAt: now,
+    })
+    res.json({ data: updated })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    await productRepo.remove(req.params.id)
+    res.status(204).send()
   } catch (error) {
     next(error)
   }
