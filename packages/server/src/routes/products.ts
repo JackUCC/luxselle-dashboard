@@ -328,11 +328,12 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
   }
 })
 
-// GET /api/products - List products with optional cursor pagination
-// Query params: limit (default 50), cursor, sort (default createdAt), dir (asc/desc)
+// GET /api/products - List products from Firestore (no cache). Optional cursor pagination.
+// Query params: limit (default 500 for full inventory), cursor, sort (default createdAt), dir (asc/desc), q (search)
 router.get('/', async (req, res, next) => {
   try {
     const { limit, cursor, sort, dir, q } = req.query
+    // Always read fresh from Firestore (single source of truth)
     let products = await productRepo.list()
 
     // Text search (simple client-side for now)
@@ -359,8 +360,9 @@ router.get('/', async (req, res, next) => {
       return 0
     })
 
-    // Cursor pagination
-    const limitNum = limit ? parseInt(String(limit)) : 50
+    // Cursor pagination (default limit 500 so inventory list shows all products)
+    const limitNum = Math.min(1000, limit ? parseInt(String(limit), 10) : 500)
+    const safeLimit = Number.isNaN(limitNum) || limitNum < 1 ? 500 : limitNum
     let startIndex = 0
 
     if (cursor && typeof cursor === 'string') {
@@ -370,11 +372,12 @@ router.get('/', async (req, res, next) => {
       }
     }
 
-    const paginatedProducts = products.slice(startIndex, startIndex + limitNum)
-    const nextCursor = paginatedProducts.length === limitNum && startIndex + limitNum < products.length
+    const paginatedProducts = products.slice(startIndex, startIndex + safeLimit)
+    const nextCursor = paginatedProducts.length === safeLimit && startIndex + safeLimit < products.length
       ? paginatedProducts[paginatedProducts.length - 1]?.id
       : null
 
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate')
     res.json({
       data: paginatedProducts,
       nextCursor,

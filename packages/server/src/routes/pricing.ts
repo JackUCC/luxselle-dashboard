@@ -249,14 +249,14 @@ Return ONLY a JSON object with these fields (lowercase keys): {"brand":"","model
       }
     }
 
-    // Mock response if no AI provider or analysis failed
+    // When mock or AI failed: return empty attributes so UI does not show hardcoded data
     if (!detectedAttributes.brand && env.AI_PROVIDER === 'mock') {
       detectedAttributes = {
-        brand: 'Chanel',
-        model: 'Classic Flap',
-        category: 'Handbag',
-        condition: 'excellent',
-        colour: 'Black',
+        brand: '',
+        model: '',
+        category: '',
+        condition: '',
+        colour: '',
       }
     }
 

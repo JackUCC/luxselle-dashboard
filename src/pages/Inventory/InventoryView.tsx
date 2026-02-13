@@ -149,9 +149,10 @@ export default function InventoryView() {
 
   const fetchProducts = useCallback(() => {
     setIsLoading(true)
-    apiGet<ProductsResponse>('/products')
+    // Request full list (limit=500) so imported and all products show; no cached result
+    apiGet<ProductsResponse>('/products?limit=500')
       .then((response) => {
-        setProducts(response.data)
+        setProducts(response.data ?? [])
         setError(null)
       })
       .catch((err: unknown) => {
