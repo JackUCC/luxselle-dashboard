@@ -14,6 +14,7 @@ import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { env } from '../config/env'
 import * as XLSX from 'xlsx'
 
 const router = Router()
@@ -208,7 +209,7 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
 
     let rows: Record<string, unknown>[]
     if (isCsv) {
-      const str = req.file.buffer.toString('utf8')
+      const str = req.file.buffer.toString('utf8').replace(/^\uFEFF/, '')
       const wb = XLSX.read(str, { type: 'string' })
       const sheetName = wb.SheetNames[0]
       const ws = wb.Sheets[sheetName]
@@ -220,6 +221,17 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
       rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
     }
 
+    // Normalize header keys (trim, strip BOM) so column matching is resilient
+    const normalizeHeaderKey = (k: string) => k.replace(/\uFEFF/g, '').trim().toLowerCase()
+    rows = rows.map(row => {
+      const out: Record<string, unknown> = {}
+      for (const key of Object.keys(row)) {
+        const n = normalizeHeaderKey(key)
+        if (n) out[n] = row[key]
+      }
+      return out
+    })
+
     if (rows.length === 0) {
       res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'File is empty'))
       return
@@ -229,9 +241,12 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
     let createdCount = 0
     let errorCount = 0
     const errors: { row: number; error: string }[] = []
+    let createdWithWarnings = 0
+    const productIdsWithMissingInfo: string[] = []
 
     const normalizeKey = (obj: Record<string, unknown>, key: string) => {
-      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase())
+      const keyLower = key.toLowerCase()
+      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower)
       return foundKey ? obj[foundKey] : undefined
     }
 
@@ -244,27 +259,104 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
       return 0
     }
 
+    // Optional AI column mapping: map our field names to CSV column names (normalized)
+    type ColumnMapping = Partial<Record<string, string>>
+    let aiMapping: ColumnMapping | null = null
+    const headers = rows.length > 0 ? Object.keys(rows[0]) : []
+    const sampleRow = rows.length > 0 ? rows[0] : {}
+
+    if (
+      rows.length > 0 &&
+      ((env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) || (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY))
+    ) {
+      try {
+        const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
+        let text = ''
+        if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+          const OpenAI = (await import('openai')).default
+          const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 400,
+            temperature: 0,
+          })
+          text = response.choices[0]?.message?.content ?? ''
+        } else if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
+          const { GoogleGenerativeAI } = await import('@google/generative-ai')
+          const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY)
+          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+          const result = await model.generateContent(prompt)
+          text = result.response.text() ?? ''
+        }
+        const jsonMatch = text.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          aiMapping = JSON.parse(jsonMatch[0]) as ColumnMapping
+        }
+      } catch {
+        // Fall back to rule-based mapping
+      }
+    }
+
+    const getVal = (row: Record<string, unknown>, field: string, colMap: ColumnMapping | null) => {
+      if (colMap?.[field] != null && row[colMap[field]] !== undefined) return row[colMap[field]]
+      return undefined
+    }
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
       try {
-        const brand = String(normalizeKey(row, 'brand') || normalizeKey(row, 'brand name') || '').trim()
-        const model = String(normalizeKey(row, 'model') || normalizeKey(row, 'product name') || normalizeKey(row, 'title') || '').trim()
+        const brand = String(
+          getVal(row, 'brand', aiMapping) ?? normalizeKey(row, 'brand') ?? normalizeKey(row, 'brand name') ?? ''
+        ).trim()
+        const model = String(
+          getVal(row, 'model', aiMapping) ??
+            normalizeKey(row, 'model') ??
+            normalizeKey(row, 'product name') ??
+            normalizeKey(row, 'title') ??
+            ''
+        ).trim()
 
         if (!brand && !model) continue
 
-        const category = String(normalizeKey(row, 'category') || '').trim()
-        const condition = String(normalizeKey(row, 'condition') || '').trim()
-        const colour = String(normalizeKey(row, 'colour') || normalizeKey(row, 'color') || '').trim()
+        const category = String(
+          getVal(row, 'category', aiMapping) ?? normalizeKey(row, 'category') ?? ''
+        ).trim()
+        const condition = String(
+          getVal(row, 'condition', aiMapping) ?? normalizeKey(row, 'condition') ?? ''
+        ).trim()
+        const colour = String(
+          getVal(row, 'colour', aiMapping) ?? normalizeKey(row, 'colour') ?? normalizeKey(row, 'color') ?? ''
+        ).trim()
 
         const costPriceEur = parseNum(
-          normalizeKey(row, 'cost eur') ?? normalizeKey(row, 'cost') ?? normalizeKey(row, 'cost price') ?? normalizeKey(row, 'invoice price') ?? 0
+          getVal(row, 'costPriceEur', aiMapping) ??
+            normalizeKey(row, 'cost eur') ??
+            normalizeKey(row, 'cost') ??
+            normalizeKey(row, 'cost price') ??
+            normalizeKey(row, 'invoice price') ??
+            0
         )
         const sellPriceEur = parseNum(
-          normalizeKey(row, 'sell eur') ?? normalizeKey(row, 'sell') ?? normalizeKey(row, 'sell price') ?? normalizeKey(row, 'price') ?? 0
+          getVal(row, 'sellPriceEur', aiMapping) ??
+            normalizeKey(row, 'sell eur') ??
+            normalizeKey(row, 'sell') ??
+            normalizeKey(row, 'sell price') ??
+            normalizeKey(row, 'price') ??
+            0
         )
-        const quantity = Math.max(0, Math.floor(parseNum(normalizeKey(row, 'quantity') ?? normalizeKey(row, 'qty') ?? 1)))
+        const quantity = Math.max(
+          0,
+          Math.floor(
+            parseNum(
+              getVal(row, 'quantity', aiMapping) ?? normalizeKey(row, 'quantity') ?? normalizeKey(row, 'qty') ?? 1
+            )
+          )
+        )
 
-        let status = String(normalizeKey(row, 'status') ?? 'in_stock').toLowerCase().replace(/\s+/g, '_')
+        let status = String(
+          getVal(row, 'status', aiMapping) ?? normalizeKey(row, 'status') ?? 'in_stock'
+        ).toLowerCase().replace(/\s+/g, '_')
         if (!['in_stock', 'sold', 'reserved'].includes(status)) status = 'in_stock'
         if (quantity === 0) status = 'sold'
 
@@ -287,8 +379,17 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
           notes: `Imported via web. Row ${i + 2}`,
         })
 
-        await productRepo.create(product)
+        const created = await productRepo.create(product)
         createdCount++
+
+        const hasMissingInfo =
+          product.costPriceEur === 0 ||
+          product.sellPriceEur === 0 ||
+          (product.category != null && product.category.trim() === '')
+        if (hasMissingInfo) {
+          createdWithWarnings++
+          productIdsWithMissingInfo.push(created.id)
+        }
       } catch (err: unknown) {
         errorCount++
         errors.push({ row: i + 2, error: err instanceof Error ? err.message : 'Unknown error' })
@@ -300,6 +401,8 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
         created: createdCount,
         errors: errorCount,
         errorDetails: errors.slice(0, 10),
+        createdWithWarnings,
+        productIdsWithMissingInfo,
       },
     })
   } catch (error) {

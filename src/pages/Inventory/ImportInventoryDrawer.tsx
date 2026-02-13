@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
     X,
@@ -7,7 +8,6 @@ import {
     FileSpreadsheet,
     CheckCircle,
     AlertCircle,
-    Download
 } from 'lucide-react'
 import { apiPostFormData, ApiError } from '../../lib/api'
 
@@ -20,13 +20,18 @@ interface ImportResult {
     created: number
     errors: number
     errorDetails: { row: number; error: string }[]
+    createdWithWarnings?: number
+    productIdsWithMissingInfo?: string[]
 }
 
 export default function ImportInventoryDrawer({ onClose, onImportComplete }: ImportInventoryDrawerProps) {
+    const navigate = useNavigate()
     const [isUploading, setIsUploading] = useState(false)
     const [result, setResult] = useState<ImportResult | null>(null)
     const [isDragOver, setIsDragOver] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const hasMissingInfo = (result?.createdWithWarnings ?? 0) > 0 || (result?.productIdsWithMissingInfo?.length ?? 0) > 0
 
     const handleFileSelect = async (files: FileList | null) => {
         if (!files || files.length === 0) return
@@ -182,6 +187,24 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                                     <div className={`text-sm font-medium ${result.errors > 0 ? 'text-red-500/80' : 'text-gray-400'}`}>Errors</div>
                                 </div>
                             </div>
+
+                            {hasMissingInfo && (
+                                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                    <p className="text-sm text-amber-800">
+                                        {(result.createdWithWarnings ?? 0)} product(s) have missing information (e.g. cost/sell price or category).
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onClose()
+                                            navigate('/inventory?missingInfo=1')
+                                        }}
+                                        className="mt-2 text-sm font-medium text-amber-700 hover:text-amber-900 underline"
+                                    >
+                                        View in list
+                                    </button>
+                                </div>
+                            )}
 
                             {result.errorDetails.length > 0 && (
                                 <div className="rounded-lg border border-red-200 bg-white overflow-hidden shadow-sm">

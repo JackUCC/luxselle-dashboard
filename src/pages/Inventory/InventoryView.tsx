@@ -50,6 +50,14 @@ const getStatusLabel = (status: string) => {
   }
 }
 
+function hasMissingInfo(product: ProductWithId): boolean {
+  return (
+    product.costPriceEur === 0 ||
+    product.sellPriceEur === 0 ||
+    (product.category != null && product.category.trim() === '')
+  )
+}
+
 export default function InventoryView() {
   const [products, setProducts] = useState<ProductWithId[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -63,6 +71,7 @@ export default function InventoryView() {
   const brandFilter = (searchParams.get('brand') ?? '').trim()
   const statusFilter = (searchParams.get('status') ?? '').trim()
   const lowStockFilter = searchParams.get('lowStock') === '1'
+  const missingInfoFilter = searchParams.get('missingInfo') === '1'
   const selectedProductId = searchParams.get('product')
 
   const openProductDrawer = useCallback((productId: string) => {
@@ -100,9 +109,11 @@ export default function InventoryView() {
         if (product.status !== 'in_stock') return false
         if (product.quantity >= LOW_STOCK_THRESHOLD) return false
       }
+      // Missing info filter: only show products with missing cost/sell/category
+      if (missingInfoFilter && !hasMissingInfo(product)) return false
       return true
     })
-  }, [products, query, brandFilter, statusFilter, lowStockFilter])
+  }, [products, query, brandFilter, statusFilter, lowStockFilter, missingInfoFilter])
 
   const handleExportCSV = useCallback(() => {
     const headers = ['Brand', 'Model', 'Category', 'Condition', 'Colour', 'Cost EUR', 'Sell EUR', 'Status', 'Quantity']
@@ -267,6 +278,26 @@ export default function InventoryView() {
           </div>
         )}
 
+        {/* Missing info banner (from Import drawer) */}
+        {missingInfoFilter && (
+          <div className="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
+            <p className="text-sm font-medium text-amber-700">
+              Showing products with missing information (e.g. cost/sell price or category)
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const newParams = new URLSearchParams(searchParams)
+                newParams.delete('missingInfo')
+                setSearchParams(newParams)
+              }}
+              className="text-sm font-medium text-amber-600 hover:text-amber-800 transition-colors"
+            >
+              Clear filter
+            </button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -323,7 +354,7 @@ export default function InventoryView() {
           </div>
           <p className="text-gray-900 font-semibold mb-1">No items found</p>
           <p className="text-sm text-gray-500">
-            {query || brandFilter || statusFilter ? 'Try adjusting your filters.' : 'Add your first inventory item to get started.'}
+            {query || brandFilter || statusFilter || lowStockFilter || missingInfoFilter ? 'Try adjusting your filters.' : 'Add your first inventory item to get started.'}
           </p>
         </div>
       ) : viewMode === 'table' ? (
@@ -349,11 +380,12 @@ export default function InventoryView() {
                 <>
                   {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                     const product = filteredProducts[virtualRow.index]
+                    const isMissingInfo = hasMissingInfo(product)
                     return (
                       <tr
                         key={product.id}
                         onClick={() => openProductDrawer(product.id)}
-                        className="group hover:bg-blue-50/30 transition-colors cursor-pointer"
+                        className={`group hover:bg-blue-50/30 transition-colors cursor-pointer ${isMissingInfo ? 'border-l-4 border-amber-400 bg-amber-50/30' : ''}`}
                         style={{
                           height: `${virtualRow.size}px`,
                         }}
@@ -366,7 +398,14 @@ export default function InventoryView() {
                               )}
                             </div>
                             <div>
-                              <div className="font-semibold text-gray-900">{product.brand} {product.model}</div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-gray-900">{product.brand} {product.model}</span>
+                                {isMissingInfo && (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                                    Missing info
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
                             </div>
                           </div>
@@ -409,11 +448,13 @@ export default function InventoryView() {
                 </>
 
               ) : (
-                filteredProducts.map((product) => (
+                filteredProducts.map((product) => {
+                  const isMissingInfo = hasMissingInfo(product)
+                  return (
                   <tr
                     key={product.id}
                     onClick={() => openProductDrawer(product.id)}
-                    className="group hover:bg-blue-50/30 transition-colors cursor-pointer"
+                    className={`group hover:bg-blue-50/30 transition-colors cursor-pointer ${isMissingInfo ? 'border-l-4 border-amber-400 bg-amber-50/30' : ''}`}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -423,7 +464,14 @@ export default function InventoryView() {
                           )}
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900">{product.brand} {product.model}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-gray-900">{product.brand} {product.model}</span>
+                            {isMissingInfo && (
+                              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                                Missing info
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
                         </div>
                       </div>
@@ -462,24 +510,32 @@ export default function InventoryView() {
                       </button>
                     </td>
                   </tr>
-                ))
+                  )
+                })
               )}
             </tbody>
           </table>
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product) => {
+            const isMissingInfo = hasMissingInfo(product)
+            return (
             <div
               key={product.id}
               onClick={() => openProductDrawer(product.id)}
-              className="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
+              className={`group relative overflow-hidden rounded-2xl bg-white border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer ${isMissingInfo ? 'border border-gray-200 border-l-4 border-l-amber-400 bg-amber-50/20' : 'border border-gray-200'}`}
             >
               <div className="aspect-[4/3] bg-gray-50 relative overflow-hidden">
                 {product.imageUrls?.[0] && (
                   <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }} />
                 )}
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
+                  {isMissingInfo && (
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                      Missing info
+                    </span>
+                  )}
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase border text-white shadow-sm ${getStatusColor(product.status).replace('bg-emerald-100', 'bg-emerald-500').replace('text-emerald-700', 'text-white')}`}>
                     {getStatusLabel(product.status)}
                   </span>
@@ -501,7 +557,8 @@ export default function InventoryView() {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
