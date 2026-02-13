@@ -55,6 +55,7 @@ router.get('/kpis', async (_req, res, next) => {
       (p) => p.status === 'in_stock' && p.quantity < lowStockThreshold
     ).length
 
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate')
     res.json({
       data: {
         totalInventoryValue,

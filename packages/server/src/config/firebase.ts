@@ -15,9 +15,9 @@ const useEmulator = env.FIREBASE_USE_EMULATOR
 // Point SDK at local emulators when FIREBASE_USE_EMULATOR is true
 if (useEmulator) {
   process.env.FIRESTORE_EMULATOR_HOST =
-    env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080'
+    env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8082'
   process.env.FIREBASE_STORAGE_EMULATOR_HOST =
-    env.FIREBASE_STORAGE_EMULATOR_HOST ?? '127.0.0.1:9199'
+    env.FIREBASE_STORAGE_EMULATOR_HOST ?? '127.0.0.1:9198'
 }
 
 const projectId = env.FIREBASE_PROJECT_ID
