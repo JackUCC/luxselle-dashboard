@@ -54,7 +54,7 @@ Go to Railway project → **Variables** tab
 ```bash
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
-FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 ```
 
 ### 2.2 Service Account Credentials
@@ -109,7 +109,7 @@ AI_PROVIDER=mock
 # Firebase
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
-FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"luxselle-dashboard",...}
 
 # App Config

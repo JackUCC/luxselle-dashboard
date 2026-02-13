@@ -24,66 +24,33 @@ const projectId = env.FIREBASE_PROJECT_ID
 const storageBucket = env.FIREBASE_STORAGE_BUCKET
 
 // Prepare credentials for production
-// In production, Firebase Admin SDK needs explicit credentials
-// Support both JSON string and file path
 let credential: ReturnType<typeof cert> | undefined
 
 if (!useEmulator) {
-  // Production: use service account credentials
   if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    // Option 1: JSON string from environment variable (recommended for Railway/Vercel)
     try {
-      console.log('Parsing Firebase service account credentials...')
       const serviceAccount = JSON.parse(env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
-      console.log('Firebase service account parsed successfully. Project:', serviceAccount.project_id)
       credential = cert(serviceAccount)
-    } catch (error) {
-      console.error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:', error)
-      console.error('JSON length:', env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.length)
-      console.error('First 100 chars:', env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.substring(0, 100))
-      throw new Error('Invalid service account JSON')
+    } catch {
+      throw new Error('Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON — check that it is valid JSON')
     }
   } else if (env.GOOGLE_APPLICATION_CREDENTIALS) {
-    // Option 2: File path to service account JSON
-    console.log('Using Firebase credentials from file path:', env.GOOGLE_APPLICATION_CREDENTIALS)
     credential = cert(env.GOOGLE_APPLICATION_CREDENTIALS)
   } else {
-    // Option 3: Try Application Default Credentials (works in Google Cloud environments)
-    console.warn('No explicit credentials provided. Attempting to use Application Default Credentials.')
+    console.warn('No Firebase credentials provided. Falling back to Application Default Credentials.')
   }
 }
 
 // Reuse existing app if already initialized (e.g. in tests)
-let adminApp
-let db
-let storage
+const adminApp = getApps().length > 0
+  ? getApps()[0]
+  : initializeApp({ credential, projectId, storageBucket })
 
-try {
-  console.log('Initializing Firebase Admin SDK...')
-  console.log('Project ID:', projectId)
-  console.log('Storage Bucket:', storageBucket)
-  console.log('Use Emulator:', useEmulator)
+const db = getFirestore(adminApp)
+db.settings({ ignoreUndefinedProperties: true })
 
-  adminApp = getApps().length > 0
-    ? getApps()[0]
-    : initializeApp({
-        credential,
-        projectId,
-        storageBucket,
-      })
+const storage = getStorage(adminApp)
 
-  console.log('Firebase Admin initialized successfully')
-
-  db = getFirestore(adminApp)
-  // Allow writing docs with undefined fields (they are omitted)
-  db.settings({ ignoreUndefinedProperties: true })
-  console.log('Firestore initialized')
-
-  storage = getStorage(adminApp)
-  console.log('Storage initialized')
-} catch (error) {
-  console.error('FATAL: Failed to initialize Firebase:', error)
-  throw error
-}
+console.log(`Firebase Admin initialized (project: ${projectId}, emulator: ${useEmulator})`)
 
 export { adminApp, db, storage }

@@ -69,7 +69,7 @@ Make sure your `.env` file has:
 ```env
 # Firebase Project Configuration
 FIREBASE_PROJECT_ID=luxselle-dashboard
-FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 
 # Emulator Configuration (for local development)
 FIREBASE_USE_EMULATOR=true
@@ -78,7 +78,7 @@ FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199
 
 # Frontend Firebase Config (Vite)
 VITE_FIREBASE_PROJECT_ID=luxselle-dashboard
-VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 
 # For Production (when not using emulators)
 # GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccount.json
@@ -101,7 +101,7 @@ For production, the frontend (e.g. on Vercel) loads product images from Firebase
      }
    ]
    ```
-   Apply with: `gsutil cors set cors.json gs://your-bucket-name.appspot.com` (see [Configure CORS on Cloud Storage](https://cloud.google.com/storage/docs/configuring-cors)).
+   Apply with: `gsutil cors set cors.json gs://your-bucket-name.firebasestorage.app` (see [Configure CORS on Cloud Storage](https://cloud.google.com/storage/docs/configuring-cors)).
 
 ---
 
@@ -141,7 +141,7 @@ import { getStorage, connectStorageEmulator } from 'firebase/storage'
 
 export const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'luxselle-dashboard',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? 'luxselle-dashboard.appspot.com',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? 'luxselle-dashboard.firebasestorage.app',
 }
 
 // Initialize Firebase

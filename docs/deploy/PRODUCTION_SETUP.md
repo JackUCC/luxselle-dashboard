@@ -34,7 +34,7 @@ Complete step-by-step guide to deploy Luxselle Dashboard to production using Ver
 2. Click "Get started"
 3. Choose **Production mode**
 4. Use same region as Firestore
-5. Note your bucket name: `luxselle-dashboard.appspot.com`
+5. Note your bucket name: `luxselle-dashboard.firebasestorage.app`
 
 ### 1.4 Deploy Firestore Rules & Indexes
 
@@ -74,7 +74,7 @@ Apply CORS configuration:
 # https://cloud.google.com/sdk/docs/install
 
 # Apply CORS
-gsutil cors set cors.json gs://luxselle-dashboard.appspot.com
+gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
 ### 1.6 Generate Service Account Key
@@ -116,7 +116,7 @@ Go to Railway project → **Variables** tab and add:
 ```bash
 # Firebase Configuration
 FIREBASE_PROJECT_ID=luxselle-dashboard
-FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 FIREBASE_USE_EMULATOR=false
 
 # Firebase Service Account
@@ -210,7 +210,7 @@ Add these **Production** variables:
 ```bash
 # Firebase Configuration (must match backend!)
 VITE_FIREBASE_PROJECT_ID=luxselle-dashboard
-VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 
 # Backend API URL (CRITICAL - use your Railway URL)
 VITE_API_BASE=https://your-backend.up.railway.app
@@ -246,7 +246,7 @@ Update your `cors.json` with the actual Vercel URL:
 
 Apply again:
 ```bash
-gsutil cors set cors.json gs://luxselle-dashboard.appspot.com
+gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
 ---
@@ -348,7 +348,7 @@ curl https://your-backend.up.railway.app/api/health
 **Fix**:
 ```bash
 # Create cors.json with your Vercel URL
-gsutil cors set cors.json gs://luxselle-dashboard.appspot.com
+gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
 ### Issue: Firebase permission denied

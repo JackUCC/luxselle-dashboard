@@ -24,7 +24,13 @@ import { requestId, requestLogger, type RequestWithId, logger, errorTracker } fr
 
 const app = express()
 
-app.use(cors())
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? [/\.vercel\.app$/, /localhost/]
+    : true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Idempotency-Key'],
+}))
 app.use(express.json({ limit: '2mb' }))
 app.use(requestId as express.RequestHandler)
 app.use(requestLogger as express.RequestHandler)

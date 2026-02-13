@@ -13,7 +13,7 @@ const defaultEnv = {
   PORT: 3001,
   FIREBASE_USE_EMULATOR: true,
   FIREBASE_PROJECT_ID: 'luxselle-dashboard',
-  FIREBASE_STORAGE_BUCKET: 'luxselle-dashboard.appspot.com',
+  FIREBASE_STORAGE_BUCKET: 'luxselle-dashboard.firebasestorage.app',
   FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080',
   FIREBASE_STORAGE_EMULATOR_HOST: '127.0.0.1:9199',
   AI_PROVIDER: 'mock',
@@ -149,32 +149,68 @@ describe('PricingService', () => {
   })
 
   it('selects openai provider when configured', async () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    const PricingService = await loadPricingService({
-      AI_PROVIDER: 'openai',
-      OPENAI_API_KEY: 'test-key',
+    vi.resetModules()
+    listMock.mockReset()
+    productListMock.mockReset()
+
+    const analyseMock = vi.fn().mockResolvedValue({
+      estimatedRetailEur: 3000,
+      confidence: 0.85,
+      comps: [{ title: 'Test Comp', price: 2900, source: 'OpenAI' }],
     })
+
+    vi.doMock('../../config/env', () => ({
+      env: { ...defaultEnv, AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-key' },
+    }))
+    vi.doMock('./providers/OpenAIProvider', () => ({
+      OpenAIProvider: class { analyse = analyseMock },
+    }))
+    vi.doMock('../../repos/TransactionRepo', () => ({
+      TransactionRepo: class { list = listMock },
+    }))
+    vi.doMock('../../repos/ProductRepo', () => ({
+      ProductRepo: class { list = productListMock },
+    }))
+
     listMock.mockResolvedValueOnce([])
     productListMock.mockResolvedValueOnce([])
+    const { PricingService } = await import('./PricingService')
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
     expect(result.provider).toBe('openai')
-    logSpy.mockRestore()
   })
 
   it('selects gemini provider when configured', async () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    const PricingService = await loadPricingService({
-      AI_PROVIDER: 'gemini',
-      GEMINI_API_KEY: 'test-key',
+    vi.resetModules()
+    listMock.mockReset()
+    productListMock.mockReset()
+
+    const analyseMock = vi.fn().mockResolvedValue({
+      estimatedRetailEur: 3000,
+      confidence: 0.85,
+      comps: [{ title: 'Test Comp', price: 2900, source: 'Gemini' }],
     })
+
+    vi.doMock('../../config/env', () => ({
+      env: { ...defaultEnv, AI_PROVIDER: 'gemini', GEMINI_API_KEY: 'test-key' },
+    }))
+    vi.doMock('./providers/GeminiProvider', () => ({
+      GeminiProvider: class { analyse = analyseMock },
+    }))
+    vi.doMock('../../repos/TransactionRepo', () => ({
+      TransactionRepo: class { list = listMock },
+    }))
+    vi.doMock('../../repos/ProductRepo', () => ({
+      ProductRepo: class { list = productListMock },
+    }))
+
     listMock.mockResolvedValueOnce([])
     productListMock.mockResolvedValueOnce([])
+    const { PricingService } = await import('./PricingService')
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
     expect(result.provider).toBe('gemini')
-    logSpy.mockRestore()
   })
 })

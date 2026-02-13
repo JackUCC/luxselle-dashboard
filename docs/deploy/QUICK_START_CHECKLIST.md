@@ -12,7 +12,7 @@ Complete this checklist step-by-step to get your Luxselle Dashboard production-r
 - [ ] Select or create project `luxselle-dashboard`
 - [ ] Enable **Firestore Database** (production mode, choose region)
 - [ ] Enable **Firebase Storage** (production mode, same region)
-- [ ] Note your bucket name: `luxselle-dashboard.appspot.com`
+- [ ] Note your bucket name: `luxselle-dashboard.firebasestorage.app`
 
 ### Step 2: Download Service Account
 
@@ -45,7 +45,7 @@ Create `cors.json`:
 
 Apply CORS:
 ```bash
-gsutil cors set cors.json gs://luxselle-dashboard.appspot.com
+gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
 - [ ] CORS configured
@@ -70,7 +70,7 @@ Go to Railway → **Variables** tab and add:
 ```bash
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
-FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 ```
 
 **Service Account (copy entire JSON file contents):**
@@ -127,7 +127,7 @@ Add these **Production** variables:
 
 ```bash
 VITE_FIREBASE_PROJECT_ID=luxselle-dashboard
-VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 VITE_API_BASE=https://your-backend-production.up.railway.app
 ```
 
@@ -233,7 +233,7 @@ Update `cors.json`:
 ```
 
 ```bash
-gsutil cors set cors.json gs://luxselle-dashboard.appspot.com
+gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
 - [ ] CORS updated with actual domain

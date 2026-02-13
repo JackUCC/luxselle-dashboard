@@ -20,7 +20,7 @@ const EnvSchema = z.object({
   NODE_ENV: z.string().optional().default('development'),
   PORT: z.coerce.number().default(3001),
   FIREBASE_USE_EMULATOR: booleanFromEnv.default(true),
-  FIREBASE_PROJECT_ID: z.string().default('luxselle-dashboard-95977150'),
+  FIREBASE_PROJECT_ID: z.string().default('luxselle-dashboard'),
   FIREBASE_STORAGE_BUCKET: z
     .string()
     .default('luxselle-dashboard.firebasestorage.app'),

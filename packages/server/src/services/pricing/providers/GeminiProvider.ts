@@ -1,4 +1,5 @@
-/** Gemini-based pricing analysis. @see docs/CODE_REFERENCE.md */
+/** Gemini-based pricing analysis for luxury goods. @see docs/CODE_REFERENCE.md */
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import type {
   IPricingProvider,
   PricingAnalysisInput,
@@ -6,18 +7,17 @@ import type {
 } from './IPricingProvider'
 
 export class GeminiProvider implements IPricingProvider {
-  private apiKey: string
+  private genAI: GoogleGenerativeAI
 
   constructor(apiKey: string) {
-    this.apiKey = apiKey
+    this.genAI = new GoogleGenerativeAI(apiKey)
   }
 
   async analyse(input: PricingAnalysisInput): Promise<PricingAnalysisResult> {
-    // Placeholder for Gemini implementation
-    // In a real implementation, this would call the Gemini API
-    // with a prompt to estimate luxury item pricing
+    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
-    const prompt = `Estimate the retail price for this luxury item:
+    const prompt = `You are a luxury goods pricing expert. Analyse this item and estimate its current retail market value in EUR.
+
 Brand: ${input.brand}
 Model: ${input.model}
 Category: ${input.category}
@@ -26,23 +26,39 @@ Colour: ${input.colour}
 Notes: ${input.notes}
 ${input.askPriceEur ? `Asking Price: €${input.askPriceEur}` : ''}
 
-Provide an estimated retail price in EUR and confidence level.`
+Return ONLY a JSON object with this exact structure (no markdown, no explanation):
+{
+  "estimatedRetailEur": <number>,
+  "confidence": <number between 0 and 1>,
+  "comps": [
+    { "title": "<comparable listing title>", "price": <number in EUR>, "source": "<marketplace name>" }
+  ]
+}
 
-    // Mock response for now
-    console.log('Gemini prompt:', prompt)
+Provide 2-4 realistic comparable listings from known luxury marketplaces (Vestiaire Collective, The RealReal, Rebag, Fashionphile, etc.).`
 
-    // Return mock data similar to MockPricingProvider
-    const basePrice = 2000
+    const result = await model.generateContent(prompt)
+    const text = result.response.text()
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('Gemini returned no valid JSON for pricing analysis')
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as {
+      estimatedRetailEur: number
+      confidence: number
+      comps: Array<{ title: string; price: number; source: string; url?: string }>
+    }
+
     return {
-      estimatedRetailEur: basePrice,
-      confidence: 0.75,
-      comps: [
-        {
-          title: `${input.brand} ${input.model} - AI Comp 1`,
-          price: basePrice * 0.95,
-          source: 'Gemini Analysis',
-        },
-      ],
+      estimatedRetailEur: Math.round(parsed.estimatedRetailEur),
+      confidence: Math.min(1, Math.max(0, parsed.confidence)),
+      comps: parsed.comps.map((c) => ({
+        title: c.title,
+        price: Math.round(c.price),
+        source: c.source,
+        url: c.url,
+      })),
     }
   }
 }
