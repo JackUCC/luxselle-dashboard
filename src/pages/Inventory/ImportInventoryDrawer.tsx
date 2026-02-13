@@ -117,8 +117,8 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                             <li>Category</li>
                             <li>Condition</li>
                             <li>Colour</li>
-                            <li>Cost Price</li>
-                            <li>Sell Price</li>
+                            <li>Cost Price / Cost EUR</li>
+                            <li>Sell Price / Sell EUR</li>
                             <li>Quantity</li>
                             <li>Status <span className="text-blue-700 font-medium">(in_stock, sold, reserved)</span></li>
                         </ul>

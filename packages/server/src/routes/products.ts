@@ -14,6 +14,7 @@ import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import * as XLSX from 'xlsx'
 
 const router = Router()
 const productRepo = new ProductRepo()
@@ -182,6 +183,125 @@ router.delete('/:id', async (req, res, next) => {
   try {
     await productRepo.remove(req.params.id)
     res.status(204).send()
+  } catch (error) {
+    next(error)
+  }
+})
+
+// --- Import from Excel/CSV (must be before /:id routes so POST /import is not matched by /:id/images) ---
+
+const importUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+})
+
+router.post('/import', importUpload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No file provided'))
+      return
+    }
+
+    const isCsv =
+      req.file.mimetype === 'text/csv' ||
+      req.file.originalname.toLowerCase().endsWith('.csv')
+
+    let rows: Record<string, unknown>[]
+    if (isCsv) {
+      const str = req.file.buffer.toString('utf8')
+      const wb = XLSX.read(str, { type: 'string' })
+      const sheetName = wb.SheetNames[0]
+      const ws = wb.Sheets[sheetName]
+      rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
+    } else {
+      const wb = XLSX.read(req.file.buffer, { type: 'buffer' })
+      const sheetName = wb.SheetNames[0]
+      const ws = wb.Sheets[sheetName]
+      rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
+    }
+
+    if (rows.length === 0) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'File is empty'))
+      return
+    }
+
+    const now = new Date().toISOString()
+    let createdCount = 0
+    let errorCount = 0
+    const errors: { row: number; error: string }[] = []
+
+    const normalizeKey = (obj: Record<string, unknown>, key: string) => {
+      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase())
+      return foundKey ? obj[foundKey] : undefined
+    }
+
+    const parseNum = (val: unknown) => {
+      if (typeof val === 'number') return val
+      if (typeof val === 'string') {
+        const n = parseFloat(val.replace(/[^0-9.-]+/g, ''))
+        return isNaN(n) ? 0 : n
+      }
+      return 0
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      try {
+        const brand = String(normalizeKey(row, 'brand') || normalizeKey(row, 'brand name') || '').trim()
+        const model = String(normalizeKey(row, 'model') || normalizeKey(row, 'product name') || normalizeKey(row, 'title') || '').trim()
+
+        if (!brand && !model) continue
+
+        const category = String(normalizeKey(row, 'category') || '').trim()
+        const condition = String(normalizeKey(row, 'condition') || '').trim()
+        const colour = String(normalizeKey(row, 'colour') || normalizeKey(row, 'color') || '').trim()
+
+        const costPriceEur = parseNum(
+          normalizeKey(row, 'cost eur') ?? normalizeKey(row, 'cost') ?? normalizeKey(row, 'cost price') ?? normalizeKey(row, 'invoice price') ?? 0
+        )
+        const sellPriceEur = parseNum(
+          normalizeKey(row, 'sell eur') ?? normalizeKey(row, 'sell') ?? normalizeKey(row, 'sell price') ?? normalizeKey(row, 'price') ?? 0
+        )
+        const quantity = Math.max(0, Math.floor(parseNum(normalizeKey(row, 'quantity') ?? normalizeKey(row, 'qty') ?? 1)))
+
+        let status = String(normalizeKey(row, 'status') ?? 'in_stock').toLowerCase().replace(/\s+/g, '_')
+        if (!['in_stock', 'sold', 'reserved'].includes(status)) status = 'in_stock'
+        if (quantity === 0) status = 'sold'
+
+        const product = ProductSchema.parse({
+          organisationId: DEFAULT_ORG_ID,
+          createdAt: now,
+          updatedAt: now,
+          currency: 'EUR',
+          status: status as 'in_stock' | 'sold' | 'reserved',
+          brand: brand || 'Unknown',
+          model: model || 'Unknown',
+          category,
+          condition,
+          colour,
+          costPriceEur,
+          sellPriceEur,
+          quantity,
+          images: [],
+          imageUrls: [],
+          notes: `Imported via web. Row ${i + 2}`,
+        })
+
+        await productRepo.create(product)
+        createdCount++
+      } catch (err: unknown) {
+        errorCount++
+        errors.push({ row: i + 2, error: err instanceof Error ? err.message : 'Unknown error' })
+      }
+    }
+
+    res.json({
+      data: {
+        created: createdCount,
+        errors: errorCount,
+        errorDetails: errors.slice(0, 10),
+      },
+    })
   } catch (error) {
     next(error)
   }
@@ -388,119 +508,6 @@ router.post('/:id/transactions', async (req, res, next) => {
     })
 
     res.status(201).json({ data: transaction })
-  } catch (error) {
-    next(error)
-  }
-})
-
-// --- Import from Excel/CSV ---
-
-// Multer config for file imports (Excel/CSV)
-const importUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-})
-
-import * as XLSX from 'xlsx'
-
-router.post('/import', importUpload.single('file'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No file provided'))
-      return
-    }
-
-    const wb = XLSX.read(req.file.buffer, { type: 'buffer' })
-    const sheetName = wb.SheetNames[0]
-    const ws = wb.Sheets[sheetName]
-    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]
-
-    if (rows.length === 0) {
-      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'File is empty'))
-      return
-    }
-
-    const now = new Date().toISOString()
-    let createdCount = 0
-    let errorCount = 0
-    const errors: { row: number; error: string }[] = []
-
-    // Helper to normalize keys (case-insensitive)
-    const normalizeKey = (obj: Record<string, unknown>, key: string) => {
-      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase())
-      return foundKey ? obj[foundKey] : undefined
-    }
-
-    // Helper to parse currency/number
-    const parseNum = (val: unknown) => {
-      if (typeof val === 'number') return val
-      if (typeof val === 'string') {
-        const n = parseFloat(val.replace(/[^0-9.-]+/g, '')) // Remove currency symbols
-        return isNaN(n) ? 0 : n
-      }
-      return 0
-    }
-
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i]
-      try {
-        // Map common headers
-        const brand = String(normalizeKey(row, 'brand') || normalizeKey(row, 'brand name') || '').trim()
-        const model = String(normalizeKey(row, 'model') || normalizeKey(row, 'product name') || normalizeKey(row, 'title') || '').trim()
-
-        // Skip empty rows
-        if (!brand && !model) continue
-
-        const category = String(normalizeKey(row, 'category') || '').trim()
-        const condition = String(normalizeKey(row, 'condition') || '').trim()
-        const colour = String(normalizeKey(row, 'colour') || normalizeKey(row, 'color') || '').trim()
-
-        const costPriceEur = parseNum(normalizeKey(row, 'cost') || normalizeKey(row, 'cost price') || normalizeKey(row, 'invoice price') || 0)
-        const sellPriceEur = parseNum(normalizeKey(row, 'sell') || normalizeKey(row, 'sell price') || normalizeKey(row, 'price') || 0)
-        const quantity = Math.max(0, Math.floor(parseNum(normalizeKey(row, 'quantity') || normalizeKey(row, 'qty') || 1)))
-
-        let status = String(normalizeKey(row, 'status') || 'in_stock').toLowerCase().replace(' ', '_')
-        if (!['in_stock', 'sold', 'reserved'].includes(status)) status = 'in_stock'
-        if (quantity === 0) status = 'sold'
-
-        // Skip invalid data
-        if (!brand && !model) throw new Error('Brand or Model required')
-
-        const product = ProductSchema.parse({
-          organisationId: DEFAULT_ORG_ID,
-          createdAt: now,
-          updatedAt: now,
-          currency: 'EUR',
-          status: status as 'in_stock' | 'sold' | 'reserved',
-          brand: brand || 'Unknown', // Fallback
-          model: model || 'Unknown',
-          category,
-          condition,
-          colour,
-          costPriceEur,
-          sellPriceEur,
-          quantity,
-          images: [],
-          imageUrls: [], // Could parse from CSV if column exists
-          notes: `Imported via web. Row ${i + 2}`,
-        })
-
-        await productRepo.create(product)
-        createdCount++
-      } catch (err: unknown) {
-        errorCount++
-        errors.push({ row: i + 2, error: err instanceof Error ? err.message : 'Unknown error' })
-      }
-    }
-
-    res.json({
-      data: {
-        created: createdCount,
-        errors: errorCount,
-        errorDetails: errors.slice(0, 10), // Limit error details
-      }
-    })
-
   } catch (error) {
     next(error)
   }
