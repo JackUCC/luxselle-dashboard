@@ -5,10 +5,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { 
-  DollarSign, 
-  ClipboardList, 
-  Users, 
+import {
+  DollarSign,
+  ClipboardList,
+  Users,
   AlertCircle,
   Globe,
   Zap,
@@ -23,6 +23,8 @@ import {
 import type { ActivityEvent } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
 import CommandBar from './CommandBar'
+import CurrencyWidget from '../../components/CurrencyWidget'
+import HolidaysWidget from '../../components/HolidaysWidget'
 
 type ActivityEventWithId = ActivityEvent & { id: string }
 
@@ -70,7 +72,7 @@ const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  
+
   if (diff < 60 * 60 * 1000) {
     return `${Math.floor(diff / (60 * 1000))} mins ago`
   }
@@ -139,7 +141,7 @@ export default function DashboardView() {
   const getEventDescription = (event: ActivityEventWithId) => {
     const p = event.payload as Record<string, unknown>
     const str = (key: string) => (p?.[key] != null ? String(p[key]) : '')
-    
+
     switch (event.eventType) {
       case 'product_created':
         return (
@@ -227,27 +229,27 @@ export default function DashboardView() {
             <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
-        
+
         <div className="w-full">
           <CommandBar />
         </div>
 
         <div className="flex flex-wrap justify-center gap-3">
-          <Link 
+          <Link
             to="/inventory"
             className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
           >
             <Package className="h-4 w-4" />
             View Stock
           </Link>
-          <Link 
+          <Link
             to="/buy-box"
             className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
           >
             <Calculator className="h-4 w-4" />
             Evaluate Item
           </Link>
-          <Link 
+          <Link
             to="/sourcing"
             className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
           >
@@ -338,7 +340,7 @@ export default function DashboardView() {
               <TrendingUp className="h-5 w-5 text-gray-400" />
               <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Profit Summary</h3>
             </div>
-            
+
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <div className="text-sm text-gray-500 mb-1">Total Revenue</div>
@@ -444,6 +446,13 @@ export default function DashboardView() {
             )}
           </div>
 
+
+          {/* Market & Logistics */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CurrencyWidget />
+            <HolidaysWidget />
+          </div>
+
           {/* Activity & Status Grid */}
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Recent Activity */}
@@ -452,16 +461,15 @@ export default function DashboardView() {
                 <Activity className="h-5 w-5 text-gray-400" />
                 <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Recent Activity</h3>
               </div>
-              
+
               <div className="space-y-6">
                 {activity.length === 0 ? (
                   <p className="text-sm text-gray-500">No recent activity</p>
                 ) : (
                   activity.map((event) => (
                     <div key={event.id} className="flex gap-4">
-                      <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${
-                        getEventIcon(event.eventType).split(' ')[1].replace('text-', 'bg-')
-                      }`} />
+                      <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${getEventIcon(event.eventType).split(' ')[1].replace('text-', 'bg-')
+                        }`} />
                       <div className="flex-1 space-y-1">
                         <div className="text-sm text-gray-600">
                           {getEventDescription(event)}

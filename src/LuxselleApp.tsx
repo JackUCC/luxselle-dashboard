@@ -1,30 +1,23 @@
 /**
- * App shell: React Query, React Router, nav, Toaster, ErrorBoundary, route definitions.
+ * App shell: React Query, React Router, responsive navigation, deep-state breadcrumbs,
+ * Toaster, ErrorBoundary, and route definitions.
  * Legacy redirects: /evaluator → /buy-box, /suppliers → /supplier-hub.
- * On init, checks API health and shows a banner if backend is not configured (e.g. missing VITE_API_BASE in production).
+ * On init, checks API health and shows a banner if backend is not configured.
  * @see docs/CODE_REFERENCE.md
  * References: react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, NavLink, Route, Routes, Navigate } from 'react-router-dom'
-import { AlertCircle } from 'lucide-react'
+import { BrowserRouter, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { AlertCircle, Bell, Menu } from 'lucide-react'
 
 import { API_BASE } from './lib/api'
-import { 
-  LayoutGrid, 
-  Package, 
-  Calculator, 
-  Globe, 
-  Users, 
-  ClipboardList, 
-  Bell,
-  FileSpreadsheet,
-  FileText
-} from 'lucide-react'
-
 import { ErrorBoundary } from './components/ErrorBoundary'
+import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
+import { appRoutes, getRouteMeta } from './components/layout/routeMeta'
+import MobileNavDrawer from './components/navigation/MobileNavDrawer'
+import WideScreenSideRail from './components/navigation/WideScreenSideRail'
 import DashboardView from './pages/Dashboard/DashboardView'
 import InventoryView from './pages/Inventory/InventoryView'
 import EvaluatorView from './pages/BuyBox/EvaluatorView'
@@ -35,16 +28,130 @@ import JobsView from './pages/Jobs/JobsView'
 import InvoicesView from './pages/Invoices/InvoicesView'
 import { queryClient } from './lib/queryClient'
 
-const navItems = [
-  { label: 'Overview', path: '/', icon: LayoutGrid },
-  { label: 'Inventory', path: '/inventory', icon: Package },
-  { label: 'Buy Box', path: '/buy-box', icon: Calculator },
-  { label: 'Supplier Hub', path: '/supplier-hub', icon: Globe },
-  { label: 'Sourcing', path: '/sourcing', icon: Users },
-  { label: 'Buying List', path: '/buying-list', icon: ClipboardList },
-  { label: 'Invoices', path: '/invoices', icon: FileText },
-  { label: 'Jobs', path: '/jobs', icon: FileSpreadsheet },
-]
+const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const location = useLocation()
+
+  const activeRoute = useMemo(() => getRouteMeta(location.pathname), [location.pathname])
+
+  return (
+    <div className="min-h-screen bg-[#F5F7FA] text-gray-900 font-sans">
+      {backendMissing === true && (
+        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-900">
+          <div className="mx-auto flex max-w-8xl items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>Backend not configured. Set `VITE_API_BASE` to your backend URL and redeploy.</span>
+          </div>
+        </div>
+      )}
+
+      <div className="2xl:flex">
+        <WideScreenSideRail />
+
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/90 backdrop-blur">
+            <div className="mx-auto max-w-8xl px-4 sm:px-6">
+              <div className="flex h-16 items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-gray-200 bg-white p-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 lg:hidden"
+                    onClick={() => setMobileNavOpen(true)}
+                    aria-label="Open navigation menu"
+                    data-testid="mobile-nav-toggle"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex items-center gap-2 lg:hidden">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-xs font-bold text-white">
+                      L
+                    </div>
+                    <span className="font-display text-sm font-semibold tracking-tight text-gray-900">Luxselle</span>
+                  </div>
+
+                  <div className="hidden min-w-0 items-center gap-2 2xl:flex">
+                    <p className="truncate text-sm font-medium text-gray-700">
+                      {activeRoute?.label ?? 'Dashboard'}
+                    </p>
+                  </div>
+                </div>
+
+                <nav className="hidden flex-1 items-center gap-1 overflow-x-auto no-scrollbar lg:flex 2xl:hidden">
+                  {appRoutes.map((route) => (
+                    <NavLink
+                      key={route.path}
+                      to={route.path}
+                      end={route.path === '/'}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                          isActive
+                            ? 'bg-gray-900 text-white shadow-soft'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <route.icon className="h-4 w-4" />
+                      <span className="whitespace-nowrap">{route.navLabel}</span>
+                    </NavLink>
+                  ))}
+                </nav>
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    className="relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                  </button>
+
+                  <div className="hidden rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-600 md:block">
+                    Control Center
+                  </div>
+
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 ring-2 ring-white">
+                    JK
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              className: 'text-sm font-medium',
+              duration: 4000,
+            }}
+          />
+
+          <main className="mx-auto max-w-8xl px-4 py-6 sm:px-6 sm:py-8">
+            <DeepStateBreadcrumb />
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<DashboardView />} />
+                <Route path="/inventory" element={<InventoryView />} />
+                <Route path="/buy-box" element={<EvaluatorView />} />
+                <Route path="/supplier-hub" element={<SupplierHubView />} />
+                <Route path="/buying-list" element={<BuyingListView />} />
+                <Route path="/sourcing" element={<SourcingView />} />
+                <Route path="/jobs" element={<JobsView />} />
+                <Route path="/invoices" element={<InvoicesView />} />
+
+                {/* Redirects for legacy routes */}
+                <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
+                <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
+              </Routes>
+            </ErrorBoundary>
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const LuxselleApp = () => {
   const [backendMissing, setBackendMissing] = useState<boolean | null>(null)
@@ -61,93 +168,15 @@ const LuxselleApp = () => {
       .catch(() => {
         if (!cancelled) setBackendMissing(true)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans">
-        {backendMissing === true && (
-          <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center gap-2 text-amber-800 text-sm font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>Backend not configured. Set VITE_API_BASE to your backend URL and redeploy.</span>
-          </div>
-        )}
-        <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
-          <div className="mx-auto flex h-16 max-w-8xl items-center justify-between px-6">
-            {/* Brand */}
-            <div className="flex items-center gap-3 pr-8">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900 text-white font-serif font-bold text-lg">
-                L
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-display font-bold text-gray-900">Luxselle</span>
-                <span className="text-[10px] font-medium tracking-wider text-gray-500">MANAGER</span>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex flex-1 items-center gap-1 overflow-x-auto no-scrollbar">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === '/'}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                      isActive 
-                        ? 'bg-gray-50 text-gray-900 shadow-sm ring-1 ring-gray-200' 
-                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                    }`
-                  }
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </NavLink>
-              ))}
-            </nav>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-4 pl-4 border-l border-gray-100 ml-4">
-              <button 
-                className="relative text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-              </button>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 ring-2 ring-white shadow-sm">
-                JK
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <Toaster position="top-center" toastOptions={{ 
-          className: 'text-sm font-medium',
-          duration: 4000 
-        }} />
-        
-        <main className="mx-auto max-w-8xl px-6 py-8">
-          <ErrorBoundary>
-            <Routes>
-              <Route path="/" element={<DashboardView />} />
-              <Route path="/inventory" element={<InventoryView />} />
-              <Route path="/buy-box" element={<EvaluatorView />} />
-              <Route path="/supplier-hub" element={<SupplierHubView />} />
-              <Route path="/buying-list" element={<BuyingListView />} />
-              <Route path="/sourcing" element={<SourcingView />} />
-              <Route path="/jobs" element={<JobsView />} />
-              <Route path="/invoices" element={<InvoicesView />} />
-              
-              {/* Redirects for legacy routes */}
-              <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-              <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
-            </Routes>
-          </ErrorBoundary>
-        </main>
-        </div>
+        <AppShell backendMissing={backendMissing} />
       </BrowserRouter>
     </QueryClientProvider>
   )
