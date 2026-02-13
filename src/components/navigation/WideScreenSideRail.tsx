@@ -1,11 +1,7 @@
 import { NavLink } from 'react-router-dom'
 
 import { appRoutes } from '../layout/routeMeta'
-
-const groups = [
-  { title: 'Core', section: 'core' as const },
-  { title: 'Operations', section: 'operations' as const },
-]
+import { NAV_GROUPS } from './navGroups'
 
 export default function WideScreenSideRail() {
   return (
@@ -24,7 +20,7 @@ export default function WideScreenSideRail() {
       </div>
 
       <div className="mt-8 flex-1 space-y-7 overflow-y-auto pb-3 no-scrollbar">
-        {groups.map((group) => (
+        {NAV_GROUPS.map((group) => (
           <section key={group.section} className="space-y-2">
             <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
               {group.title}
@@ -38,10 +34,9 @@ export default function WideScreenSideRail() {
                     to={route.path}
                     end={route.path === '/'}
                     className={({ isActive }) =>
-                      `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                        isActive
-                          ? 'bg-gray-900 text-white shadow-soft-lg'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive
+                        ? 'bg-gray-900 text-white shadow-soft-lg'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                       }`
                     }
                   >

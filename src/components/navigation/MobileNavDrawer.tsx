@@ -3,16 +3,12 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 
 import { appRoutes } from '../layout/routeMeta'
+import { NAV_GROUPS } from './navGroups'
 
 interface MobileNavDrawerProps {
   open: boolean
   onClose: () => void
 }
-
-const groups = [
-  { title: 'Core', section: 'core' as const },
-  { title: 'Operations', section: 'operations' as const },
-]
 
 export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const location = useLocation()
@@ -83,7 +79,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
         </div>
 
         <div className="space-y-6 overflow-y-auto p-5">
-          {groups.map((group) => (
+          {NAV_GROUPS.map((group) => (
             <section key={group.section} className="space-y-2">
               <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
                 {group.title}
@@ -98,10 +94,9 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                       end={route.path === '/'}
                       onClick={onClose}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-gray-900 text-white shadow-sm'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                          ? 'bg-gray-900 text-white shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`
                       }
                     >

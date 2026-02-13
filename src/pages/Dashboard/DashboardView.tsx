@@ -20,44 +20,14 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import type { ActivityEvent } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
+import { formatCurrency, formatRelativeDate } from '../../lib/formatters'
+import type { ActivityEventWithId, KPIs, ProfitSummary, SystemStatus } from '../../types/dashboard'
 import { isInsightSource, type InsightSource } from '../../components/layout/routeMeta'
 import CommandBar from './CommandBar'
 import DashboardSkeleton from './DashboardSkeleton'
 import InsightsDrawer from './InsightsDrawer'
-import CurrencyWidget from '../../components/CurrencyWidget'
-import HolidaysWidget from '../../components/HolidaysWidget'
-import MarketResearchWidget from '../../components/MarketResearchWidget'
-import NewsWidget from '../../components/NewsWidget'
-
-type ActivityEventWithId = ActivityEvent & { id: string }
-
-interface KPIs {
-  totalInventoryValue: number
-  pendingBuyListValue: number
-  activeSourcingPipeline: number
-  lowStockAlerts: number
-}
-
-interface ProfitSummary {
-  totalCost: number
-  totalRevenue: number
-  totalProfit: number
-  marginPct: number
-  itemsSold: number
-  avgMarginPct: number
-}
-
-interface SystemStatus {
-  aiProvider: string
-  firebaseMode: string
-  lastSupplierImport: {
-    status: string
-    lastRunAt?: string
-    lastError?: string
-  } | null
-}
+import { CurrencyWidget, HolidaysWidget, MarketResearchWidget, NewsWidget } from '../../components/widgets'
 
 interface VatResult {
   netEur: number
@@ -66,29 +36,7 @@ interface VatResult {
   ratePct: number
 }
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(value)
 
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  if (diff < 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 1000))} mins ago`
-  }
-  if (diff < 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 60 * 1000))} hours ago`
-  }
-  return new Intl.DateTimeFormat('en-GB', {
-    month: 'short',
-    day: 'numeric',
-  }).format(date)
-}
 
 const insightButtonClass =
   'inline-flex items-center rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900'
@@ -569,7 +517,7 @@ export default function DashboardView() {
                         <div className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${getEventIcon(event.eventType)}`} />
                         <div className="flex-1 space-y-1">
                           <div className="text-sm text-gray-600">{getEventDescription(event)}</div>
-                          <div className="text-xs text-gray-400">{formatDate(event.createdAt)}</div>
+                          <div className="text-xs text-gray-400">{formatRelativeDate(event.createdAt)}</div>
                         </div>
                       </div>
                     ))

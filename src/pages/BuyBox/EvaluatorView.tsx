@@ -7,19 +7,14 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Tag, Calculator, Sparkles, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { apiPost, apiGet, apiPostFormData, ApiError } from '../../lib/api'
+import { formatCurrency } from '../../lib/formatters'
 import type {
   AuctionPlatformProfile,
   LandedCostSnapshot,
   Product,
   Settings,
 } from '@shared/schemas'
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(value)
+import type { ProductWithId } from '../../types/dashboard'
 
 // Brand and model database for luxury items
 const BRAND_MODELS: Record<string, string[]> = {
@@ -70,9 +65,9 @@ interface AuctionLandedCostResponse {
   data: LandedCostSnapshot
 }
 
-import CalculatorWidget from '../../components/CalculatorWidget'
+import { CalculatorWidget } from '../../components/widgets'
 
-type ProductWithId = Product & { id: string }
+
 
 export default function EvaluatorView() {
   const [activeTab, setActiveTab] = useState<'details' | 'calculator'>('details')

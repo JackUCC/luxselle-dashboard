@@ -58,7 +58,6 @@ export default function HolidaysWidget() {
                 // Keep top 5 upcoming across all regions
                 setHolidays(nextHolidays.slice(0, 5))
             } catch (err) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setError('Could not load holiday data')
             } finally {
                 setLoading(false)
@@ -130,8 +129,8 @@ export default function HolidaysWidget() {
                                     </div>
                                     <div className="flex items-center gap-2 mt-0.5">
                                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${getDaysUntil(holiday.date) === 'Today' ? 'bg-red-100 text-red-700' :
-                                                getDaysUntil(holiday.date) === 'Tomorrow' ? 'bg-orange-100 text-orange-700' :
-                                                    'bg-blue-50 text-blue-600'
+                                            getDaysUntil(holiday.date) === 'Tomorrow' ? 'bg-orange-100 text-orange-700' :
+                                                'bg-blue-50 text-blue-600'
                                             }`}>
                                             {getDaysUntil(holiday.date)}
                                         </span>

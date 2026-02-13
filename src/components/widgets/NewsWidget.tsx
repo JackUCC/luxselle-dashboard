@@ -37,7 +37,6 @@ export default function NewsWidget() {
                 throw new Error('News feed currently unavailable')
             }
         } catch (err) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             console.error(err)
             setError('Could not load industry news')
         } finally {

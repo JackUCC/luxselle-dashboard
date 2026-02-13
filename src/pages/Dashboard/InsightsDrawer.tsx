@@ -1,37 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, ChevronRight, Sparkles, X } from 'lucide-react'
-import type { ActivityEvent } from '@shared/schemas'
 
 import { insightLabelMap, type InsightSource } from '../../components/layout/routeMeta'
-
-type ActivityEventWithId = ActivityEvent & { id: string }
-
-interface KPIs {
-  totalInventoryValue: number
-  pendingBuyListValue: number
-  activeSourcingPipeline: number
-  lowStockAlerts: number
-}
-
-interface ProfitSummary {
-  totalCost: number
-  totalRevenue: number
-  totalProfit: number
-  marginPct: number
-  itemsSold: number
-  avgMarginPct: number
-}
-
-interface SystemStatus {
-  aiProvider: string
-  firebaseMode: string
-  lastSupplierImport: {
-    status: string
-    lastRunAt?: string
-    lastError?: string
-  } | null
-}
+import { formatCurrency } from '../../lib/formatters'
+import type { ActivityEventWithId, KPIs, ProfitSummary, SystemStatus } from '../../types/dashboard'
 
 export interface InsightPanelProps {
   open: boolean
@@ -42,13 +15,6 @@ export interface InsightPanelProps {
   activity: ActivityEventWithId[]
   status: SystemStatus | null
 }
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(value)
 
 const getInsightBullets = (
   source: InsightSource,

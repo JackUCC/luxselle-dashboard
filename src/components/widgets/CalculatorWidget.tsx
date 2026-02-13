@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Calculator, Save, RefreshCw, Trash2, ArrowRight } from 'lucide-react'
+import { Calculator, Save, RefreshCw, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { calculateLandedCost } from '../lib/landedCost'
+import { calculateLandedCost } from '../../lib/landedCost'
 
 interface CalculatorState {
     currency: 'EUR' | 'USD' | 'GBP' | 'JPY'

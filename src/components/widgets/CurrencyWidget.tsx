@@ -33,7 +33,6 @@ export default function CurrencyWidget() {
       setRates(data.rates)
       setLastUpdated(new Date())
     } catch (err) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setError(err instanceof Error ? err.message : 'Failed to load')
     } finally {
       setLoading(false)
@@ -53,8 +52,8 @@ export default function CurrencyWidget() {
           </div>
           <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Exchange Rates (Base: EUR)</h3>
         </div>
-        <button 
-          onClick={fetchRates} 
+        <button
+          onClick={fetchRates}
           disabled={loading}
           className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
           title="Refresh rates"
@@ -84,7 +83,7 @@ export default function CurrencyWidget() {
               </div>
               <div className="text-right">
                 <div className="font-bold text-gray-900 font-mono">
-                   {currency.symbol}{rates?.[currency.code]?.toFixed(4)}
+                  {currency.symbol}{rates?.[currency.code]?.toFixed(4)}
                 </div>
                 {/* Mock trend indicator for visual flair */}
                 <div className="text-[10px] items-center justify-end flex gap-1 text-green-600">
@@ -99,7 +98,7 @@ export default function CurrencyWidget() {
 
       <div className="mt-4 pt-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
         Data provided by Frankfurter API
-        {lastUpdated && <span> • Updated {lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>}
+        {lastUpdated && <span> • Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
       </div>
     </div>
   )

@@ -6,34 +6,28 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import toast from 'react-hot-toast'
-import { 
-  Search, 
-  LayoutList, 
-  LayoutGrid, 
-  Plus, 
+import {
+  Search,
+  LayoutList,
+  LayoutGrid,
+  Plus,
   MoreVertical,
   ChevronDown,
   Loader2,
   Package,
   Download
 } from 'lucide-react'
-import type { Product } from '@shared/schemas'
 import { apiGet } from '../../lib/api'
+import { formatCurrency } from '../../lib/formatters'
 import { PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE_SMALL } from '../../lib/placeholder'
+import type { ProductWithId } from '../../types/dashboard'
 import ProductDetailDrawer from './ProductDetailDrawer'
 
-type ProductWithId = Product & { id: string }
-
-type ProductsResponse = {
+interface ProductsResponse {
   data: ProductWithId[]
 }
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(value)
+
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -118,12 +112,12 @@ export default function InventoryView() {
       p.status,
       p.quantity
     ])
-    
+
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     ].join('\n')
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -133,7 +127,7 @@ export default function InventoryView() {
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-    
+
     toast.success(`Exported ${filteredProducts.length} items to CSV`)
   }, [filteredProducts])
 
@@ -160,9 +154,9 @@ export default function InventoryView() {
     }
   }, [])
 
-  const brands = useMemo(() => 
+  const brands = useMemo(() =>
     Array.from(new Set(products.map(p => p.brand))).sort()
-  , [products])
+    , [products])
 
   // Virtualization for large tables (>50 items)
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -202,22 +196,20 @@ export default function InventoryView() {
                 className="lux-input pl-10"
               />
             </div>
-            
+
             {/* View Toggles */}
             <div className="flex rounded-lg border border-gray-200 bg-white p-1">
               <button
                 onClick={() => setViewMode('table')}
-                className={`rounded p-1.5 transition-colors ${
-                  viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`rounded p-1.5 transition-colors ${viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 <LayoutList className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`rounded p-1.5 transition-colors ${
-                  viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`rounded p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
@@ -263,7 +255,7 @@ export default function InventoryView() {
         {/* Filters */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <select 
+            <select
               className="appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
               value={brandFilter}
               onChange={(e) => {
@@ -282,7 +274,7 @@ export default function InventoryView() {
           </div>
 
           <div className="relative">
-            <select 
+            <select
               className="appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
               value={statusFilter}
               onChange={(e) => {
@@ -318,7 +310,7 @@ export default function InventoryView() {
           </p>
         </div>
       ) : viewMode === 'table' ? (
-        <div 
+        <div
           ref={shouldVirtualize ? tableContainerRef : null}
           className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
           style={shouldVirtualize ? { maxHeight: '600px', overflow: 'auto' } : undefined}
@@ -400,58 +392,58 @@ export default function InventoryView() {
                 </>
               ) : (
                 filteredProducts.map((product) => (
-                <tr
-                  key={product.id}
-                  onClick={() => openProductDrawer(product.id)}
-                  className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
-                        {product.imageUrls?.[0] && (
-                          <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }} />
-                        )}
+                  <tr
+                    key={product.id}
+                    onClick={() => openProductDrawer(product.id)}
+                    className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                          {product.imageUrls?.[0] && (
+                            <img src={product.imageUrls[0]} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }} />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{product.brand} {product.model}</div>
+                          <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{product.brand} {product.model}</div>
-                        <div className="text-xs text-gray-500 font-mono mt-0.5">BA{product.id.slice(-4)}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                        {product.quantity} units
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-gray-400 w-8">PAID</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(product.costPriceEur)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-gray-400 w-8">SELL</span>
+                          <span className="font-medium text-gray-900">{formatCurrency(product.sellPriceEur)}</span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                      {product.quantity} units
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-gray-400 w-8">PAID</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(product.costPriceEur)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-gray-400 w-8">SELL</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(product.sellPriceEur)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)} border-current/10`}>
-                      {getStatusLabel(product.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // Menu will be added later
-                      }}
-                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(product.status)} border-current/10`}>
+                        {getStatusLabel(product.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // Menu will be added later
+                        }}
+                        className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>
@@ -478,7 +470,7 @@ export default function InventoryView() {
               <div className="p-4">
                 <div className="mb-1 text-xs font-medium text-gray-500">{product.brand}</div>
                 <h3 className="font-semibold text-gray-900 text-sm mb-4 line-clamp-1">{product.model}</h3>
-                
+
                 <div className="flex items-end justify-between">
                   <div>
                     <div className="text-[10px] text-gray-400 uppercase tracking-wide">Price</div>
