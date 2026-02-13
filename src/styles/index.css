@@ -1,4 +1,4 @@
-/* Global styles: Tailwind directives, CSS variables (fonts), and shared utility classes. @see docs/CODE_REFERENCE.md */
+/* Global styles: Tailwind directives, shell tokens, and shared utility classes. @see docs/CODE_REFERENCE.md */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +6,9 @@
 :root {
   --font-display: 'Sora', sans-serif;
   --font-body: 'Manrope', sans-serif;
+  --lux-canvas: #f5f7fa;
+  --lux-surface: #ffffff;
+  --lux-border: #e5e7eb;
 }
 
 body {
@@ -13,16 +16,21 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F8FAFC;
-  color: #1E293B;
+  background: radial-gradient(1200px 500px at 15% -10%, #eef2ff 0%, transparent 50%), var(--lux-canvas);
+  color: #1e293b;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
 }
 
 .lux-card {
-  @apply bg-white border border-gray-100 rounded-xl shadow-soft;
+  @apply rounded-xl border border-gray-100 bg-white shadow-soft;
 }
 
 .lux-input {
@@ -35,4 +43,85 @@ h1, h2, h3, h4, h5, h6 {
 
 .lux-btn-secondary {
   @apply rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50;
+}
+
+.lux-skeleton {
+  @apply relative overflow-hidden bg-gray-200/80;
+}
+
+.lux-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: lux-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes lux-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes lux-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lux-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes lux-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-fade-in {
+    animation: lux-fade-in 180ms ease-out both;
+  }
+
+  .animate-in {
+    animation-duration: 260ms;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .slide-in-from-right {
+    animation-name: lux-slide-in-right;
+  }
+
+  .slide-in-from-left {
+    animation-name: lux-slide-in-left;
+  }
 }

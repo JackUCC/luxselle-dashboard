@@ -107,28 +107,32 @@ test('receiving an already received item fails gracefully', async ({ request }) 
 })
 
 test('nav routing works for all main routes', async ({ page }) => {
+  const clickVisibleNav = async (path: string) => {
+    await page.locator(`a[href="${path}"]:visible`).first().click()
+  }
+
   // Start at Overview
   await page.goto('/')
   await expect(page.getByText('Good afternoon, Jack')).toBeVisible()
 
   // Navigate to Inventory
-  await page.click('a[href="/inventory"]')
+  await clickVisibleNav('/inventory')
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
   // Navigate to Buy Box
-  await page.click('a[href="/buy-box"]')
+  await clickVisibleNav('/buy-box')
   await expect(page.getByRole('heading', { name: 'Item Evaluator' })).toBeVisible()
 
   // Navigate to Supplier Hub
-  await page.click('a[href="/supplier-hub"]')
+  await clickVisibleNav('/supplier-hub')
   await expect(page.getByRole('heading', { name: 'Connected Sources' })).toBeVisible()
 
   // Navigate to Sourcing
-  await page.click('a[href="/sourcing"]')
+  await clickVisibleNav('/sourcing')
   await expect(page.getByRole('heading', { name: 'Sourcing' })).toBeVisible()
 
   // Navigate to Buying List
-  await page.click('a[href="/buying-list"]')
+  await clickVisibleNav('/buying-list')
   await expect(page.getByRole('heading', { name: 'Buying List' })).toBeVisible()
 })
 

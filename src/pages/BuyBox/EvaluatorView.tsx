@@ -36,7 +36,7 @@ const BRAND_MODELS: Record<string, string[]> = {
 }
 
 const COMMON_COLORS = [
-  'Black', 'White', 'Beige', 'Navy', 'Brown', 'Burgundy', 'Red', 
+  'Black', 'White', 'Beige', 'Navy', 'Brown', 'Burgundy', 'Red',
   'Pink', 'Grey', 'Tan', 'Camel', 'Gold', 'Silver'
 ]
 
@@ -70,9 +70,12 @@ interface AuctionLandedCostResponse {
   data: LandedCostSnapshot
 }
 
+import CalculatorWidget from '../../components/CalculatorWidget'
+
 type ProductWithId = Product & { id: string }
 
 export default function EvaluatorView() {
+  const [activeTab, setActiveTab] = useState<'details' | 'calculator'>('details')
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -165,13 +168,13 @@ export default function EvaluatorView() {
   const availableModels = useMemo(() => {
     const { brand } = formData
     if (!brand) return []
-    
+
     // Combine predefined models with models from actual products
     const predefinedModels = BRAND_MODELS[brand] || []
     const productModels = products
       .filter(p => p.brand === brand)
       .map(p => p.model)
-    
+
     return Array.from(new Set([...predefinedModels, ...productModels])).sort()
   }, [formData.brand, products])
 
@@ -391,8 +394,8 @@ export default function EvaluatorView() {
         err instanceof ApiError
           ? err.message
           : err instanceof Error
-          ? err.message
-          : 'Failed to calculate landed cost'
+            ? err.message
+            : 'Failed to calculate landed cost'
       toast.error(message)
     } finally {
       setIsCalculatingLandedCost(false)
@@ -411,482 +414,308 @@ export default function EvaluatorView() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Input Form */}
         <div className="lux-card p-6 h-fit">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide">
-              <Tag className="h-4 w-4" />
-              Product Details
-            </div>
-            {uploadedImage && (
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="text-xs text-gray-500 hover:text-red-600 transition-colors"
-              >
-                Clear Image
-              </button>
-            )}
-          </div>
-
-          {/* Image Upload Section */}
-          <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
-              Product Image (Optional)
-            </label>
-            
-            {imagePreview ? (
-              <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 mb-3">
-                <img src={imagePreview} alt="Upload preview" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 text-gray-600 hover:text-red-600 shadow-sm transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
-                <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600">Click to upload product image</p>
-                <p className="text-xs text-gray-400 mt-1">AI will analyze the image</p>
-              </label>
-            )}
-
-            {uploadedImage && (
-              <button
-                type="button"
-                onClick={handleAnalyzeImage}
-                disabled={isAnalyzingImage}
-                className="w-full mt-3 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-              >
-                {isAnalyzingImage ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyzing image...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="h-4 w-4" />
-                    Analyze with AI
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-          
-          <form onSubmit={handleAnalyse} className="space-y-5">
-            <div>
-              <label htmlFor="brand-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Brand *
-              </label>
-              <select
-                id="brand-select"
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                required
-                className="lux-input"
-              >
-                <option value="">Select Brand</option>
-                {Object.keys(BRAND_MODELS).sort().map(brand => (
-                  <option key={brand} value={brand}>{brand}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="model-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Model *
-              </label>
-              {availableModels.length > 0 ? (
-                <select
-                  id="model-select"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleChange}
-                  required
-                  className="lux-input"
-                  disabled={!formData.brand}
-                >
-                  <option value="">Select Model</option>
-                  {availableModels.map(model => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                  <option value="__custom__">Other (type manually)</option>
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. Classic Flap"
-                  className="lux-input"
-                  disabled={!formData.brand}
-                />
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                {formData.brand ? `${availableModels.length} models available for ${formData.brand}` : 'Select a brand first'}
-              </p>
-            </div>
-            
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label htmlFor="condition-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Condition *
-                </label>
-                <select
-                  id="condition-select"
-                  name="condition"
-                  value={formData.condition}
-                  onChange={handleChange}
-                  required
-                  className="lux-input"
-                >
-                  <option value="">Grade</option>
-                  <option value="new">New / Pristine</option>
-                  <option value="excellent">Excellent (A)</option>
-                  <option value="good">Good (B)</option>
-                  <option value="fair">Fair (C)</option>
-                  <option value="used">Used</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="colour-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Color *
-                </label>
-                <select
-                  id="colour-select"
-                  name="colour"
-                  value={formData.colour}
-                  onChange={handleChange}
-                  required
-                  className="lux-input"
-                >
-                  <option value="">Select Color</option>
-                  {COMMON_COLORS.map(color => (
-                    <option key={color} value={color}>{color}</option>
-                  ))}
-                  <option value="__custom__">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="year-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Year
-                </label>
-                <select
-                  id="year-select"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                  className="lux-input"
-                >
-                  <option value="">Unknown</option>
-                  {YEARS.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="category-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Category *
-              </label>
-              <select
-                id="category-input"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-                className="lux-input"
-              >
-                <option value="">Select Category</option>
-                <option value="Handbag">Handbag</option>
-                <option value="Wallet">Wallet</option>
-                <option value="Shoes">Shoes</option>
-                <option value="Watch">Watch</option>
-                <option value="Jewelry">Jewelry</option>
-                <option value="Accessory">Accessory</option>
-                <option value="Clothing">Clothing</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="notes-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Additional Notes
-              </label>
-              <textarea
-                id="notes-input"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Size, material, special features..."
-                rows={2}
-                className="lux-input resize-none"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="ask-price-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                Asking Price (EUR)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
-                <input
-                  id="ask-price-input"
-                  type="number"
-                  name="askPriceEur"
-                  value={formData.askPriceEur}
-                  onChange={handleChange}
-                  placeholder="0"
-                  step="0.01"
-                  className="lux-input pl-7"
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Optional - helps calibrate analysis</p>
-            </div>
-
-            <div className="rounded-lg border border-gray-200 p-4 space-y-4 bg-gray-50/60">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-700">
-                    Auction Landed Cost
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Includes platform fees, customs duty, and VAT.
-                  </p>
-                </div>
-                <span className="text-[11px] px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
-                  Ireland import basis
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Auction Platform
-                </label>
-                <select
-                  value={landedCostInput.platformId}
-                  onChange={(e) => {
-                    const nextPlatform =
-                      settings?.auctionPlatforms.find((item) => item.id === e.target.value) ?? null
-                    handlePlatformChange(nextPlatform)
-                  }}
-                  className="lux-input"
-                >
-                  <option value="">Manual</option>
-                  {(settings?.auctionPlatforms ?? []).map((platform) => (
-                    <option key={platform.id} value={platform.id}>
-                      {platform.name}
-                    </option>
-                  ))}
-                </select>
-                {selectedAuctionPlatform && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Defaults loaded from {selectedAuctionPlatform.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Hammer Price (€)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.hammerEur}
-                    onChange={(e) => handleLandedCostInputChange('hammerEur', e.target.value)}
-                    className="lux-input"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Buyer Premium %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.buyerPremiumPct}
-                    onChange={(e) => handleLandedCostInputChange('buyerPremiumPct', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Platform Fee %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.platformFeePct}
-                    onChange={(e) => handleLandedCostInputChange('platformFeePct', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Fixed Fee (€)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.fixedFeeEur}
-                    onChange={(e) => handleLandedCostInputChange('fixedFeeEur', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Payment Fee %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.paymentFeePct}
-                    onChange={(e) => handleLandedCostInputChange('paymentFeePct', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Shipping (€)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.shippingEur}
-                    onChange={(e) => handleLandedCostInputChange('shippingEur', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Insurance (€)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.insuranceEur}
-                    onChange={(e) => handleLandedCostInputChange('insuranceEur', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Customs Duty %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={landedCostInput.customsDutyPct}
-                    onChange={(e) => handleLandedCostInputChange('customsDutyPct', e.target.value)}
-                    className="lux-input"
-                  />
-                  <div className="mt-2 flex items-center gap-2 text-[11px]">
-                    <button
-                      type="button"
-                      onClick={() => handleLandedCostInputChange('customsDutyPct', '0')}
-                      className="rounded-full border border-gray-200 bg-white px-2 py-1 text-gray-600 hover:bg-gray-50"
-                    >
-                      EU preset 0%
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleLandedCostInputChange('customsDutyPct', '3')}
-                      className="rounded-full border border-gray-200 bg-white px-2 py-1 text-gray-600 hover:bg-gray-50"
-                    >
-                      Japan preset 3%
-                    </button>
-                  </div>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Import VAT %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={landedCostInput.importVatPct}
-                    onChange={(e) => handleLandedCostInputChange('importVatPct', e.target.value)}
-                    className="lux-input"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleCalculateLandedCost}
-                disabled={isCalculatingLandedCost}
-                className="w-full rounded-lg border border-gray-300 bg-white py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-              >
-                {isCalculatingLandedCost ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Calculating landed cost...
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="h-4 w-4" />
-                    Calculate landed cost
-                  </>
-                )}
-              </button>
-
-              {landedCostResult && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
-                  <div className="text-xs font-medium uppercase tracking-wide text-emerald-700">
-                    Landed Cost Summary
-                  </div>
-                  <div className="text-lg font-semibold text-emerald-900">
-                    {formatCurrency(landedCostResult.landedCostEur)}
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-emerald-800">
-                    <div>Customs duty</div>
-                    <div className="text-right">{formatCurrency(landedCostResult.customsDutyEur)}</div>
-                    <div>Import VAT</div>
-                    <div className="text-right">{formatCurrency(landedCostResult.importVatEur)}</div>
-                    <div>Pre-import subtotal</div>
-                    <div className="text-right">{formatCurrency(landedCostResult.preImportSubtotalEur)}</div>
-                  </div>
-                </div>
-              )}
-
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={saveLandedCostSnapshot}
-                  onChange={(e) => setSaveLandedCostSnapshot(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Save landed cost snapshot with this evaluation
-              </label>
-            </div>
-
+          {/* Tab Switcher */}
+          <div className="flex border-b border-gray-200 mb-6">
             <button
-              type="submit"
-              disabled={isAnalysing}
-              className="w-full rounded-lg bg-gray-500 py-3 text-sm font-medium text-white hover:bg-gray-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              type="button"
+              onClick={() => setActiveTab('details')}
+              className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'details'
+                ? 'border-b-2 border-gray-900 text-gray-900'
+                : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
-              <Sparkles className="h-4 w-4" />
-              {isAnalysing ? 'Analyzing Market...' : 'Analyze Market'}
+              <Tag className="mb-1 mr-2 inline-block h-4 w-4" />
+              Item Details
             </button>
-            
-            {error && (
-              <div className="text-xs text-red-600 text-center mt-2">
-                {error}
+            <button
+              type="button"
+              onClick={() => setActiveTab('calculator')}
+              className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'calculator'
+                ? 'border-b-2 border-gray-900 text-gray-900'
+                : 'text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              <Calculator className="mb-1 mr-2 inline-block h-4 w-4" />
+              Landed Cost
+            </button>
+          </div>
+
+          {activeTab === 'calculator' ? (
+            <CalculatorWidget />
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  <Tag className="h-4 w-4" />
+                  Product Details
+                </div>
+                {uploadedImage && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+                  >
+                    Clear Image
+                  </button>
+                )}
               </div>
-            )}
-          </form>
-        </div>
+
+              {/* Image Upload Section */}
+              <div className="mb-6">
+                <label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
+                  Product Image (Optional)
+                </label>
+
+                {imagePreview ? (
+                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 mb-3">
+                    <img src={imagePreview} alt="Upload preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 text-gray-600 hover:text-red-600 shadow-sm transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600">Click to upload product image</p>
+                    <p className="text-xs text-gray-400 mt-1">AI will analyze the image</p>
+                  </label>
+                )}
+
+                {uploadedImage && (
+                  <button
+                    type="button"
+                    onClick={handleAnalyzeImage}
+                    disabled={isAnalyzingImage}
+                    className="w-full mt-3 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isAnalyzingImage ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Analyzing image...
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="h-4 w-4" />
+                        Analyze with AI
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              <form onSubmit={handleAnalyse} className="space-y-5">
+                <div>
+                  <label htmlFor="brand-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Brand *
+                  </label>
+                  <select
+                    id="brand-select"
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleChange}
+                    required
+                    className="lux-input"
+                  >
+                    <option value="">Select Brand</option>
+                    {Object.keys(BRAND_MODELS).sort().map(brand => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="model-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Model *
+                  </label>
+                  {availableModels.length > 0 ? (
+                    <select
+                      id="model-select"
+                      name="model"
+                      value={formData.model}
+                      onChange={handleChange}
+                      required
+                      className="lux-input"
+                      disabled={!formData.brand}
+                    >
+                      <option value="">Select Model</option>
+                      {availableModels.map(model => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                      <option value="__custom__">Other (type manually)</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      name="model"
+                      value={formData.model}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. Classic Flap"
+                      className="lux-input"
+                      disabled={!formData.brand}
+                    />
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">
+                    {formData.brand ? `${availableModels.length} models available for ${formData.brand}` : 'Select a brand first'}
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <label htmlFor="condition-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                      Condition *
+                    </label>
+                    <select
+                      id="condition-select"
+                      name="condition"
+                      value={formData.condition}
+                      onChange={handleChange}
+                      required
+                      className="lux-input"
+                    >
+                      <option value="">Grade</option>
+                      <option value="new">New / Pristine</option>
+                      <option value="excellent">Excellent (A)</option>
+                      <option value="good">Good (B)</option>
+                      <option value="fair">Fair (C)</option>
+                      <option value="used">Used</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="colour-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                      Color *
+                    </label>
+                    <select
+                      id="colour-select"
+                      name="colour"
+                      value={formData.colour}
+                      onChange={handleChange}
+                      required
+                      className="lux-input"
+                    >
+                      <option value="">Select Color</option>
+                      {COMMON_COLORS.map(color => (
+                        <option key={color} value={color}>{color}</option>
+                      ))}
+                      <option value="__custom__">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="year-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                      Year
+                    </label>
+                    <select
+                      id="year-select"
+                      name="year"
+                      value={formData.year}
+                      onChange={handleChange}
+                      className="lux-input"
+                    >
+                      <option value="">Unknown</option>
+                      {YEARS.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="category-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Category *
+                  </label>
+                  <select
+                    id="category-input"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    className="lux-input"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Handbag">Handbag</option>
+                    <option value="Wallet">Wallet</option>
+                    <option value="Shoes">Shoes</option>
+                    <option value="Watch">Watch</option>
+                    <option value="Jewelry">Jewelry</option>
+                    <option value="Accessory">Accessory</option>
+                    <option value="Clothing">Clothing</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="notes-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    id="notes-input"
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    placeholder="Size, material, special features..."
+                    rows={2}
+                    className="lux-input resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="ask-price-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Asking Price (EUR)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                    <input
+                      id="ask-price-input"
+                      type="number"
+                      name="askPriceEur"
+                      value={formData.askPriceEur}
+                      onChange={handleChange}
+                      placeholder="0"
+                      step="0.01"
+                      className="lux-input pl-7"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Optional - helps calibrate analysis</p>
+                </div>
+
+                {/* Legacy Landed Cost Calculator removed in favor of standalone widget */}
+
+                <button
+                  type="submit"
+                  disabled={isAnalysing}
+                  className="w-full rounded-lg bg-gray-500 py-3 text-sm font-medium text-white hover:bg-gray-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {isAnalysing ? 'Analyzing Market...' : 'Analyze Market'}
+                </button>
+
+                {
+                  error && (
+                    <div className="text-xs text-red-600 text-center mt-2">
+                      {error}
+                    </div>
+                  )
+                }
+              </form>
+            </>
+          )}
+        </div >
 
         {/* Results / Empty State */}
-        <div className={`lux-card relative min-h-[400px] ${!result ? 'border-dashed border-2' : ''}`}>
+        < div className={`lux-card relative min-h-[400px] ${!result ? 'border-dashed border-2' : ''}`
+        }>
           {!result ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
               <Calculator className="h-12 w-12 mb-4 opacity-20" />
@@ -1003,8 +832,8 @@ export default function EvaluatorView() {
               </button>
             </div>
           )}
-        </div>
-      </div>
-    </section>
+        </div >
+      </div >
+    </section >
   )
 }

@@ -124,7 +124,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | File | Purpose | References |
 |------|--------|------------|
 | `src/main.tsx` | React root; mounts `LuxselleApp` with StrictMode; imports global styles. | React, Vite |
-| `src/LuxselleApp.tsx` | App shell: React Query, React Router, nav, Toaster, ErrorBoundary, route definitions; legacy redirects; on init calls `GET /api/dashboard/status` and shows "Backend not configured" banner if API returns HTML or fails. | react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react |
+| `src/LuxselleApp.tsx` | App shell: React Query + Router, responsive navigation (mobile drawer / desktop tabs / ultra-wide side rail), deep-state breadcrumb mounting, Toaster, ErrorBoundary, and route definitions; includes legacy redirects and backend-config banner check via `GET /api/dashboard/status`. | react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react |
 
 ### Lib
 
@@ -140,13 +140,20 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | File | Purpose | References |
 |------|--------|------------|
 | `src/components/ErrorBoundary.tsx` | Class-component error boundary; catches render errors and shows fallback UI. | React error boundaries |
+| `src/components/layout/routeMeta.ts` | Route metadata + deep-state breadcrumb rules; includes dashboard `insight` URL contract and type guards. | lucide-react |
+| `src/components/layout/DeepStateBreadcrumb.tsx` | Query-aware breadcrumb that only renders for configured deep-state route params. | react-router-dom |
+| `src/components/navigation/MobileNavDrawer.tsx` | Mobile navigation drawer with grouped routes and route-change close behavior. | react-router-dom |
+| `src/components/navigation/WideScreenSideRail.tsx` | Persistent side rail navigation for ultra-wide layouts (`2xl+`). | react-router-dom |
+| `src/components/feedback/Skeleton.tsx` | Shared loading skeleton primitive (`text`, `rect`, `circle`). | Tailwind CSS |
 
 ### Pages (one folder per route)
 
 | File | Purpose | References |
 |------|--------|------------|
-| `src/pages/Dashboard/DashboardView.tsx` | Dashboard overview (counts, recent activity). | apiGet, react-query |
+| `src/pages/Dashboard/DashboardView.tsx` | Dashboard overview with KPI/action cards, URL-driven insights drawer state (`insight` query param), and skeleton-first loading flow. | apiGet, react-router-dom |
 | `src/pages/Dashboard/CommandBar.tsx` | Dashboard command/search bar. | — |
+| `src/pages/Dashboard/DashboardSkeleton.tsx` | Layout-matched dashboard skeleton while dashboard aggregates are loading. | Skeleton primitive |
+| `src/pages/Dashboard/InsightsDrawer.tsx` | Right-side manual insights drawer with keyboard close/focus containment and quick-link actions from existing dashboard data. | react-router-dom |
 | `src/pages/Inventory/InventoryView.tsx` | Product list and filters. | apiGet, react-query |
 | `src/pages/Inventory/ProductDetailDrawer.tsx` | Product detail side drawer. | apiGet, apiPut, apiPost |
 | `src/pages/BuyBox/EvaluatorView.tsx` | Buy-box / evaluator UI. | apiGet, pricing API |
@@ -160,7 +167,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 
 | File | Purpose | References |
 |------|--------|------------|
-| `src/styles/index.css` | Global styles, Tailwind directives, custom utilities. | Tailwind CSS |
+| `src/styles/index.css` | Global styles, Tailwind directives, shell visual tokens, motion utilities (`animate-in`, slide/fade), scrollbar hiding, and skeleton shimmer classes. | Tailwind CSS |
 
 ---
 
@@ -192,6 +199,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/services/pricing/PricingService.test.ts` | Pricing service tests. | Vitest |
 | `packages/server/src/services/import/SupplierImportService.test.ts` | CSV import and mapping tests. | Vitest |
 | `tests/e2e/evaluator.spec.ts` | E2E smoke (evaluator, buying list, invoices page). | Playwright |
+| `tests/e2e/dashboard-shell.spec.ts` | E2E shell coverage: mobile drawer, desktop/ultra-wide nav variants, deep-state breadcrumb visibility, dashboard skeleton, insights drawer URL sync. | Playwright |
 
 ---
 

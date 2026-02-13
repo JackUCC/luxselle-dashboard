@@ -102,7 +102,7 @@ export default function CommandBar({ className = '' }: { className?: string }) {
     <div className={`w-full ${className}`}>
       <form onSubmit={handleSubmit} className="relative group">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Sparkles className="h-5 w-5 text-indigo-400" />
+          <Sparkles className="h-5 w-5 text-sky-500" />
         </div>
         
         <input
@@ -111,7 +111,7 @@ export default function CommandBar({ className = '' }: { className?: string }) {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Ask Luxselle or search inventory..."
           aria-label="Command bar input"
-          className="w-full rounded-2xl border-0 bg-white py-4 pl-12 pr-14 text-lg shadow-soft-lg ring-1 ring-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 transition-shadow"
+          className="w-full rounded-2xl border-0 bg-white py-4 pl-12 pr-14 text-lg shadow-soft-lg ring-1 ring-gray-200 placeholder:text-gray-400 transition-shadow focus:ring-2 focus:ring-sky-500"
         />
         
         <button
