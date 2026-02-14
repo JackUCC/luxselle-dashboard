@@ -27,7 +27,7 @@ const app = express()
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? [/\.vercel\.app$/, /localhost/]
+    ? [/\.vercel\.app$/, /localhost/, /127\.0\.0\.1/]
     : true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Idempotency-Key'],
@@ -37,7 +37,7 @@ app.use(requestId as express.RequestHandler)
 app.use(requestLogger as express.RequestHandler)
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' })
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // Mount API route modules
