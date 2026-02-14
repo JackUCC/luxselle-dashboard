@@ -31,6 +31,7 @@ const EnvSchema = z.object({
   AI_PROVIDER: z.enum(['mock', 'openai', 'gemini']).default('mock'),
   OPENAI_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
+  GITHUB_TOKEN: z.string().optional(),
   BASE_CURRENCY: z.string().default('EUR'),
   TARGET_MARGIN_PCT: z.coerce.number().default(35),
   SKIP_AUTH: z.string().optional(), // set to 'true' to disable auth in development
