@@ -73,6 +73,11 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
   res.status(500).json(formatApiError(API_ERROR_CODES.INTERNAL, 'Internal server error'))
 })
 
-app.listen(env.PORT, '0.0.0.0', () => {
-  console.log(`API server running on http://0.0.0.0:${env.PORT}`)
-})
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  app.listen(env.PORT, '0.0.0.0', () => {
+    console.log(`API server running on http://0.0.0.0:${env.PORT}`)
+  })
+}
+
+export { app }
