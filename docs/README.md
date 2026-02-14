@@ -14,6 +14,9 @@ Central place for all project documentation. Use this index for audits and onboa
 - **[PLAN](planning/PLAN.md)** — Implementation phases (0–6 complete, Phase 7 polish)
 - **[AGENT_TEAM](planning/AGENT_TEAM.md)** — Page-specific agents, next-level APIs, Jarvis-like vision
 - **[STATUS_AND_PLAN](planning/STATUS_AND_PLAN.md)** — Current state and gaps
+- **[FRONTEND_BACKEND_CONNECTION_TASKS](planning/FRONTEND_BACKEND_CONNECTION_TASKS.md)** — Comprehensive agent task list for cleanup and connection validation
+- **[QUICK_ACTION_CHECKLIST](planning/QUICK_ACTION_CHECKLIST.md)** — Quick validation checklist for frontend-backend connection
+- **[QA_SWARM_PLAYBOOK](planning/QA_SWARM_PLAYBOOK.md)** — QA orchestration guide
 - **[ITERATION_STATUS](planning/ITERATION_STATUS.md)** — Iteration checklist
 - **[CODE_AND_ITERATION_4](planning/CODE_AND_ITERATION_4.md)** — Code and Iteration 4 reference
 
