@@ -26,6 +26,7 @@ import SourcingView from './pages/Sourcing/SourcingView'
 import BuyingListView from './pages/BuyingList/BuyingListView'
 import JobsView from './pages/Jobs/JobsView'
 import InvoicesView from './pages/Invoices/InvoicesView'
+import MarketResearchView from './pages/MarketResearch/MarketResearchView'
 import { queryClient } from './lib/queryClient'
 
 const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
@@ -134,6 +135,7 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
                 <Route path="/" element={<DashboardView />} />
                 <Route path="/inventory" element={<InventoryView />} />
                 <Route path="/buy-box" element={<EvaluatorView />} />
+                <Route path="/market-research" element={<MarketResearchView />} />
                 <Route path="/supplier-hub" element={<SupplierHubView />} />
                 <Route path="/buying-list" element={<BuyingListView />} />
                 <Route path="/sourcing" element={<SourcingView />} />

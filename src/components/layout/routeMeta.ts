@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Calculator,
   ClipboardList,
   FileSpreadsheet,
@@ -24,6 +25,7 @@ export const appRoutes: RouteMeta[] = [
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'core' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'core' },
   { path: '/buy-box', label: 'Buy Box', navLabel: 'Buy Box', icon: Calculator, section: 'core' },
+  { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'core' },
   {
     path: '/supplier-hub',
     label: 'Supplier Hub',
