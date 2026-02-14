@@ -28,8 +28,10 @@ import JobsView from './pages/Jobs/JobsView'
 import InvoicesView from './pages/Invoices/InvoicesView'
 import MarketResearchView from './pages/MarketResearch/MarketResearchView'
 import { queryClient } from './lib/queryClient'
+import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
 
-const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
+const AppContent = () => {
+  const { isConnected } = useServerStatus()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
 
@@ -37,7 +39,7 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
 
   return (
     <div className="min-h-screen bg-lux-50 text-gray-900 font-sans">
-      {backendMissing === true && (
+      {isConnected === false && (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -155,30 +157,13 @@ const AppShell = ({ backendMissing }: { backendMissing: boolean | null }) => {
 }
 
 const LuxselleApp = () => {
-  const [backendMissing, setBackendMissing] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch(`${API_BASE}/dashboard/status`)
-      .then((res) => {
-        if (cancelled) return
-        const ct = res.headers.get('content-type') ?? ''
-        if (!res.ok || ct.includes('text/html')) setBackendMissing(true)
-        else setBackendMissing(false)
-      })
-      .catch(() => {
-        if (!cancelled) setBackendMissing(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppShell backendMissing={backendMissing} />
-      </BrowserRouter>
+      <ServerStatusProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </ServerStatusProvider>
     </QueryClientProvider>
   )
 }

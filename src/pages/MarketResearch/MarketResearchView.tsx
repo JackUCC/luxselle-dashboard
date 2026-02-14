@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { apiGet, apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
+import { useServerStatus } from '../../lib/ServerStatusContext'
 
 // ─── Brand database ────────────────────────────────────────────
 const BRAND_MODELS: Record<string, string[]> = {
@@ -181,6 +182,8 @@ export default function MarketResearchView() {
         setResult(null)
     }
 
+    const { status } = useServerStatus()
+
     return (
         <section className="mx-auto max-w-6xl space-y-8">
             {/* Header */}
@@ -189,8 +192,18 @@ export default function MarketResearchView() {
                     <BarChart3 className="h-7 w-7 text-indigo-600" />
                     Market Research
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">
-                    AI-powered market intelligence for luxury goods
+                <p className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-2">
+                    <span>AI-powered market intelligence for luxury goods</span>
+                    {status?.aiProvider === 'mock' && (
+                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                            Mock Data
+                        </span>
+                    )}
+                    {(status?.aiProvider === 'openai' || status?.aiProvider === 'gemini') && (
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 capitalize">
+                            AI: {status.aiProvider}
+                        </span>
+                    )}
                 </p>
             </div>
 
