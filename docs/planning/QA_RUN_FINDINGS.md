@@ -77,3 +77,28 @@ Baseline (server tests, typecheck, build) is **green**.
   2. Running `npm run dev` in one terminal until Vite and the API are ready.
   3. Running `npm run test:e2e` in another (Playwright will reuse the existing server).
 - **Smoke:** Main routes and flows are covered by the E2E specs (dashboard shell, evaluator → buying list → receive → inventory, nav, legacy redirects, invoices). Manual smoke of all routes remains optional.
+
+---
+
+## Checklist for you
+
+Use this list on your side after pulling the `qa-run-fixes` branch (or merging it):
+
+1. **Open/merge the PR**  
+   Create a PR from `qa-run-fixes` into `main` (if not already open):  
+   https://github.com/JackUCC/luxselle-dashboard/pull/new/qa-run-fixes  
+   Review and merge when ready.
+
+2. **Run E2E locally**  
+   - Kill any existing `npm run dev` or Firebase emulator processes.  
+   - In terminal 1: `npm run dev` — wait until Vite shows `http://localhost:5173/` and the API is up.  
+   - In terminal 2: `npm run test:e2e` — all 15 tests should pass (Playwright will reuse the existing server).
+
+3. **Smoke-test main routes**  
+   With the app running, quickly open: `/`, `/inventory`, `/buy-box`, `/supplier-hub`, `/buying-list`, `/sourcing`, `/jobs`, `/invoices`. Confirm each page loads and nav works.
+
+4. **Confirm baseline in your env**  
+   Run: `npm run test --workspace=@luxselle/server && npm run typecheck && npm run build`. All should pass.
+
+5. **Production/deploy**  
+   If you deploy after merging: ensure env (Firebase, Gmail OAuth, pricing API keys) is set per the deploy docs; see “Owner input needed” above.
