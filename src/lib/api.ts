@@ -13,8 +13,15 @@ export class ApiError extends Error {
   }
 }
 
-/** In production set VITE_API_BASE to your backend URL (e.g. Vercel serverless or other host). */
-export const API_BASE = import.meta.env.VITE_API_BASE ?? '/api'
+/**
+ * In production set VITE_API_BASE to your backend origin (e.g. https://your-app.up.railway.app).
+ * Paths like /dashboard/kpis are appended; the backend serves /api/* so we ensure /api is included.
+ */
+const rawBase = import.meta.env.VITE_API_BASE ?? '/api'
+export const API_BASE =
+  rawBase.startsWith('http')
+    ? rawBase.replace(/\/+$/, '').replace(/\/api\/?$/, '') + '/api'  // origin + /api, no duplicate
+    : rawBase
 
 interface ApiErrorBody {
   error?: { code?: string; message?: string; details?: unknown }
@@ -45,7 +52,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (!isJson) {
     const text = await response.text()
     if (/^\s*<!doctype/i.test(text))
-      throw new ApiError('API returned HTML instead of JSON. Set VITE_API_BASE to your backend URL in production.', response.status)
+      throw new ApiError(
+        'Backend URL not set. In Vercel: Settings → Environment Variables → add VITE_API_BASE = your Railway URL (e.g. https://your-app.up.railway.app), then redeploy.',
+        response.status
+      )
     throw new ApiError(text || 'Invalid response', response.status)
   }
   return response.json() as Promise<T>
@@ -91,7 +101,10 @@ export async function apiPostFormData<T>(path: string, formData: FormData): Prom
   if (!contentType.includes('application/json')) {
     const text = await response.text()
     if (/^\s*<!doctype/i.test(text))
-      throw new ApiError('API returned HTML instead of JSON. Set VITE_API_BASE to your backend URL in production.', response.status)
+      throw new ApiError(
+        'Backend URL not set. In Vercel: Settings → Environment Variables → add VITE_API_BASE = your Railway URL (e.g. https://your-app.up.railway.app), then redeploy.',
+        response.status
+      )
     throw new ApiError(text || 'Invalid response', response.status)
   }
   return response.json() as Promise<T>
