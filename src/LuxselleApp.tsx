@@ -31,7 +31,7 @@ import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
 
 const AppContent = () => {
-  const { isConnected } = useServerStatus()
+  const { isConnected, refetchStatus } = useServerStatus()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
 
@@ -41,9 +41,16 @@ const AppContent = () => {
     <div className="min-h-screen bg-lux-50 text-gray-900 font-sans">
       {isConnected === false && (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-800">
-          <div className="mx-auto flex max-w-8xl items-center gap-2">
+          <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>Backend not configured. Set `VITE_API_BASE` to your backend URL and redeploy.</span>
+            <span>Backend not configured. Set VITE_API_BASE in Vercel (Settings → Environment Variables) to your Railway URL, then redeploy. Env vars only apply to new builds.</span>
+            <button
+              type="button"
+              onClick={() => refetchStatus()}
+              className="rounded bg-amber-200 px-2 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-300"
+            >
+              Retry
+            </button>
           </div>
         </div>
       )}
