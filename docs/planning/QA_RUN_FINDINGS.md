@@ -66,3 +66,14 @@ Baseline (server tests, typecheck, build) is **green**.
 
 - None for this QA run.  
 - For production/e2e: ensure Firebase emulator (or real project) and env (e.g. Gmail OAuth, pricing API keys) are configured per [PRODUCTION_INPUTS_SUPPLIER_EMAIL_AND_PRICING.md](../deploy/PRODUCTION_INPUTS_SUPPLIER_EMAIL_AND_PRICING.md) and [GMAIL_WORKSPACE_OAUTH_SETUP.md](../deploy/GMAIL_WORKSPACE_OAUTH_SETUP.md).
+
+---
+
+## Phase 4: Frontend verification (post-commit)
+
+- **Baseline re-run:** Server tests, `npm run typecheck`, and `npm run build` were re-run after commit; all passed.
+- **E2E re-run:** Not run in this environment. Starting `npm run dev` failed because Firebase emulators could not bind (ports already in use from a previous run). Full E2E verification should be done locally by:
+  1. Stopping any existing emulator or dev processes.
+  2. Running `npm run dev` in one terminal until Vite and the API are ready.
+  3. Running `npm run test:e2e` in another (Playwright will reuse the existing server).
+- **Smoke:** Main routes and flows are covered by the E2E specs (dashboard shell, evaluator → buying list → receive → inventory, nav, legacy redirects, invoices). Manual smoke of all routes remains optional.
