@@ -55,7 +55,7 @@ const AppContent = () => {
         </div>
       )}
 
-      <div className="xl:flex">
+      <div className="2xl:flex">
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
@@ -65,7 +65,7 @@ const AppContent = () => {
                 <div className="flex min-w-0 items-center gap-3">
                   <button
                     type="button"
-                    className="rounded-xl border border-gray-200 bg-white p-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 xl:hidden"
+                    className="rounded-xl border border-gray-200 bg-white p-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 2xl:hidden"
                     onClick={() => setMobileNavOpen(true)}
                     aria-label="Open navigation menu"
                     data-testid="mobile-nav-toggle"
@@ -73,21 +73,21 @@ const AppContent = () => {
                     <Menu className="h-5 w-5" />
                   </button>
 
-                  <div className="flex items-center gap-2 xl:hidden">
+                  <div className="flex items-center gap-2 2xl:hidden">
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
                       L
                     </div>
                     <span className="font-display text-sm font-semibold tracking-tight text-gray-900">Luxselle</span>
                   </div>
 
-                  <div className="hidden min-w-0 items-center gap-2 xl:flex">
+                  <div className="hidden min-w-0 items-center gap-2 2xl:flex">
                     <p className="truncate text-sm font-medium text-gray-500">
                       {activeRoute?.label ?? 'Dashboard'}
                     </p>
                   </div>
                 </div>
 
-                <nav className="hidden flex-1 items-center gap-1 overflow-x-auto no-scrollbar lg:flex xl:hidden">
+                <nav className="hidden flex-1 items-center gap-1 overflow-x-auto no-scrollbar lg:flex 2xl:hidden">
                   {appRoutes.map((route) => (
                     <NavLink
                       key={route.path}

@@ -6,7 +6,7 @@ import { NAV_GROUPS } from './navGroups'
 export default function WideScreenSideRail() {
   return (
     <aside
-      className="sticky top-0 hidden h-screen w-72 flex-col border-r border-gray-200 bg-slate-50/90 px-5 py-6 backdrop-blur-xl xl:flex"
+      className="sticky top-0 hidden h-screen w-72 flex-col border-r border-gray-200 bg-slate-50/90 px-5 py-6 backdrop-blur-xl 2xl:flex"
       data-testid="wide-screen-side-rail"
     >
       {/* Gradient accent line at top */}
