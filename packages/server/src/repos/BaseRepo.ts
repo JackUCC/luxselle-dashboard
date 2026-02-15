@@ -4,12 +4,27 @@
  * @see docs/CODE_REFERENCE.md
  * References: firebase-admin/firestore, Zod
  */
-import { CollectionReference, DocumentData, Query } from 'firebase-admin/firestore'
+import { CollectionReference, DocumentData, Query, Timestamp } from 'firebase-admin/firestore'
 import { z } from 'zod'
 import { db } from '../config/firebase'
 import { DEFAULT_ORG_ID } from '@shared/schemas'
 
 export type WithId<T> = T & { id: string }
+
+/** Convert Firestore Timestamp objects to ISO strings for Zod schema compatibility. */
+function serializeDocData(data: DocumentData): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(data)) {
+    if (v instanceof Timestamp) {
+      out[k] = v.toDate().toISOString()
+    } else if (v && typeof v === 'object' && typeof (v as { toDate?: () => Date }).toDate === 'function') {
+      out[k] = (v as { toDate: () => Date }).toDate().toISOString()
+    } else {
+      out[k] = v
+    }
+  }
+  return out
+}
 
 /**
  * Base repository supporting multi-tenancy via org subcollections.
@@ -93,7 +108,8 @@ export class BaseRepo<T extends Record<string, unknown>> {
   }
 
   protected parseDoc(id: string, data: DocumentData): WithId<T> {
-    const parsed = this.schema.parse(data)
+    const serialized = serializeDocData(data)
+    const parsed = this.schema.parse(serialized)
     return { id, ...parsed }
   }
 

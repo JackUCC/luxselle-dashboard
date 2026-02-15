@@ -69,8 +69,15 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
   }
 
   errorTracker.track('internal')
+  const errMessage = err instanceof Error ? err.message : String(err)
   logger.error('unhandled_error', err, { requestId })
-  res.status(500).json(formatApiError(API_ERROR_CODES.INTERNAL, 'Internal server error'))
+  // Include error message in response when X-Debug: 1 for troubleshooting
+  const includeDebug = req.headers['x-debug'] === '1'
+  res.status(500).json(formatApiError(
+    API_ERROR_CODES.INTERNAL,
+    includeDebug ? errMessage : 'Internal server error',
+    includeDebug && err instanceof Error && err.stack ? { stack: err.stack } : undefined
+  ))
 })
 
 
