@@ -1,0 +1,9 @@
+# Railway deployment config (backend only). Frontend deploys to Vercel.
+# See docs/deploy/RAILWAY.md for env vars and setup.
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm install"
+
+[deploy]
+startCommand = "npm run start --workspace=@luxselle/server"

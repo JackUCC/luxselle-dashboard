@@ -1,10 +1,11 @@
 /**
- * System jobs API: list/filter jobs (e.g. import); get by id.
+ * System jobs API: list/filter jobs (e.g. import); get by id; retry runs job in-process async.
  * @see docs/CODE_REFERENCE.md
- * References: Express, SystemJobRepo
+ * References: Express, SystemJobRepo, JobRunner
  */
 import { Router } from 'express'
 import { SystemJobRepo } from '../repos/SystemJobRepo'
+import { runJob } from '../services/JobRunner'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
@@ -78,10 +79,13 @@ router.post('/:id/retry', async (req, res, next) => {
       progress: undefined,
       updatedAt: now,
     })
-    
-    // TODO: Actually trigger the job execution (would need a job runner)
-    // For now, just queue it
-    
+
+    setImmediate(() => {
+      runJob(req.params.id).catch((err) => {
+        console.error('JobRunner runJob error:', err)
+      })
+    })
+
     res.json({ data: updated })
   } catch (error) {
     next(error)

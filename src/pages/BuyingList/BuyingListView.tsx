@@ -21,7 +21,9 @@ import {
   Phone
 } from 'lucide-react'
 import type { BuyingListItem, Supplier } from '@shared/schemas'
-import { apiGet, apiPost } from '../../lib/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { apiDelete, apiGet, apiPost } from '../../lib/api'
+import { queryKeys } from '../../lib/queryClient'
 
 type BuyingListItemWithId = BuyingListItem & { id: string }
 type SupplierWithId = Supplier & { id: string }
@@ -50,6 +52,7 @@ const statusColors = {
 
 export default function BuyingListView() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [items, setItems] = useState<BuyingListItemWithId[]>([])
   const [suppliers, setSuppliers] = useState<Record<string, SupplierWithId>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -124,8 +127,16 @@ export default function BuyingListView() {
   }
 
   const handleClearList = async () => {
-    // TODO: Implement clear list endpoint
-    toast.error('Clear list not yet implemented')
+    try {
+      await apiDelete('/buying-list/clear')
+      queryClient.invalidateQueries({ queryKey: queryKeys.buyingList.all })
+      await loadData()
+      toast.success('Buying list cleared')
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to clear list'
+      toast.error(message)
+    }
   }
 
   const handleExportPO = () => {

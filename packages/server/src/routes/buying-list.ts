@@ -110,6 +110,19 @@ router.get('/', async (req, res, next) => {
   }
 })
 
+// Clear all buying list items (must be before /:id so "clear" is not treated as id)
+router.delete('/clear', async (req, res, next) => {
+  try {
+    const items = await buyingListRepo.list()
+    for (const item of items) {
+      await buyingListRepo.remove(item.id)
+    }
+    res.json({ data: { deleted: items.length } })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Get single buying list item
 router.get('/:id', async (req, res, next) => {
   try {
