@@ -1,9 +1,7 @@
 import { defineConfig } from '@playwright/test'
 import path from 'path'
-import { fileURLToPath } from 'url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const root = path.resolve(__dirname, '..')
+const root = process.cwd()
 
 export default defineConfig({
   testDir: path.join(root, 'tests/e2e'),
@@ -20,6 +18,6 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
-    timeout: 120000,
+    timeout: 180000,
   },
 })

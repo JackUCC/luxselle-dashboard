@@ -33,10 +33,12 @@ A release is green only when all are true:
 ```bash
 npm run test --workspace=@luxselle/server
 npm run build
-npm exec tsc --noEmit
+npm run typecheck
 ```
 
-Optional when e2e environment is available:
+(`typecheck` runs `tsc --noEmit` from the repo root; see root `package.json`.)
+
+Optional when e2e environment is available (start dev + emulators first for reliable runs):
 
 ```bash
 npm run test:e2e
