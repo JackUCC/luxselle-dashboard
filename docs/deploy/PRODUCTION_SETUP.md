@@ -73,17 +73,56 @@ Apply CORS configuration:
 # Install Google Cloud SDK if needed
 # https://cloud.google.com/sdk/docs/install
 
+# Verify current CORS (optional)
+gsutil cors get gs://luxselle-dashboard.firebasestorage.app
+
 # Apply CORS
 gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
-### 1.6 Generate Service Account Key
+### 1.6 Security Rules for Production
+
+The app uses Firebase Admin SDK (backend-only) for Firestore and Storage. Admin SDK bypasses security rules. Production rules should **deny all client SDK access** to prevent direct reads/writes from untrusted clients.
+
+**Firestore** (`firebase/firestore.rules`):
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+**Storage** (`firebase/storage.rules`):
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+Images remain accessible via public URLs because the backend calls `makePublic()` on uploaded files (IAM), which is independent of Storage rules.
+
+Deploy hardened rules:
+```bash
+firebase deploy --only firestore
+firebase deploy --only storage
+```
+
+### 1.7 Generate Service Account Key
 
 1. Go to [Firebase Console](https://console.firebase.google.com) → Project Settings (gear icon)
 2. Go to **Service accounts** tab
 3. Click **Generate new private key**
 4. Download the JSON file (keep it **secure** - do NOT commit to Git!)
-5. You'll use this for Railway backend
+5. You'll use this for Railway backend (see section 2.3)
 
 ---
 
@@ -392,6 +431,19 @@ Check `firestore.rules` - make sure rules allow the operations you need.
 2. Check `AI_PROVIDER` matches the key you set (`openai` or `gemini`)
 3. Test API key directly (OpenAI playground or Gemini AI Studio)
 4. Use `AI_PROVIDER=mock` temporarily to bypass
+
+### Issue: PERMISSION_DENIED (code 7) in Railway logs
+
+**Cause**: Google Cloud API access requires billing or IAM permissions
+
+**Fix**:
+1. Inspect Railway logs for the full error (stack trace, call site)
+2. In [GCP IAM](https://console.cloud.google.com/iam-admin/iam?project=luxselle-dashboard), ensure service account `firebase-adminsdk-fbsvc@luxselle-dashboard.iam.gserviceaccount.com` has:
+   - Cloud Datastore User (Firestore)
+   - Firebase Admin SDK Administrator Service Agent
+   - Storage Object Admin (for Storage writes)
+3. Confirm Firebase project has Blaze billing enabled
+4. If Gmail/SupplierEmailSync is used, configure OAuth for production
 
 ---
 

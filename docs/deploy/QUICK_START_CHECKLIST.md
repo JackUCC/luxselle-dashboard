@@ -217,29 +217,36 @@ curl https://your-backend.railway.app/api/products
 
 ## Phase 6: Final Checks (5 minutes)
 
-### Step 16: Security Review
+### Step 16: Security Review and Hardened Rules
 
 - [ ] Service account JSON is NOT in your git repository
 - [ ] `.gitignore` includes `serviceAccount.json`
-- [ ] Firestore rules are deployed (not wide open)
-- [ ] Storage rules are deployed
+- [ ] Firestore and Storage rules use `allow read, write: if false` (deny client access; backend Admin SDK bypasses rules)
+- [ ] Deploy hardened rules: `firebase deploy --only firestore` and `firebase deploy --only storage`
 
-### Step 17: Update CORS with Actual Vercel URL
+### Step 17: Verify and Update CORS
 
-Update `cors.json`:
+Verify current CORS:
+```bash
+gsutil cors get gs://luxselle-dashboard.firebasestorage.app
+```
+
+Update `cors.json` with your actual Vercel URL:
 ```json
 [{
-  "origin": ["https://your-actual-app.vercel.app"],
+  "origin": ["https://your-actual-app.vercel.app", "https://*.vercel.app"],
   "method": ["GET", "HEAD"],
+  "responseHeader": ["Content-Type", "Content-Length"],
   "maxAgeSeconds": 3600
 }]
 ```
 
+Apply CORS:
 ```bash
 gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 ```
 
-- [ ] CORS updated with actual domain
+- [ ] CORS verified and updated with actual domain
 
 ### Step 18: Monitor Logs
 

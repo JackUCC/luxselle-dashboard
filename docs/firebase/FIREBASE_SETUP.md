@@ -508,11 +508,22 @@ firebase deploy --only firestore:indexes
 
 ---
 
+## Production Security Rules
+
+For production, the app uses Firebase Admin SDK (backend-only). Rules should **deny all client SDK access**:
+
+- **Firestore** (`firebase/firestore.rules`): `allow read, write: if false`
+- **Storage** (`firebase/storage.rules`): `allow read, write: if false`
+
+Admin SDK bypasses rules, so backend operations continue to work. Images remain accessible via public URLs (backend calls `makePublic()` on uploads). See [PRODUCTION_SETUP.md](../deploy/PRODUCTION_SETUP.md#16-security-rules-for-production).
+
+---
+
 ## Next Steps
 
 1. ✅ Verify Firebase login: `firebase login:list`
 2. ✅ Verify project: `firebase use`
 3. ✅ Test emulators: `npm run emulators`
 4. ✅ Access Firebase UI: http://localhost:4000
-5. 📝 Review and update security rules in `firestore.rules` and `storage.rules`
+5. ✅ Production: Use hardened rules (`allow read, write: if false`) - see above
 6. 📝 Add Firestore indexes as needed in `firestore.indexes.json`
