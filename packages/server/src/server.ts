@@ -26,10 +26,21 @@ import { requestId, requestLogger, type RequestWithId, logger, errorTracker } fr
 
 const app = express()
 
+const configuredFrontendOrigins = env.FRONTEND_ORIGINS
+  ? env.FRONTEND_ORIGINS
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean)
+  : []
+
+const defaultProductionOrigins: (string | RegExp)[] = [/\.vercel\.app$/, /localhost(:\d+)?$/, /127\.0\.0\.1(:\d+)?$/]
+const allowedOrigins: true | (string | RegExp)[] =
+  process.env.NODE_ENV === 'production'
+    ? [...configuredFrontendOrigins, ...defaultProductionOrigins]
+    : true
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? [/\.vercel\.app$/, /localhost/, /127\.0\.0\.1/]
-    : true,
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Idempotency-Key'],
 }))

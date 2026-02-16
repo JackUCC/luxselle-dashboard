@@ -272,3 +272,31 @@ Each agent should:
 ## Changelog
 
 - **2025-02-13** — Initial Agent Team architecture and per-page API/UX/Jarvis specs.
+
+---
+
+## Iteration Swarm (Global Codebase Optimizer)
+
+Use this swarm when the goal is not one page, but **systematic improvement across the whole repository**.
+
+| Agent | Agent File | Role |
+|------|------------|------|
+| Codebase Optimizer | `.cursor/agents/agent-codebase-optimizer.md` | Orchestrates sprint scope, priorities, and consolidation |
+| Frontend UX Optimizer | `.cursor/agents/agent-frontend-ux-optimizer.md` | Improves page-level UX and interaction quality |
+| Backend Reliability Optimizer | `.cursor/agents/agent-backend-reliability-optimizer.md` | Hardens API contracts and deterministic server behavior |
+| Data Pipeline Optimizer | `.cursor/agents/agent-data-pipeline-optimizer.md` | Improves supplier ingestion resilience and observability |
+| Test Hardening | `.cursor/agents/agent-test-hardening.md` | Expands automated confidence and release gates |
+
+### Launching the swarm
+
+From repository root:
+
+```bash
+npm run agents:launch
+```
+
+To launch plus execute validation checks in one run:
+
+```bash
+npm run agents:launch -- --run-checks
+```
