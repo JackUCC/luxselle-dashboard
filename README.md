@@ -23,8 +23,8 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
    | `FIRESTORE_EMULATOR_HOST` | e.g. `127.0.0.1:8082` (match firebase/firebase.json) |
    | `FIREBASE_STORAGE_EMULATOR_HOST` | e.g. `127.0.0.1:9198` (match firebase/firebase.json) |
    | `GOOGLE_APPLICATION_CREDENTIALS` | Path to service account JSON (leave empty for emulator) |
-   | `AI_PROVIDER` | `mock` \| `openai` \| `gemini` |
-   | `OPENAI_API_KEY` / `GEMINI_API_KEY` | Optional; required only when not using `mock` |
+   | `AI_PROVIDER` | `mock` \| `openai` |
+   | `OPENAI_API_KEY` | Required when `AI_PROVIDER=openai` |
    | `BASE_CURRENCY` | e.g. `EUR` (used by pricing) |
    | `TARGET_MARGIN_PCT` | Default margin % (e.g. `35`) |
    | `PORT` | Backend port (default `3001`) |

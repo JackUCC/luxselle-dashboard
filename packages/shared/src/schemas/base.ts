@@ -47,4 +47,4 @@ export const TransactionTypeSchema = z.enum([
   'sale',
   'adjustment',
 ])
-export const EvaluationProviderSchema = z.enum(['mock', 'openai', 'gemini'])
+export const EvaluationProviderSchema = z.enum(['mock', 'openai'])

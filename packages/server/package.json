@@ -16,7 +16,6 @@
     "test:watch": "vitest --config ../../config/vitest.config.ts"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@luxselle/shared": "*",
     "cors": "^2.8.5",
     "csv-parse": "^6.1.0",

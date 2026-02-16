@@ -91,7 +91,7 @@ router.post('/analyse', async (req, res, next) => {
       historyAvgPaidEur: result.historyAvgPaidEur ?? 0,
       comps: result.comps,
       confidence: result.confidence,
-      provider: result.provider as 'mock' | 'openai' | 'gemini',
+      provider: result.provider as 'mock' | 'openai',
       imageUrl: input.imageUrl,
       marketSummary: result.marketSummary,
       landedCostSnapshot: input.landedCostSnapshot,
@@ -151,7 +151,7 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
     const imageBase64 = req.file.buffer.toString('base64')
     const mimeType = req.file.mimetype
 
-    // Use AI provider if available (Gemini or OpenAI vision)
+    // Use OpenAI vision when available
     let detectedAttributes = {
       brand: '',
       model: '',
@@ -160,50 +160,7 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
       colour: '',
     }
 
-    if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
-      // Gemini Vision API
-      try {
-        const { GoogleGenerativeAI } = await import('@google/generative-ai')
-        const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY)
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
-
-        const prompt = `Analyze this luxury product image and extract:
-- Brand (e.g., Chanel, Hermès, Louis Vuitton, Gucci, Prada, Dior, Bottega Veneta, Fendi, Givenchy, Loewe)
-- Model/Style name (e.g., Classic Flap, Birkin, Speedy)
-- Category (Handbag, Wallet, Shoes, Watch, Jewelry, Accessory, Clothing)
-- Condition (new, excellent, good, fair, used)
-- Primary color (Black, White, Beige, Navy, Brown, etc.)
-
-Return ONLY a JSON object with these fields (lowercase keys): {"brand":"","model":"","category":"","condition":"","colour":""}`
-
-        const result = await model.generateContent([
-          prompt,
-          {
-            inlineData: {
-              data: imageBase64,
-              mimeType,
-            },
-          },
-        ])
-
-        const text = result.response.text()
-        // Extract JSON from response (handle markdown code blocks)
-        const jsonMatch = text.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
-          detectedAttributes = {
-            brand: parsed.brand || '',
-            model: parsed.model || '',
-            category: parsed.category || '',
-            condition: parsed.condition || '',
-            colour: parsed.colour || parsed.color || '',
-          }
-        }
-      } catch (error) {
-        console.error('Gemini Vision API error:', error)
-        // Fall through to mock response
-      }
-    } else if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+    if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
       // OpenAI Vision API
       try {
         const OpenAI = (await import('openai')).default

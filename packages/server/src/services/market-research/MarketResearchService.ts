@@ -3,7 +3,7 @@
  * Provides deep market analysis including price trends, demand indicators,
  * competitive landscape, and buy/sell recommendations.
  * @see docs/CODE_REFERENCE.md
- * References: Gemini AI, OpenAI, env
+ * References: OpenAI, env
  */
 import { env } from '../../config/env'
 
@@ -195,22 +195,6 @@ export class MarketResearchService {
         const parsed = this.parseJSON(text)
 
         return this.formatResult(parsed, input, 'openai')
-    }
-
-    private async trendingWithGemini(): Promise<TrendingResult> {
-        const { GoogleGenerativeAI } = await import('@google/generative-ai')
-        const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY!)
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-
-        const result = await model.generateContent(TRENDING_PROMPT)
-        const text = result.response.text()
-        const parsed = this.parseJSON(text)
-
-        return {
-            provider: 'gemini',
-            items: parsed.items ?? [],
-            generatedAt: new Date().toISOString(),
-        }
     }
 
     private async trendingWithOpenAI(): Promise<TrendingResult> {

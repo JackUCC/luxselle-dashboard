@@ -19,7 +19,6 @@ const defaultEnv = {
   FIREBASE_STORAGE_EMULATOR_HOST: '127.0.0.1:9198',
   AI_PROVIDER: 'mock',
   OPENAI_API_KEY: '',
-  GEMINI_API_KEY: '',
   BASE_CURRENCY: 'EUR',
   TARGET_MARGIN_PCT: 35,
 }
@@ -147,7 +146,6 @@ describe('PricingService', () => {
     const PricingService = await loadPricingService({
       AI_PROVIDER: 'mock',
       OPENAI_API_KEY: '',
-      GEMINI_API_KEY: '',
     })
     listMock.mockResolvedValueOnce([])
     productListMock.mockResolvedValueOnce([])
@@ -188,39 +186,6 @@ describe('PricingService', () => {
     const result = await service.analyse(basePricingInput)
 
     expect(result.provider).toBe('openai')
-  })
-
-  it('selects gemini provider when configured', async () => {
-    vi.resetModules()
-    listMock.mockReset()
-    productListMock.mockReset()
-
-    const analyseMock = vi.fn().mockResolvedValue({
-      estimatedRetailEur: 3000,
-      confidence: 0.85,
-      comps: [{ title: 'Test Comp', price: 2900, source: 'Gemini' }],
-    })
-
-    vi.doMock('../../config/env', () => ({
-      env: { ...defaultEnv, AI_PROVIDER: 'gemini', GEMINI_API_KEY: 'test-key' },
-    }))
-    vi.doMock('./providers/GeminiProvider', () => ({
-      GeminiProvider: class { analyse = analyseMock },
-    }))
-    vi.doMock('../../repos/TransactionRepo', () => ({
-      TransactionRepo: class { list = listMock },
-    }))
-    vi.doMock('../../repos/ProductRepo', () => ({
-      ProductRepo: class { list = productListMock },
-    }))
-
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
-    const { PricingService } = await import('./PricingService')
-    const service = new PricingService()
-    const result = await service.analyse(basePricingInput)
-
-    expect(result.provider).toBe('gemini')
   })
 
   it('applies IE-first market policy with EU fallback', async () => {

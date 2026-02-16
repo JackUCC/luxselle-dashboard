@@ -7,7 +7,7 @@ Step-by-step guide to deploy the Express API backend to Railway.
 - Railway account (sign up at [railway.app](https://railway.app))
 - GitHub repository with your code
 - Firebase service account JSON file
-- API keys (OpenAI or Gemini, optional)
+- API key (OpenAI, optional)
 
 ---
 
@@ -87,16 +87,10 @@ TARGET_MARGIN_PCT=35
 
 ### 2.4 AI Provider (Optional)
 
-**For OpenAI:**
+**For OpenAI (pricing, market research, image analysis):**
 ```bash
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-proj-your-key-here
-```
-
-**For Google Gemini:**
-```bash
-AI_PROVIDER=gemini
-GEMINI_API_KEY=your-gemini-key-here
 ```
 
 **For Mock (no AI, testing only):**

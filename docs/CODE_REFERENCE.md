@@ -87,11 +87,10 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 
 | File | Purpose | References |
 |------|--------|------------|
-| `packages/server/src/services/pricing/PricingService.ts` | Orchestrates AI pricing: provider selection (mock/openai/gemini), margin, FX (usdToEur). | fx.ts, env, providers |
+| `packages/server/src/services/pricing/PricingService.ts` | Orchestrates AI pricing: provider selection (mock/openai), margin, FX (usdToEur). | fx.ts, env, providers |
 | `packages/server/src/services/pricing/providers/IPricingProvider.ts` | Interface for pricing providers. | — |
 | `packages/server/src/services/pricing/providers/MockPricingProvider.ts` | Mock pricing for tests/local. | IPricingProvider |
 | `packages/server/src/services/pricing/providers/OpenAIProvider.ts` | OpenAI-based pricing. | OpenAI API, IPricingProvider |
-| `packages/server/src/services/pricing/providers/GeminiProvider.ts` | Gemini-based pricing. | Gemini API, IPricingProvider |
 | `packages/server/src/services/import/SupplierImportService.ts` | Parse supplier CSV, map columns, validate; create/update suppliers and items. | fx.ts, CSV parse |
 
 ---

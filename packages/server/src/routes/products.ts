@@ -183,30 +183,18 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
     const headers = rows.length > 0 ? Object.keys(rows[0]) : []
     const sampleRow = rows.length > 0 ? rows[0] : {}
 
-    if (
-      rows.length > 0 &&
-      ((env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) || (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY))
-    ) {
+    if (rows.length > 0 && env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
       try {
         const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
-        let text = ''
-        if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
-          const OpenAI = (await import('openai')).default
-          const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
-          const response = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 400,
-            temperature: 0,
-          })
-          text = response.choices[0]?.message?.content ?? ''
-        } else if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
-          const { GoogleGenerativeAI } = await import('@google/generative-ai')
-          const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY)
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-          const result = await model.generateContent(prompt)
-          text = result.response.text() ?? ''
-        }
+        const OpenAI = (await import('openai')).default
+        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 400,
+          temperature: 0,
+        })
+        const text = response.choices[0]?.message?.content ?? ''
         const jsonMatch = text.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
           aiMapping = JSON.parse(jsonMatch[0]) as ColumnMapping

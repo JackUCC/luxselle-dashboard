@@ -1,4 +1,4 @@
-/** Pricing provider interface; implementations: Mock, OpenAI, Gemini. @see docs/CODE_REFERENCE.md */
+/** Pricing provider interface; implementations: Mock, OpenAI. @see docs/CODE_REFERENCE.md */
 import type {
   PricingMarketCountry,
   PricingMarketMode,

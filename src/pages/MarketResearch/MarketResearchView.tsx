@@ -199,9 +199,9 @@ export default function MarketResearchView() {
                             Mock Data
                         </span>
                     )}
-                    {(status?.aiProvider === 'openai' || status?.aiProvider === 'gemini') && (
-                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 capitalize">
-                            AI: {status.aiProvider}
+                    {status?.aiProvider === 'openai' && (
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                            AI: OpenAI
                         </span>
                     )}
                 </p>

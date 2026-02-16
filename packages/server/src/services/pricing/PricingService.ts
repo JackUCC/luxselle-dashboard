@@ -1,5 +1,5 @@
 /**
- * Orchestrates AI pricing: selects provider (mock/openai/gemini from env), runs analysis, applies margin and FX (usdToEur).
+ * Orchestrates AI pricing: selects provider (mock/openai from env), runs analysis, applies margin and FX (usdToEur).
  * @see docs/CODE_REFERENCE.md
  * References: env, fx.ts, IPricingProvider implementations
  */
@@ -9,7 +9,6 @@ import { SettingsRepo } from '../../repos/SettingsRepo'
 import { TransactionRepo } from '../../repos/TransactionRepo'
 import { MockPricingProvider } from './providers/MockPricingProvider'
 import { OpenAIProvider } from './providers/OpenAIProvider'
-import { GeminiProvider } from './providers/GeminiProvider'
 import type { IPricingProvider, PricingAnalysisInput } from './providers/IPricingProvider'
 import type { PricingComparable, PricingMarketSummary } from '@shared/schemas'
 
@@ -77,9 +76,6 @@ export class PricingService {
     if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
       this.provider = new OpenAIProvider(env.OPENAI_API_KEY)
       this.providerName = 'openai'
-    } else if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
-      this.provider = new GeminiProvider(env.GEMINI_API_KEY)
-      this.providerName = 'gemini'
     } else {
       this.provider = new MockPricingProvider()
       this.providerName = 'mock'

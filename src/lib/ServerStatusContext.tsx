@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { API_BASE, apiGet } from './api'
 
 interface ServerStatus {
-    aiProvider: 'mock' | 'openai' | 'gemini'
+    aiProvider: 'mock' | 'openai'
     firebaseMode: 'emulator' | 'real'
     version?: string
 }

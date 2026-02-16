@@ -96,7 +96,7 @@ If the product doesn’t exist, the route returns **404** (not 500). So a 500 on
 
 ## 4. Market research 500s (`/analyse`, `/trending`)
 
-These call `MarketResearchService`, which can use **Gemini**, **OpenAI**, or **mock**. Any thrown error (missing key, network, or bad AI response) becomes 500.
+These call `MarketResearchService`, which uses **OpenAI** or **mock**. Any thrown error (missing key, network, or bad AI response) becomes 500.
 
 ### 4.1 Env and provider selection
 
@@ -104,17 +104,15 @@ These call `MarketResearchService`, which can use **Gemini**, **OpenAI**, or **m
 
 **Check Railway Variables:**
 
-- `AI_PROVIDER` = one of `mock` | `openai` | `gemini`
+- `AI_PROVIDER` = `mock` or `openai`
 - If `AI_PROVIDER=openai` → `OPENAI_API_KEY` must be set and valid
-- If `AI_PROVIDER=gemini` → `GEMINI_API_KEY` must be set and valid
 - If `AI_PROVIDER=mock` → no keys needed; service returns mock data (no 500 from external AI)
 
-**Quick fix to stop 500s:** Set `AI_PROVIDER=mock` until keys and parsing are fixed. Mock responses are defined in `MarketResearchService` and don’t call external APIs.
+**Quick fix to stop 500s:** Set `AI_PROVIDER=mock` until the key and parsing are fixed. Mock responses are defined in `MarketResearchService` and don’t call external APIs.
 
-### 4.2 Invalid or expired API keys
+### 4.2 Invalid or expired API key
 
 - **OpenAI:** Dashboard → API keys. Ensure key is active and has capacity.
-- **Gemini:** Google AI Studio / Cloud. Ensure key is valid and the API is enabled for the project.
 
 Wrong or expired keys often yield 401/403 from the provider; the server may wrap that in a 500. Check Railway logs for the underlying HTTP or error message.
 
@@ -128,17 +126,16 @@ The service parses the model output with a regex and expects a JSON object. If t
 
 **What to do:** Check logs for the exact throw. If it’s parse/format, consider relaxing parsing or falling back to mock when parsing fails (so you return 200 with mock instead of 500).
 
-### 4.4 429 Quota exceeded (OpenAI / Gemini / Firebase)
+### 4.4 429 Quota exceeded (OpenAI / Firebase)
 
 **Symptom:** Logs show "429 You exceeded your current quota" or similar rate-limit errors.
 
-**Cause:** The configured AI provider (OpenAI or Gemini) or Firebase has hit rate or usage limits. The server surfaces these as 500.
+**Cause:** OpenAI or Firebase has hit rate or usage limits. The server surfaces these as 500.
 
 **Options:**
 
-- **Temporary:** Set `AI_PROVIDER=mock` in Railway Variables so market-research endpoints return mock data and no longer call the provider.
+- **Temporary:** Set `AI_PROVIDER=mock` in Railway Variables so market-research and pricing endpoints return mock data and no longer call OpenAI.
 - **OpenAI:** Check [OpenAI usage](https://platform.openai.com/usage) and upgrade plan or add usage limits; ensure the key has capacity.
-- **Switch provider:** If you have headroom on Gemini, set `AI_PROVIDER=gemini` and ensure `GEMINI_API_KEY` is set.
 - **Firebase 429:** Less common; if the log points to Firestore, check Firebase Console → Usage and quotas.
 
 ---
@@ -154,7 +151,7 @@ Use this order:
 | 3 | **Firebase:** `GOOGLE_APPLICATION_CREDENTIALS_JSON` or `GOOGLE_APPLICATION_CREDENTIALS`, valid JSON, correct project | Railway → Variables; Firebase Console |
 | 4 | **Firestore index** for `transactions` (productId + occurredAt desc) | Firebase Console → Firestore → Indexes; or URL in error |
 | 5 | **Market research:** `AI_PROVIDER` and corresponding API key set and valid; or use `mock` | Railway → Variables |
-| 6 | **429 quota:** If logs show 429, use `AI_PROVIDER=mock`, switch to Gemini, or increase OpenAI quota | Railway → Variables; provider dashboard |
+| 6 | **429 quota:** If logs show 429, use `AI_PROVIDER=mock` or increase OpenAI quota | Railway → Variables; OpenAI dashboard |
 | 7 | **Market research:** If 500 persists, check logs for parse/format errors and consider fallback to mock | `MarketResearchService.ts` |
 
 ---
@@ -164,7 +161,7 @@ Use this order:
 - **Global error handler:** `packages/server/src/server.ts` (Zod → 400, everything else → 500).
 - **Products/transactions:** `packages/server/src/routes/products.ts` (GET/POST `/:id/transactions`); repos: `ProductRepo`, `TransactionRepo`, `ActivityEventRepo` in `packages/server/src/repos/`.
 - **Firebase init:** `packages/server/src/config/firebase.ts` (needs valid credentials in production).
-- **Market research:** `packages/server/src/routes/market-research.ts` → `packages/server/src/services/market-research/MarketResearchService.ts` (analyse + getTrending; Gemini/OpenAI/mock).
+- **Market research:** `packages/server/src/routes/market-research.ts` → `packages/server/src/services/market-research/MarketResearchService.ts` (analyse + getTrending; OpenAI/mock).
 - **Env schema:** `packages/server/src/config/env.ts` (all env vars and defaults).
 
 ---
