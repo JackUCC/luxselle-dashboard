@@ -14,6 +14,7 @@ import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
 import { env } from '../config/env'
 import * as XLSX from 'xlsx'
 
