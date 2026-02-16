@@ -44,6 +44,21 @@ Optional when e2e environment is available (start dev + emulators first for reli
 npm run test:e2e
 ```
 
+
+## One-command Launcher
+
+You can print the full swarm prompts and command checklist via:
+
+```bash
+npm run agents:launch
+```
+
+To print the plan and execute validation checks in sequence:
+
+```bash
+npm run agents:launch -- --run-checks
+```
+
 ## Reporting Format
 
 Each run should output:
