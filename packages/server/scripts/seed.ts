@@ -1,4 +1,5 @@
 import { DEFAULT_ORG_ID } from '@shared/schemas'
+import { env } from '../src/config/env'
 import { db } from '../src/config/firebase'
 import {
   ActivityEventRepo,
@@ -12,6 +13,37 @@ import {
   SystemJobRepo,
   TransactionRepo,
 } from '../src/repos'
+
+interface SeedOptions {
+  reset: boolean
+  allowProductionSeed: boolean
+}
+
+function parseArgs(argv: string[]): SeedOptions {
+  const args = new Set(argv)
+  return {
+    reset: args.has('--confirm-reset'),
+    allowProductionSeed: args.has('--allow-production-seed'),
+  }
+}
+
+function assertSafeExecution(options: SeedOptions) {
+  const isProduction = env.NODE_ENV === 'production' || !env.FIREBASE_USE_EMULATOR
+
+  if (isProduction && !options.allowProductionSeed) {
+    throw new Error(
+      'Refusing to run seed against production/non-emulator Firebase. Use --allow-production-seed only for controlled smoke/demo org data.'
+    )
+  }
+
+  if (!options.reset) {
+    throw new Error('Seed is destructive. Re-run with --confirm-reset to clear collections before seeding.')
+  }
+
+  if (isProduction && options.reset) {
+    throw new Error('Destructive reset is blocked in production/non-emulator environments.')
+  }
+}
 
 const dayMs = 24 * 60 * 60 * 1000
 const baseDate = new Date('2026-01-01T10:00:00.000Z')
@@ -63,8 +95,15 @@ async function clearCollection(name: string) {
 }
 
 async function seed() {
-  process.env.FIREBASE_USE_EMULATOR =
-    process.env.FIREBASE_USE_EMULATOR ?? 'true'
+  const options = parseArgs(process.argv.slice(2))
+  assertSafeExecution(options)
+
+  console.log('Starting destructive seed', {
+    nodeEnv: env.NODE_ENV,
+    firebaseProject: env.FIREBASE_PROJECT_ID,
+    emulator: env.FIREBASE_USE_EMULATOR,
+    resetConfirmed: options.reset,
+  })
 
   const reposToClear = [
     'products',
