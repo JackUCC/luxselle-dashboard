@@ -39,11 +39,15 @@ const upload = multer({
 const ProductInputSchema = z.object({
   brand: z.string(),
   model: z.string(),
+  title: z.string().optional(),
+  sku: z.string().optional(),
   category: z.string().optional(),
   condition: z.string().optional(),
   colour: z.string().optional(),
   costPriceEur: z.coerce.number(),
   sellPriceEur: z.coerce.number(),
+  customsEur: z.coerce.number().optional(),
+  vatEur: z.coerce.number().optional(),
   status: ProductStatusSchema,
   quantity: z.coerce.number().int().min(0).optional(),
   imageUrls: z.array(z.string().url()).optional(),
@@ -103,11 +107,63 @@ function parseCsvToRows(csvStr: string): Record<string, unknown>[] {
   return rows
 }
 
-// --- Import from Excel/CSV (must be before /:id so POST /import is not matched by /:id/images) ---
+// --- Import from Excel/CSV/PDF (must be before /:id so POST /import is not matched by /:id/images) ---
 const importUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 })
+
+/** Parse Luxselle inventory PDF text into product rows (brand, title, sku, costPriceEur, customsEur, vatEur, sellPriceEur) */
+function parseLuxsellePdfText(text: string): Array<{ brand: string; title: string; sku: string; costPriceEur: number; customsEur: number; vatEur: number; sellPriceEur: number }> {
+  const rows: Array<{ brand: string; title: string; sku: string; costPriceEur: number; customsEur: number; vatEur: number; sellPriceEur: number }> = []
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+
+  function parseEurAmount(s: string): number {
+    const n = parseFloat(s.replace(/[,\s]/g, ''))
+    return Number.isNaN(n) ? 0 : n
+  }
+
+  function brandFromTitle(title: string): string {
+    const t = title.trim()
+    if (t.startsWith('Christian Dior') || t.startsWith('Christian ')) return 'Christian Dior'
+    if (t.startsWith('BOTTEGA VENETA') || t.startsWith('BOTTEGAVENETA')) return 'Bottega Veneta'
+    const first = t.split(/\s+/)[0] ?? ''
+    if (!first) return 'Unknown'
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()
+  }
+
+  for (const line of lines) {
+    if (line.startsWith('▼') || line.startsWith('Invoice No.') || line === 'LUXSELLE INVENTORY' || line.includes('--')) continue
+    // Data line: invoice_no date SKU title €p1 €p2 ... (e.g. 1000263792628 Nov 17, 2025 28643AV CHANEL Chain... €3,425.00 €102.75 ...)
+    const euroParts = line.split('€')
+    if (euroParts.length < 6) continue
+    const beforePrices = euroParts[0].trim()
+    // beforePrices = "1000263792628 Nov 17, 2025 28643AV CHANEL Chain Turn Lock..."
+    const match = beforePrices.match(/^\d+\s+[A-Za-z]+\s+\d{1,2},\s+\d{4}\s+(\S+)\s+(.+)$/)
+    if (!match) continue
+    const sku = match[1]
+    const title = match[2].trim()
+    if (!title || title.length < 2) continue
+
+    const prices = euroParts.slice(1).map((s) => parseEurAmount(s)).filter((n) => n > 0)
+    const invoicePrice = prices[0] ?? 0
+    const customs = prices[1] ?? 0
+    // PDF columns: Invoice, Customs, Landed, Margin10%, VAT23%(10%), Selling(10%), Margin30%, VAT23%(30%), Selling(30%)
+    const vat10 = prices[4] ?? 0
+    const selling10 = prices[5] ?? 0
+
+    rows.push({
+      brand: brandFromTitle(title),
+      title,
+      sku,
+      costPriceEur: invoicePrice,
+      customsEur: customs,
+      vatEur: vat10,
+      sellPriceEur: selling10,
+    })
+  }
+  return rows
+}
 
 router.post('/import', importUpload.single('file'), async (req, res, next) => {
   try {
@@ -316,6 +372,76 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
   }
 })
 
+// POST /api/products/import-pdf - Parse Luxselle inventory PDF and create products (brand, title, sku, purchase, customs, vat, selling price)
+router.post('/import-pdf', importUpload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No file provided'))
+      return
+    }
+    if (req.file.mimetype !== 'application/pdf' && !req.file.originalname.toLowerCase().endsWith('.pdf')) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'File must be a PDF'))
+      return
+    }
+
+    const pdfParse = (await import('pdf-parse')).default
+    const data = await pdfParse(req.file.buffer)
+    const text = (data as { text?: string }).text ?? ''
+
+    const parsed = parseLuxsellePdfText(text)
+    if (parsed.length === 0) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No product rows found in PDF. Ensure it is the Luxselle inventory pricing format.'))
+      return
+    }
+
+    const now = new Date().toISOString()
+    let createdCount = 0
+    const errors: { row: number; error: string }[] = []
+
+    for (let i = 0; i < parsed.length; i++) {
+      const row = parsed[i]
+      try {
+        const product = ProductSchema.parse({
+          organisationId: DEFAULT_ORG_ID,
+          createdAt: now,
+          updatedAt: now,
+          currency: 'EUR',
+          status: 'in_stock' as const,
+          brand: row.brand,
+          model: row.title.slice(0, 200),
+          title: row.title,
+          sku: row.sku,
+          category: '',
+          condition: '',
+          colour: '',
+          costPriceEur: row.costPriceEur,
+          sellPriceEur: row.sellPriceEur,
+          customsEur: row.customsEur,
+          vatEur: row.vatEur,
+          quantity: 1,
+          images: [],
+          imageUrls: [],
+          notes: `Imported from PDF. SKU: ${row.sku}.`,
+        })
+        await productRepo.create(product)
+        createdCount++
+      } catch (err: unknown) {
+        errors.push({ row: i + 1, error: err instanceof Error ? err.message : 'Unknown error' })
+      }
+    }
+
+    res.json({
+      data: {
+        created: createdCount,
+        errors: errors.length,
+        errorDetails: errors.slice(0, 20),
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/products - List products from Firestore (no cache). Optional cursor pagination.
 // Query params: limit (default 500 for full inventory), cursor, sort (default createdAt), dir (asc/desc), q (search)
 router.get('/', async (req, res, next) => {
@@ -401,11 +527,15 @@ router.post('/', async (req, res, next) => {
       status: input.status,
       brand: input.brand,
       model: input.model,
+      title: input.title ?? '',
+      sku: input.sku ?? '',
       category: input.category ?? '',
       condition: input.condition ?? '',
       colour: input.colour ?? '',
       costPriceEur: input.costPriceEur,
       sellPriceEur: input.sellPriceEur,
+      customsEur: input.customsEur ?? 0,
+      vatEur: input.vatEur ?? 0,
       quantity: input.quantity ?? 1,
       imageUrls: input.imageUrls ?? [],
       images: [],

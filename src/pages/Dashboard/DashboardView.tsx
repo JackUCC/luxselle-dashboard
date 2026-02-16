@@ -348,7 +348,7 @@ export default function DashboardView() {
               <User className="h-4 w-4" />
               Sourcing List
             </Link>
-            <button type="button" onClick={() => openInsights('overview')} className={insightButtonClass}>
+            <button type="button" onClick={() => openInsights('overview')} className={insightButtonClass} data-testid="dashboard-insights-button">
               <Sparkles className="h-3 w-3 mr-1" />
               Insights
             </button>

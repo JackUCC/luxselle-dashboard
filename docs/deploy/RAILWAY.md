@@ -51,6 +51,8 @@ Go to Railway project → **Variables** tab
 
 ### 2.1 Firebase Configuration
 
+**Critical for production:** `FIREBASE_USE_EMULATOR` must be `false` on Railway. If it is `true`, the server will try to connect to a Firestore emulator at 127.0.0.1:8082 (which does not run in the container), and all dashboard/Firestore requests will return 500.
+
 ```bash
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
@@ -188,8 +190,8 @@ Expected: Empty array `[]` or list of products if you've seeded data.
 Railway dashboard → **Deployments** → Click latest → **View Logs**
 
 Look for:
-- ✅ `Server listening on port 3001`
-- ✅ `Firebase initialized successfully`
+- ✅ `API server running on http://0.0.0.0:3001`
+- ✅ `Firebase Admin initialized (project: ..., emulator: false)` — must be **emulator: false** in production
 - ❌ No error messages about credentials or Firebase connection
 
 ---
@@ -210,6 +212,16 @@ Now that your backend is deployed, update your frontend to use it:
 ---
 
 ## 6. Troubleshooting
+
+### Dashboard / API returns 500 — "emulator: true" in logs
+
+**Cause:** `FIREBASE_USE_EMULATOR` is set to `true` (or not set and something overrode the default). The server then tries to connect to Firestore at 127.0.0.1:8082; there is no emulator in the Railway container, so every Firestore call fails.
+
+**Fix:** In Railway → **Variables**, set:
+```bash
+FIREBASE_USE_EMULATOR=false
+```
+Redeploy. After deploy, logs should show `emulator: false` and dashboard/status, KPIs, activity, etc. should return 200.
 
 ### Build Fails: "Cannot find module"
 

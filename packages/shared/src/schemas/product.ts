@@ -17,11 +17,19 @@ export type ProductImage = z.infer<typeof ProductImageSchema>
 export const ProductSchema = BaseDocSchema.extend({
   brand: z.string(),
   model: z.string(),
+  /** Full product title (e.g. from invoice); falls back to model for display if empty */
+  title: z.string().optional().default(''),
+  /** Stock-keeping unit / reference code */
+  sku: z.string().optional().default(''),
   category: z.string().optional().default(''),
   condition: z.string().optional().default(''),
   colour: z.string().optional().default(''),
   costPriceEur: z.number(),
   sellPriceEur: z.number(),
+  /** Customs amount in EUR (e.g. 3% of invoice) */
+  customsEur: z.number().optional().default(0),
+  /** VAT amount in EUR on selling price */
+  vatEur: z.number().optional().default(0),
   currency: CurrencySchema.default('EUR'),
   status: ProductStatusSchema,
   quantity: z.number().int().min(0).default(1),

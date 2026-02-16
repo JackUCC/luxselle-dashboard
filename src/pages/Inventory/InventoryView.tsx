@@ -343,6 +343,8 @@ export default function InventoryView() {
                     ? "bg-white shadow-sm text-gray-900"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
+                data-testid="inventory-view-table"
+                aria-label="Table view"
               >
                 <LayoutList className="h-4 w-4" />
               </button>
@@ -353,6 +355,8 @@ export default function InventoryView() {
                     ? "bg-white shadow-sm text-gray-900"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
+                data-testid="inventory-view-grid"
+                aria-label="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>

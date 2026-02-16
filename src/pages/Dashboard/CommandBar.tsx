@@ -117,6 +117,7 @@ export default function CommandBar({ className = '' }: { className?: string }) {
         <button
           type="submit"
           className="absolute right-2 top-2 bottom-2 aspect-square rounded-xl bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-transform active:scale-95"
+          aria-label="Submit"
         >
           <ArrowRight className="h-5 w-5" />
         </button>

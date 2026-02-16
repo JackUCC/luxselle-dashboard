@@ -135,7 +135,7 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
 test('insights drawer syncs with URL and closes cleanly', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByRole('button', { name: 'Insights' }).first().click()
+  await page.getByTestId('dashboard-insights-button').click()
   await expect(page.getByTestId('dashboard-insights-drawer')).toBeVisible()
   await expect(page).toHaveURL(/\?insight=overview/)
 
@@ -150,4 +150,39 @@ test('low stock card keeps inventory flow intact', async ({ page }) => {
   await page.getByText('Low Stock Alerts').click()
   await expect(page).toHaveURL('/inventory?lowStock=1')
   await expect(page.getByText(/Showing low stock items/)).toBeVisible()
+})
+
+test('command bar search navigates to inventory with query', async ({ page }) => {
+  await page.goto('/')
+
+  const input = page.getByPlaceholder('Ask Luxselle or search inventory...')
+  await input.fill('Chanel')
+  await page.getByRole('button', { name: 'Submit' }).click()
+
+  await expect(page).toHaveURL(/\/inventory\?.*q=Chanel/)
+  await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
+})
+
+test('VAT calculator shows result after calculate', async ({ page }) => {
+  await page.route('**/api/vat/calculate*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        netEur: 81.3,
+        vatEur: 18.7,
+        grossEur: 100,
+        ratePct: 23,
+      }),
+    })
+  )
+
+  await page.goto('/')
+
+  await page.getByLabel('Amount in EUR').fill('100')
+  await page.getByRole('button', { name: 'Calculate' }).click()
+
+  await expect(page.getByText('Net (EUR)')).toBeVisible()
+  await expect(page.getByText('VAT (23%)')).toBeVisible()
+  await expect(page.getByText('Gross (EUR)')).toBeVisible()
 })

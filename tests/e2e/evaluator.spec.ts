@@ -29,10 +29,10 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
 
   await page.goto('/buy-box')
   await page.selectOption('select[name="brand"]', brand)
-  await page.fill('input[name="model"]', model)
-  await page.fill('input[name="category"]', 'handbag')
+  await page.selectOption('select[name="model"]', model)
+  await page.selectOption('select[name="category"]', 'Handbag')
   await page.selectOption('select[name="condition"]', 'excellent')
-  await page.fill('input[name="colour"]', 'black')
+  await page.selectOption('select[name="colour"]', 'black')
 
   await page.getByRole('button', { name: 'Analyze Market' }).click()
   await expect(page.getByText('Estimated Retail Price')).toBeVisible()
@@ -58,10 +58,10 @@ test('shows error when pricing analysis fails', async ({ page }) => {
 
   await page.goto('/buy-box')
   await page.selectOption('select[name="brand"]', 'Chanel')
-  await page.fill('input[name="model"]', 'Classic Flap')
-  await page.fill('input[name="category"]', 'handbag')
+  await page.selectOption('select[name="model"]', 'Classic Flap')
+  await page.selectOption('select[name="category"]', 'Handbag')
   await page.selectOption('select[name="condition"]', 'excellent')
-  await page.fill('input[name="colour"]', 'black')
+  await page.selectOption('select[name="colour"]', 'black')
 
   await page.getByRole('button', { name: 'Analyze Market' }).click()
   await expect(page.getByText('Pricing service unavailable')).toBeVisible()
@@ -181,4 +181,11 @@ test('invoices page loads and shows list or empty state', async ({ page }) => {
   await expect(
     page.getByText(/No invoices yet|All invoices|Create invoices from sales/)
   ).toBeVisible()
+})
+
+test('Landed Cost tab shows calculator widget', async ({ page }) => {
+  await page.goto('/buy-box')
+
+  await page.getByRole('button', { name: 'Landed Cost' }).click()
+  await expect(page.getByText('Landed Cost Calculator')).toBeVisible()
 })

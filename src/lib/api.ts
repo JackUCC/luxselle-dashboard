@@ -22,13 +22,13 @@ export function normalizeApiBase(rawBase: string | undefined): string {
   const value = rawBase?.trim()
   if (!value) return fallback
 
-  const normalized = value.replace(/\/+$/, '')
-
-  if (normalized.startsWith('http')) {
-    return normalized.replace(/\/api$/, '') + '/api'
+  let normalized = value.replace(/\/+$/, '')
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`
   }
 
-  return normalized.endsWith('/api') ? normalized : `${normalized}/api`
+  const base = normalized.replace(/\/api$/, '') + '/api'
+  return base
 }
 
 export const API_BASE = normalizeApiBase(import.meta.env.VITE_API_BASE)

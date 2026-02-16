@@ -1,0 +1,65 @@
+import { test, expect, type APIRequestContext } from '@playwright/test'
+
+const projectId = 'luxselle-dashboard'
+const emulatorBaseUrl = 'http://127.0.0.1:8082'
+
+const clearFirestore = async (request: APIRequestContext) => {
+  try {
+    await request.delete(
+      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`
+    )
+  } catch {
+    // Emulator may not be ready yet. Tests can continue.
+  }
+}
+
+test.beforeEach(async ({ request }) => {
+  await clearFirestore(request)
+})
+
+test.afterEach(async ({ request }) => {
+  await clearFirestore(request)
+})
+
+test('run research shows result or loading then content', async ({ page }) => {
+  await page.route('**/api/market-research/analyse', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          provider: 'openai',
+          brand: 'Chanel',
+          model: 'Classic Flap',
+          estimatedMarketValueEur: 5000,
+          priceRangeLowEur: 4500,
+          priceRangeHighEur: 5500,
+          suggestedBuyPriceEur: 4000,
+          suggestedSellPriceEur: 5200,
+          demandLevel: 'high',
+          priceTrend: 'stable',
+          marketLiquidity: 'moderate',
+          recommendation: 'buy',
+          confidence: 0.85,
+          marketSummary: 'Test summary.',
+          keyInsights: ['Test insight'],
+          riskFactors: [],
+          comparables: [],
+        },
+      }),
+    })
+  )
+
+  await page.goto('/market-research')
+
+  await page.selectOption('select[name="brand"]', 'Chanel')
+  await page.selectOption('select[name="model"]', 'Classic Flap')
+  await page.selectOption('select[name="category"]', 'Handbag')
+  await page.selectOption('select[name="condition"]', 'excellent')
+
+  await page.getByRole('button', { name: 'Research Market' }).click()
+
+  await expect(
+    page.getByText(/Estimated Market Value|market summary|Test summary|€5,000/i)
+  ).toBeVisible({ timeout: 15000 })
+})
