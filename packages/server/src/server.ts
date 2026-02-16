@@ -7,7 +7,7 @@
 import express from 'express'
 import cors from 'cors'
 import { ZodError } from 'zod'
-import { env } from './config/env'
+import { env, integrationReadiness } from './config/env'
 import { productsRouter } from './routes/products'
 import { buyingListRouter } from './routes/buying-list'
 import { pricingRouter } from './routes/pricing'
@@ -37,7 +37,11 @@ app.use(requestId as express.RequestHandler)
 app.use(requestLogger as express.RequestHandler)
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    integrations: integrationReadiness,
+  })
 })
 
 // Enforce auth for production traffic (health route above remains public).

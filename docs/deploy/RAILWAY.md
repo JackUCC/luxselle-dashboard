@@ -436,3 +436,14 @@ See [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md) for the complete production dep
 ## 7. Post-Hardening Checklist
 
 After deployment, verify platform variables and smoke-data workflow using [PLATFORM_INPUTS_AFTER_HARDENING.md](./PLATFORM_INPUTS_AFTER_HARDENING.md).
+
+
+### Live provider preflight
+
+Before final deploy, run:
+
+```bash
+npm run verify:live-config --workspace=@luxselle/server
+```
+
+This fails if `AI_PROVIDER=mock` or required real-provider credentials are missing.

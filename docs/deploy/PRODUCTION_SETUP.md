@@ -498,3 +498,14 @@ Check `firestore.rules` - make sure rules allow the operations you need.
 ## 8. Platform Inputs Checklist (Post-Hardening)
 
 Use [PLATFORM_INPUTS_AFTER_HARDENING.md](./PLATFORM_INPUTS_AFTER_HARDENING.md) to verify Railway, Firebase, and Vercel settings and run smoke sample-data load/cleanup scripts.
+
+
+### Live provider preflight
+
+Before final deploy, run:
+
+```bash
+npm run verify:live-config --workspace=@luxselle/server
+```
+
+This fails if `AI_PROVIDER=mock` or required real-provider credentials are missing.

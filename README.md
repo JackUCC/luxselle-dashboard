@@ -127,6 +127,7 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 | `npm run test:e2e` | E2E tests (Playwright) |
 | `npm run sample:load -- --org=default --allow-production-seed` | Load idempotent smoke-test sample data |
 | `npm run sample:cleanup -- --org=default` | Remove smoke-test sample data |
+| `npm run verify:live-config --workspace=@luxselle/server` | Validate production-ready real API credentials (no mock AI) |
 | `npm run build` | Production frontend build |
 
 ## Docs

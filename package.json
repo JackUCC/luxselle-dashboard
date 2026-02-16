@@ -26,7 +26,8 @@
     "typecheck": "tsc --noEmit",
     "auto-commit": "node scripts/auto-commit.js",
     "sample:load": "npm run sample:load --workspace=@luxselle/server --",
-    "sample:cleanup": "npm run sample:cleanup --workspace=@luxselle/server --"
+    "sample:cleanup": "npm run sample:cleanup --workspace=@luxselle/server --",
+    "verify:live-config": "npm run verify:live-config --workspace=@luxselle/server"
   },
   "dependencies": {
     "@luxselle/shared": "*",

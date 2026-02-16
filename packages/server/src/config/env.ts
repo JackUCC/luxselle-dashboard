@@ -45,4 +45,49 @@ const EnvSchema = z.object({
 })
 
 // Parse and validate on load; throws if required/env shape is invalid
-export const env = EnvSchema.parse(process.env)
+const parsedEnv = EnvSchema.parse(process.env)
+
+if (parsedEnv.AI_PROVIDER === 'openai' && !parsedEnv.OPENAI_API_KEY) {
+  throw new Error('AI_PROVIDER=openai requires OPENAI_API_KEY')
+}
+
+if (parsedEnv.AI_PROVIDER === 'gemini' && !parsedEnv.GEMINI_API_KEY) {
+  throw new Error('AI_PROVIDER=gemini requires GEMINI_API_KEY')
+}
+
+if (parsedEnv.NODE_ENV === 'production' && parsedEnv.AI_PROVIDER === 'mock') {
+  throw new Error('AI_PROVIDER=mock is not allowed in production. Set AI_PROVIDER=openai or AI_PROVIDER=gemini.')
+}
+
+export const env = parsedEnv
+
+const hasFirebaseCredentials = Boolean(
+  parsedEnv.GOOGLE_APPLICATION_CREDENTIALS_JSON || parsedEnv.GOOGLE_APPLICATION_CREDENTIALS
+)
+
+const hasSupplierEmailCredentials = Boolean(
+  parsedEnv.GMAIL_CLIENT_ID &&
+    parsedEnv.GMAIL_CLIENT_SECRET &&
+    parsedEnv.GMAIL_REFRESH_TOKEN &&
+    parsedEnv.GMAIL_USER
+)
+
+export const integrationReadiness = {
+  ai: {
+    provider: parsedEnv.AI_PROVIDER,
+    configured:
+      parsedEnv.AI_PROVIDER === 'mock'
+        ? false
+        : parsedEnv.AI_PROVIDER === 'openai'
+          ? Boolean(parsedEnv.OPENAI_API_KEY)
+          : Boolean(parsedEnv.GEMINI_API_KEY),
+  },
+  firebase: {
+    emulator: parsedEnv.FIREBASE_USE_EMULATOR,
+    credentialsConfigured: parsedEnv.FIREBASE_USE_EMULATOR ? true : hasFirebaseCredentials,
+  },
+  supplierEmail: {
+    enabled: parsedEnv.SUPPLIER_EMAIL_ENABLED,
+    credentialsConfigured: hasSupplierEmailCredentials,
+  },
+}

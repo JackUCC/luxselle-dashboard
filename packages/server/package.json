@@ -15,7 +15,8 @@
     "test": "vitest --config ../../config/vitest.config.ts --run",
     "test:watch": "vitest --config ../../config/vitest.config.ts",
     "sample:load": "tsx scripts/load-sample-data.ts",
-    "sample:cleanup": "tsx scripts/cleanup-sample-data.ts"
+    "sample:cleanup": "tsx scripts/cleanup-sample-data.ts",
+    "verify:live-config": "tsx scripts/verify-live-config.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

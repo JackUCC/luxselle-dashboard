@@ -8,6 +8,7 @@ This checklist captures what you (ops/admin) need to add or verify in **Firebase
 
 - `NODE_ENV=production`
 - `FIREBASE_USE_EMULATOR=false`
+- `AI_PROVIDER=openai` **or** `AI_PROVIDER=gemini` (mock is blocked in production)
 - `FIREBASE_PROJECT_ID=<your-firebase-project-id>`
 - `FIREBASE_STORAGE_BUCKET=<your-firebase-bucket>`
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON=<service-account-json>` (or `GOOGLE_APPLICATION_CREDENTIALS` file path)
@@ -25,6 +26,14 @@ This checklist captures what you (ops/admin) need to add or verify in **Firebase
 - Supplier email sync:
   - `SUPPLIER_EMAIL_ENABLED=true`
   - `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `GMAIL_USER`
+
+### Preflight checks (new)
+
+Run this before production deploy to ensure no-mock + credential readiness:
+
+```bash
+npm run verify:live-config --workspace=@luxselle/server
+```
 
 ---
 
@@ -85,3 +94,17 @@ npm run seed -- --confirm-reset
 ```
 
 - In production/non-emulator environments, destructive reset is blocked.
+
+
+## 6) Runtime verification
+
+After deploy, call:
+
+```bash
+curl https://<your-railway-domain>/api/health
+```
+
+Confirm:
+- `integrations.ai.provider` is `openai` or `gemini`
+- `integrations.ai.configured` is `true`
+- `integrations.firebase.credentialsConfigured` is `true`
