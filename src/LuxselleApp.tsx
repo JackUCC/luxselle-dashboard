@@ -3,10 +3,11 @@
  * Toaster, ErrorBoundary, and route definitions.
  * Legacy redirects: /evaluator → /buy-box, /suppliers → /supplier-hub.
  * On init, checks API health and shows a banner if backend is not configured.
+ * Route views are lazy-loaded to improve INP (Interaction to Next Paint) on nav clicks.
  * @see docs/CODE_REFERENCE.md
  * References: react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react
  */
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
@@ -18,17 +19,18 @@ import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
 import { appRoutes, getRouteMeta } from './components/layout/routeMeta'
 import MobileNavDrawer from './components/navigation/MobileNavDrawer'
 import WideScreenSideRail from './components/navigation/WideScreenSideRail'
-import DashboardView from './pages/Dashboard/DashboardView'
-import InventoryView from './pages/Inventory/InventoryView'
-import EvaluatorView from './pages/BuyBox/EvaluatorView'
-import SupplierHubView from './pages/SupplierHub/SupplierHubView'
-import SourcingView from './pages/Sourcing/SourcingView'
-import BuyingListView from './pages/BuyingList/BuyingListView'
-import JobsView from './pages/Jobs/JobsView'
-import InvoicesView from './pages/Invoices/InvoicesView'
-import MarketResearchView from './pages/MarketResearch/MarketResearchView'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
+
+const DashboardView = lazy(() => import('./pages/Dashboard/DashboardView'))
+const InventoryView = lazy(() => import('./pages/Inventory/InventoryView'))
+const EvaluatorView = lazy(() => import('./pages/BuyBox/EvaluatorView'))
+const SupplierHubView = lazy(() => import('./pages/SupplierHub/SupplierHubView'))
+const SourcingView = lazy(() => import('./pages/Sourcing/SourcingView'))
+const BuyingListView = lazy(() => import('./pages/BuyingList/BuyingListView'))
+const JobsView = lazy(() => import('./pages/Jobs/JobsView'))
+const InvoicesView = lazy(() => import('./pages/Invoices/InvoicesView'))
+const MarketResearchView = lazy(() => import('./pages/MarketResearch/MarketResearchView'))
 
 const AppContent = () => {
   const { isConnected, refetchStatus } = useServerStatus()
@@ -140,21 +142,23 @@ const AppContent = () => {
           <main className="mx-auto max-w-8xl px-4 py-6 sm:px-6 sm:py-8">
             <DeepStateBreadcrumb />
             <ErrorBoundary>
-              <Routes>
-                <Route path="/" element={<DashboardView />} />
-                <Route path="/inventory" element={<InventoryView />} />
-                <Route path="/buy-box" element={<EvaluatorView />} />
-                <Route path="/market-research" element={<MarketResearchView />} />
-                <Route path="/supplier-hub" element={<SupplierHubView />} />
-                <Route path="/buying-list" element={<BuyingListView />} />
-                <Route path="/sourcing" element={<SourcingView />} />
-                <Route path="/jobs" element={<JobsView />} />
-                <Route path="/invoices" element={<InvoicesView />} />
+              <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-sm text-gray-500" aria-hidden>Loading…</div>}>
+                <Routes>
+                  <Route path="/" element={<DashboardView />} />
+                  <Route path="/inventory" element={<InventoryView />} />
+                  <Route path="/buy-box" element={<EvaluatorView />} />
+                  <Route path="/market-research" element={<MarketResearchView />} />
+                  <Route path="/supplier-hub" element={<SupplierHubView />} />
+                  <Route path="/buying-list" element={<BuyingListView />} />
+                  <Route path="/sourcing" element={<SourcingView />} />
+                  <Route path="/jobs" element={<JobsView />} />
+                  <Route path="/invoices" element={<InvoicesView />} />
 
-                {/* Redirects for legacy routes */}
-                <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-                <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
-              </Routes>
+                  {/* Redirects for legacy routes */}
+                  <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
+                  <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
+                </Routes>
+              </Suspense>
             </ErrorBoundary>
           </main>
         </div>
@@ -167,7 +171,12 @@ const LuxselleApp = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ServerStatusProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <AppContent />
         </BrowserRouter>
       </ServerStatusProvider>

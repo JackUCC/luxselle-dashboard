@@ -20,8 +20,8 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
    | `FIREBASE_USE_EMULATOR` | `true` for local Firestore/Storage emulator |
    | `FIREBASE_PROJECT_ID` | Firebase project ID |
    | `FIREBASE_STORAGE_BUCKET` | Storage bucket name |
-   | `FIRESTORE_EMULATOR_HOST` | e.g. `127.0.0.1:8080` |
-   | `FIREBASE_STORAGE_EMULATOR_HOST` | e.g. `127.0.0.1:9199` |
+   | `FIRESTORE_EMULATOR_HOST` | e.g. `127.0.0.1:8082` (match firebase/firebase.json) |
+   | `FIREBASE_STORAGE_EMULATOR_HOST` | e.g. `127.0.0.1:9198` (match firebase/firebase.json) |
    | `GOOGLE_APPLICATION_CREDENTIALS` | Path to service account JSON (leave empty for emulator) |
    | `AI_PROVIDER` | `mock` \| `openai` \| `gemini` |
    | `OPENAI_API_KEY` / `GEMINI_API_KEY` | Optional; required only when not using `mock` |
@@ -80,6 +80,10 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 - **Frontend (Vercel)**: Set `VITE_API_BASE` to your Railway backend URL
 - **Backend (Railway)**: Set Firebase service account credentials
 - **Firebase**: Enable Firestore + Storage, deploy rules, configure CORS
+
+**Production URLs** (for reference when setting `VITE_API_BASE` in Vercel): Railway backend = `https://luxselleserver-production.up.railway.app`; Vercel frontend = your project URL (e.g. `https://luxselle-dashboard.vercel.app`).
+
+**Production not working?** The app shows "Backend not configured" when the frontend cannot reach the API (see [Production troubleshooting](docs/deploy/PRODUCTION_TROUBLESHOOTING.md)). Most often: set `VITE_API_BASE` in Vercel to your Railway URL (no trailing slash), then redeploy. Env vars are build-time only.
 
 ## Project structure (where to find things)
 

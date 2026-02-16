@@ -1,9 +1,17 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 
 import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 
+function navLinkClass({ isActive }: { isActive: boolean }) {
+  return `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+    ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
+    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-transparent'
+  }`
+}
+
 export default function WideScreenSideRail() {
+  const { pathname } = useLocation()
   return (
     <aside
       className="sticky top-0 hidden h-screen w-72 flex-col border-r border-gray-200 bg-slate-50/90 px-5 py-6 backdrop-blur-xl xl:flex"
@@ -22,13 +30,13 @@ export default function WideScreenSideRail() {
         </div>
       </div>
 
-      <div className="mt-8 flex-1 space-y-7 overflow-y-auto pb-3 no-scrollbar">
+      <div className="mt-8 flex-1 space-y-7 overflow-y-auto pb-3 no-scrollbar [contain:layout]">
         {NAV_GROUPS.map((group) => (
           <section key={group.section} className="space-y-2">
             <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
               {group.title}
             </h2>
-            <nav className="space-y-1">
+            <nav className="space-y-1" aria-label={group.title}>
               {appRoutes
                 .filter((route) => route.section === group.section)
                 .map((route) => (
@@ -36,16 +44,10 @@ export default function WideScreenSideRail() {
                     key={route.path}
                     to={route.path}
                     end={route.path === '/'}
-                    className={({ isActive }) =>
-                      `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
-                        ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-transparent'
-                      }`
-                    }
+                    className={navLinkClass}
                   >
-                    <route.icon className={`h-4 w-4 ${route.path === location.pathname ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'}`} />
+                    <route.icon className={`h-4 w-4 shrink-0 ${route.path === pathname ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'}`} />
                     <span>{route.navLabel}</span>
-                    {/* Active glow dot */}
                   </NavLink>
                 ))}
             </nav>

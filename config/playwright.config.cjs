@@ -1,11 +1,9 @@
-import { defineConfig } from '@playwright/test'
-import path from 'path'
-import { fileURLToPath } from 'url'
+const path = require('path')
+const { defineConfig } = require('@playwright/test')
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
 
-export default defineConfig({
+module.exports = defineConfig({
   testDir: path.join(root, 'tests/e2e'),
   timeout: 120000,
   expect: {

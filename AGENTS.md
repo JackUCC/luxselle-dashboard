@@ -72,3 +72,8 @@ See [docs/planning/QA_SWARM_PLAYBOOK.md](docs/planning/QA_SWARM_PLAYBOOK.md) for
 - QA swarm invocation prompts
 - Quality gates and default command set
 - Standard readiness report format
+
+See [docs/planning/DEPLOYMENT_CHECKER_PLAYBOOK.md](docs/planning/DEPLOYMENT_CHECKER_PLAYBOOK.md) for:
+- Deployment checker agents (Vercel, Railway, Firebase)
+- Review and Fix Coordinator workflow
+- Output formats and fix prioritization

@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 
 const projectId = 'luxselle-dashboard'
-const emulatorBaseUrl = 'http://127.0.0.1:8080'
+const emulatorBaseUrl = 'http://127.0.0.1:8082'
 
 const clearFirestore = async (request: APIRequestContext) => {
   try {
