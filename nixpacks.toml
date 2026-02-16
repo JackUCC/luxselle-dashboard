@@ -1,0 +1,4 @@
+# Pin Node 22 for Railway/Nixpacks (superstatic requires 18||20||22; default is 24)
+# See docs: https://nixpacks.com/docs/providers/node
+[variables]
+NIXPACKS_NODE_VERSION = "22"
