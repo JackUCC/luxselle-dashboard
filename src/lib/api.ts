@@ -17,11 +17,21 @@ export class ApiError extends Error {
  * In production set VITE_API_BASE to your backend origin (e.g. https://your-app.up.railway.app).
  * Paths like /dashboard/kpis are appended; the backend serves /api/* so we ensure /api is included.
  */
-const rawBase = import.meta.env.VITE_API_BASE ?? '/api'
-export const API_BASE =
-  rawBase.startsWith('http')
-    ? rawBase.replace(/\/+$/, '').replace(/\/api\/?$/, '') + '/api'  // origin + /api, no duplicate
-    : rawBase
+export function normalizeApiBase(rawBase: string | undefined): string {
+  const fallback = '/api'
+  const value = rawBase?.trim()
+  if (!value) return fallback
+
+  const normalized = value.replace(/\/+$/, '')
+
+  if (normalized.startsWith('http')) {
+    return normalized.replace(/\/api$/, '') + '/api'
+  }
+
+  return normalized.endsWith('/api') ? normalized : `${normalized}/api`
+}
+
+export const API_BASE = normalizeApiBase(import.meta.env.VITE_API_BASE)
 
 interface ApiErrorBody {
   error?: { code?: string; message?: string; details?: unknown }
