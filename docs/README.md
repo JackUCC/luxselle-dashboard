@@ -25,6 +25,7 @@ Central place for all project documentation. Use this index for audits and onboa
 ## deploy/
 
 - **[VERCEL](deploy/VERCEL.md)** — Vercel env vars and production deploy
+- **[INVENTORY_PRODUCTS_TROUBLESHOOTING](deploy/INVENTORY_PRODUCTS_TROUBLESHOOTING.md)** — Products show €0 / Missing info: Railway, Vercel, Firebase checks and how to load data (PDF import, seed)
 
 ## design/
 

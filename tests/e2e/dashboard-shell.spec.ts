@@ -147,7 +147,7 @@ test('insights drawer syncs with URL and closes cleanly', async ({ page }) => {
 test('low stock card keeps inventory flow intact', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByText('Low Stock Alerts').click()
+  await page.getByText('Low stock').click()
   await expect(page).toHaveURL('/inventory?lowStock=1')
   await expect(page.getByText(/Showing low stock items/)).toBeVisible()
 })
@@ -155,7 +155,7 @@ test('low stock card keeps inventory flow intact', async ({ page }) => {
 test('command bar search navigates to inventory with query', async ({ page }) => {
   await page.goto('/')
 
-  const input = page.getByPlaceholder('Ask Luxselle or search inventory...')
+  const input = page.getByPlaceholder('Search or ask...')
   await input.fill('Chanel')
   await page.getByRole('button', { name: 'Submit' }).click()
 

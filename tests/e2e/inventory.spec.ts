@@ -39,8 +39,8 @@ test('table and grid view toggle', async ({ page, request }) => {
       category: 'Handbag',
       condition: 'excellent',
       colour: 'black',
-      costPriceEur: 0,
-      sellPriceEur: 0,
+      costPriceEur: 1200,
+      sellPriceEur: 1850,
       quantity: 1,
       status: 'in_stock',
     },
@@ -53,4 +53,28 @@ test('table and grid view toggle', async ({ page, request }) => {
 
   await page.getByTestId('inventory-view-table').click()
   await expect(page.locator('table')).toBeVisible()
+})
+
+test('products with prices appear correctly in table', async ({ page, request }) => {
+  await request.post('/api/products', {
+    data: {
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      title: 'Chanel Classic Flap Bag',
+      sku: 'TEST-SKU-001',
+      costPriceEur: 1200,
+      sellPriceEur: 1850,
+      quantity: 1,
+      status: 'in_stock',
+    },
+  })
+
+  await page.goto('/inventory')
+  await expect(page.locator('table')).toBeVisible()
+
+  // Table should show non-zero purchase and selling prices (not €0)
+  await expect(page.getByText('€1,200').first()).toBeVisible()
+  await expect(page.getByText('€1,850').first()).toBeVisible()
+  // Product row should not show "Missing info" when prices are set
+  await expect(page.getByText('Chanel — Classic Flap').first()).toBeVisible()
 })

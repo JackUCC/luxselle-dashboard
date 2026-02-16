@@ -62,7 +62,7 @@ export default function CommandBar({ className = '' }: { className?: string }) {
     event.preventDefault()
     const trimmed = query.trim()
     if (!trimmed) {
-      setError('Enter a request to route.')
+      setError('Type something to search or go to a page.')
       return
     }
 
@@ -109,7 +109,7 @@ export default function CommandBar({ className = '' }: { className?: string }) {
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Ask Luxselle or search inventory..."
+          placeholder="Search or ask..."
           aria-label="Command bar input"
           className="w-full rounded-2xl border-0 bg-white py-4 pl-12 pr-14 text-lg shadow-soft-lg ring-1 ring-gray-200 placeholder:text-gray-400 transition-shadow focus:ring-2 focus:ring-sky-500"
         />

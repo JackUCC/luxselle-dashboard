@@ -326,27 +326,28 @@ export default function DashboardView() {
             <CommandBar />
           </div>
 
+          {/* Quick-action labels kept minimal for scanability */}
           <div className="flex flex-wrap justify-center gap-2.5">
             <Link
               to="/inventory"
               className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12] hover:shadow-glow-indigo"
             >
               <Package className="h-4 w-4" />
-              View Stock
+              Inventory
             </Link>
             <Link
               to="/buy-box"
               className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12] hover:shadow-glow-indigo"
             >
               <Calculator className="h-4 w-4" />
-              Evaluate Item
+              Evaluate
             </Link>
             <Link
               to="/sourcing"
               className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.08] hover:text-white hover:border-white/[0.12] hover:shadow-glow-indigo"
             >
               <User className="h-4 w-4" />
-              Sourcing List
+              Sourcing
             </Link>
             <button type="button" onClick={() => openInsights('overview')} className={insightButtonClass} data-testid="dashboard-insights-button">
               <Sparkles className="h-3 w-3 mr-1" />
@@ -387,7 +388,7 @@ export default function DashboardView() {
                     <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
                       <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
                     </div>
-                    <div className="text-sm text-gray-500">Total Inventory Value</div>
+                    <div className="text-sm text-gray-500">Inventory value</div>
                   </div>
                   <KPISparkline color="#60A5FA" />
                 </div>
@@ -408,7 +409,7 @@ export default function DashboardView() {
                     <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
                       <AnimatedNumber value={kpis?.pendingBuyListValue ?? 0} prefix="€" />
                     </div>
-                    <div className="text-sm text-gray-500">Pending Buy List</div>
+                    <div className="text-sm text-gray-500">Pending buy list</div>
                   </div>
                   <KPISparkline color="#FB7185" />
                 </div>
@@ -429,7 +430,7 @@ export default function DashboardView() {
                     <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
                       <AnimatedNumber value={kpis?.activeSourcingPipeline ?? 0} prefix="€" />
                     </div>
-                    <div className="text-sm text-gray-500">Active Sourcing Pipeline</div>
+                    <div className="text-sm text-gray-500">Sourcing pipeline</div>
                   </div>
                   <KPISparkline color="#818CF8" />
                 </div>
@@ -463,7 +464,7 @@ export default function DashboardView() {
                     <div className="mb-1 text-2xl font-bold text-gray-100 font-mono">
                       <AnimatedNumber value={kpis?.lowStockAlerts ?? 0} />
                     </div>
-                    <div className="text-sm text-gray-500">Low Stock Alerts</div>
+                    <div className="text-sm text-gray-500">Low stock</div>
                   </div>
                   <KPISparkline color="#FBBF24" />
                 </div>
@@ -475,7 +476,7 @@ export default function DashboardView() {
               <div className="mb-6 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-emerald-400" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Profit Summary</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Profit</h3>
                 </div>
                 <button type="button" onClick={() => openInsights('profit')} className={insightButtonClass} aria-label="Open profit insights">
                   Insight
@@ -484,26 +485,26 @@ export default function DashboardView() {
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <ProfitBar
-                  label="Total Revenue"
+                  label="Revenue"
                   value={profit?.totalRevenue ?? 0}
                   maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
                   color="text-indigo-400"
                 />
                 <ProfitBar
-                  label="Total Cost"
+                  label="Cost"
                   value={profit?.totalCost ?? 0}
                   maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
                   color="text-rose-400"
                 />
                 <ProfitBar
-                  label="Total Profit"
+                  label="Profit"
                   value={profit?.totalProfit ?? 0}
                   maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
                   color="text-emerald-400"
                 />
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">Avg Margin</span>
+                    <span className="text-gray-400">Margin</span>
                     <span className={`font-bold font-mono ${profit && profit.avgMarginPct >= 20 ? 'text-emerald-400' : profit && profit.avgMarginPct >= 10 ? 'text-amber-400' : 'text-rose-400'}`}>
                       <AnimatedNumber value={profit?.avgMarginPct ?? 0} suffix="%" />
                     </span>
@@ -517,11 +518,11 @@ export default function DashboardView() {
             <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
               <div className="mb-6 flex items-center gap-2">
                 <Calculator className="h-5 w-5 text-indigo-400" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">VAT Compliance Calculator</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">VAT calculator</h3>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-400">Amount (EUR)</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-400">Amount (€)</label>
                   <input
                     type="number"
                     min="0"
@@ -542,11 +543,11 @@ export default function DashboardView() {
                     className="rounded border-white/20 bg-white/[0.04] text-indigo-500 focus:ring-indigo-500/30"
                   />
                   <label htmlFor="vat-incl" className="text-sm text-gray-400">
-                    Amount includes VAT
+                    Price includes VAT
                   </label>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-400">VAT rate % (optional)</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-400">VAT %</label>
                   <input
                     type="number"
                     min="0"
@@ -554,7 +555,7 @@ export default function DashboardView() {
                     step="0.5"
                     value={vatRateOverride}
                     onChange={(e) => setVatRateOverride(e.target.value)}
-                    placeholder="From settings"
+                    placeholder="e.g. 23"
                     className="lux-input w-full"
                     aria-label="VAT rate percentage override"
                   />
@@ -618,7 +619,7 @@ export default function DashboardView() {
                 <div className="mb-6 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Activity className="h-5 w-5 text-indigo-400" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Recent Activity</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Activity</h3>
                   </div>
                   <button type="button" onClick={() => openInsights('activity')} className={insightButtonClass} aria-label="Open activity insights">
                     Insight
@@ -627,7 +628,7 @@ export default function DashboardView() {
 
                 <div className="space-y-5">
                   {activity.length === 0 ? (
-                    <p className="text-sm text-gray-500">No recent activity</p>
+                    <p className="text-sm text-gray-500">No activity yet</p>
                   ) : (
                     activity.map((event) => (
                       <div key={event.id} className="flex gap-4 group">
@@ -646,8 +647,8 @@ export default function DashboardView() {
               <div className="lux-card p-6 bg-gradient-to-br from-indigo-500/5 to-violet-500/5 animate-bento-enter" style={{ '--stagger': 13 } as React.CSSProperties}>
                 <div className="mb-6 flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="mb-1 text-lg font-display font-bold text-gray-100">System Status</h3>
-                    <p className="text-sm text-gray-500">All systems operational</p>
+                    <h3 className="mb-1 text-lg font-display font-bold text-gray-100">Status</h3>
+                    <p className="text-sm text-gray-500">All good</p>
                   </div>
                   <button
                     type="button"
@@ -688,7 +689,7 @@ export default function DashboardView() {
                   onClick={() => openInsights('system')}
                   className="mt-6 w-full rounded-xl bg-white/[0.04] border border-white/[0.08] py-3 text-sm font-medium text-gray-300 transition-all hover:bg-white/[0.08] hover:text-white"
                 >
-                  Run Diagnostics
+                  Diagnostics
                 </button>
               </div>
             </div>
