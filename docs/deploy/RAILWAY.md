@@ -55,6 +55,7 @@ Go to Railway project → **Variables** tab
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
 FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
+FRONTEND_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
 ```
 
 ### 2.2 Service Account Credentials
@@ -110,6 +111,7 @@ AI_PROVIDER=mock
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
 FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
+FRONTEND_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
 GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"luxselle-dashboard",...}
 
 # App Config
@@ -429,3 +431,12 @@ railway variables
 6. → Configure custom domain (optional)
 
 See [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md) for the complete production deployment guide.
+
+
+### CORS origin blocked from custom domain
+
+If the frontend works on `*.vercel.app` but fails on your custom domain, set `FRONTEND_ORIGINS` on Railway to a comma-separated allow-list of exact frontend origins, then redeploy. Example:
+
+```bash
+FRONTEND_ORIGINS=https://your-app.vercel.app,https://app.yourdomain.com
+```

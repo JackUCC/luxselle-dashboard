@@ -157,6 +157,7 @@ Go to Railway project → **Variables** tab and add:
 FIREBASE_PROJECT_ID=luxselle-dashboard
 FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
 FIREBASE_USE_EMULATOR=false
+FRONTEND_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
 
 # Firebase Service Account
 # Paste the ENTIRE contents of your service account JSON file
@@ -379,6 +380,7 @@ curl https://your-backend.up.railway.app/api/health
 1. Verify `VITE_API_BASE` has correct Railway URL
 2. Check Railway logs for errors
 3. Test API directly: `curl https://your-backend.up.railway.app/api/health`
+4. If you use a custom frontend domain, set Railway `FRONTEND_ORIGINS` to include that exact origin and redeploy
 
 ### Issue: Images not loading (CORS error)
 
