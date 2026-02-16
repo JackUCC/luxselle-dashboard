@@ -29,6 +29,7 @@ interface ProductDetailDrawerProps {
   productId: string | null
   onClose: () => void
   onProductUpdated?: (product: ProductWithId) => void
+  onProductDeleted?: (id: string) => void
 }
 
 type TabId = 'images' | 'details' | 'financials' | 'history' | 'notes'
@@ -61,10 +62,12 @@ export default function ProductDetailDrawer({
   productId,
   onClose,
   onProductUpdated,
+  onProductDeleted,
 }: ProductDetailDrawerProps) {
   const [product, setProduct] = useState<ProductWithId | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('details')
   const [editedFields, setEditedFields] = useState<Partial<Product>>({})
   const [hasChanges, setHasChanges] = useState(false)
@@ -130,6 +133,22 @@ export default function ProductDetailDrawer({
     return product?.[field] as Product[K]
   }
 
+  const handleDeleteProduct = useCallback(async () => {
+    if (!product?.id) return
+    if (!window.confirm(`Delete "${product.brand} ${product.title || product.model}"? This cannot be undone.`)) return
+    setIsDeleting(true)
+    try {
+      await apiDelete(`/products/${product.id}`)
+      toast.success('Product deleted')
+      onProductDeleted?.(product.id)
+      onClose()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete product')
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [product, onClose, onProductDeleted])
+
   if (!productId) return null
 
   return (
@@ -169,23 +188,36 @@ export default function ProductDetailDrawer({
               ) : (
                 <>
                   <h2 className="font-semibold text-gray-900">
-                    {product?.brand} {product?.model}
+                    {product?.brand} {product?.title || product?.model}
                   </h2>
                   <p className="text-xs text-gray-500 font-mono">
-                    BA{product?.id.slice(-4)}
+                    {product?.sku || `BA${product?.id.slice(-4)}`}
                   </p>
                 </>
               )}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Close drawer"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {!isLoading && product && (
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                disabled={isDeleting}
+                className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                aria-label="Delete product"
+              >
+                {isDeleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="Close drawer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -484,6 +516,16 @@ interface DetailsTabProps {
 function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps) {
   return (
     <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+        <input
+          type="text"
+          value={getCurrentValue('sku') ?? ''}
+          onChange={(e) => onFieldChange('sku', e.target.value)}
+          className="lux-input"
+          placeholder="e.g. 28643AV"
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
@@ -503,6 +545,16 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
             className="lux-input"
           />
         </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <input
+          type="text"
+          value={getCurrentValue('title') ?? ''}
+          onChange={(e) => onFieldChange('title', e.target.value)}
+          className="lux-input"
+          placeholder="Full product title"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -597,6 +649,8 @@ interface FinancialsTabProps {
 function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTabProps) {
   const costPrice = getCurrentValue('costPriceEur') ?? 0
   const sellPrice = getCurrentValue('sellPriceEur') ?? 0
+  const customsEur = getCurrentValue('customsEur') ?? 0
+  const vatEur = getCurrentValue('vatEur') ?? 0
   const margin = sellPrice - costPrice
   const marginPct = sellPrice > 0 ? (margin / sellPrice) * 100 : 0
   const [vatInfo, setVatInfo] = useState<{ ratePct: number; vatEur: number } | null>(null)
@@ -617,7 +671,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price (EUR)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Purchase / Cost (EUR)</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
             <input
@@ -640,6 +694,36 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
               step="0.01"
               value={sellPrice}
               onChange={(e) => onFieldChange('sellPriceEur', parseFloat(e.target.value) || 0)}
+              className="lux-input pl-7"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Customs (EUR)</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={customsEur}
+              onChange={(e) => onFieldChange('customsEur', parseFloat(e.target.value) || 0)}
+              className="lux-input pl-7"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">VAT (EUR)</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={vatEur}
+              onChange={(e) => onFieldChange('vatEur', parseFloat(e.target.value) || 0)}
               className="lux-input pl-7"
             />
           </div>

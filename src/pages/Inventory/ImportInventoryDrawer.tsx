@@ -37,9 +37,8 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
         if (!files || files.length === 0) return
         const file = files[0]
 
-        // Simple extension check
-        if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
-            toast.error('Please upload an Excel (.xlsx, .xls) or CSV file')
+        if (!file.name.match(/\.(xlsx|xls|csv|pdf)$/i)) {
+            toast.error('Please upload an Excel (.xlsx, .xls), CSV, or PDF (Luxselle inventory) file')
             return
         }
 
@@ -49,8 +48,9 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
         try {
             const formData = new FormData()
             formData.append('file', file)
-
-            const response = await apiPostFormData<{ data: ImportResult }>('/products/import', formData)
+            const isPdf = file.name.toLowerCase().endsWith('.pdf')
+            const endpoint = isPdf ? '/products/import-pdf' : '/products/import'
+            const response = await apiPostFormData<{ data: ImportResult }>(endpoint, formData)
             setResult(response.data)
 
             if (response.data.created > 0) {
@@ -114,7 +114,7 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                             File Requirements
                         </h3>
                         <p className="text-sm text-blue-600 mb-3">
-                            Upload an Excel (.xlsx) or CSV file with the following headers (case-insensitive):
+                            <strong>PDF:</strong> Luxselle inventory pricing PDF — we’ll extract brand, title, SKU, purchase price, customs, VAT, and selling price. Or upload <strong>Excel/CSV</strong> with headers (case-insensitive):
                         </p>
                         <ul className="list-disc list-inside text-sm text-blue-600/80 space-y-1 ml-1">
                             <li>Brand <span className="text-blue-700 font-medium">(required)</span></li>
@@ -144,7 +144,7 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept=".csv, .xlsx, .xls"
+                                accept=".csv,.xlsx,.xls,.pdf"
                                 className="hidden"
                                 onChange={(e) => handleFileSelect(e.target.files)}
                             />

@@ -18,11 +18,15 @@ interface AddProductDrawerProps {
 const INITIAL_PRODUCT: Partial<Product> = {
     brand: '',
     model: '',
+    title: '',
+    sku: '',
     category: '',
     condition: '',
     colour: '',
     costPriceEur: 0,
     sellPriceEur: 0,
+    customsEur: 0,
+    vatEur: 0,
     quantity: 1,
     status: 'in_stock',
     notes: '',
@@ -134,6 +138,16 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                            <input
+                                type="text"
+                                value={product.sku ?? ''}
+                                onChange={(e) => handleFieldChange('sku', e.target.value)}
+                                className="lux-input w-full"
+                                placeholder="e.g. 28643AV"
+                            />
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Brand <span className="text-red-500">*</span></label>
@@ -146,7 +160,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Model <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Model / Title <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     value={product.model}
@@ -155,6 +169,16 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                     placeholder="e.g. Classic Flap"
                                 />
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Full title (optional)</label>
+                            <input
+                                type="text"
+                                value={product.title ?? ''}
+                                onChange={(e) => handleFieldChange('title', e.target.value)}
+                                className="lux-input w-full"
+                                placeholder="Full product name from invoice"
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -193,7 +217,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price (EUR)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Purchase / Cost (EUR)</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
                                     <input
@@ -216,6 +240,36 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                         step="0.01"
                                         value={product.sellPriceEur}
                                         onChange={(e) => handleFieldChange('sellPriceEur', parseFloat(e.target.value) || 0)}
+                                        className="lux-input pl-7 w-full"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Customs (EUR)</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={product.customsEur ?? 0}
+                                        onChange={(e) => handleFieldChange('customsEur', parseFloat(e.target.value) || 0)}
+                                        className="lux-input pl-7 w-full"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">VAT (EUR)</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={product.vatEur ?? 0}
+                                        onChange={(e) => handleFieldChange('vatEur', parseFloat(e.target.value) || 0)}
                                         className="lux-input pl-7 w-full"
                                     />
                                 </div>

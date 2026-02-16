@@ -11,6 +11,7 @@
     "seed": "tsx scripts/seed.ts",
     "import-excel": "tsx scripts/import-inventory-from-excel.ts",
     "import-invoice-pdfs": "tsx scripts/import-invoice-pdfs.ts",
+    "import-inventory-pdf": "tsx scripts/import-inventory-from-pdf.ts",
     "supplier-email-sync": "tsx scripts/supplier-email-sync.ts",
     "test": "vitest --config ../../config/vitest.config.ts --run",
     "test:watch": "vitest --config ../../config/vitest.config.ts"

@@ -18,6 +18,7 @@
     "seed": "npm run seed --workspace=@luxselle/server",
     "import-excel": "npm run import-excel --workspace=@luxselle/server",
     "import-invoice-pdfs": "npm run import-invoice-pdfs --workspace=@luxselle/server",
+    "import-inventory-pdf": "npm run import-inventory-pdf --workspace=@luxselle/server",
     "supplier-email-sync": "npm run supplier-email-sync --workspace=@luxselle/server",
     "test": "vitest --run --config config/vitest.config.ts",
     "test:watch": "vitest --config config/vitest.config.ts",
