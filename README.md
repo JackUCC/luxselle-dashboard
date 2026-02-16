@@ -34,7 +34,7 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
 3. **Seed data (optional)**
    - Run after emulator and server are available (e.g. after first `npm run dev`).
    ```bash
-   npm run seed
+   npm run seed -- --confirm-reset
    ```
 
 4. **Import inventory from Excel (optional)**
@@ -52,7 +52,7 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
   ```
 - **Seed the database** so the UI shows products, KPIs, and activity (run once after emulator is up, or when you see empty data):
   ```bash
-  npm run seed
+  npm run seed -- --confirm-reset
   ```
 - **Frontend only** (if backend/emulators already running):
   ```bash
@@ -75,6 +75,7 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 - [Complete Production Setup](docs/deploy/PRODUCTION_SETUP.md) - End-to-end guide
 - [Railway Backend Deployment](docs/deploy/RAILWAY.md) - Express API on Railway
 - [Vercel Frontend Deployment](docs/deploy/VERCEL.md) - React/Vite on Vercel
+- [Platform Inputs After Hardening](docs/deploy/PLATFORM_INPUTS_AFTER_HARDENING.md) - Required Firebase/Vercel/Railway variables and smoke-data workflow
 
 **Key Requirements**:
 - **Frontend (Vercel)**: Set `VITE_API_BASE` to your Railway backend URL
@@ -121,9 +122,11 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 | `npm run dev` | Emulators + server + frontend |
 | `npm run dev:client` | Vite frontend only |
 | `npm run emulators` | Firebase Firestore + Storage emulators |
-| `npm run seed` | Seed Firestore (run after dev is up) |
+| `npm run seed -- --confirm-reset` | Destructive emulator seed (explicit reset confirmation required) |
 | `npm run test` | Unit tests (Vitest) |
 | `npm run test:e2e` | E2E tests (Playwright) |
+| `npm run sample:load -- --org=default --allow-production-seed` | Load idempotent smoke-test sample data |
+| `npm run sample:cleanup -- --org=default` | Remove smoke-test sample data |
 | `npm run build` | Production frontend build |
 
 ## Docs

@@ -21,8 +21,7 @@ import { settingsRouter } from './routes/settings'
 import { marketResearchRouter } from './routes/market-research'
 import { API_ERROR_CODES, formatApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
-// Auth middleware available but not applied yet (deferred to Iteration 6)
-// import { requireAuth, requireRole } from './middleware/auth'
+import { requireAuth } from './middleware/auth'
 
 const app = express()
 
@@ -40,6 +39,15 @@ app.use(requestLogger as express.RequestHandler)
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+// Enforce auth for production traffic (health route above remains public).
+// Development keeps current open workflow unless explicitly enabled via env.
+if (env.NODE_ENV === 'production') {
+  if (env.SKIP_AUTH === 'true') {
+    throw new Error('SKIP_AUTH=true is not allowed in production')
+  }
+  app.use('/api', requireAuth as express.RequestHandler)
+}
 
 // Mount API route modules
 app.use('/api/products', productsRouter)

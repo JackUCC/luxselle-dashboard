@@ -13,7 +13,9 @@
     "import-invoice-pdfs": "tsx scripts/import-invoice-pdfs.ts",
     "supplier-email-sync": "tsx scripts/supplier-email-sync.ts",
     "test": "vitest --config ../../config/vitest.config.ts --run",
-    "test:watch": "vitest --config ../../config/vitest.config.ts"
+    "test:watch": "vitest --config ../../config/vitest.config.ts",
+    "sample:load": "tsx scripts/load-sample-data.ts",
+    "sample:cleanup": "tsx scripts/cleanup-sample-data.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

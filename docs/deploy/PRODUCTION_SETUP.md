@@ -170,6 +170,7 @@ BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
 PORT=3001
 NODE_ENV=production
+# Important: do not set SKIP_AUTH=true in production
 
 # AI Provider (choose one)
 AI_PROVIDER=openai
@@ -492,3 +493,8 @@ Check `firestore.rules` - make sure rules allow the operations you need.
    - Review and tighten Firestore security rules
    - Enable Firebase App Check (optional)
    - Set up rate limiting on Railway (if needed)
+
+
+## 8. Platform Inputs Checklist (Post-Hardening)
+
+Use [PLATFORM_INPUTS_AFTER_HARDENING.md](./PLATFORM_INPUTS_AFTER_HARDENING.md) to verify Railway, Firebase, and Vercel settings and run smoke sample-data load/cleanup scripts.

@@ -82,6 +82,7 @@ NODE_ENV=production
 PORT=3001
 BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
+# Do not set SKIP_AUTH=true in production
 ```
 
 ### 2.4 AI Provider (Optional)
@@ -117,6 +118,7 @@ NODE_ENV=production
 PORT=3001
 BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
+# Do not set SKIP_AUTH=true in production
 
 # AI Provider (choose one)
 AI_PROVIDER=openai
@@ -429,3 +431,8 @@ railway variables
 6. → Configure custom domain (optional)
 
 See [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md) for the complete production deployment guide.
+
+
+## 7. Post-Hardening Checklist
+
+After deployment, verify platform variables and smoke-data workflow using [PLATFORM_INPUTS_AFTER_HARDENING.md](./PLATFORM_INPUTS_AFTER_HARDENING.md).
