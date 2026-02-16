@@ -42,6 +42,7 @@ const EnvSchema = z.object({
   GMAIL_USER: z.string().optional(),
   SUPPLIER_EMAIL_DEFAULT_QUERY: z.string().default('has:attachment newer_than:30d'),
   SUPPLIER_EMAIL_MAX_ATTACHMENT_MB: z.coerce.number().default(10),
+  FRONTEND_ORIGINS: z.string().optional(),
 })
 
 // Parse and validate on load; throws if required/env shape is invalid
