@@ -29,7 +29,7 @@ import {
   Trash2,
   Pencil,
 } from "lucide-react";
-import { apiGet, apiDelete } from "../../lib/api";
+import { apiGet, apiDelete, apiPost } from "../../lib/api";
 import { formatCurrency } from "../../lib/formatters";
 import {
   PLACEHOLDER_IMAGE,
@@ -154,6 +154,7 @@ export default function InventoryView() {
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [showAddDrawer, setShowAddDrawer] = useState(false);
   const [showImportDrawer, setShowImportDrawer] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -308,6 +309,32 @@ export default function InventoryView() {
       });
   }, []);
 
+  const handleClearAll = useCallback(() => {
+    if (products.length === 0) return;
+    const confirmed = window.confirm(
+      `Clear all ${products.length} inventory items? This cannot be undone.`
+    );
+    if (!confirmed) return;
+    setIsClearing(true);
+    apiPost<{ data: { deleted: number } }>("/products/clear", {})
+      .then((res) => {
+        const deleted = res?.data?.deleted ?? 0;
+        setProducts([]);
+        setError(null);
+        closeProductDrawer();
+        toast.success(`Cleared ${deleted} item${deleted === 1 ? "" : "s"} from inventory.`);
+        fetchProducts();
+      })
+      .catch((err: unknown) => {
+        const message =
+          err instanceof Error ? err.message : "Failed to clear inventory";
+        toast.error(message);
+      })
+      .finally(() => {
+        setIsClearing(false);
+      });
+  }, [products.length, fetchProducts, closeProductDrawer]);
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -453,6 +480,20 @@ export default function InventoryView() {
             >
               <Upload className="h-4 w-4" />
               Import
+            </button>
+            <button
+              type="button"
+              onClick={handleClearAll}
+              disabled={products.length === 0 || isClearing}
+              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Delete all inventory items"
+            >
+              {isClearing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Clear all
             </button>
           </div>
         </div>
