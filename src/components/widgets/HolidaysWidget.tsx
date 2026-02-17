@@ -74,53 +74,53 @@ export default function HolidaysWidget() {
         <div className="lux-card p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="rounded-xl bg-violet-500/10 p-2 text-violet-400 border border-violet-500/20">
+                    <div className="rounded-xl bg-violet-50 p-2 text-violet-600 border border-violet-100">
                         <Calendar className="h-5 w-5" />
                     </div>
-                    <h3 className="font-semibold text-gray-200 uppercase tracking-wider text-xs">Logistics Holidays</h3>
+                    <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Logistics Holidays</h3>
                 </div>
-                <Globe className="h-4 w-4 text-gray-600" />
+                <Globe className="h-4 w-4 text-gray-400" />
             </div>
 
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                 {error ? (
-                    <div className="text-center text-sm text-rose-400 py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{error}</div>
+                    <div className="text-center text-sm text-rose-600 py-2 bg-rose-50 rounded-xl border border-rose-200">{error}</div>
                 ) : loading ? (
                     <div className="space-y-4 animate-pulse">
                         {[1, 2, 3].map(i => (
                             <div key={i} className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-white/[0.04] rounded-xl" />
+                                <div className="h-10 w-10 bg-gray-100 rounded-xl" />
                                 <div className="flex-1 space-y-2">
-                                    <div className="h-3 bg-white/[0.04] rounded w-3/4" />
-                                    <div className="h-2 bg-white/[0.03] rounded w-1/2" />
+                                    <div className="h-3 bg-gray-100 rounded w-3/4" />
+                                    <div className="h-2 bg-gray-50 rounded w-1/2" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : holidays.length === 0 ? (
-                    <div className="text-center text-sm text-gray-500 py-4">No upcoming holidays found.</div>
+                    <div className="text-center text-sm text-gray-400 py-4">No upcoming holidays found.</div>
                 ) : (
                     <div className="space-y-3">
                         {holidays.map((holiday, idx) => (
-                            <div key={`${holiday.countryCode}-${holiday.date}-${idx}`} className="flex items-start gap-3 group p-2 -mx-2 rounded-xl hover:bg-white/[0.03] transition-colors">
-                                <div className="flex flex-col items-center justify-center h-10 w-10 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm font-bold text-gray-400 shrink-0">
-                                    <span className="text-[10px] uppercase text-gray-600 leading-none mb-0.5">{new Date(holiday.date).toLocaleString('en-US', { month: 'short' })}</span>
-                                    <span className="text-base leading-none text-gray-200">{new Date(holiday.date).getDate()}</span>
+                            <div key={`${holiday.countryCode}-${holiday.date}-${idx}`} className="flex items-start gap-3 group p-2 -mx-2 rounded-xl hover:bg-gray-50 transition-colors">
+                                <div className="flex flex-col items-center justify-center h-10 w-10 rounded-xl bg-gray-50 border border-gray-200 text-sm font-bold text-gray-500 shrink-0">
+                                    <span className="text-[10px] uppercase text-gray-400 leading-none mb-0.5">{new Date(holiday.date).toLocaleString('en-US', { month: 'short' })}</span>
+                                    <span className="text-base leading-none text-gray-900">{new Date(holiday.date).getDate()}</span>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-gray-200 truncate pr-2">{holiday.name}</p>
+                                        <p className="text-sm font-medium text-gray-900 truncate pr-2">{holiday.name}</p>
                                         <span className="text-lg leading-none" title={holiday.countryCode}>{holiday.countryFlag}</span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium border ${getDaysUntil(holiday.date) === 'Today' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
-                                            getDaysUntil(holiday.date) === 'Tomorrow' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                                                'bg-indigo-500/15 text-indigo-300 border-indigo-500/20'
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium border ${getDaysUntil(holiday.date) === 'Today' ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                                            getDaysUntil(holiday.date) === 'Tomorrow' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                                'bg-indigo-50 text-indigo-600 border-indigo-200'
                                             }`}>
                                             {getDaysUntil(holiday.date)}
                                         </span>
-                                        <span className="text-xs text-gray-500 truncate">{holiday.localName}</span>
+                                        <span className="text-xs text-gray-400 truncate">{holiday.localName}</span>
                                     </div>
                                 </div>
                             </div>
@@ -128,7 +128,7 @@ export default function HolidaysWidget() {
                     </div>
                 )}
             </div>
-            <div className="mt-4 pt-4 border-t border-white/[0.06] text-[10px] text-gray-600 text-center">
+            <div className="mt-4 pt-4 border-t border-gray-200 text-[10px] text-gray-400 text-center">
                 Nager.Date API
             </div>
         </div>

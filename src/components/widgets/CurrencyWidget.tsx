@@ -9,9 +9,9 @@ interface ExchangeRates {
 }
 
 const TARGET_CURRENCIES = [
-  { code: 'USD', symbol: '$', flag: '🇺🇸', color: 'text-emerald-400' },
-  { code: 'GBP', symbol: '£', flag: '🇬🇧', color: 'text-blue-400' },
-  { code: 'CNY', symbol: '¥', flag: '🇨🇳', color: 'text-rose-400' },
+  { code: 'USD', symbol: '$', flag: '🇺🇸', color: 'text-emerald-600' },
+  { code: 'GBP', symbol: '£', flag: '🇬🇧', color: 'text-blue-600' },
+  { code: 'CNY', symbol: '¥', flag: '🇨🇳', color: 'text-rose-600' },
 ]
 
 // Mock sparkline data for visual appeal
@@ -34,7 +34,7 @@ function TinySparkline({ data, color }: { data: number[]; color: string }) {
   }).join(' ')
 
   return (
-    <svg width={width} height={height} className="opacity-60">
+    <svg width={width} height={height} className="opacity-50">
       <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -70,15 +70,15 @@ export default function CurrencyWidget() {
     <div className="lux-card p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="rounded-xl bg-blue-500/10 p-2 text-blue-400 border border-blue-500/20">
+          <div className="rounded-xl bg-blue-50 p-2 text-blue-600 border border-blue-100">
             <DollarSign className="h-5 w-5" />
           </div>
-          <h3 className="font-semibold text-gray-200 uppercase tracking-wider text-xs">Exchange Rates</h3>
+          <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Exchange Rates</h3>
         </div>
         <button
           onClick={fetchRates}
           disabled={loading}
-          className="text-gray-600 hover:text-gray-400 transition-colors disabled:opacity-50"
+          className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
           title="Refresh rates"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -87,30 +87,30 @@ export default function CurrencyWidget() {
 
       <div className="flex-1 flex flex-col justify-center space-y-3">
         {error ? (
-          <div className="text-center text-sm text-rose-400 py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{error}</div>
+          <div className="text-center text-sm text-rose-600 py-2 bg-rose-50 rounded-xl border border-rose-200">{error}</div>
         ) : loading && !rates ? (
           <div className="space-y-3 animate-pulse">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-12 bg-white/[0.04] rounded-xl w-full" />
+              <div key={i} className="h-12 bg-gray-100 rounded-xl w-full" />
             ))}
           </div>
         ) : (
           TARGET_CURRENCIES.map((currency) => (
-            <div key={currency.code} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1] transition-all">
+            <div key={currency.code} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all">
               <div className="flex items-center gap-3">
                 <span className="text-xl" role="img" aria-label={currency.code}>{currency.flag}</span>
                 <div>
-                  <div className="font-semibold text-gray-200 text-sm">{currency.code}</div>
+                  <div className="font-semibold text-gray-900 text-sm">{currency.code}</div>
                   <div className="text-[10px] text-gray-500">1 EUR =</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <TinySparkline data={MOCK_SPARKLINES[currency.code] || []} color={currency.color.replace('text-', '').includes('emerald') ? '#34D399' : currency.color.includes('blue') ? '#60A5FA' : '#FB7185'} />
+                <TinySparkline data={MOCK_SPARKLINES[currency.code] || []} color={currency.color.includes('emerald') ? '#10B981' : currency.color.includes('blue') ? '#3B82F6' : '#F43F5E'} />
                 <div className="text-right">
-                  <div className="font-bold text-gray-100 font-mono">
+                  <div className="font-bold text-gray-900 font-mono">
                     {currency.symbol}{rates?.[currency.code]?.toFixed(4)}
                   </div>
-                  <div className="text-[10px] items-center justify-end flex gap-1 text-emerald-400">
+                  <div className="text-[10px] items-center justify-end flex gap-1 text-emerald-600">
                     <TrendingUp className="h-3 w-3" />
                     <span>Live</span>
                   </div>
@@ -121,7 +121,7 @@ export default function CurrencyWidget() {
         )}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-white/[0.06] text-[10px] text-gray-600 text-center">
+      <div className="mt-4 pt-4 border-t border-gray-200 text-[10px] text-gray-400 text-center">
         Frankfurter API
         {lastUpdated && <span> • {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
       </div>

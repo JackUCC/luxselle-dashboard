@@ -48,15 +48,15 @@ export default function NewsWidget() {
         <div className="lux-card p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="rounded-xl bg-amber-500/10 p-2 text-amber-400 border border-amber-500/20">
+                    <div className="rounded-xl bg-amber-50 p-2 text-amber-600 border border-amber-100">
                         <Newspaper className="h-5 w-5" />
                     </div>
-                    <h3 className="font-semibold text-gray-200 uppercase tracking-wider text-xs">Industry News</h3>
+                    <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Industry News</h3>
                 </div>
                 <button
                     onClick={fetchNews}
                     disabled={loading}
-                    className="text-gray-600 hover:text-gray-400 transition-colors disabled:opacity-50"
+                    className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
                     title="Refresh news"
                 >
                     <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -65,15 +65,15 @@ export default function NewsWidget() {
 
             <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                 {error ? (
-                    <div className="text-center text-sm text-gray-500 py-8 italic">{error}</div>
+                    <div className="text-center text-sm text-gray-400 py-8 italic">{error}</div>
                 ) : loading ? (
                     <div className="space-y-4 animate-pulse">
                         {[1, 2, 3].map(i => (
                             <div key={i} className="flex gap-3">
-                                <div className="h-16 w-16 bg-white/[0.04] rounded-xl shrink-0" />
+                                <div className="h-16 w-16 bg-gray-100 rounded-xl shrink-0" />
                                 <div className="flex-1 space-y-2 py-1">
-                                    <div className="h-3 bg-white/[0.04] rounded w-full" />
-                                    <div className="h-3 bg-white/[0.03] rounded w-2/3" />
+                                    <div className="h-3 bg-gray-100 rounded w-full" />
+                                    <div className="h-3 bg-gray-50 rounded w-2/3" />
                                 </div>
                             </div>
                         ))}
@@ -86,9 +86,9 @@ export default function NewsWidget() {
                                 href={item.link}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex gap-3 group hover:bg-white/[0.03] -mx-2 p-2 rounded-xl transition-all hover:translate-y-[-1px]"
+                                className="flex gap-3 group hover:bg-gray-50 -mx-2 p-2 rounded-xl transition-all hover:translate-y-[-1px]"
                             >
-                                <div className="h-16 w-16 bg-white/[0.04] rounded-xl overflow-hidden shrink-0 border border-white/[0.06] text-gray-600 flex items-center justify-center">
+                                <div className="h-16 w-16 bg-gray-100 rounded-xl overflow-hidden shrink-0 border border-gray-200 text-gray-400 flex items-center justify-center">
                                     {item.thumbnail ? (
                                         <img src={item.thumbnail} alt="" className="h-full w-full object-cover" />
                                     ) : (
@@ -97,14 +97,14 @@ export default function NewsWidget() {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                                    <h4 className="text-sm font-medium text-gray-200 line-clamp-2 leading-snug group-hover:text-white transition-colors">
+                                    <h4 className="text-sm font-medium text-gray-800 line-clamp-2 leading-snug group-hover:text-gray-900 transition-colors">
                                         {item.title}
                                     </h4>
                                     <div className="flex items-center justify-between mt-1">
-                                        <span className="text-[10px] text-gray-500">
+                                        <span className="text-[10px] text-gray-400">
                                             {new Date(item.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </span>
-                                        <ExternalLink className="h-3 w-3 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <ExternalLink className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                 </div>
                             </a>
@@ -112,7 +112,7 @@ export default function NewsWidget() {
                     </div>
                 )}
             </div>
-            <div className="mt-4 pt-4 border-t border-white/[0.06] text-[10px] text-gray-600 text-center">
+            <div className="mt-4 pt-4 border-t border-gray-200 text-[10px] text-gray-400 text-center">
                 Vogue Business RSS
             </div>
         </div>

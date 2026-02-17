@@ -23,16 +23,15 @@ const LOCATIONS: Omit<LocationWeather, 'data'>[] = [
     { name: 'London', flag: '🇬🇧', lat: 51.5074, lon: -0.1278 },
 ]
 
-// Map WMO weather codes to icons + descriptions
 const getWeatherInfo = (code: number, isDay: boolean) => {
-    if (code === 0) return { icon: Sun, label: 'Clear', gradient: isDay ? 'from-amber-500/20 to-orange-500/10' : 'from-indigo-500/20 to-blue-500/10' }
-    if (code <= 3) return { icon: Cloud, label: 'Cloudy', gradient: 'from-slate-400/20 to-gray-500/10' }
-    if (code <= 48) return { icon: CloudFog, label: 'Foggy', gradient: 'from-gray-400/20 to-slate-500/10' }
-    if (code <= 67) return { icon: CloudRain, label: 'Rain', gradient: 'from-blue-500/20 to-cyan-500/10' }
-    if (code <= 77) return { icon: CloudSnow, label: 'Snow', gradient: 'from-blue-200/20 to-white/10' }
-    if (code <= 82) return { icon: CloudRain, label: 'Showers', gradient: 'from-blue-600/20 to-indigo-500/10' }
-    if (code <= 99) return { icon: CloudLightning, label: 'Storm', gradient: 'from-violet-500/20 to-purple-600/10' }
-    return { icon: Cloud, label: 'Unknown', gradient: 'from-gray-500/20 to-gray-600/10' }
+    if (code === 0) return { icon: Sun, label: 'Clear', bg: isDay ? 'bg-amber-50' : 'bg-indigo-50', border: isDay ? 'border-amber-100' : 'border-indigo-100' }
+    if (code <= 3) return { icon: Cloud, label: 'Cloudy', bg: 'bg-gray-50', border: 'border-gray-200' }
+    if (code <= 48) return { icon: CloudFog, label: 'Foggy', bg: 'bg-gray-50', border: 'border-gray-200' }
+    if (code <= 67) return { icon: CloudRain, label: 'Rain', bg: 'bg-blue-50', border: 'border-blue-100' }
+    if (code <= 77) return { icon: CloudSnow, label: 'Snow', bg: 'bg-sky-50', border: 'border-sky-100' }
+    if (code <= 82) return { icon: CloudRain, label: 'Showers', bg: 'bg-blue-50', border: 'border-blue-100' }
+    if (code <= 99) return { icon: CloudLightning, label: 'Storm', bg: 'bg-violet-50', border: 'border-violet-100' }
+    return { icon: Cloud, label: 'Unknown', bg: 'bg-gray-50', border: 'border-gray-200' }
 }
 
 export default function WeatherWidget() {
@@ -73,7 +72,7 @@ export default function WeatherWidget() {
 
     useEffect(() => {
         fetchWeather()
-        const interval = setInterval(fetchWeather, 30 * 60 * 1000) // 30 min refresh
+        const interval = setInterval(fetchWeather, 30 * 60 * 1000)
         return () => clearInterval(interval)
     }, [])
 
@@ -81,15 +80,15 @@ export default function WeatherWidget() {
         <div className="lux-card p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="rounded-xl bg-cyan-500/10 p-2 text-cyan-400 border border-cyan-500/20">
+                    <div className="rounded-xl bg-cyan-50 p-2 text-cyan-600 border border-cyan-100">
                         <Cloud className="h-5 w-5" />
                     </div>
-                    <h3 className="font-semibold text-gray-200 uppercase tracking-wider text-xs">Weather</h3>
+                    <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Weather</h3>
                 </div>
                 <button
                     onClick={fetchWeather}
                     disabled={loading}
-                    className="text-gray-600 hover:text-gray-400 transition-colors disabled:opacity-50"
+                    className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
                     title="Refresh weather"
                 >
                     <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -98,11 +97,11 @@ export default function WeatherWidget() {
 
             <div className="flex-1 flex flex-col justify-center space-y-3">
                 {error ? (
-                    <div className="text-center text-sm text-rose-400 py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{error}</div>
+                    <div className="text-center text-sm text-rose-600 py-2 bg-rose-50 rounded-xl border border-rose-200">{error}</div>
                 ) : loading && !locations[0]?.data ? (
                     <div className="space-y-3 animate-pulse">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="h-16 bg-white/[0.04] rounded-xl w-full" />
+                            <div key={i} className="h-16 bg-gray-100 rounded-xl w-full" />
                         ))}
                     </div>
                 ) : (
@@ -111,11 +110,11 @@ export default function WeatherWidget() {
                         const weather = getWeatherInfo(loc.data.weatherCode, loc.data.isDay)
                         const WeatherIcon = weather.icon
                         return (
-                            <div key={loc.name} className={`flex items-center justify-between p-3 rounded-xl bg-gradient-to-r ${weather.gradient} border border-white/[0.06] transition-all hover:border-white/[0.1]`}>
+                            <div key={loc.name} className={`flex items-center justify-between p-3 rounded-xl ${weather.bg} border ${weather.border} transition-all hover:shadow-sm`}>
                                 <div className="flex items-center gap-3">
                                     <span className="text-lg" role="img" aria-label={loc.name}>{loc.flag}</span>
                                     <div>
-                                        <div className="font-semibold text-gray-200 text-sm">{loc.name}</div>
+                                        <div className="font-semibold text-gray-900 text-sm">{loc.name}</div>
                                         <div className="flex items-center gap-1 text-[10px] text-gray-500">
                                             <WeatherIcon className="h-3 w-3" />
                                             <span>{weather.label}</span>
@@ -123,7 +122,7 @@ export default function WeatherWidget() {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-bold text-gray-100 font-mono text-lg">
+                                    <div className="font-bold text-gray-900 font-mono text-lg">
                                         {Math.round(loc.data.temperature)}°
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-gray-500">
@@ -137,7 +136,7 @@ export default function WeatherWidget() {
                 )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-white/[0.06] text-[10px] text-gray-600 text-center">
+            <div className="mt-4 pt-4 border-t border-gray-200 text-[10px] text-gray-400 text-center">
                 Powered by Open-Meteo • Auto-refreshes every 30min
             </div>
         </div>

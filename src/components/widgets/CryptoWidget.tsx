@@ -22,10 +22,10 @@ const CRYPTO_ICONS: Record<string, string> = {
     solana: '◎',
 }
 
-const CRYPTO_COLORS: Record<string, { gradient: string; glow: string; stroke: string }> = {
-    bitcoin: { gradient: 'from-amber-500/20 to-orange-500/10', glow: 'shadow-[0_0_15px_rgba(245,158,11,0.2)]', stroke: '#F59E0B' },
-    ethereum: { gradient: 'from-blue-500/20 to-indigo-500/10', glow: 'shadow-[0_0_15px_rgba(99,102,241,0.2)]', stroke: '#6366F1' },
-    solana: { gradient: 'from-violet-500/20 to-purple-500/10', glow: 'shadow-[0_0_15px_rgba(139,92,246,0.2)]', stroke: '#8B5CF6' },
+const CRYPTO_COLORS: Record<string, { bg: string; border: string; stroke: string }> = {
+    bitcoin: { bg: 'bg-amber-50', border: 'border-amber-100', stroke: '#F59E0B' },
+    ethereum: { bg: 'bg-indigo-50', border: 'border-indigo-100', stroke: '#6366F1' },
+    solana: { bg: 'bg-violet-50', border: 'border-violet-100', stroke: '#8B5CF6' },
 }
 
 function MiniSparkline({ data, color, width = 80, height = 28 }: { data: number[]; color: string; width?: number; height?: number }) {
@@ -46,16 +46,14 @@ function MiniSparkline({ data, color, width = 80, height = 28 }: { data: number[
         <svg width={width} height={height} className="overflow-visible">
             <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                    <stop offset="0%" stopColor={color} stopOpacity="0.2" />
                     <stop offset="100%" stopColor={color} stopOpacity="0" />
                 </linearGradient>
             </defs>
-            {/* Fill area */}
             <path
                 d={`M0,${height} L${points.join(' L')} L${width},${height} Z`}
                 fill={`url(#${gradientId})`}
             />
-            {/* Line */}
             <polyline
                 points={points.join(' ')}
                 fill="none"
@@ -78,14 +76,12 @@ export default function CryptoWidget() {
         setLoading(true)
         setError(null)
         try {
-            // Fetch prices
             const ids = TARGET_ASSETS.join(',')
             const res = await fetch(`https://api.coincap.io/v2/assets?ids=${ids}`)
             if (!res.ok) throw new Error('Failed to fetch crypto data')
             const json = await res.json()
             setAssets(json.data)
 
-            // Fetch 24h sparkline for each
             const sparkData: Record<string, number[]> = {}
             const now = Date.now()
             const oneDayAgo = now - 24 * 60 * 60 * 1000
@@ -115,7 +111,7 @@ export default function CryptoWidget() {
 
     useEffect(() => {
         fetchCrypto()
-        const interval = setInterval(fetchCrypto, 5 * 60 * 1000) // 5 min refresh
+        const interval = setInterval(fetchCrypto, 5 * 60 * 1000)
         return () => clearInterval(interval)
     }, [])
 
@@ -130,15 +126,15 @@ export default function CryptoWidget() {
         <div className="lux-card p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="rounded-xl bg-violet-500/10 p-2 text-violet-400 border border-violet-500/20">
+                    <div className="rounded-xl bg-violet-50 p-2 text-violet-600 border border-violet-100">
                         <Coins className="h-5 w-5" />
                     </div>
-                    <h3 className="font-semibold text-gray-200 uppercase tracking-wider text-xs">Crypto</h3>
+                    <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Crypto</h3>
                 </div>
                 <button
                     onClick={fetchCrypto}
                     disabled={loading}
-                    className="text-gray-600 hover:text-gray-400 transition-colors disabled:opacity-50"
+                    className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
                     title="Refresh crypto"
                 >
                     <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -147,11 +143,11 @@ export default function CryptoWidget() {
 
             <div className="flex-1 flex flex-col justify-center space-y-3">
                 {error ? (
-                    <div className="text-center text-sm text-rose-400 py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{error}</div>
+                    <div className="text-center text-sm text-rose-600 py-2 bg-rose-50 rounded-xl border border-rose-200">{error}</div>
                 ) : loading && assets.length === 0 ? (
                     <div className="space-y-3 animate-pulse">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="h-16 bg-white/[0.04] rounded-xl w-full" />
+                            <div key={i} className="h-16 bg-gray-100 rounded-xl w-full" />
                         ))}
                     </div>
                 ) : (
@@ -162,28 +158,27 @@ export default function CryptoWidget() {
                         const TrendIcon = isPositive ? TrendingUp : TrendingDown
 
                         return (
-                            <div key={asset.id} className={`flex items-center justify-between p-3 rounded-xl bg-gradient-to-r ${colors.gradient} border border-white/[0.06] transition-all hover:border-white/[0.1] ${colors.glow}`}>
+                            <div key={asset.id} className={`flex items-center justify-between p-3 rounded-xl ${colors.bg} border ${colors.border} transition-all hover:shadow-sm`}>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.06] text-lg font-bold text-gray-200 border border-white/[0.06]">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-lg font-bold text-gray-700 border border-gray-200 shadow-sm">
                                         {CRYPTO_ICONS[asset.id] || asset.symbol.charAt(0)}
                                     </div>
                                     <div>
-                                        <div className="font-semibold text-gray-200 text-sm">{asset.name}</div>
+                                        <div className="font-semibold text-gray-900 text-sm">{asset.name}</div>
                                         <div className="text-[10px] text-gray-500 uppercase">{asset.symbol}</div>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    {/* Sparkline */}
                                     {sparklines[asset.id] && sparklines[asset.id].length > 2 && (
                                         <MiniSparkline data={sparklines[asset.id]} color={colors.stroke} />
                                     )}
 
                                     <div className="text-right">
-                                        <div className="font-bold text-gray-100 font-mono text-sm">
+                                        <div className="font-bold text-gray-900 font-mono text-sm">
                                             {formatPrice(asset.priceUsd)}
                                         </div>
-                                        <div className={`flex items-center justify-end gap-0.5 text-[10px] font-medium ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        <div className={`flex items-center justify-end gap-0.5 text-[10px] font-medium ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                                             <TrendIcon className="h-3 w-3" />
                                             <span>{isPositive ? '+' : ''}{change.toFixed(2)}%</span>
                                         </div>
@@ -195,7 +190,7 @@ export default function CryptoWidget() {
                 )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-white/[0.06] text-[10px] text-gray-600 text-center">
+            <div className="mt-4 pt-4 border-t border-gray-200 text-[10px] text-gray-400 text-center">
                 Powered by CoinCap • Auto-refreshes every 5min
             </div>
         </div>
