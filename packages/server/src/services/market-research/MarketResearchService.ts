@@ -117,8 +117,8 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no expla
 }
 
 Important guidelines:
-- Use real marketplace sources: Vestiaire Collective, eBay, Designer Exchange, Siopaella, The RealReal, Rebelle, Vinted, Depop
-- Include 4-6 comparable listings from different sources
+- ONLY use these 4 approved sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella (siopaella.com). Do NOT include any other marketplace.
+- Include 4-6 comparable listings from the 4 approved sources only
 - Price ranges should reflect condition-adjusted real market data
 - suggestedBuyPriceEur should leave room for 35% profit margin
 - Be specific about demand trends and timing
@@ -302,18 +302,18 @@ export class MarketResearchService {
                     daysListed: 7,
                 },
                 {
-                    title: `${input.brand} ${input.model}`,
+                    title: `${input.brand} ${input.model} - Authenticated`,
                     priceEur: Math.round(basePrice * 0.85),
-                    source: 'eBay',
-                    sourceUrl: 'https://ebay.ie',
+                    source: 'Luxury Exchange',
+                    sourceUrl: 'https://luxuryexchange.ie',
                     condition: input.condition,
                     daysListed: 21,
                 },
                 {
-                    title: `${input.brand} ${input.model} Authenticated`,
+                    title: `${input.brand} ${input.model} - Certified`,
                     priceEur: Math.round(basePrice * 1.05),
-                    source: 'The RealReal',
-                    sourceUrl: 'https://therealreal.com',
+                    source: 'Siopella',
+                    sourceUrl: 'https://siopaella.com',
                     condition: input.condition,
                     daysListed: 5,
                 },

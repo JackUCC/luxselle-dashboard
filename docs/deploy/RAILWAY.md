@@ -53,10 +53,13 @@ Go to Railway project → **Variables** tab
 
 **Critical for production:** `FIREBASE_USE_EMULATOR` must be `false` on Railway. If it is `true`, the server will try to connect to a Firestore emulator at 127.0.0.1:8082 (which does not run in the container), and all dashboard/Firestore requests will return 500.
 
+If your Firestore data is in the **eur3 (Europe)** instance (database ID `luxselle-dashboard-95977150`), set `FIRESTORE_DATABASE_ID=luxselle-dashboard-95977150`. Otherwise the backend uses the **(default)** US database. See [FIREBASE_CONNECTION_REFERENCE.md](../firebase/FIREBASE_CONNECTION_REFERENCE.md).
+
 ```bash
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
 FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
+FIRESTORE_DATABASE_ID=luxselle-dashboard-95977150
 FRONTEND_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
 ```
 
@@ -103,10 +106,11 @@ AI_PROVIDER=mock
 ### 2.5 Complete Environment Variables Template
 
 ```bash
-# Firebase
+# Firebase (set FIRESTORE_DATABASE_ID if using eur3 instance)
 FIREBASE_USE_EMULATOR=false
 FIREBASE_PROJECT_ID=luxselle-dashboard
 FIREBASE_STORAGE_BUCKET=luxselle-dashboard.firebasestorage.app
+FIRESTORE_DATABASE_ID=luxselle-dashboard-95977150
 FRONTEND_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
 GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"luxselle-dashboard",...}
 

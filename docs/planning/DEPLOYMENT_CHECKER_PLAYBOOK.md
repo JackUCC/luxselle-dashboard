@@ -30,7 +30,8 @@ flowchart LR
 **Purpose:** Verify the live Vercel app and that configuration matches docs.
 
 **Inputs:**
-- Vercel project URL (from `vercel.json` / `app/README.md` or env)
+
+- Vercel project URL (from `vercel.json` / `docs/PROJECT_STRUCTURE.md` or env)
 - `docs/deploy/VERCEL.md`
 
 **Tasks:**
@@ -45,6 +46,7 @@ flowchart LR
 | 6 | Docs match | `docs/deploy/VERCEL.md` and `docs/deploy/QUICK_START_CHECKLIST.md` Phase 3 list same env vars and steps. |
 
 **Output Format:**
+
 ```
 Vercel Frontend Check
 =====================
@@ -71,6 +73,7 @@ Fixes Required:
 **Purpose:** Verify the backend API used by the frontend (Railway deployment).
 
 **Inputs:**
+
 - Railway service URL (from Vercel `VITE_API_BASE` or Railway dashboard)
 - `docs/deploy/RAILWAY.md`
 - `railway.toml`
@@ -87,6 +90,7 @@ Fixes Required:
 | 6 | Docs match | `docs/deploy/RAILWAY.md` matches start command and required env vars. |
 
 **Output Format:**
+
 ```
 Backend (Railway) Check
 =======================
@@ -117,6 +121,7 @@ Log Excerpts:
 **Purpose:** Verify Firebase project, Firestore, Storage, rules, and CORS so backend and frontend work.
 
 **Inputs:**
+
 - Firebase project ID (e.g. `luxselle-dashboard` from `.firebaserc` or docs)
 - `docs/firebase/FIREBASE_SETUP.md`
 - `docs/deploy/PRODUCTION_SETUP.md` Section 1
@@ -135,6 +140,7 @@ Log Excerpts:
 | 8 | Docs match | `docs/firebase/FIREBASE_SETUP.md` and `docs/deploy/QUICK_START_CHECKLIST.md` Phase 1 match commands and bucket name. |
 
 **Output Format:**
+
 ```
 Firebase Console Check
 ======================
@@ -163,6 +169,7 @@ Fixes Required:
 **Purpose:** Deeper verification of Railway build, deploy, env, networking, and operations.
 
 **Inputs:**
+
 - Same as Backend Check, plus:
 - `docs/deploy/RAILWAY.md` full guide
 - `railway.toml`
@@ -181,6 +188,7 @@ Fixes Required:
 | 12 | Docs and code | `railway.toml` matches `docs/deploy/RAILWAY.md`; no contradictory instructions in QUICK_START or PRODUCTION_SETUP. |
 
 **Output Format:**
+
 ```
 Full Railway Check
 ==================
@@ -211,6 +219,7 @@ Railway Configuration:
 **Purpose:** Consume reports from the four checkers; prioritize issues; apply code and config fixes; remove old code and obsolete MD files.
 
 **Inputs:**
+
 - Outputs from: (1) Vercel Frontend Check, (2) Backend (Railway) Check, (3) Firebase Console Check, (4) Full Railway Check
 - Codebase under `src/`, `packages/`, `docs/`, root config
 
@@ -228,6 +237,7 @@ Railway Configuration:
 **Scope Discipline:** No large refactors; minimal, targeted changes. Do not touch `packages/server` for non-backend-contract fixes unless the checker explicitly identified a backend defect.
 
 **Output Format:**
+
 ```
 Review and Fix Coordinator Report
 ==================================

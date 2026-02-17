@@ -6,6 +6,7 @@ import {
     Save,
     Upload,
     ChevronDown,
+    Sparkles,
 } from 'lucide-react'
 import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import type { Product } from '@shared/schemas'
@@ -305,12 +306,35 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-sm font-medium text-gray-700">Notes / Description</label>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!product.brand || !product.model) {
+                                            toast.error('Please enter Brand and Model first')
+                                            return
+                                        }
+                                        const toastId = toast.loading('Generating description...')
+                                        try {
+                                            const res = await apiPost<{ data: { description: string } }>('/ai/generate-description', { product })
+                                            setProduct(prev => ({ ...prev, notes: res.data.description }))
+                                            toast.success('Description generated', { id: toastId })
+                                        } catch (err) {
+                                            toast.error('Failed to generate', { id: toastId })
+                                        }
+                                    }}
+                                    className="text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-medium"
+                                >
+                                    <Sparkles className="h-3 w-3" />
+                                    Generate with AI
+                                </button>
+                            </div>
                             <textarea
                                 value={product.notes}
                                 onChange={(e) => handleFieldChange('notes', e.target.value)}
-                                className="lux-input h-24 resize-none w-full"
-                                placeholder="Internal notes..."
+                                className="lux-input h-32 resize-none w-full"
+                                placeholder="Internal notes or product description..."
                             />
                         </div>
                     </div>

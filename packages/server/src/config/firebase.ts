@@ -50,11 +50,19 @@ const adminApp = getApps().length > 0
       storageBucket,
     })
 
-const db = getFirestore(adminApp)
+// Use secondary Firestore database when FIRESTORE_DATABASE_ID is set (e.g. eur3 instance).
+// When using emulator, always use default database; emulator does not support named databases.
+const databaseId =
+  useEmulator ? undefined : (env.FIRESTORE_DATABASE_ID && env.FIRESTORE_DATABASE_ID !== '(default)'
+    ? env.FIRESTORE_DATABASE_ID
+    : undefined)
+const db = databaseId ? getFirestore(adminApp, databaseId) : getFirestore(adminApp)
 db.settings({ ignoreUndefinedProperties: true })
 
 const storage = getStorage(adminApp)
 
-console.log(`Firebase Admin initialized (project: ${projectId}, emulator: ${useEmulator})`)
+console.log(
+  `Firebase Admin initialized (project: ${projectId}, emulator: ${useEmulator}${databaseId ? `, database: ${databaseId}` : ''})`
+)
 
 export { adminApp, db, storage }

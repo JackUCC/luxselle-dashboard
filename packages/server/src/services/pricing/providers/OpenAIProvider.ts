@@ -43,8 +43,7 @@ Return ONLY a JSON object with this exact structure (no markdown, no explanation
   ]
 }
 
-Provide 3-6 realistic comparable listings with IE sources first (designerexchange.ie, luxuryexchange.ie, siopaella.com).
-Only add EU comps if IE listings are sparse.`
+Provide 3-6 comparable listings ONLY from these 4 approved sources: Vestiaire Collective (vestiairecollective.com), Designer Exchange (designerexchange.ie), Luxury Exchange (luxuryexchange.ie), Siopella (siopaella.com). Do NOT include listings from any other marketplace. Mark Designer Exchange, Luxury Exchange, and Siopella as marketCountry "IE" and Vestiaire Collective as "EU".`
 
     const response = await this.client.chat.completions.create({
       model: 'gpt-4o',

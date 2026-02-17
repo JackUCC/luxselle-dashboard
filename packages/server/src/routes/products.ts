@@ -12,7 +12,7 @@ import { DEFAULT_ORG_ID, ProductSchema, ProductStatusSchema, type ProductImage }
 import { ProductRepo } from '../repos/ProductRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
-import { storage } from '../config/firebase'
+import { db, storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
 import { mapCsvRowToProductPayload, type ColumnMapping } from '../lib/csvProductParser'
@@ -298,6 +298,27 @@ router.post('/import-pdf', importUpload.single('file'), async (req, res, next) =
         errorDetails: errors.slice(0, 20),
       },
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/products/clear - Delete all products (same DB as the running server, e.g. eur3). Use with care.
+const BATCH_SIZE = 500
+router.post('/clear', async (_req, res, next) => {
+  try {
+    const coll = db.collection('products')
+    let totalDeleted = 0
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const snapshot = await coll.limit(BATCH_SIZE).get()
+      if (snapshot.empty) break
+      const batch = db.batch()
+      snapshot.docs.forEach((doc) => batch.delete(doc.ref))
+      await batch.commit()
+      totalDeleted += snapshot.docs.length
+    }
+    res.json({ data: { deleted: totalDeleted } })
   } catch (error) {
     next(error)
   }

@@ -25,7 +25,7 @@ export const appRoutes: RouteMeta[] = [
   // Core — daily workflow
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'core' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'core' },
-  { path: '/buy-box', label: 'Buy Box', navLabel: 'Buy Box', icon: Calculator, section: 'core' },
+  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'core' },
   { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'core' },
   { path: '/buying-list', label: 'Buying List', navLabel: 'Buying List', icon: ClipboardList, section: 'core' },
   // Tools — supporting pages

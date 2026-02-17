@@ -60,13 +60,13 @@ const getStatusColor = (status: string) => {
 const getStatusLabel = (status: string) => {
   switch (status) {
     case "in_stock":
-      return "IN STOCK";
+      return "In Stock";
     case "sold":
-      return "SOLD";
+      return "Sold";
     case "reserved":
-      return "RESERVED";
+      return "Reserved";
     default:
-      return status.toUpperCase().replace("_", " ");
+      return status.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   }
 };
 
@@ -399,7 +399,7 @@ export default function InventoryView() {
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search..."
+                placeholder="Search by brand, model, SKU..."
                 value={query}
                 onChange={handleSearchChange}
                 className="lux-input pl-10 w-full shadow-sm"
@@ -503,7 +503,7 @@ export default function InventoryView() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              Quick filters
+              Filter by
             </span>
             {STATUS_FILTER_OPTIONS.map((option) => {
               const isActive = statusFilter === option.value;
@@ -565,7 +565,7 @@ export default function InventoryView() {
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-gray-500">
-              Top brands:
+              Brands:
             </span>
             {topBrands.map((brand) => {
               const isActive =
@@ -635,15 +635,15 @@ export default function InventoryView() {
           <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <Package className="h-6 w-6 text-gray-400" />
           </div>
-          <p className="text-gray-900 font-semibold mb-1">No items found</p>
+          <p className="text-gray-900 font-semibold mb-1">No matching products</p>
           <p className="text-sm text-gray-500">
             {query ||
             brandFilter ||
             statusFilter ||
             lowStockFilter ||
             missingInfoFilter
-              ? "Try adjusting your filters."
-              : "Add your first inventory item to get started."}
+              ? "Try a different search or clear your filters."
+              : "Add your first product to get started."}
           </p>
         </div>
       ) : viewMode === "table" ? (
@@ -663,7 +663,7 @@ export default function InventoryView() {
                   Brand / Title / SKU
                 </th>
                 <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Purchase
+                  Cost
                 </th>
                 <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Customs
@@ -672,10 +672,10 @@ export default function InventoryView() {
                   VAT
                 </th>
                 <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Selling
+                  Sell Price
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Stock
+                  Qty
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Status

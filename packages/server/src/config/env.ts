@@ -24,6 +24,8 @@ const EnvSchema = z.object({
   FIREBASE_STORAGE_BUCKET: z
     .string()
     .default('luxselle-dashboard.firebasestorage.app'),
+  /** Firestore database ID. Use '(default)' or leave unset for default DB; set to e.g. luxselle-dashboard-95977150 for a secondary (eur3) instance. */
+  FIRESTORE_DATABASE_ID: z.string().optional(),
   FIRESTORE_EMULATOR_HOST: z.string().optional(),
   FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),

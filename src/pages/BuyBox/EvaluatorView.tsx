@@ -400,9 +400,9 @@ export default function EvaluatorView() {
   return (
     <section className="mx-auto max-w-5xl space-y-8">
       <div className="text-center">
-        <h1 className="text-2xl font-display font-bold text-gray-900">Item Evaluator</h1>
+        <h1 className="text-2xl font-display font-bold text-gray-900">Price Check</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Instant pricing intelligence for potential buys.
+          Check the market value before you buy.
         </p>
       </div>
 

@@ -26,7 +26,7 @@ export default function WideScreenSideRail() {
         </div>
         <div>
           <p className="font-display text-base font-semibold text-gray-900">Luxselle</p>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">Operations Hub</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">Dashboard</p>
         </div>
       </div>
 

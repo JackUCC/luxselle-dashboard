@@ -18,6 +18,7 @@ import { apiGet } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
+import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
 
 // ─── Animated Counter ───
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
@@ -185,6 +186,9 @@ export default function DashboardView() {
         </div>
       ) : (
         <div className="w-full space-y-8">
+          {/* ─── AI Insights ─── */}
+          <AiInsightsWidget kpis={kpis} profit={profit} />
+
           {/* ─── KPI Cards ─── */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {/* Inventory Value */}

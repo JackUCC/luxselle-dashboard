@@ -19,6 +19,7 @@ import { vatRouter } from './routes/vat'
 import { invoicesRouter } from './routes/invoices'
 import { settingsRouter } from './routes/settings'
 import { marketResearchRouter } from './routes/market-research'
+import { aiRouter } from './routes/ai'
 import { API_ERROR_CODES, formatApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 // Auth middleware available but not applied yet (deferred to Iteration 6)
@@ -28,9 +29,9 @@ const app = express()
 
 const configuredFrontendOrigins = env.FRONTEND_ORIGINS
   ? env.FRONTEND_ORIGINS
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean)
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
   : []
 
 const defaultProductionOrigins: (string | RegExp)[] = [/\.vercel\.app$/, /localhost(:\d+)?$/, /127\.0\.0\.1(:\d+)?$/]
@@ -64,6 +65,7 @@ app.use('/api/vat', vatRouter)
 app.use('/api/invoices', invoicesRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/market-research', marketResearchRouter)
+app.use('/api/ai', aiRouter)
 
 // Global error handler: Zod validation → 400 with error body; all other errors → 500
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {

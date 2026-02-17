@@ -35,6 +35,13 @@ export class MockPricingProvider implements IPricingProvider {
         sourceUrl: 'https://www.vestiairecollective.com/',
         marketCountry: 'EU',
       },
+      {
+        title: `${input.brand} ${input.model} - Certified`,
+        price: Math.round(estimatedRetailEur * 0.98),
+        source: 'Siopella',
+        sourceUrl: 'https://www.siopaella.com/',
+        marketCountry: 'IE',
+      },
     ]
 
     return {

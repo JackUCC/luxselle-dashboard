@@ -8,6 +8,15 @@ import {
 } from './pricing'
 
 export const SettingsSchema = BaseDocSchema.extend({
+  // Business details for Invoices
+  businessName: z.string().optional().default('Luxselle'),
+  businessAddress: z.string().optional().default(''), // Multi-line address
+  businessVatNumber: z.string().optional().default(''),
+  businessEmail: z.string().email().optional().default(''),
+  businessPhone: z.string().optional().default(''),
+  businessWebsite: z.string().optional().default(''),
+  businessLogoUrl: z.string().optional().default(''),
+
   baseCurrency: CurrencySchema.default('EUR'),
   targetMarginPct: z.number(),
   lowStockThreshold: z.number(),

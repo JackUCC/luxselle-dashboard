@@ -165,19 +165,19 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
 
     const lineItem: InvoiceLineItem = amountEur > 0
       ? {
-          description,
-          quantity: 1,
-          unitPriceEur: amountEur,
-          vatPct: ratePct,
-          amountEur,
-        }
+        description,
+        quantity: 1,
+        unitPriceEur: amountEur,
+        vatPct: ratePct,
+        amountEur,
+      }
       : {
-          description: description || `Invoice ${invoiceNumber}`,
-          quantity: 1,
-          unitPriceEur: 0,
-          vatPct: ratePct,
-          amountEur: 0,
-        }
+        description: description || `Invoice ${invoiceNumber}`,
+        quantity: 1,
+        unitPriceEur: 0,
+        vatPct: ratePct,
+        amountEur: 0,
+      }
 
     const subtotalEur = lineItem.amountEur
     const vatEur = lineItem.amountEur * (lineItem.vatPct / 100)
@@ -227,6 +227,58 @@ router.get('/', async (req, res, next) => {
     const page = list.slice(start, start + limitNum)
     const nextCursor = page.length === limitNum && start + limitNum < list.length ? page[page.length - 1]?.id : null
     res.json({ data: page, nextCursor })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/invoices/:id/generate-pdf — generate PDF, upload, update invoice
+import { InvoicePdfService } from '../services/InvoicePdfService'
+
+router.post('/:id/generate-pdf', async (req, res, next) => {
+  try {
+    const invoice = await invoiceRepo.getById(req.params.id)
+    if (!invoice) {
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Invoice not found'))
+      return
+    }
+
+    const settings = await settingsRepo.getSettings()
+
+    // Generate PDF
+    const pdfService = new InvoicePdfService()
+    let pdfBuffer: Buffer
+    try {
+      pdfBuffer = await pdfService.generate(invoice, settings)
+    } catch (err) {
+      throw new Error(`Failed to generate PDF: ${err instanceof Error ? err.message : String(err)}`)
+    }
+
+    // Upload to Firebase Storage
+    const bucket = storage.bucket()
+    const safeName = `${invoice.invoiceNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}_${Date.now()}.pdf`
+    const path = `invoices/generated/${safeName}`
+    const file = bucket.file(path)
+
+    await file.save(pdfBuffer, {
+      contentType: 'application/pdf',
+      metadata: { cacheControl: 'public, max-age=31536000' },
+    })
+
+    await file.makePublic()
+    const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${path}`
+
+    // Update invoice with new PDF URL
+    const updated = await invoiceRepo.update(invoice.id, {
+      pdfUrl,
+      updatedAt: new Date().toISOString()
+    })
+
+    if (!updated) {
+      throw new Error('Failed to update invoice with PDF URL')
+    }
+
+    res.json(updated)
   } catch (err) {
     next(err)
   }

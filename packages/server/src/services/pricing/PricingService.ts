@@ -93,7 +93,9 @@ export class PricingService {
       marketCountry,
       marketMode,
     })
-    const allowlist = settings?.pricingIeSourceAllowlist ?? []
+    const allowlist = settings?.pricingIeSourceAllowlist ?? [
+      'designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com', 'vestiairecollective.com',
+    ]
     const marketProcessed = this.applyIeFirstMarketPolicy(providerResult.comps, allowlist, marketCountry)
 
     // Calculate max buy price based on target margin

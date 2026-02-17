@@ -5,6 +5,7 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
 ## Setup
 
 1. **Clone and install**
+
    ```bash
    git clone <repo-url>
    cd luxselle-dashboard
@@ -33,32 +34,42 @@ Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + 
 
 3. **Seed data (optional)**
    - Run after emulator and server are available (e.g. after first `npm run dev`).
+
    ```bash
    npm run seed
    ```
 
 4. **Import inventory from Excel (optional)**
    - To load stock from the Luxselle BST/TBC Excel sheets into products, start the emulator (or use real Firebase), then run:
+
    ```bash
    npm run import-excel -- "path/to/Luxselle Inventory Managment sheet.xlsx" "path/to/Luxselle_Inventory_With_Formulas (2).xlsx"
    ```
+
    - If you omit paths, the script uses default paths under `~/Desktop/Luxselle docs/Invoices from BST/Exel sheet for luxselle examples/`. You can also set `LUXSELLE_EXCEL_1` and `LUXSELLE_EXCEL_2` in `.env`.
 
 ## Development
 
 - **Start everything** (Firebase emulators + backend + frontend):
+
   ```bash
   npm run dev
   ```
+
 - **Seed the database** so the UI shows products, KPIs, and activity (run once after emulator is up, or when you see empty data):
+
   ```bash
   npm run seed
   ```
+
 - **Frontend only** (if backend/emulators already running):
+
   ```bash
   npm run dev:client
   ```
+
 - **Emulators only**:
+
   ```bash
   npm run emulators
   ```
@@ -72,11 +83,13 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 **Quick Start**: Follow the [Production Deployment Checklist](docs/deploy/QUICK_START_CHECKLIST.md) (~60 min setup)
 
 **Detailed Guides**:
+
 - [Complete Production Setup](docs/deploy/PRODUCTION_SETUP.md) - End-to-end guide
 - [Railway Backend Deployment](docs/deploy/RAILWAY.md) - Express API on Railway
 - [Vercel Frontend Deployment](docs/deploy/VERCEL.md) - React/Vite on Vercel
 
 **Key Requirements**:
+
 - **Frontend (Vercel)**: Set `VITE_API_BASE` to your Railway backend URL
 - **Backend (Railway)**: Set Firebase service account credentials
 - **Firebase**: Enable Firestore + Storage, deploy rules, configure CORS
@@ -89,29 +102,35 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 
 | Location | Purpose |
 |----------|---------|
-| **config/** | Build and test configs (Vite, Vitest, Playwright). See [config/README.md](config/README.md). |
+| **config/** | Build and test configs (Vite, Vitest, Playwright). See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
 | **docs/** | All documentation (planning, design, Firebase, iterations). See [docs/README.md](docs/README.md). |
-| **firebase/** | Firebase project: rules and indexes. See [firebase/README.md](firebase/README.md). |
-| **packages/** | NPM workspaces: `server` (Express API), `shared` (Zod schemas). See [packages/README.md](packages/README.md). |
+| **firebase/** | Firebase project: rules and indexes. See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
+| **packages/** | NPM workspaces: `server` (Express API), `shared` (Zod schemas). See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
 | **src/** | Frontend app: `pages/` (one folder per page), `components/` (shared UI), `lib/` (API, Firebase, query client), `styles/` (global CSS). |
-| **tests/** | E2E tests (Playwright). Unit tests live next to server source in `packages/server/src`. See [tests/README.md](tests/README.md). |
+| **tests/** | E2E tests (Playwright). Unit tests live next to server source in `packages/server/src`. See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
 | **Root** | `package.json`, `index.html`, `.env.example`, `tsconfig.json`, `tailwind.config.js`, `postcss.config.js`, `.firebaserc`. |
 
 ## Tests
 
 - **Unit tests** (Vitest):
+
   ```bash
   npm run test
   ```
+
 - **E2E tests** (Playwright): Start the app first, then run tests.
+
   ```bash
   npm run dev
   ```
+
   In another terminal (after the app is up):
+
   ```bash
   npx playwright install   # once, if browsers are missing
   npm run test:e2e
   ```
+
   Or with UI: `npm run test:e2e:ui`. Playwright can also start the server automatically (see `config/playwright.config.ts`); ensure emulators and backend are up if you rely on that.
 
 ## Scripts summary
