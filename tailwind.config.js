@@ -60,6 +60,7 @@ module.exports = {
         'fade-in': 'lux-fade-in 500ms cubic-bezier(0.16, 1, 0.3, 1) both',
         'slide-up': 'lux-slide-up 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
         'scale-in': 'lux-scale-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'bento-enter': 'lux-bento-enter 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       keyframes: {
         'lux-fade-in': {
@@ -73,6 +74,10 @@ module.exports = {
         'lux-scale-in': {
           from: { opacity: '0', transform: 'scale(0.96)' },
           to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'lux-bento-enter': {
+          from: { opacity: '0', transform: 'translateY(16px) scale(0.97)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
       },
     },

@@ -1,7 +1,1 @@
 export { default as CalculatorWidget } from './CalculatorWidget'
-export { default as CurrencyWidget } from './CurrencyWidget'
-export { default as HolidaysWidget } from './HolidaysWidget'
-export { default as MarketResearchWidget } from './MarketResearchWidget'
-export { default as NewsWidget } from './NewsWidget'
-export { default as WeatherWidget } from './WeatherWidget'
-export { default as CryptoWidget } from './CryptoWidget'

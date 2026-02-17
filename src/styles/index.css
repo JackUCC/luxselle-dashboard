@@ -152,4 +152,8 @@ h6 {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  .animate-bento-enter {
+    animation-delay: calc(var(--stagger, 0) * 80ms);
+  }
 }

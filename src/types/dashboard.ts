@@ -1,9 +1,7 @@
 /**
  * Shared types for Dashboard-related data consumed by multiple views and drawers.
  */
-import type { ActivityEvent, Product } from '@shared/schemas'
-
-export type ActivityEventWithId = ActivityEvent & { id: string }
+import type { Product } from '@shared/schemas'
 
 export interface KPIs {
     totalInventoryValue: number
@@ -19,16 +17,6 @@ export interface ProfitSummary {
     marginPct: number
     itemsSold: number
     avgMarginPct: number
-}
-
-export interface SystemStatus {
-    aiProvider: string
-    firebaseMode: string
-    lastSupplierImport: {
-        status: string
-        lastRunAt?: string
-        lastError?: string
-    } | null
 }
 
 export type ProductWithId = Product & { id: string }

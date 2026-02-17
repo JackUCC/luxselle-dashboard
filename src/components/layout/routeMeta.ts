@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-export type AppNavSection = 'core' | 'operations'
+export type AppNavSection = 'core' | 'tools'
 
 export interface RouteMeta {
   path: string
@@ -22,48 +22,23 @@ export interface RouteMeta {
 }
 
 export const appRoutes: RouteMeta[] = [
+  // Core — daily workflow
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'core' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'core' },
   { path: '/buy-box', label: 'Buy Box', navLabel: 'Buy Box', icon: Calculator, section: 'core' },
-  { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'core' },
-  {
-    path: '/supplier-hub',
-    label: 'Supplier Hub',
-    navLabel: 'Supplier Hub',
-    icon: Globe,
-    section: 'operations',
-  },
-  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'operations' },
-  {
-    path: '/buying-list',
-    label: 'Buying List',
-    navLabel: 'Buying List',
-    icon: ClipboardList,
-    section: 'operations',
-  },
-  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'operations' },
-  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'operations' },
+  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'core' },
+  { path: '/buying-list', label: 'Buying List', navLabel: 'Buying List', icon: ClipboardList, section: 'core' },
+  // Tools — supporting pages
+  { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'tools' },
+  { path: '/supplier-hub', label: 'Supplier Hub', navLabel: 'Supplier Hub', icon: Globe, section: 'tools' },
+  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'tools' },
+  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'tools' },
 ]
 
 const formatLabel = (value: string) =>
   value
     .replace(/[-_]/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase())
-
-export const insightSources = ['overview', 'low-stock', 'profit', 'activity', 'system'] as const
-
-export type InsightSource = (typeof insightSources)[number]
-
-export const isInsightSource = (value: string | null): value is InsightSource =>
-  value != null && insightSources.includes(value as InsightSource)
-
-export const insightLabelMap: Record<InsightSource, string> = {
-  overview: 'Overview',
-  'low-stock': 'Low Stock',
-  profit: 'Profit',
-  activity: 'Activity',
-  system: 'System',
-}
 
 export interface DeepStateRule {
   route: string
@@ -72,15 +47,6 @@ export interface DeepStateRule {
 }
 
 export const deepStateRules: DeepStateRule[] = [
-  {
-    route: '/',
-    keys: ['insight'],
-    toCrumbLabel: (params) => {
-      const source = params.get('insight')
-      if (!isInsightSource(source)) return []
-      return ['Insights', insightLabelMap[source]]
-    },
-  },
   {
     route: '/inventory',
     keys: ['q', 'brand', 'status', 'lowStock', 'product'],
