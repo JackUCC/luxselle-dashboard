@@ -176,6 +176,8 @@ async function run() {
           ...base,
           brand,
           model,
+          sku: row.sku,
+          title: row.title,
           category: '',
           condition: '',
           colour: '',

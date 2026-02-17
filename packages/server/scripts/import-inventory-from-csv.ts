@@ -118,10 +118,18 @@ async function run() {
       const condition = String(normalizeKey(row, 'condition') ?? '').trim()
       const colour = String(normalizeKey(row, 'colour') ?? normalizeKey(row, 'color') ?? '').trim()
       const costPriceEur = parseNum(
-        normalizeKey(row, 'cost eur') ?? normalizeKey(row, 'cost') ?? normalizeKey(row, 'cost price') ?? 0
+        normalizeKey(row, 'cost eur') ??
+          normalizeKey(row, 'cost') ??
+          normalizeKey(row, 'cost price') ??
+          normalizeKey(row, 'invoice price') ??
+          0
       )
       const sellPriceEur = parseNum(
-        normalizeKey(row, 'sell eur') ?? normalizeKey(row, 'sell') ?? normalizeKey(row, 'sell price') ?? 0
+        normalizeKey(row, 'sell eur') ??
+          normalizeKey(row, 'sell') ??
+          normalizeKey(row, 'sell price') ??
+          normalizeKey(row, 'price') ??
+          0
       )
       const quantity = Math.max(
         0,
@@ -130,6 +138,25 @@ async function run() {
       let status = String(normalizeKey(row, 'status') ?? 'in_stock').toLowerCase().replace(/\s+/g, '_')
       if (!['in_stock', 'sold', 'reserved'].includes(status)) status = 'in_stock'
       if (quantity === 0) status = 'sold'
+
+      const sku = String(
+        normalizeKey(row, 'sku') ?? normalizeKey(row, 'reference') ?? ''
+      ).trim()
+      const productTitle = String(
+        normalizeKey(row, 'full title') ??
+          normalizeKey(row, 'product title') ??
+          normalizeKey(row, 'invoice title') ??
+          ''
+      ).trim()
+      const notesVal = String(
+        normalizeKey(row, 'notes') ?? normalizeKey(row, 'remarks') ?? ''
+      ).trim()
+      const customsEur = parseNum(
+        normalizeKey(row, 'customs eur') ?? normalizeKey(row, 'customs') ?? 0
+      )
+      const vatEur = parseNum(
+        normalizeKey(row, 'vat eur') ?? normalizeKey(row, 'vat') ?? 0
+      )
 
       const product = ProductSchema.parse({
         organisationId: DEFAULT_ORG_ID,
@@ -145,9 +172,13 @@ async function run() {
         costPriceEur,
         sellPriceEur,
         quantity,
+        sku,
+        title: productTitle,
+        notes: notesVal || `Imported from CSV. Row ${i + 2}.`,
+        customsEur,
+        vatEur,
         images: [],
         imageUrls: [],
-        notes: `Imported from CSV. Row ${i + 2}.`,
       })
 
       await productRepo.create(product)

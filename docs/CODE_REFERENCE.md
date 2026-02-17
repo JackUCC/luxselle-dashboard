@@ -102,6 +102,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/shared/src/index.ts` | Re-exports schemas. | — |
 | `packages/shared/src/schemas/base.ts` | Base enums and `BaseDocSchema` (organisationId, createdAt, updatedAt, createdBy, updatedBy); currency, product/buying/sourcing/transaction/evaluation/supplier status enums. | Zod |
 | `packages/shared/src/schemas/product.ts` | Product and ProductImage schemas. | base |
+| `docs/INVENTORY_PRODUCT_AND_CSV_IMPORT.md` | Product fields and CSV/Excel column mapping for inventory import. | — |
 | `packages/shared/src/schemas/buyingListItem.ts` | Buying list item schema. | base |
 | `packages/shared/src/schemas/supplier.ts` | Supplier schema. | base |
 | `packages/shared/src/schemas/supplierItem.ts` | Supplier item schema. | base |

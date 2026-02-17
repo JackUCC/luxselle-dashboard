@@ -22,12 +22,21 @@ export function normalizeApiBase(rawBase: string | undefined): string {
   const value = rawBase?.trim()
   if (!value) return fallback
 
-  let normalized = value.replace(/\/+$/, '')
-  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-    normalized = `https://${normalized}`
+  const normalized = value.replace(/\/+$/, '')
+
+  // Absolute URL: ensure path ends with /api
+  if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+    return normalized.replace(/\/api\/?$/, '') + '/api'
   }
 
-  const base = normalized.replace(/\/api$/, '') + '/api'
+  // Relative path (e.g. /api, /backend): keep as path, ensure ends with /api
+  if (normalized.startsWith('/')) {
+    const base = normalized.endsWith('/api') ? normalized : normalized + '/api'
+    return base
+  }
+
+  // Bare word (e.g. api): treat as path segment, append /api if missing
+  const base = normalized.endsWith('/api') ? normalized : normalized + '/api'
   return base
 }
 

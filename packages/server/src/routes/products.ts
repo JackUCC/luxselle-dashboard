@@ -15,6 +15,7 @@ import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
+import { mapCsvRowToProductPayload, type ColumnMapping } from '../lib/csvProductParser'
 import { env } from '../config/env'
 import * as XLSX from 'xlsx'
 
@@ -167,30 +168,14 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
     let createdWithWarnings = 0
     const productIdsWithMissingInfo: string[] = []
 
-    const normalizeKey = (obj: Record<string, unknown>, key: string) => {
-      const keyLower = key.toLowerCase()
-      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower)
-      return foundKey ? obj[foundKey] : undefined
-    }
-
-    const parseNum = (val: unknown) => {
-      if (typeof val === 'number') return val
-      if (typeof val === 'string') {
-        const n = parseFloat(val.replace(/[^0-9.-]+/g, ''))
-        return isNaN(n) ? 0 : n
-      }
-      return 0
-    }
-
     // Optional AI column mapping
-    type ColumnMapping = Partial<Record<string, string>>
     let aiMapping: ColumnMapping | null = null
     const headers = rows.length > 0 ? Object.keys(rows[0]) : []
     const sampleRow = rows.length > 0 ? rows[0] : {}
 
     if (rows.length > 0 && env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
       try {
-        const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
+        const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity, sku, title, notes, customsEur, vatEur. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
         const OpenAI = (await import('openai')).default
         const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
         const response = await openai.chat.completions.create({
@@ -209,86 +194,13 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
       }
     }
 
-    const getVal = (row: Record<string, unknown>, field: string, colMap: ColumnMapping | null) => {
-      if (colMap?.[field] != null && row[colMap[field]] !== undefined) return row[colMap[field]]
-      return undefined
-    }
-
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
       try {
-        const brand = String(
-          getVal(row, 'brand', aiMapping) ?? normalizeKey(row, 'brand') ?? normalizeKey(row, 'brand name') ?? ''
-        ).trim()
-        const model = String(
-          getVal(row, 'model', aiMapping) ??
-            normalizeKey(row, 'model') ??
-            normalizeKey(row, 'product name') ??
-            normalizeKey(row, 'title') ??
-            ''
-        ).trim()
+        const payload = mapCsvRowToProductPayload(row, i, now, aiMapping)
+        if (payload === null) continue
 
-        if (!brand && !model) continue
-
-        const category = String(
-          getVal(row, 'category', aiMapping) ?? normalizeKey(row, 'category') ?? ''
-        ).trim()
-        const condition = String(
-          getVal(row, 'condition', aiMapping) ?? normalizeKey(row, 'condition') ?? ''
-        ).trim()
-        const colour = String(
-          getVal(row, 'colour', aiMapping) ?? normalizeKey(row, 'colour') ?? normalizeKey(row, 'color') ?? ''
-        ).trim()
-
-        const costPriceEur = parseNum(
-          getVal(row, 'costPriceEur', aiMapping) ??
-            normalizeKey(row, 'cost eur') ??
-            normalizeKey(row, 'cost') ??
-            normalizeKey(row, 'cost price') ??
-            normalizeKey(row, 'invoice price') ??
-            0
-        )
-        const sellPriceEur = parseNum(
-          getVal(row, 'sellPriceEur', aiMapping) ??
-            normalizeKey(row, 'sell eur') ??
-            normalizeKey(row, 'sell') ??
-            normalizeKey(row, 'sell price') ??
-            normalizeKey(row, 'price') ??
-            0
-        )
-        const quantity = Math.max(
-          0,
-          Math.floor(
-            parseNum(
-              getVal(row, 'quantity', aiMapping) ?? normalizeKey(row, 'quantity') ?? normalizeKey(row, 'qty') ?? 1
-            )
-          )
-        )
-
-        let status = String(
-          getVal(row, 'status', aiMapping) ?? normalizeKey(row, 'status') ?? 'in_stock'
-        ).toLowerCase().replace(/\s+/g, '_')
-        if (!['in_stock', 'sold', 'reserved'].includes(status)) status = 'in_stock'
-        if (quantity === 0) status = 'sold'
-
-        const product = ProductSchema.parse({
-          organisationId: DEFAULT_ORG_ID,
-          createdAt: now,
-          updatedAt: now,
-          currency: 'EUR',
-          status: status as 'in_stock' | 'sold' | 'reserved',
-          brand: brand || 'Unknown',
-          model: model || 'Unknown',
-          category,
-          condition,
-          colour,
-          costPriceEur,
-          sellPriceEur,
-          quantity,
-          images: [],
-          imageUrls: [],
-          notes: `Imported via web. Row ${i + 2}`,
-        })
+        const product = ProductSchema.parse(payload)
 
         const created = await productRepo.create(product)
         createdCount++
