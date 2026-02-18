@@ -175,7 +175,7 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
 
     if (rows.length > 0 && env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
       try {
-        const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity, sku, title, notes, customsEur, vatEur. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
+        const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity, sku, title, notes, customsEur, vatEur. Canonical columns (use these names when present): brand, model, category, condition, colour, cost eur, vat eur, customs eur, sell eur, quantity, status, sku, notes. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
         const OpenAI = (await import('openai')).default
         const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
         const response = await openai.chat.completions.create({

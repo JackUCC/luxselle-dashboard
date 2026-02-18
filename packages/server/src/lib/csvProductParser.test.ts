@@ -129,6 +129,42 @@ describe('mapCsvRowToProductPayload', () => {
     expect(payload!.sellPriceEur).toBe(1299)
   })
 
+  it('maps Luxselle canonical CSV row (Brand, Model, Cost EUR, VAT EUR, Customs EUR, Sell EUR, Landed EUR, Margin %, etc.)', () => {
+    const row: Record<string, unknown> = {
+      brand: 'Bottega Veneta',
+      model: 'Mini Arco Shoulder Bag (Green)',
+      category: 'handbag',
+      condition: 'excellent',
+      colour: 'Green',
+      'cost eur': 1084.0,
+      'vat eur': 249.32,
+      'customs eur': 32.52,
+      'landed eur': 1365.84,
+      'sell eur': 1600.0,
+      'margin eur': 234.16,
+      'margin %': '14.6%',
+      quantity: 1,
+      status: 'in_stock',
+      sku: 'hk3230M',
+      notes: '',
+    }
+    const payload = mapCsvRowToProductPayload(row, 0, now)
+    expect(payload).not.toBeNull()
+    expect(payload!.brand).toBe('Bottega Veneta')
+    expect(payload!.model).toBe('Mini Arco Shoulder Bag (Green)')
+    expect(payload!.category).toBe('handbag')
+    expect(payload!.condition).toBe('excellent')
+    expect(payload!.colour).toBe('Green')
+    expect(payload!.costPriceEur).toBe(1084)
+    expect(payload!.vatEur).toBe(249.32)
+    expect(payload!.customsEur).toBe(32.52)
+    expect(payload!.sellPriceEur).toBe(1600)
+    expect(payload!.quantity).toBe(1)
+    expect(payload!.status).toBe('in_stock')
+    expect(payload!.sku).toBe('hk3230M')
+    expect(payload!.notes).toBe('Imported via web. Row 2')
+  })
+
   it('uses AI column mapping when provided', () => {
     const row: Record<string, unknown> = {
       'brand name': 'Gucci',

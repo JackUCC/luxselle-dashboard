@@ -1,8 +1,17 @@
 /**
  * Map a normalized CSV row (lowercase keys) to a product payload for ProductSchema.parse.
  * Used by POST /api/products/import. @see docs/INVENTORY_PRODUCT_AND_CSV_IMPORT.md
+ *
+ * Canonical CSV columns (Luxselle format): Brand, Model, Category, Condition, Colour,
+ * Cost EUR, VAT EUR, Customs EUR, Landed EUR, Sell EUR, Margin EUR, Margin %, Quantity,
+ * Status, SKU, Notes. Landed EUR, Margin EUR, Margin % are accepted but not stored (derived).
+ * Image is handled separately (upload after import).
  */
 import { DEFAULT_ORG_ID } from '@shared/schemas'
+
+/** Canonical CSV header row for Luxselle inventory import (matches luxselle_dashboard22_import.csv). */
+export const CANONICAL_CSV_HEADERS =
+  'Brand,Model,Category,Condition,Colour,Cost EUR,VAT EUR,Customs EUR,Landed EUR,Sell EUR,Margin EUR,Margin %,Quantity,Status,SKU,Notes'
 
 export type ColumnMapping = Partial<Record<string, string>>
 

@@ -114,18 +114,15 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                             File Requirements
                         </h3>
                         <p className="text-sm text-blue-600 mb-3">
-                            <strong>PDF:</strong> Luxselle inventory pricing PDF — we’ll extract brand, title, SKU, purchase price, customs, VAT, and selling price. Or upload <strong>Excel/CSV</strong> with headers (case-insensitive):
+                            <strong>PDF:</strong> Luxselle inventory pricing PDF — we’ll extract brand, title, SKU, purchase price, customs, VAT, and selling price. Or upload <strong>Excel/CSV</strong> with these columns (case-insensitive). Image is handled separately after import.
                         </p>
                         <ul className="list-disc list-inside text-sm text-blue-600/80 space-y-1 ml-1">
-                            <li>Brand <span className="text-blue-700 font-medium">(required)</span></li>
-                            <li>Model <span className="text-blue-700 font-medium">(required)</span></li>
-                            <li>Category</li>
-                            <li>Condition</li>
-                            <li>Colour</li>
-                            <li>Cost Price / Cost EUR</li>
-                            <li>Sell Price / Sell EUR</li>
-                            <li>Quantity</li>
-                            <li>Status <span className="text-blue-700 font-medium">(in_stock, sold, reserved)</span></li>
+                            <li>Brand <span className="text-blue-700 font-medium">(required)</span>, Model <span className="text-blue-700 font-medium">(required)</span></li>
+                            <li>Category, Condition, Colour</li>
+                            <li>Cost EUR, VAT EUR, Customs EUR, Landed EUR</li>
+                            <li>Sell EUR, Margin EUR, Margin %</li>
+                            <li>Quantity, Status (in_stock, sold, reserved)</li>
+                            <li>SKU, Notes</li>
                         </ul>
                     </div>
 
