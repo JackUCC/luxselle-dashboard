@@ -220,12 +220,12 @@ export default function DashboardView() {
             </div>
           </section>
 
-          {/* ─── Quick tools ─── */}
+          {/* ─── Quick tools (2×2 grid, responsive) ─── */}
           <section aria-labelledby="tools-heading">
             <h2 id="tools-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Quick tools
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6 [&>*]:min-w-0">
               <LandedCostWidget />
               <SerialCheckWidget />
               <EurToYenWidget />
