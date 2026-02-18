@@ -32,10 +32,15 @@ router.get('/kpis', async (_req, res, next) => {
       settingsRepo.getSettings(),
     ])
 
-    // Total Inventory Value (sum cost where status=in_stock)
+    // Total Inventory Cost (sum cost where status=in_stock)
     const totalInventoryValue = products
       .filter((p) => p.status === 'in_stock')
       .reduce((sum, p) => sum + p.costPriceEur * p.quantity, 0)
+
+    // Total Inventory Potential Value (sum sell price where status=in_stock)
+    const totalInventoryPotentialValue = products
+      .filter((p) => p.status === 'in_stock')
+      .reduce((sum, p) => sum + p.sellPriceEur * p.quantity, 0)
 
     // Pending Buy List Value (sum target price where status IN [pending, ordered])
     const pendingBuyListValue = buyingListItems
@@ -59,6 +64,7 @@ router.get('/kpis', async (_req, res, next) => {
     res.json({
       data: {
         totalInventoryValue,
+        totalInventoryPotentialValue,
         pendingBuyListValue,
         activeSourcingPipeline,
         lowStockAlerts,

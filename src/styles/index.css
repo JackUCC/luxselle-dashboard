@@ -71,6 +71,19 @@ h6 {
   background: rgba(255, 255, 255, 0.8);
 }
 
+/* EvaluatorView search card: dynamic layout, aligns with grid */
+.lux-card.evaluator-form-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+@media (min-width: 1024px) {
+  .lux-card.evaluator-form-card {
+    min-height: min(420px, 100%);
+  }
+}
+
 /* ─── Apple Form Inputs ─── */
 .lux-input {
   @apply w-full rounded-xl border border-gray-200 bg-white/50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 font-medium;

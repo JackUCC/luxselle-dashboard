@@ -8,6 +8,7 @@ export const InvoiceLineItemSchema = z.object({
   unitPriceEur: z.number(),
   vatPct: z.number().min(0).max(100),
   amountEur: z.number(), // line total (quantity * unitPriceEur or pre-calculated)
+  sku: z.string().optional(),
 })
 
 export type InvoiceLineItem = z.infer<typeof InvoiceLineItemSchema>
@@ -16,6 +17,7 @@ export const InvoiceSchema = BaseDocSchema.extend({
   invoiceNumber: z.string(),
   customerName: z.string().optional().default(''),
   customerEmail: z.string().email().optional(),
+  customerAddress: z.string().optional(),
   lineItems: z.array(InvoiceLineItemSchema).min(1),
   subtotalEur: z.number(),
   vatEur: z.number(),

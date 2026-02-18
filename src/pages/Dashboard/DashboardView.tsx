@@ -1,24 +1,19 @@
 /**
- * Dashboard overview: Clean light-theme layout with KPI cards and profit summary.
+ * Dashboard overview: Apple-style layout — KPIs, quick tools (landed cost, serial check, EUR→JPY), profit.
  * @see docs/CODE_REFERENCE.md
  */
 import { useEffect, useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import {
-  AlertCircle,
-  ClipboardList,
-  DollarSign,
-  Package,
-  RefreshCw,
-  TrendingUp,
-  Users,
-} from 'lucide-react'
+import { Package, RefreshCw, TrendingUp } from 'lucide-react'
 import { apiGet } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
-import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
+import AiPromptBar from '../../components/widgets/AiPromptBar'
+import LandedCostWidget from '../../components/widgets/LandedCostWidget'
+import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
+import EurToYenWidget from '../../components/widgets/EurToYenWidget'
+import AuctionLinksWidget from '../../components/widgets/AuctionLinksWidget'
 
 // ─── Animated Counter ───
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
@@ -151,160 +146,130 @@ export default function DashboardView() {
   }
 
   return (
-    <div className="flex flex-col items-center space-y-10 py-4 sm:py-6">
-      {/* ─── Greeting ─── */}
-      <div className="w-full max-w-2xl text-center">
-        <div className="flex items-center justify-center gap-3">
-          <h1 className="text-3xl font-display font-bold sm:text-4xl text-gray-900">
-            {getGreeting()}, Jack
-          </h1>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={isLoading || isRefreshing}
-            className="rounded-full border border-gray-200 bg-white p-2 text-gray-400 transition-all hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50 shadow-sm"
-            title="Refresh data"
-            aria-label="Refresh dashboard data"
-          >
-            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      {/* ─── Header ─── */}
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-gray-900">
+          {getGreeting()}, Jack
+        </h1>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={isLoading || isRefreshing}
+          className="self-start sm:self-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 flex items-center gap-2"
+          title="Refresh data"
+          aria-label="Refresh dashboard data"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
+      </header>
 
       {isLoading ? (
         <DashboardSkeleton />
       ) : error ? (
-        <div className="w-full max-w-4xl rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
           <p>{error}</p>
           <button
             type="button"
             onClick={handleRefresh}
-            className="mt-3 rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+            className="mt-3 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
           >
             Retry
           </button>
         </div>
       ) : (
-        <div className="w-full space-y-8">
-          {/* ─── AI Insights ─── */}
-          <AiInsightsWidget kpis={kpis} profit={profit} />
+        <div className="space-y-10">
+          {/* ─── AI prompt ─── */}
+          <AiPromptBar />
 
-          {/* ─── KPI Cards ─── */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Inventory Value */}
-            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
-              <div className="mb-4">
-                <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600 border border-blue-100 w-fit">
-                  <DollarSign className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="mb-1 text-2xl font-bold text-gray-900 font-mono">
-                    <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
+          {/* ─── Overview (KPIs) ─── */}
+          <section aria-labelledby="overview-heading">
+            <h2 id="overview-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+              Overview
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Inventory cost</p>
+                    <p className="text-2xl font-bold font-mono text-gray-900">
+                      <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
+                    </p>
                   </div>
-                  <div className="text-sm text-gray-500">Inventory value</div>
+                  <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600 border border-blue-100 shrink-0">
+                    <Package className="h-5 w-5" />
+                  </div>
                 </div>
                 <KPISparkline color="#3B82F6" />
               </div>
-            </div>
-
-            {/* Pending Buy List */}
-            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
-              <div className="mb-4">
-                <div className="rounded-xl bg-rose-50 p-2.5 text-rose-600 border border-rose-100 w-fit">
-                  <ClipboardList className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="mb-1 text-2xl font-bold text-gray-900 font-mono">
-                    <AnimatedNumber value={kpis?.pendingBuyListValue ?? 0} prefix="€" />
+              <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Potential value</p>
+                    <p className="text-2xl font-bold font-mono text-gray-900">
+                      <AnimatedNumber value={kpis?.totalInventoryPotentialValue ?? 0} prefix="€" />
+                    </p>
                   </div>
-                  <div className="text-sm text-gray-500">Pending buy list</div>
-                </div>
-                <KPISparkline color="#F43F5E" />
-              </div>
-            </div>
-
-            {/* Active Sourcing Pipeline */}
-            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
-              <div className="mb-4">
-                <div className="rounded-xl bg-indigo-50 p-2.5 text-indigo-600 border border-indigo-100 w-fit">
-                  <Users className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="mb-1 text-2xl font-bold text-gray-900 font-mono">
-                    <AnimatedNumber value={kpis?.activeSourcingPipeline ?? 0} prefix="€" />
+                  <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600 border border-emerald-100 shrink-0">
+                    <TrendingUp className="h-5 w-5" />
                   </div>
-                  <div className="text-sm text-gray-500">Sourcing pipeline</div>
                 </div>
-                <KPISparkline color="#6366F1" />
+                <KPISparkline color="#10B981" />
               </div>
             </div>
+          </section>
 
-            {/* Low Stock Alerts */}
-            <Link
-              to="/inventory?lowStock=1"
-              className="lux-card block cursor-pointer p-6 transition-all hover:shadow-lg hover:border-rose-200 animate-bento-enter"
-              style={{ '--stagger': 3 } as React.CSSProperties}
-            >
-              <div className="mb-4">
-                <div className="rounded-xl bg-amber-50 p-2.5 text-amber-600 border border-amber-100 w-fit">
-                  <AlertCircle className="h-5 w-5" />
-                </div>
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="mb-1 text-2xl font-bold text-gray-900 font-mono">
-                    <AnimatedNumber value={kpis?.lowStockAlerts ?? 0} />
+          {/* ─── Quick tools ─── */}
+          <section aria-labelledby="tools-heading">
+            <h2 id="tools-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+              Quick tools
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <LandedCostWidget />
+              <SerialCheckWidget />
+              <EurToYenWidget />
+              <AuctionLinksWidget />
+            </div>
+          </section>
+
+          {/* ─── Profit ─── */}
+          <section aria-labelledby="profit-heading">
+            <h2 id="profit-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+              Profit
+            </h2>
+            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <ProfitBar
+                  label="Revenue"
+                  value={profit?.totalRevenue ?? 0}
+                  maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
+                  color="text-indigo-600"
+                />
+                <ProfitBar
+                  label="Cost"
+                  value={profit?.totalCost ?? 0}
+                  maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
+                  color="text-rose-600"
+                />
+                <ProfitBar
+                  label="Profit"
+                  value={profit?.totalProfit ?? 0}
+                  maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
+                  color="text-emerald-600"
+                />
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Margin</span>
+                    <span className={`font-bold font-mono ${profit && profit.avgMarginPct >= 20 ? 'text-emerald-600' : profit && profit.avgMarginPct >= 10 ? 'text-amber-600' : 'text-rose-600'}`}>
+                      <AnimatedNumber value={profit?.avgMarginPct ?? 0} suffix="%" />
+                    </span>
                   </div>
-                  <div className="text-sm text-gray-500">Low stock</div>
+                  <div className="text-xs text-gray-400">{profit ? `${profit.itemsSold} items sold` : ''}</div>
                 </div>
-                <KPISparkline color="#F59E0B" />
-              </div>
-            </Link>
-          </div>
-
-          {/* ─── Profit Summary ─── */}
-          <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
-            <div className="mb-6 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Profit</h3>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <ProfitBar
-                label="Revenue"
-                value={profit?.totalRevenue ?? 0}
-                maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
-                color="text-indigo-600"
-              />
-              <ProfitBar
-                label="Cost"
-                value={profit?.totalCost ?? 0}
-                maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
-                color="text-rose-600"
-              />
-              <ProfitBar
-                label="Profit"
-                value={profit?.totalProfit ?? 0}
-                maxValue={Math.max(profit?.totalRevenue ?? 0, profit?.totalCost ?? 0, 1)}
-                color="text-emerald-600"
-              />
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Margin</span>
-                  <span className={`font-bold font-mono ${profit && profit.avgMarginPct >= 20 ? 'text-emerald-600' : profit && profit.avgMarginPct >= 10 ? 'text-amber-600' : 'text-rose-600'}`}>
-                    <AnimatedNumber value={profit?.avgMarginPct ?? 0} suffix="%" />
-                  </span>
-                </div>
-                <div className="text-xs text-gray-400">{profit ? `${profit.itemsSold} items sold` : ''}</div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>

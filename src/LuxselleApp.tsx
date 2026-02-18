@@ -7,16 +7,15 @@
  * @see docs/CODE_REFERENCE.md
  * References: react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react
  */
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AlertCircle, Bell, Menu } from 'lucide-react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AlertCircle, Menu } from 'lucide-react'
 
 import { API_BASE } from './lib/api'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
-import { appRoutes, getRouteMeta } from './components/layout/routeMeta'
 import MobileNavDrawer from './components/navigation/MobileNavDrawer'
 import WideScreenSideRail from './components/navigation/WideScreenSideRail'
 import { queryClient } from './lib/queryClient'
@@ -31,13 +30,12 @@ const BuyingListView = lazy(() => import('./pages/BuyingList/BuyingListView'))
 const JobsView = lazy(() => import('./pages/Jobs/JobsView'))
 const InvoicesView = lazy(() => import('./pages/Invoices/InvoicesView'))
 const MarketResearchView = lazy(() => import('./pages/MarketResearch/MarketResearchView'))
+const SerialCheckView = lazy(() => import('./pages/SerialCheck/SerialCheckView'))
+const RetailPriceView = lazy(() => import('./pages/RetailPrice/RetailPriceView'))
 
 const AppContent = () => {
   const { isConnected, refetchStatus } = useServerStatus()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const location = useLocation()
-
-  const activeRoute = useMemo(() => getRouteMeta(location.pathname), [location.pathname])
 
   return (
     <div className="min-h-screen bg-lux-50 text-gray-900 font-sans">
@@ -61,70 +59,24 @@ const AppContent = () => {
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+          <header className="sticky top-0 z-50 border-b border-gray-100/80 bg-white/90 shadow-sm shadow-gray-200/50 backdrop-blur-xl">
             <div className="mx-auto max-w-8xl px-4 sm:px-6">
-              <div className="flex h-16 items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-14 items-center">
+                <div className="flex min-w-[40px] items-center xl:invisible">
                   <button
                     type="button"
-                    className="rounded-xl border border-gray-200 bg-white p-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 xl:hidden"
+                    className="rounded-lg border border-gray-100 bg-white/80 p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 xl:hidden"
                     onClick={() => setMobileNavOpen(true)}
                     aria-label="Open navigation menu"
                     data-testid="mobile-nav-toggle"
                   >
-                    <Menu className="h-5 w-5" />
+                    <Menu className="h-[18px] w-[18px]" />
                   </button>
-
-                  <div className="flex items-center gap-2 xl:hidden">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-sm">
-                      L
-                    </div>
-                    <span className="font-display text-sm font-semibold tracking-tight text-gray-900">Luxselle</span>
-                  </div>
-
-                  <div className="hidden min-w-0 items-center gap-2 xl:flex">
-                    <p className="truncate text-sm font-medium text-gray-500">
-                      {activeRoute?.label ?? 'Dashboard'}
-                    </p>
-                  </div>
                 </div>
-
-                <nav className="hidden flex-1 items-center gap-1 overflow-x-auto no-scrollbar lg:flex xl:hidden">
-                  {appRoutes.map((route) => (
-                    <NavLink
-                      key={route.path}
-                      to={route.path}
-                      end={route.path === '/'}
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive
-                          ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
-                          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 border border-transparent'
-                        }`
-                      }
-                    >
-                      <route.icon className="h-4 w-4" />
-                      <span className="whitespace-nowrap">{route.navLabel}</span>
-                    </NavLink>
-                  ))}
-                </nav>
-
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <button
-                    className="relative rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 shadow-sm ring-2 ring-white animate-pulse" />
-                  </button>
-
-                  <div className="hidden rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-500 md:block">
-                    Control Center
-                  </div>
-
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-xs font-bold text-white shadow-sm ring-2 ring-white">
-                    JK
-                  </div>
+                <div className="flex flex-1 items-center justify-center">
+                  <span className="font-display text-sm font-semibold tracking-tight text-gray-900">Luxselle</span>
                 </div>
+                <div className="min-w-[40px]" aria-hidden />
               </div>
             </div>
           </header>
@@ -147,6 +99,8 @@ const AppContent = () => {
                   <Route path="/" element={<DashboardView />} />
                   <Route path="/inventory" element={<InventoryView />} />
                   <Route path="/buy-box" element={<EvaluatorView />} />
+                  <Route path="/serial-check" element={<SerialCheckView />} />
+                  <Route path="/retail-price" element={<RetailPriceView />} />
                   <Route path="/market-research" element={<MarketResearchView />} />
                   <Route path="/supplier-hub" element={<SupplierHubView />} />
                   <Route path="/buying-list" element={<BuyingListView />} />

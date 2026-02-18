@@ -1,9 +1,10 @@
 /**
  * Market Research: AI-driven market intelligence for luxury goods.
  * Deep analysis of pricing trends, demand, competitive landscape.
+ * Irish & EU market: Designer Exchange, Luxury Exchange, Siopella, Vestiaire.
  * @see docs/CODE_REFERENCE.md
  */
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import {
     TrendingUp,
@@ -22,6 +23,8 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Clock,
+    History,
+    Store,
 } from 'lucide-react'
 import { apiGet, apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
@@ -88,6 +91,31 @@ interface TrendingResult {
     generatedAt: string
 }
 
+/** Competitor feed item (Designer Exchange, Luxury Exchange, Siopella). */
+interface CompetitorFeedItem {
+    title: string
+    priceEur: number
+    source: string
+    sourceUrl?: string
+    listedAt?: string
+}
+
+interface CompetitorFeedResult {
+    items: CompetitorFeedItem[]
+    generatedAt: string
+}
+
+const PREVIOUS_SEARCHES_KEY = 'luxselle_market_research_previous'
+const PREVIOUS_SEARCHES_MAX = 6
+
+/** Editable: key bags to show as quick-select (merge with trending when loaded). */
+const KEY_TRENDING_BAGS: { brand: string; model: string }[] = [
+    { brand: 'Chanel', model: 'Classic Flap' },
+    { brand: 'Louis Vuitton', model: 'Pochette Metis' },
+    { brand: 'Hermès', model: 'Birkin 25' },
+    { brand: 'Bottega Veneta', model: 'Jodie' },
+]
+
 // ─── Helpers ───────────────────────────────────────────────────
 const DEMAND_CONFIG = {
     very_high: { label: 'Very High', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', pct: 95 },
@@ -135,11 +163,62 @@ export default function MarketResearchView() {
 
     const [trending, setTrending] = useState<TrendingResult | null>(null)
     const [isTrendingLoading, setIsTrendingLoading] = useState(false)
+    const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
+    const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
+    const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
 
     const availableModels = useMemo(() => {
         if (!formData.brand) return []
         return BRAND_MODELS[formData.brand] ?? []
     }, [formData.brand])
+
+    // Pre-load trending and competitor feed on mount
+    useEffect(() => {
+        let cancelled = false
+        const load = async () => {
+            setIsTrendingLoading(true)
+            try {
+                const { data } = await apiGet<{ data: TrendingResult }>('/market-research/trending')
+                if (!cancelled) setTrending(data)
+            } catch {
+                if (!cancelled) setTrending(null)
+            } finally {
+                if (!cancelled) setIsTrendingLoading(false)
+            }
+        }
+        load()
+        return () => { cancelled = true }
+    }, [])
+
+    useEffect(() => {
+        let cancelled = false
+        const load = async () => {
+            setIsCompetitorLoading(true)
+            try {
+                const { data } = await apiGet<{ data: CompetitorFeedResult }>('/market-research/competitor-feed')
+                if (!cancelled) setCompetitorFeed(data)
+            } catch {
+                if (!cancelled) setCompetitorFeed(null)
+            } finally {
+                if (!cancelled) setIsCompetitorLoading(false)
+            }
+        }
+        load()
+        return () => { cancelled = true }
+    }, [])
+
+    // Restore previous searches from localStorage
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(PREVIOUS_SEARCHES_KEY)
+            if (raw) {
+                const parsed = JSON.parse(raw) as { brand: string; model: string }[]
+                if (Array.isArray(parsed)) setPreviousSearches(parsed.slice(0, PREVIOUS_SEARCHES_MAX))
+            }
+        } catch {
+            setPreviousSearches([])
+        }
+    }, [])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -156,6 +235,16 @@ export default function MarketResearchView() {
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
             setResult(data)
+            // Persist as previous search
+            const entry = { brand: formData.brand, model: formData.model }
+            setPreviousSearches(prev => {
+                const next = [entry, ...prev.filter(p => !(p.brand === entry.brand && p.model === entry.model))]
+                const slice = next.slice(0, PREVIOUS_SEARCHES_MAX)
+                try {
+                    localStorage.setItem(PREVIOUS_SEARCHES_KEY, JSON.stringify(slice))
+                } catch { /* ignore */ }
+                return slice
+            })
         } catch (err) {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analysis failed'
             toast.error(msg)
@@ -192,8 +281,8 @@ export default function MarketResearchView() {
                     <BarChart3 className="h-7 w-7 text-indigo-600" />
                     Market Research
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-2">
-                    <span>AI-powered market intelligence for luxury goods</span>
+                <p className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-2 flex-wrap">
+                    <span>Irish & EU market · Designer Exchange, Luxury Exchange, Siopella, Vestiaire</span>
                     {status?.aiProvider === 'mock' && (
                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                             Mock Data
@@ -208,8 +297,50 @@ export default function MarketResearchView() {
             </div>
 
             <div className="grid gap-8 lg:grid-cols-5">
-                {/* ─── Left: Input + Trending ─────────────────────── */}
+                {/* ─── Left: Input + Previous + Key bags + Trending + Competitor ─── */}
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Previous searches */}
+                    {previousSearches.length > 0 && (
+                        <div className="lux-card p-4">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                                <History className="h-3.5 w-3.5" />
+                                Previous searches
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {previousSearches.map((p, i) => (
+                                    <button
+                                        key={`${p.brand}-${p.model}-${i}`}
+                                        type="button"
+                                        onClick={() => quickResearch(p.brand, p.model)}
+                                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                    >
+                                        {p.brand} {p.model}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Key trending bags (editable list) */}
+                    <div className="lux-card p-4">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                            <Zap className="h-3.5 w-3.5 text-amber-500" />
+                            Key trending bags
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {KEY_TRENDING_BAGS.map(({ brand, model }) => (
+                                <button
+                                    key={`${brand}-${model}`}
+                                    type="button"
+                                    onClick={() => quickResearch(brand, model)}
+                                    className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-amber-100 transition-colors"
+                                >
+                                    {brand} {model}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Research Form */}
                     <div className="lux-card p-6">
                         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide mb-5">
@@ -286,7 +417,7 @@ export default function MarketResearchView() {
                         </form>
                     </div>
 
-                    {/* Trending Section */}
+                    {/* Trending Section (pre-loaded) */}
                     <div className="lux-card p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide">
@@ -299,7 +430,7 @@ export default function MarketResearchView() {
                                 className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                             >
                                 {isTrendingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
-                                Load Trends
+                                Refresh
                             </button>
                         </div>
 
@@ -328,13 +459,66 @@ export default function MarketResearchView() {
                                     )
                                 })}
                                 <p className="text-[10px] text-gray-400 text-center mt-2 uppercase tracking-wider">
-                                    via {trending.provider} · {new Date(trending.generatedAt).toLocaleTimeString()}
+                                    via {trending.provider} · Irish & EU · {new Date(trending.generatedAt).toLocaleTimeString()}
                                 </p>
                             </div>
                         ) : (
                             <div className="text-center py-6 text-gray-400">
-                                <Zap className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                                <p className="text-sm">Click "Load Trends" to see what&apos;s hot</p>
+                                {isTrendingLoading ? (
+                                    <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-indigo-500" />
+                                ) : (
+                                    <Zap className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                                )}
+                                <p className="text-sm">{isTrendingLoading ? 'Loading trends…' : 'Click "Refresh" to load trending items'}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Competitor activity: what Irish/EU competitors are listing */}
+                    <div className="lux-card p-6">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+                            <Store className="h-4 w-4 text-indigo-500" />
+                            Competitor activity
+                        </div>
+                        <p className="text-xs text-gray-500 mb-3">Recent listings from Designer Exchange, Luxury Exchange, Siopella — market prices from Irish & EU competitors.</p>
+                        {isCompetitorLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                            </div>
+                        ) : competitorFeed && competitorFeed.items.length > 0 ? (
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {competitorFeed.items.map((item, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors"
+                                    >
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <div className="text-xs font-medium text-gray-900 truncate">{item.title}</div>
+                                            <div className="text-[10px] text-gray-500">{item.source}</div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <span className="text-sm font-semibold text-gray-900">{formatCurrency(item.priceEur)}</span>
+                                            {item.sourceUrl && (
+                                                <a
+                                                    href={item.sourceUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="p-1 rounded text-gray-400 hover:text-indigo-600"
+                                                    aria-label="Open listing"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                <p className="text-[10px] text-gray-400 text-center mt-2">
+                                    Updated {new Date(competitorFeed.generatedAt).toLocaleTimeString()}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="text-center py-6 text-gray-400 text-sm">
+                                No competitor feed available. Check API connection.
                             </div>
                         )}
                     </div>
@@ -346,7 +530,7 @@ export default function MarketResearchView() {
                         <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-gray-400">
                             <BarChart3 className="h-14 w-14 mb-4 opacity-20" />
                             <p className="text-lg font-medium">Ready to research</p>
-                            <p className="text-sm opacity-60 mt-1">Select a product to begin market analysis</p>
+                            <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
                         </div>
                     ) : (
                         <div className="space-y-5">

@@ -80,6 +80,22 @@ If your **app** shows items but the script deletes 0:
    - Deployed app might use a different project (e.g. another `VITE_FIREBASE_PROJECT_ID` / backend `FIREBASE_PROJECT_ID`).  
    **Fix:** Set backend and frontend env to the same project/bucket and run `firebase-connection-details` (with `FIREBASE_USE_EMULATOR=false` for production) to confirm “configured” and “connected” both show that project.
 
+## Migrating data from (default) to eur3
+
+If your data is in the **(default)** US database and you want to use the **eur3** Europe database:
+
+1. Run the migration script (requires `FIREBASE_USE_EMULATOR=false` and credentials):
+
+   ```bash
+   FIREBASE_USE_EMULATOR=false npm run migrate-firestore-to-eur --workspace=@luxselle/server
+   ```
+
+2. Add `FIRESTORE_DATABASE_ID=luxselle-dashboard-95977150` to `.env` and Railway.
+
+3. Restart the server and verify the app shows data correctly.
+
+The script copies all root-level collections (products, buying_list_items, transactions, etc.) from (default) to eur3, preserving document IDs.
+
 ## Where config lives
 
 | Source | File or location |

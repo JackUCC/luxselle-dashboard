@@ -53,7 +53,7 @@ test('ultra-wide side rail is visible and routes correctly', async ({ page }) =>
 
   await sideRail.getByRole('link', { name: 'Buy Box' }).click()
   await expect(page).toHaveURL('/buy-box')
-  await expect(page.getByRole('heading', { name: 'Item Evaluator' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 })
 
 test('deep-state breadcrumb is hidden on base route and shown on deep state', async ({ page }) => {
@@ -75,6 +75,7 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
       body: JSON.stringify({
         data: {
           totalInventoryValue: 120000,
+          totalInventoryPotentialValue: 165000,
           pendingBuyListValue: 20000,
           activeSourcingPipeline: 15000,
           lowStockAlerts: 2,
@@ -105,13 +106,11 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
 
   await expect(page.getByTestId('dashboard-skeleton')).toBeVisible()
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
-  await expect(page.getByText('Inventory value')).toBeVisible()
+  await expect(page.getByText('Cost of inventory total')).toBeVisible()
 })
 
-test('low stock card keeps inventory flow intact', async ({ page }) => {
-  await page.goto('/')
-
-  await page.getByText('Low stock').click()
+test('inventory low-stock filter works via URL', async ({ page }) => {
+  await page.goto('/inventory?lowStock=1')
   await expect(page).toHaveURL('/inventory?lowStock=1')
   await expect(page.getByText(/Showing low stock items/)).toBeVisible()
 })

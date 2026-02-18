@@ -11,6 +11,7 @@
     "seed": "tsx scripts/seed.ts",
     "clear-inventory": "tsx scripts/clear-inventory.ts",
     "firebase-connection-details": "tsx scripts/firebase-connection-details.ts",
+    "migrate-firestore-to-eur": "tsx scripts/migrate-firestore-to-eur.ts",
     "import-excel": "tsx scripts/import-inventory-from-excel.ts",
     "import-invoice-pdfs": "tsx scripts/import-invoice-pdfs.ts",
     "import-inventory-pdf": "tsx scripts/import-inventory-from-pdf.ts",

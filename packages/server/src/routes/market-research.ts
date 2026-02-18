@@ -44,4 +44,14 @@ router.get('/trending', async (_req, res, next) => {
     }
 })
 
+// GET /api/market-research/competitor-feed — recent listings from Irish/EU competitors (Designer Exchange, Luxury Exchange, Siopella)
+router.get('/competitor-feed', async (_req, res, next) => {
+    try {
+        const result = await marketResearchService.getCompetitorFeed()
+        res.json({ data: result })
+    } catch (error) {
+        next(error)
+    }
+})
+
 export { router as marketResearchRouter }

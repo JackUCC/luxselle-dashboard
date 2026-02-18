@@ -47,4 +47,33 @@ router.post('/insights', async (req, res, next) => {
     }
 })
 
+// POST /api/ai/prompt — simple prompt bar
+router.post('/prompt', async (req, res, next) => {
+    try {
+        const { prompt: userPrompt } = req.body
+        const prompt = typeof userPrompt === 'string' ? userPrompt.trim() : ''
+        if (!prompt) {
+            res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'Prompt is required'))
+            return
+        }
+
+        const reply = await aiService.prompt(prompt)
+        res.json({ data: { reply } })
+    } catch (error) {
+        next(error)
+    }
+})
+
+// POST /api/ai/retail-lookup — what was this retail? (brand new price from description)
+router.post('/retail-lookup', async (req, res, next) => {
+    try {
+        const { description } = req.body
+        const text = typeof description === 'string' ? description.trim() : ''
+        const result = await aiService.getRetailPriceFromDescription(text)
+        res.json({ data: result })
+    } catch (error) {
+        next(error)
+    }
+})
+
 export { router as aiRouter }

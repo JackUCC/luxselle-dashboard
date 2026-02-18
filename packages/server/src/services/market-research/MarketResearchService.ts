@@ -75,6 +75,20 @@ export interface TrendingResult {
     generatedAt: string
 }
 
+/** Single listing from a competitor (Designer Exchange, Luxury Exchange, Siopella). */
+export interface CompetitorFeedItem {
+    title: string
+    priceEur: number
+    source: 'Designer Exchange' | 'Luxury Exchange' | 'Siopella'
+    sourceUrl?: string
+    listedAt?: string
+}
+
+export interface CompetitorFeedResult {
+    items: CompetitorFeedItem[]
+    generatedAt: string
+}
+
 const MARKET_RESEARCH_PROMPT = (input: MarketResearchInput) => `You are a luxury goods market research analyst specializing in the European resale market, with particular focus on Ireland and the EU.
 
 Analyse the following luxury item and provide comprehensive market intelligence:
@@ -166,6 +180,11 @@ export class MarketResearchService {
             return this.trendingWithOpenAI()
         }
         return this.mockTrending()
+    }
+
+    /** Recent listings from Irish/EU competitors (Designer Exchange, Luxury Exchange, Siopella). */
+    async getCompetitorFeed(): Promise<CompetitorFeedResult> {
+        return this.mockCompetitorFeed()
     }
 
     private async analyseWithGemini(input: MarketResearchInput): Promise<MarketResearchResult> {
@@ -334,6 +353,24 @@ export class MarketResearchService {
                 { brand: 'Loewe', model: 'Puzzle', category: 'Handbag', demandLevel: 'high', priceTrend: 'rising', avgPriceEur: 2000, searchVolume: 'medium' },
                 { brand: 'Prada', model: 'Re-Edition 2005', category: 'Handbag', demandLevel: 'moderate', priceTrend: 'stable', avgPriceEur: 1200, searchVolume: 'medium' },
                 { brand: 'Gucci', model: 'Horsebit 1955', category: 'Handbag', demandLevel: 'moderate', priceTrend: 'declining', avgPriceEur: 1500, searchVolume: 'medium' },
+            ],
+            generatedAt: new Date().toISOString(),
+        }
+    }
+
+    private mockCompetitorFeed(): CompetitorFeedResult {
+        const now = new Date()
+        const fmt = (d: Date) => d.toISOString().slice(0, 10)
+        return {
+            items: [
+                { title: 'Chanel Classic Flap Medium Black Caviar', priceEur: 6200, source: 'Designer Exchange', sourceUrl: 'https://designerexchange.ie', listedAt: fmt(now) },
+                { title: 'Louis Vuitton Pochette Metis Monogram', priceEur: 1750, source: 'Luxury Exchange', sourceUrl: 'https://luxuryexchange.ie', listedAt: fmt(now) },
+                { title: 'Hermès Evelyne III PM Gold', priceEur: 2800, source: 'Siopella', sourceUrl: 'https://siopaella.com', listedAt: fmt(now) },
+                { title: 'Bottega Veneta Jodie Small Intrecciato', priceEur: 2100, source: 'Designer Exchange', sourceUrl: 'https://designerexchange.ie', listedAt: fmt(now) },
+                { title: 'Dior Lady Dior Medium Cannage', priceEur: 3400, source: 'Luxury Exchange', sourceUrl: 'https://luxuryexchange.ie', listedAt: fmt(now) },
+                { title: 'Loewe Puzzle Small Sand', priceEur: 1850, source: 'Siopella', sourceUrl: 'https://siopaella.com', listedAt: fmt(now) },
+                { title: 'Gucci Horsebit 1955 Shoulder Bag', priceEur: 1480, source: 'Designer Exchange', sourceUrl: 'https://designerexchange.ie', listedAt: fmt(now) },
+                { title: 'Prada Re-Edition 2005 Nylon Black', priceEur: 1150, source: 'Luxury Exchange', sourceUrl: 'https://luxuryexchange.ie', listedAt: fmt(now) },
             ],
             generatedAt: new Date().toISOString(),
         }

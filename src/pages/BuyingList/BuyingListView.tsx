@@ -297,7 +297,7 @@ export default function BuyingListView() {
                           />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{item.brand} {item.model}</div>
+                          <div className="font-medium text-gray-900">{item.brand && item.model ? `${item.brand} ${item.model}` : item.notes || '—'}</div>
                           <div className="text-xs text-gray-500 font-mono mt-0.5">BA{item.id.slice(-4)}</div>
                         </div>
                       </div>

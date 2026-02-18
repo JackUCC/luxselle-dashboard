@@ -33,10 +33,12 @@ export default function WideScreenSideRail() {
       <div className="mt-8 flex-1 space-y-7 overflow-y-auto pb-3 no-scrollbar [contain:layout]">
         {NAV_GROUPS.map((group) => (
           <section key={group.section} className="space-y-2">
-            <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
-              {group.title}
-            </h2>
-            <nav className="space-y-1" aria-label={group.title}>
+            {group.title ? (
+              <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
+                {group.title}
+              </h2>
+            ) : null}
+            <nav className="space-y-1" aria-label={group.title || 'Main'}>
               {appRoutes
                 .filter((route) => route.section === group.section)
                 .map((route) => (

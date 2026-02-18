@@ -1,399 +1,142 @@
 /**
- * Buy-box / evaluator: analyse item (brand/model/category), get pricing suggestion, optional image upload; uses pricing API.
+ * Price Check: search-style item lookup, market research (Irish + Vestiaire), max buy/bid, landed cost.
  * @see docs/CODE_REFERENCE.md
  */
-import { useEffect, useState, useMemo, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useRef } from 'react'
 import toast from 'react-hot-toast'
-import { Tag, Calculator, Sparkles, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
-import { apiPost, apiGet, apiPostFormData, ApiError } from '../../lib/api'
+import { Search, Calculator, Sparkles, Upload, X, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
-import type {
-  AuctionPlatformProfile,
-  LandedCostSnapshot,
-  Product,
-  Settings,
-} from '@shared/schemas'
-import type { ProductWithId } from '../../types/dashboard'
+import { CalculatorWidget } from '../../components/widgets'
+import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 
-// Brand and model database for luxury items
-const BRAND_MODELS: Record<string, string[]> = {
-  'Chanel': ['Classic Flap', '2.55', 'Boy', 'Gabrielle', '19', 'Coco Handle', 'Vanity Case'],
-  'Hermès': ['Birkin', 'Kelly', 'Constance', 'Evelyne', 'Picotin', 'Lindy', 'Garden Party'],
-  'Louis Vuitton': ['Speedy', 'Neverfull', 'Pochette Metis', 'Alma', 'Capucines', 'OnTheGo', 'Twist'],
-  'Gucci': ['Marmont', 'Dionysus', 'Jackie', 'Horsebit 1955', 'Ophidia', 'Bamboo', 'Soho Disco'],
-  'Prada': ['Galleria', 'Cahier', 'Cleo', 'Re-Edition 2005', 'Hobo', 'Sidonie'],
-  'Dior': ['Lady Dior', 'Saddle', 'Book Tote', '30 Montaigne', 'Diorama', 'Miss Dior'],
-  'Bottega Veneta': ['Pouch', 'Cassette', 'Jodie', 'Arco', 'Cabat', 'Intrecciato'],
-  'Fendi': ['Baguette', 'Peekaboo', 'By The Way', 'Kan I', 'Mon Tresor'],
-  'Givenchy': ['Antigona', 'Pandora', 'GV3', 'Cut Out'],
-  'Loewe': ['Puzzle', 'Hammock', 'Barcelona', 'Gate', 'Flamenco'],
+interface PriceCheckComp {
+  title: string
+  price: number
+  source: string
+  sourceUrl?: string
 }
 
-const COMMON_COLORS = [
-  'Black', 'White', 'Beige', 'Navy', 'Brown', 'Burgundy', 'Red',
-  'Pink', 'Grey', 'Tan', 'Camel', 'Gold', 'Silver'
+interface PriceCheckResult {
+  averageSellingPriceEur: number
+  comps: PriceCheckComp[]
+  maxBuyEur: number
+  maxBidEur: number
+}
+
+const CONDITION_OPTIONS = [
+  { value: '', label: 'Any' },
+  { value: 'new', label: 'New / Pristine' },
+  { value: 'excellent', label: 'Excellent (A)' },
+  { value: 'good', label: 'Good (B)' },
+  { value: 'fair', label: 'Fair (C)' },
+  { value: 'used', label: 'Used' },
 ]
 
-const YEARS = Array.from({ length: 25 }, (_, i) => (new Date().getFullYear() - i).toString())
-
-interface AnalysisResult {
-  estimatedRetailEur: number
-  maxBuyPriceEur: number
-  historyAvgPaidEur: number | null
-  comps: Array<{
-    title: string
-    price: number
-    source: string
-    sourceUrl?: string
-    marketCountry?: string
-    marketScope?: 'IE' | 'EU_FALLBACK'
-  }>
-  confidence: number
-  provider: string
-  evaluationId: string
-  marketSummary?: {
-    marketCountry: 'IE'
-    marketMode: 'ie_first_eu_fallback'
-    ieCount: number
-    euFallbackCount: number
-    fallbackUsed: boolean
-  }
-}
-
-interface AuctionLandedCostResponse {
-  data: LandedCostSnapshot
-}
-
-import { CalculatorWidget } from '../../components/widgets'
-
-
-
 export default function EvaluatorView() {
-  const [activeTab, setActiveTab] = useState<'details' | 'calculator'>('details')
-  const [formData, setFormData] = useState({
-    brand: '',
-    model: '',
-    category: '',
-    condition: '',
-    colour: '',
-    year: '',
-    notes: '',
-    askPriceEur: '',
-  })
-  const [searchParams] = useSearchParams()
-  const [isAnalysing, setIsAnalysing] = useState(false)
-  const [result, setResult] = useState<AnalysisResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isAddingToBuyList, setIsAddingToBuyList] = useState(false)
+  const [activeTab, setActiveTab] = useState<'pricecheck' | 'landed'>('pricecheck')
+  const [query, setQuery] = useState('')
+  const [condition, setCondition] = useState('')
+  const [notes, setNotes] = useState('')
   const [uploadedImage, setUploadedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
-  const [settings, setSettings] = useState<Settings | null>(null)
-  const [landedCostInput, setLandedCostInput] = useState({
-    platformId: '',
-    hammerEur: '',
-    buyerPremiumPct: '',
-    platformFeePct: '',
-    fixedFeeEur: '',
-    paymentFeePct: '',
-    shippingEur: '',
-    insuranceEur: '',
-    customsDutyPct: '',
-    importVatPct: '',
-  })
-  const [landedCostResult, setLandedCostResult] = useState<LandedCostSnapshot | null>(null)
-  const [isCalculatingLandedCost, setIsCalculatingLandedCost] = useState(false)
-  const [saveLandedCostSnapshot, setSaveLandedCostSnapshot] = useState(true)
+  const [isResearching, setIsResearching] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<PriceCheckResult | null>(null)
+  const [isAddingToBuyList, setIsAddingToBuyList] = useState(false)
+  const [refineOpen, setRefineOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [products, setProducts] = useState<ProductWithId[]>([])
-
-  // Fetch products for learning model/brand combinations
-  useEffect(() => {
-    apiGet<{ data: ProductWithId[] }>('/products')
-      .then((response) => {
-        setProducts(response.data)
-      })
-      .catch(() => {
-        // Silently fail - we have fallback brand/model data
-      })
-
-    apiGet<{ data: Settings }>('/settings')
-      .then((response) => {
-        setSettings(response.data)
-      })
-      .catch(() => {
-        // Silently fail - calculator can still run with manual entries
-      })
-  }, [])
-
-  const selectedAuctionPlatform = useMemo(() => {
-    if (!settings?.auctionPlatforms?.length) return null
-    return (
-      settings.auctionPlatforms.find((platform) => platform.id === landedCostInput.platformId) ??
-      settings.auctionPlatforms.find((platform) => platform.enabled) ??
-      settings.auctionPlatforms[0]
-    )
-  }, [settings, landedCostInput.platformId])
-
-  useEffect(() => {
-    if (!settings) return
-    const defaultPlatform =
-      settings.auctionPlatforms.find((platform) => platform.enabled) ??
-      settings.auctionPlatforms[0]
-
-    setLandedCostInput((prev) => ({
-      ...prev,
-      platformId: prev.platformId || defaultPlatform?.id || '',
-      buyerPremiumPct: prev.buyerPremiumPct || String(defaultPlatform?.buyerPremiumPct ?? 0),
-      platformFeePct: prev.platformFeePct || String(defaultPlatform?.platformFeePct ?? 0),
-      fixedFeeEur: prev.fixedFeeEur || String(defaultPlatform?.fixedFeeEur ?? 0),
-      paymentFeePct: prev.paymentFeePct || String(defaultPlatform?.paymentFeePct ?? 0),
-      shippingEur: prev.shippingEur || String(defaultPlatform?.defaultShippingEur ?? 0),
-      insuranceEur: prev.insuranceEur || String(defaultPlatform?.defaultInsuranceEur ?? 0),
-      customsDutyPct:
-        prev.customsDutyPct || String(defaultPlatform?.defaultCustomsDutyPct ?? 0),
-      importVatPct:
-        prev.importVatPct ||
-        String(defaultPlatform?.defaultImportVatPct ?? settings.importVatPctDefault ?? 23),
-    }))
-  }, [settings])
-
-  // Get available models for selected brand (from products + predefined list)
-  const availableModels = useMemo(() => {
-    const { brand } = formData
-    if (!brand) return []
-
-    // Combine predefined models with models from actual products
-    const predefinedModels = BRAND_MODELS[brand] || []
-    const productModels = products
-      .filter(p => p.brand === brand)
-      .map(p => p.model)
-
-    return Array.from(new Set([...predefinedModels, ...productModels])).sort()
-  }, [formData.brand, products])
-
-  // Reset model when brand changes
-  useEffect(() => {
-    if (formData.brand && formData.model) {
-      // Check if current model is valid for selected brand
-      if (!availableModels.includes(formData.model)) {
-        setFormData(prev => ({ ...prev, model: '' }))
-      }
-    }
-  }, [formData.brand, formData.model, availableModels])
-
-  useEffect(() => {
-    const brand = searchParams.get('brand')
-    const model = searchParams.get('model')
-    const category = searchParams.get('category')
-    const condition = searchParams.get('condition')
-    const colour = searchParams.get('colour')
-
-    if (brand || model || category || condition || colour) {
-      setFormData((prev) => ({
-        ...prev,
-        ...(brand !== null ? { brand } : {}),
-        ...(model !== null ? { model } : {}),
-        ...(category !== null ? { category } : {}),
-        ...(condition !== null ? { condition } : {}),
-        ...(colour !== null ? { colour } : {}),
-      }))
-    }
-  }, [searchParams])
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image must be less than 10MB')
-      return
-    }
-
+    if (!file || !file.type.startsWith('image/')) return
     setUploadedImage(file)
     const reader = new FileReader()
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string)
-    }
+    reader.onloadend = () => setImagePreview(reader.result as string)
     reader.readAsDataURL(file)
   }
 
   const handleRemoveImage = () => {
     setUploadedImage(null)
     setImagePreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    fileInputRef.current && (fileInputRef.current.value = '')
   }
 
   const handleAnalyzeImage = async () => {
     if (!uploadedImage) return
-
     setIsAnalyzingImage(true)
+    setError(null)
     try {
       const formData = new FormData()
       formData.append('image', uploadedImage)
-
-      const { data } = await apiPostFormData<{ data: { brand?: string; model?: string; category?: string; condition?: string; colour?: string } }>(
+      const { data } = await apiPostFormData<{ data: { query?: string; condition?: string } }>(
         '/pricing/analyze-image',
-        formData,
+        formData
       )
-
-      setFormData(prev => ({
-        ...prev,
-        brand: data?.brand ?? prev.brand,
-        model: data?.model ?? prev.model,
-        category: data?.category ?? prev.category,
-        condition: data?.condition ?? prev.condition,
-        colour: data?.colour ?? prev.colour,
-      }))
-
-      toast.success('Image analyzed! Check the pre-filled details.')
-    } catch (err: unknown) {
-      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to analyze image'
-      toast.error(message)
+      if (data?.query) setQuery(data.query)
+      if (data?.condition) setCondition(data.condition)
+      toast.success('Image analyzed — search updated')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
+      toast.error(msg)
     } finally {
       setIsAnalyzingImage(false)
     }
   }
 
-  const handleAnalyse = async (e: React.FormEvent) => {
+  const handleResearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsAnalysing(true)
+    const q = query.trim()
+    if (!q) {
+      toast.error('Enter an item name to search')
+      return
+    }
+    setIsResearching(true)
     setError(null)
-
+    setResult(null)
     try {
-      const { data } = await apiPost<{ data: AnalysisResult }>('/pricing/analyse', {
-        ...formData,
-        askPriceEur: formData.askPriceEur ? Number(formData.askPriceEur) : undefined,
-        marketCountry: 'IE',
-        marketMode: 'ie_first_eu_fallback',
-        landedCostSnapshot: saveLandedCostSnapshot ? landedCostResult ?? undefined : undefined,
+      const { data } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
+        query: q,
+        condition: condition || undefined,
+        notes: notes.trim() || undefined,
       })
       setResult(data)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Analysis failed'
-      setError(message)
+      toast.success('Market research complete')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Research failed'
+      setError(msg)
+      toast.error(msg)
     } finally {
-      setIsAnalysing(false)
+      setIsResearching(false)
     }
   }
 
   const handleAddToBuyList = async () => {
     if (!result) return
-
     setIsAddingToBuyList(true)
     try {
       await apiPost('/buying-list', {
         sourceType: 'evaluator',
-        evaluationId: result.evaluationId,
-        brand: formData.brand,
-        model: formData.model,
-        category: formData.category,
-        condition: formData.condition,
-        colour: formData.colour,
-        targetBuyPriceEur: result.maxBuyPriceEur,
-        status: 'pending',
-        notes: formData.notes,
-        landedCostSnapshot: saveLandedCostSnapshot ? landedCostResult ?? undefined : undefined,
-      })
-      toast.success('Added to buying list!')
-      setFormData({
         brand: '',
         model: '',
         category: '',
-        condition: '',
+        condition: condition || 'unknown',
         colour: '',
-        year: '',
-        notes: '',
-        askPriceEur: '',
+        targetBuyPriceEur: result.maxBuyEur,
+        status: 'pending',
+        notes: query.trim() || 'Price check item',
       })
+      toast.success('Added to buying list')
       setResult(null)
-      handleRemoveImage()
-      setLandedCostResult(null)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to add to buying list'
-      toast.error(message)
+      setQuery('')
+      setCondition('')
+      setNotes('')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to add'
+      toast.error(msg)
     } finally {
       setIsAddingToBuyList(false)
-    }
-  }
-
-  const handlePlatformChange = (platform: AuctionPlatformProfile | null) => {
-    if (!platform) {
-      setLandedCostInput((prev) => ({ ...prev, platformId: '' }))
-      return
-    }
-    setLandedCostInput((prev) => ({
-      ...prev,
-      platformId: platform.id,
-      buyerPremiumPct: String(platform.buyerPremiumPct),
-      platformFeePct: String(platform.platformFeePct),
-      fixedFeeEur: String(platform.fixedFeeEur),
-      paymentFeePct: String(platform.paymentFeePct),
-      shippingEur: String(platform.defaultShippingEur),
-      insuranceEur: String(platform.defaultInsuranceEur),
-      customsDutyPct: String(platform.defaultCustomsDutyPct),
-      importVatPct: String(platform.defaultImportVatPct),
-    }))
-  }
-
-  const handleLandedCostInputChange = (field: keyof typeof landedCostInput, value: string) => {
-    setLandedCostInput((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleCalculateLandedCost = async () => {
-    const hammerValue = Number(landedCostInput.hammerEur)
-    if (!hammerValue || hammerValue <= 0) {
-      toast.error('Enter a hammer price to calculate landed cost')
-      return
-    }
-
-    setIsCalculatingLandedCost(true)
-    try {
-      const payload = {
-        platformId: landedCostInput.platformId || undefined,
-        hammerEur: hammerValue,
-        buyerPremiumPct: Number(landedCostInput.buyerPremiumPct || 0),
-        platformFeePct: Number(landedCostInput.platformFeePct || 0),
-        fixedFeeEur: Number(landedCostInput.fixedFeeEur || 0),
-        paymentFeePct: Number(landedCostInput.paymentFeePct || 0),
-        shippingEur: Number(landedCostInput.shippingEur || 0),
-        insuranceEur: Number(landedCostInput.insuranceEur || 0),
-        customsDutyPct: Number(landedCostInput.customsDutyPct || 0),
-        importVatPct: Number(landedCostInput.importVatPct || settings?.importVatPctDefault || 23),
-      }
-
-      const response = await apiPost<AuctionLandedCostResponse>(
-        '/pricing/auction-landed-cost',
-        payload,
-      )
-      setLandedCostResult(response.data)
-    } catch (err: unknown) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : 'Failed to calculate landed cost'
-      toast.error(message)
-    } finally {
-      setIsCalculatingLandedCost(false)
     }
   }
 
@@ -402,433 +145,206 @@ export default function EvaluatorView() {
       <div className="text-center">
         <h1 className="text-2xl font-display font-bold text-gray-900">Price Check</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Check the market value before you buy.
+          Research market price (Irish + Vestiaire), then see max buy and max bid.
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* Input Form */}
-        <div className="lux-card p-6 h-fit">
-          {/* Tab Switcher */}
-          <div className="flex border-b border-gray-200 mb-6">
-            <button
-              type="button"
-              onClick={() => setActiveTab('details')}
-              className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'details'
-                ? 'border-b-2 border-gray-900 text-gray-900'
-                : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <Tag className="mb-1 mr-2 inline-block h-4 w-4" />
-              Item Details
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('calculator')}
-              className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'calculator'
-                ? 'border-b-2 border-gray-900 text-gray-900'
-                : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <Calculator className="mb-1 mr-2 inline-block h-4 w-4" />
-              Landed Cost
-            </button>
-          </div>
+      <div className="flex border-b border-gray-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab('pricecheck')}
+          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'pricecheck' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <Search className="mb-1 mr-2 inline-block h-4 w-4" />
+          Price Check
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('landed')}
+          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'landed' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <Calculator className="mb-1 mr-2 inline-block h-4 w-4" />
+          Landed Cost
+        </button>
+      </div>
 
-          {activeTab === 'calculator' ? (
-            <CalculatorWidget />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide">
-                  <Tag className="h-4 w-4" />
-                  Product Details
-                </div>
-                {uploadedImage && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="text-xs text-gray-500 hover:text-red-600 transition-colors"
-                  >
-                    Clear Image
-                  </button>
-                )}
-              </div>
-
-              {/* Image Upload Section */}
-              <div className="mb-6">
-                <label className="block text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
-                  Product Image (Optional)
+      {activeTab === 'landed' ? (
+        <div className="lux-card p-6">
+          <CalculatorWidget />
+        </div>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Search + Refine */}
+          <div className="lux-card evaluator-form-card flex flex-col p-4 sm:p-5 lg:p-6 h-fit">
+            <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Search for item
                 </label>
-
-                {imagePreview ? (
-                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 mb-3">
-                    <img src={imagePreview} alt="Upload preview" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 text-gray-600 hover:text-red-600 shadow-sm transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">Click to upload product image</p>
-                    <p className="text-xs text-gray-400 mt-1">AI will analyze the image</p>
-                  </label>
-                )}
-
-                {uploadedImage && (
-                  <button
-                    type="button"
-                    onClick={handleAnalyzeImage}
-                    disabled={isAnalyzingImage}
-                    className="w-full mt-3 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {isAnalyzingImage ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Analyzing image...
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="h-4 w-4" />
-                        Analyze with AI
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              <form onSubmit={handleAnalyse} className="space-y-5">
-                <div>
-                  <label htmlFor="brand-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                    Brand *
-                  </label>
-                  <select
-                    id="brand-select"
-                    name="brand"
-                    value={formData.brand}
-                    onChange={handleChange}
-                    required
-                    className="lux-input"
-                  >
-                    <option value="">Select Brand</option>
-                    {Object.keys(BRAND_MODELS).sort().map(brand => (
-                      <option key={brand} value={brand}>{brand}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="model-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                    Model *
-                  </label>
-                  {availableModels.length > 0 ? (
-                    <select
-                      id="model-select"
-                      name="model"
-                      value={formData.model}
-                      onChange={handleChange}
-                      required
-                      className="lux-input"
-                      disabled={!formData.brand}
-                    >
-                      <option value="">Select Model</option>
-                      {availableModels.map(model => (
-                        <option key={model} value={model}>{model}</option>
-                      ))}
-                      <option value="__custom__">Other (type manually)</option>
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      name="model"
-                      value={formData.model}
-                      onChange={handleChange}
-                      required
-                      placeholder="e.g. Classic Flap"
-                      className="lux-input"
-                      disabled={!formData.brand}
-                    />
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">
-                    {formData.brand ? `${availableModels.length} models available for ${formData.brand}` : 'Select a brand first'}
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div>
-                    <label htmlFor="condition-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                      Condition *
-                    </label>
-                    <select
-                      id="condition-select"
-                      name="condition"
-                      value={formData.condition}
-                      onChange={handleChange}
-                      required
-                      className="lux-input"
-                    >
-                      <option value="">Grade</option>
-                      <option value="new">New / Pristine</option>
-                      <option value="excellent">Excellent (A)</option>
-                      <option value="good">Good (B)</option>
-                      <option value="fair">Fair (C)</option>
-                      <option value="used">Used</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="colour-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                      Color *
-                    </label>
-                    <select
-                      id="colour-select"
-                      name="colour"
-                      value={formData.colour}
-                      onChange={handleChange}
-                      required
-                      className="lux-input"
-                    >
-                      <option value="">Select Color</option>
-                      {COMMON_COLORS.map(color => (
-                        <option key={color} value={color}>{color}</option>
-                      ))}
-                      <option value="__custom__">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="year-select" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                      Year
-                    </label>
-                    <select
-                      id="year-select"
-                      name="year"
-                      value={formData.year}
-                      onChange={handleChange}
-                      className="lux-input"
-                    >
-                      <option value="">Unknown</option>
-                      {YEARS.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="category-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                    Category *
-                  </label>
-                  <select
-                    id="category-input"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                    className="lux-input"
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Handbag">Handbag</option>
-                    <option value="Wallet">Wallet</option>
-                    <option value="Shoes">Shoes</option>
-                    <option value="Watch">Watch</option>
-                    <option value="Jewelry">Jewelry</option>
-                    <option value="Accessory">Accessory</option>
-                    <option value="Clothing">Clothing</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="notes-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                    Additional Notes
-                  </label>
-                  <textarea
-                    id="notes-input"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    placeholder="Size, material, special features..."
-                    rows={2}
-                    className="lux-input resize-none"
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="e.g. Chanel Classic Flap Medium Black"
+                    className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>
-
-                <div>
-                  <label htmlFor="ask-price-input" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                    Asking Price (EUR)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
-                    <input
-                      id="ask-price-input"
-                      type="number"
-                      name="askPriceEur"
-                      value={formData.askPriceEur}
-                      onChange={handleChange}
-                      placeholder="0"
-                      step="0.01"
-                      className="lux-input pl-7"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Optional - helps calibrate analysis</p>
-                </div>
-
-                {/* Legacy Landed Cost Calculator removed in favor of standalone widget */}
-
-                <button
-                  type="submit"
-                  disabled={isAnalysing}
-                  className="w-full rounded-lg bg-gray-500 py-3 text-sm font-medium text-white hover:bg-gray-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {isAnalysing ? 'Analyzing Market...' : 'Analyze Market'}
-                </button>
-
-                {
-                  error && (
-                    <div className="text-xs text-red-600 text-center mt-2">
-                      {error}
-                    </div>
-                  )
-                }
-              </form>
-            </>
-          )}
-        </div >
-
-        {/* Results / Empty State */}
-        < div className={`lux-card relative min-h-[400px] ${!result ? 'border-dashed border-2' : ''}`
-        }>
-          {!result ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-              <Calculator className="h-12 w-12 mb-4 opacity-20" />
-              <p className="text-lg font-medium">Ready to evaluate</p>
-              <p className="text-sm opacity-60">Enter product details to begin</p>
-            </div>
-          ) : (
-            <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900">Analysis Results</h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-full font-medium">
-                    Ireland market
-                  </span>
-                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
-                    {(result.confidence * 100).toFixed(0)}% Confidence
-                  </span>
-                  {result.marketSummary?.fallbackUsed && (
-                    <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded-full font-medium">
-                      EU fallback used
-                    </span>
-                  )}
-                </div>
               </div>
 
-              <div className="rounded-xl bg-gray-50 p-6 text-center">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                  Estimated Retail Price
-                </div>
-                <div className="text-4xl font-display font-bold text-gray-900">
-                  {formatCurrency(result.estimatedRetailEur)}
-                </div>
-                {result.marketSummary && (
-                  <div className="text-xs text-gray-500 mt-2">
-                    {result.marketSummary.ieCount} IE comps
-                    {result.marketSummary.euFallbackCount > 0
-                      ? ` + ${result.marketSummary.euFallbackCount} EU fallback`
-                      : ''}
+              {/* Optional image */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Or drop / upload image
+                </label>
+                {imagePreview ? (
+                  <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
+                    <img src={imagePreview} alt="Upload" className="w-full h-full object-cover" />
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-2 py-1.5">
+                      <button
+                        type="button"
+                        onClick={handleAnalyzeImage}
+                        disabled={isAnalyzingImage}
+                        className="text-xs text-white hover:text-indigo-200 flex items-center gap-1"
+                      >
+                        {isAnalyzingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                        {isAnalyzingImage ? 'Analyzing…' : 'Analyze with AI'}
+                      </button>
+                      <button type="button" onClick={handleRemoveImage} className="text-white hover:text-red-300" aria-label="Remove image">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="block border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-gray-300 transition-colors">
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Drop image or click to upload</p>
+                    <p className="text-xs text-gray-400 mt-1">AI will suggest search text</p>
+                  </label>
+                )}
+              </div>
+
+              {/* Refine (collapsible) */}
+              <div className="border border-gray-100 rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setRefineOpen(!refineOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Refine results (condition, notes)
+                  {refineOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+                {refineOpen && (
+                  <div className="px-3 pb-3 pt-0 space-y-3 border-t border-gray-100">
+                    <div>
+                      <label id="refine-condition-label" className="block text-xs text-gray-500 mb-1">Condition</label>
+                      <select
+                        id="refine-condition"
+                        aria-labelledby="refine-condition-label"
+                        value={condition}
+                        onChange={(e) => setCondition(e.target.value)}
+                        className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm text-gray-900"
+                      >
+                        {CONDITION_OPTIONS.map((o) => (
+                          <option key={o.value || 'any'} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Notes</label>
+                      <input
+                        type="text"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Size, colour, features…"
+                        className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-400"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-gray-100 p-4 bg-white shadow-sm">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                    Max Buy Price
-                  </div>
-                  <div className="text-xl font-bold text-gray-900">
-                    {formatCurrency(result.maxBuyPriceEur)}
-                  </div>
-                  <div className="text-xs text-green-600 mt-1">Target 35% Margin</div>
-                </div>
+              <button
+                type="submit"
+                disabled={isResearching}
+                className="w-full rounded-lg bg-gray-900 py-3 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isResearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {isResearching ? 'Researching…' : 'Research market'}
+              </button>
+              {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+            </form>
+          </div>
 
-                <div className="rounded-xl border border-gray-100 p-4 bg-white shadow-sm">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                    Avg Paid History
-                  </div>
-                  <div className="text-xl font-bold text-gray-900">
-                    {result.historyAvgPaidEur
-                      ? formatCurrency(result.historyAvgPaidEur)
-                      : '—'}
-                  </div>
-                </div>
+          {/* Results + Landed cost */}
+          <div className="space-y-6">
+            {!result ? (
+              <div className="lux-card border-dashed border-2 min-h-[280px] flex flex-col items-center justify-center text-gray-400 p-6">
+                <Search className="h-12 w-12 mb-4 opacity-30" />
+                <p className="font-medium">Enter an item and run research</p>
+                <p className="text-sm mt-1">Irish competitors + Vestiaire Collective</p>
               </div>
-
-              {result.comps.length > 0 && (
-                <div>
-                  <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
-                    Recent Comparables
+            ) : (
+              <div className="lux-card p-6 space-y-6">
+                <h2 className="text-lg font-medium text-gray-900">Market breakdown</h2>
+                <div className="rounded-xl bg-gray-50 p-4 text-center">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Avg. selling price (second-hand)</div>
+                  <div className="text-2xl font-bold text-gray-900">{formatCurrency(result.averageSellingPriceEur)}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-gray-100 p-4 bg-white">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Max buy</div>
+                    <div className="text-xl font-bold text-gray-900">{formatCurrency(result.maxBuyEur)}</div>
+                    <div className="text-xs text-gray-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
-                  <div className="space-y-3">
-                    {result.comps.map((comp, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-sm py-2 border-b border-gray-100 last:border-0"
-                      >
-                        <div className="pr-4 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">
-                            {comp.sourceUrl ? (
-                              <a
-                                href={comp.sourceUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="hover:text-blue-700 underline-offset-2 hover:underline"
-                              >
-                                {comp.title}
+                  <div className="rounded-xl border border-gray-100 p-4 bg-white">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Max bid</div>
+                    <div className="text-xl font-bold text-gray-900">{formatCurrency(result.maxBidEur)}</div>
+                    <div className="text-xs text-gray-500 mt-1">−7% auction fee</div>
+                  </div>
+                </div>
+                {result.comps.length > 0 && (
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Comparables</div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {result.comps.map((c, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
+                          <div className="min-w-0 pr-2">
+                            {c.sourceUrl ? (
+                              <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-gray-900 hover:text-indigo-600 truncate block">
+                                {c.title}
                               </a>
                             ) : (
-                              comp.title
+                              <span className="text-gray-900 truncate block">{c.title}</span>
                             )}
+                            <span className="text-xs text-gray-500">{c.source}</span>
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {comp.source}
-                            {comp.marketCountry ? ` · ${comp.marketCountry}` : ''}
-                            {comp.marketScope === 'EU_FALLBACK' ? ' · fallback' : ''}
-                          </div>
+                          <span className="font-mono text-gray-700 whitespace-nowrap">{formatCurrency(c.price)}</span>
                         </div>
-                        <div className="font-mono text-gray-600 whitespace-nowrap">
-                          {formatCurrency(comp.price)}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                <button
+                  type="button"
+                  onClick={handleAddToBuyList}
+                  disabled={isAddingToBuyList}
+                  className="w-full rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                >
+                  {isAddingToBuyList ? 'Adding…' : 'Add to buying list'}
+                </button>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={handleAddToBuyList}
-                disabled={isAddingToBuyList}
-                className="w-full rounded-lg bg-gray-900 py-3 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 transition-colors mt-4"
-              >
-                {isAddingToBuyList ? 'Adding...' : 'Add to Buying List'}
-              </button>
+            {/* Landed cost from bid (7% + 3% + 23%) */}
+            <div className="lux-card p-6">
+              <LandedCostWidget />
             </div>
-          )}
-        </div >
-      </div >
-    </section >
+          </div>
+        </div>
+      )}
+    </section>
   )
 }

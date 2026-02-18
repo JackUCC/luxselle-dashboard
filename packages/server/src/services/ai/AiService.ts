@@ -109,4 +109,148 @@ Return ONLY a valid JSON object:
             generatedAt: new Date().toISOString()
         }
     }
+
+    /** Simple free-form prompt for dashboard prompt bar. */
+    async prompt(userPrompt: string): Promise<string> {
+        if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
+            return this.mockPromptReply(userPrompt)
+        }
+
+        try {
+            const openai = await this.getOpenAI()
+            const system = `You are a concise assistant for a luxury resale business dashboard. Answer in 1-2 short sentences. Topics: inventory, KPIs, buying, sourcing, margins.`
+            const response = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: system },
+                    { role: 'user', content: userPrompt },
+                ],
+                max_tokens: 150,
+                temperature: 0.5,
+            })
+            return response.choices[0]?.message?.content?.trim() ?? ''
+        } catch (error) {
+            console.error('AI Prompt Failed:', error)
+            return this.mockPromptReply(userPrompt)
+        }
+    }
+
+    private mockPromptReply(_prompt: string): string {
+        return "With mock AI, I can't analyze live data. Connect OpenAI in .env to get real answers about your inventory and KPIs."
+    }
+
+    /**
+     * Estimate the official / brand retail price (new, from the brand) for an item from its description.
+     * Used for "What was this retail?" — helps compare brand-new price vs second-hand.
+     */
+    async getRetailPriceFromDescription(description: string): Promise<{
+        retailPriceEur: number | null
+        currency: string
+        productName: string | null
+        note: string
+    }> {
+        if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
+            return this.mockRetailPrice(description)
+        }
+
+        const trimmed = description.trim()
+        if (!trimmed) {
+            return {
+                retailPriceEur: null,
+                currency: 'EUR',
+                productName: null,
+                note: 'Please paste an item description (e.g. brand, model, category).',
+            }
+        }
+
+        try {
+            const openai = await this.getOpenAI()
+            const prompt = `You are a luxury retail expert. Given the following item description, estimate the CURRENT OFFICIAL RETAIL PRICE — i.e. what the brand sells this item for NEW, directly from the brand (boutique or official website), NOT second-hand or resale market prices.
+
+Item description:
+"""
+${trimmed}
+"""
+
+Return ONLY a valid JSON object with these exact keys:
+- "retailPriceEur": number or null (estimate in EUR; use null if you cannot identify the product or price)
+- "currency": "EUR"
+- "productName": string or null (short name e.g. "Chanel Classic Flap Medium")
+- "note": string (one short sentence, e.g. "Current boutique price as of 2024" or "Approximate; check brand website for your region")
+
+If the description is too vague or not a recognisable luxury product, set retailPriceEur to null and explain in note.`
+
+            const response = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 200,
+                temperature: 0.3,
+            })
+
+            const text = response.choices[0]?.message?.content?.trim() ?? ''
+            const jsonMatch = text.match(/\{[\s\S]*\}/)
+            if (!jsonMatch) throw new Error('No JSON in response')
+
+            const parsed = JSON.parse(jsonMatch[0]) as {
+                retailPriceEur?: number | null
+                currency?: string
+                productName?: string | null
+                note?: string
+            }
+
+            const retailPriceEur =
+                typeof parsed.retailPriceEur === 'number' && parsed.retailPriceEur >= 0
+                    ? parsed.retailPriceEur
+                    : null
+
+            return {
+                retailPriceEur,
+                currency: parsed.currency === 'EUR' ? 'EUR' : 'EUR',
+                productName:
+                    typeof parsed.productName === 'string' && parsed.productName.trim()
+                        ? parsed.productName.trim()
+                        : null,
+                note:
+                    typeof parsed.note === 'string' && parsed.note.trim()
+                        ? parsed.note.trim()
+                        : retailPriceEur != null
+                          ? 'Estimate; verify on brand website.'
+                          : 'Could not determine retail price from description.',
+            }
+        } catch (error) {
+            console.error('AI Retail Price Lookup Failed:', error)
+            return this.mockRetailPrice(description)
+        }
+    }
+
+    private mockRetailPrice(description: string): {
+        retailPriceEur: number | null
+        currency: string
+        productName: string | null
+        note: string
+    } {
+        const lower = description.toLowerCase()
+        if (lower.includes('chanel') && (lower.includes('flap') || lower.includes('classic'))) {
+            return {
+                retailPriceEur: 6500,
+                currency: 'EUR',
+                productName: 'Chanel Classic Flap (example)',
+                note: 'Mock estimate. Connect OpenAI for real brand retail lookups.',
+            }
+        }
+        if (lower.includes('louis vuitton') || lower.includes('lv')) {
+            return {
+                retailPriceEur: 1800,
+                currency: 'EUR',
+                productName: 'Louis Vuitton (example)',
+                note: 'Mock estimate. Connect OpenAI for real brand retail lookups.',
+            }
+        }
+        return {
+            retailPriceEur: null,
+            currency: 'EUR',
+            productName: null,
+            note: 'Mock mode: paste a description and connect OpenAI (AI_PROVIDER=openai, OPENAI_API_KEY) for real brand retail price lookups.',
+        }
+    }
 }

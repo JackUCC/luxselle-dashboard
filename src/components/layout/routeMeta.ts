@@ -7,11 +7,13 @@ import {
   Globe,
   LayoutGrid,
   Package,
+  Search,
+  Tag,
   Users,
   type LucideIcon,
 } from 'lucide-react'
 
-export type AppNavSection = 'core' | 'tools'
+export type AppNavSection = 'main' | 'admin' | 'extra'
 
 export interface RouteMeta {
   path: string
@@ -22,17 +24,21 @@ export interface RouteMeta {
 }
 
 export const appRoutes: RouteMeta[] = [
-  // Core — daily workflow
-  { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'core' },
-  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'core' },
-  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'core' },
-  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'core' },
-  { path: '/buying-list', label: 'Buying List', navLabel: 'Buying List', icon: ClipboardList, section: 'core' },
-  // Tools — supporting pages
-  { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'tools' },
-  { path: '/supplier-hub', label: 'Supplier Hub', navLabel: 'Supplier Hub', icon: Globe, section: 'tools' },
-  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'tools' },
-  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'tools' },
+  // Main — Overview, Price Check, Serial Check
+  { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'main' },
+  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'main' },
+  { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: Search, section: 'main' },
+  // Admin tools — Inventory, Sourcing, Supplier Hub, Jobs
+  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'admin' },
+  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'admin' },
+  { path: '/supplier-hub', label: 'Supplier Hub', navLabel: 'Supplier Hub', icon: Globe, section: 'admin' },
+  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'admin' },
+  // Extra tools — Market Research, Retail price
+  { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'extra' },
+  { path: '/retail-price', label: 'What was this retail?', navLabel: 'Retail price', icon: Tag, section: 'extra' },
+  // Also in nav (placed in admin / extra for visibility)
+  { path: '/buying-list', label: 'Buying List', navLabel: 'Buying List', icon: ClipboardList, section: 'admin' },
+  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'extra' },
 ]
 
 const formatLabel = (value: string) =>

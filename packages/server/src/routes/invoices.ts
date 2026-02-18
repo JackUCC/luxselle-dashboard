@@ -38,6 +38,17 @@ const CreateInvoiceFromSaleSchema = z.object({
   notes: z.string().optional(),
 })
 
+const CreateInvoiceFromInPersonSchema = z.object({
+  fromInPerson: z.literal(true),
+  issuedAt: z.string().optional(),
+  amountPaidEur: z.number().min(0),
+  description: z.string().min(1),
+  sku: z.string().optional(),
+  customerName: z.string().optional().default(''),
+  customerEmail: z.string().email().optional(),
+  customerAddress: z.string().optional(),
+})
+
 const CreateInvoiceFullSchema = z.object({
   fromSale: z.boolean().optional().default(false),
   invoiceNumber: z.string().optional(),
@@ -81,6 +92,42 @@ function buildInvoiceFromSale(
   }
 }
 
+function buildInvoiceFromInPerson(
+  body: z.infer<typeof CreateInvoiceFromInPersonSchema>,
+  invoiceNumber: string,
+  ratePct: number
+): Omit<Invoice, 'id'> {
+  const { amountPaidEur, description, sku, customerName, customerEmail, customerAddress } = body
+  const { netEur, vatEur } = vatFromGross(amountPaidEur, ratePct)
+  const now = new Date().toISOString()
+  const issuedAt = body.issuedAt ?? now
+  const lineDescription = sku ? `${description} - ${sku}` : description
+  const lineItem: InvoiceLineItem = {
+    description: lineDescription,
+    quantity: 1,
+    unitPriceEur: netEur,
+    vatPct: ratePct,
+    amountEur: netEur,
+    sku: sku || undefined,
+  }
+  return {
+    organisationId: DEFAULT_ORG_ID,
+    createdAt: now,
+    updatedAt: now,
+    invoiceNumber,
+    customerName: customerName ?? '',
+    customerEmail: body.customerEmail,
+    customerAddress: customerAddress ?? undefined,
+    lineItems: [lineItem],
+    subtotalEur: netEur,
+    vatEur,
+    totalEur: amountPaidEur,
+    currency: 'EUR',
+    issuedAt,
+    notes: '',
+  }
+}
+
 // POST /api/invoices — create (from sale or full body)
 router.post('/', async (req, res, next) => {
   try {
@@ -94,6 +141,20 @@ router.post('/', async (req, res, next) => {
       const ratePct = parsed.data.vatPct ?? (await settingsRepo.getSettings())?.vatRatePct ?? 20
       const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
       const invoiceData = buildInvoiceFromSale(parsed.data, invoiceNumber, ratePct)
+      const created = await invoiceRepo.create(invoiceData as Invoice)
+      res.status(201).json(created)
+      return
+    }
+
+    if (raw && typeof raw === 'object' && (raw as { fromInPerson?: boolean }).fromInPerson === true) {
+      const parsed = CreateInvoiceFromInPersonSchema.safeParse(raw)
+      if (!parsed.success) {
+        res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'Invalid from-in-person body', parsed.error.flatten()))
+        return
+      }
+      const ratePct = (await settingsRepo.getSettings())?.vatRatePct ?? 23
+      const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
+      const invoiceData = buildInvoiceFromInPerson(parsed.data, invoiceNumber, ratePct)
       const created = await invoiceRepo.create(invoiceData as Invoice)
       res.status(201).json(created)
       return

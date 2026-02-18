@@ -45,7 +45,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[80] lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+    <div className="fixed inset-0 z-[80] xl:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
       <button
         type="button"
         className="absolute inset-0 bg-gray-500/20 backdrop-blur-sm"
@@ -83,9 +83,11 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
         <div className="space-y-6 overflow-y-auto p-5">
           {NAV_GROUPS.map((group) => (
             <section key={group.section} className="space-y-2">
-              <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
-                {group.title}
-              </h2>
+              {group.title ? (
+                <h2 className="px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                  {group.title}
+                </h2>
+              ) : null}
               <nav className="space-y-1">
                 {appRoutes
                   .filter((route) => route.section === group.section)

@@ -36,160 +36,123 @@ export class InvoicePdfService {
     }
 
     private formatDate(dateStr: string): string {
-        return new Intl.DateTimeFormat('en-IE', { dateStyle: 'medium' }).format(new Date(dateStr))
+        return new Intl.DateTimeFormat('en-IE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(dateStr))
+    }
+
+    /** Company name and address lines for header/footer; fallback to Luxselle Limited when no settings. */
+    private companyBlock(settings: Settings | null): { name: string; addressLines: string[] } {
+        const name = settings?.businessName?.trim() || 'Luxselle Limited'
+        const raw = settings?.businessAddress?.trim()
+        if (raw) {
+            const addressLines = raw.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+            if (addressLines.length > 0) return { name, addressLines }
+        }
+        return {
+            name: 'Luxselle Limited',
+            addressLines: ['Limenstone House', 'Waterfall', 'Cork', 'T12 WCR7'],
+        }
     }
 
     private buildDocDefinition(invoice: Invoice, settings: Settings | null): TDocumentDefinitions {
-        const businessName = settings?.businessName || 'Luxselle'
-        const businessAddress = settings?.businessAddress || ''
-        const businessVat = settings?.businessVatNumber
-        const businessLogo = settings?.businessLogoUrl
+        const { name: businessName, addressLines: businessAddressLines } = this.companyBlock(settings)
+        const vatPct = invoice.lineItems[0]?.vatPct ?? 23
 
-        // Build header content
-        const headerStack: Content[] = [
-            { text: businessName, style: 'headerRight', bold: true },
-        ]
-        if (businessAddress) headerStack.push({ text: businessAddress, style: 'headerRight' })
-        if (businessVat) headerStack.push({ text: `VAT No: ${businessVat}`, style: 'headerRight' })
-        if (settings?.businessEmail) headerStack.push({ text: settings.businessEmail, style: 'headerRight' })
-        if (settings?.businessWebsite) headerStack.push({ text: settings.businessWebsite, style: 'headerRight' })
-
-        const headerColumn: Content[] = [
-            {
-                text: 'INVOICE',
-                style: 'headerLeft',
-                alignment: 'left',
-                fontSize: 20,
-                bold: true,
-                margin: [0, 10, 0, 0]
-            },
-            {
-                stack: headerStack,
-                alignment: 'right',
-            }
+        // Header: company at top (left)
+        const headerContent: Content[] = [
+            { text: businessName, style: 'companyName' },
+            ...businessAddressLines.map((line) => ({ text: line, style: 'companyAddress' as const })),
+            { text: ' ', margin: [0, 0, 0, 10] },
+            { text: 'Invoice', style: 'invoiceTitle' },
+            { text: `Order ID: ${invoice.invoiceNumber}`, margin: [0, 4, 0, 0] },
+            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, margin: [0, 2, 0, 0] },
         ]
 
-        // Line items table body
-        const tableBody: TableCell[][] = [
+        // Customer block
+        const customerStack: Content[] = [
+            { text: 'Billed To:', bold: true, margin: [0, 0, 0, 5] },
+            { text: invoice.customerName || '—', bold: true },
+        ]
+        if (invoice.customerEmail) customerStack.push({ text: invoice.customerEmail })
+        if (invoice.customerAddress?.trim()) {
+            const addrLines = invoice.customerAddress.trim().split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+            addrLines.forEach((line) => customerStack.push({ text: line }))
+        }
+
+        // Order Items: Product | Qty only
+        const orderItemsBody: TableCell[][] = [
             [
-                { text: 'Description', style: 'tableHeader' },
+                { text: 'Product', style: 'tableHeader' },
                 { text: 'Qty', style: 'tableHeader', alignment: 'right' },
-                { text: 'Unit Price', style: 'tableHeader', alignment: 'right' },
-                { text: 'VAT %', style: 'tableHeader', alignment: 'right' },
-                { text: 'Amount', style: 'tableHeader', alignment: 'right' },
-            ]
+            ],
         ]
-
-        invoice.lineItems.forEach(item => {
-            tableBody.push([
+        invoice.lineItems.forEach((item) => {
+            orderItemsBody.push([
                 item.description,
                 { text: item.quantity.toString(), alignment: 'right' },
-                { text: this.formatCurrency(item.unitPriceEur), alignment: 'right' },
-                { text: `${item.vatPct}%`, alignment: 'right' },
-                { text: this.formatCurrency(item.amountEur), alignment: 'right' },
             ])
         })
 
+        // VAT Breakdown section
+        const vatBreakdownBody: TableCell[][] = [
+            [
+                { text: 'Subtotal (excl. VAT):', alignment: 'right', margin: [0, 2, 10, 2] },
+                { text: this.formatCurrency(invoice.subtotalEur), alignment: 'right', margin: [0, 2, 0, 2] },
+            ],
+            [
+                { text: `VAT @ ${vatPct}%:`, alignment: 'right', margin: [0, 2, 10, 2] },
+                { text: this.formatCurrency(invoice.vatEur), alignment: 'right', margin: [0, 2, 0, 2] },
+            ],
+            [
+                { text: 'Total (incl. VAT):', alignment: 'right', margin: [0, 2, 10, 2] },
+                { text: this.formatCurrency(invoice.totalEur), alignment: 'right', margin: [0, 2, 0, 2] },
+            ],
+            [
+                { text: 'Grand Total:', bold: true, alignment: 'right', margin: [0, 5, 10, 0] },
+                { text: this.formatCurrency(invoice.totalEur), bold: true, alignment: 'right', margin: [0, 5, 0, 0] },
+            ],
+        ]
+
+        // Footer: thank you text + company again
+        const footerContent: Content[] = [
+            { text: 'Thank you for shopping with Luxselle.', margin: [0, 20, 0, 4] },
+            { text: 'This is an automatically generated invoice.', fontSize: 9, color: '#555', margin: [0, 0, 0, 16] },
+            { text: businessName, style: 'companyName' },
+            ...businessAddressLines.map((line) => ({ text: line, style: 'companyAddress' as const })),
+        ]
+
         return {
             content: [
-                {
-                    columns: headerColumn,
-                    margin: [0, 0, 0, 40]
-                },
+                { stack: headerContent, margin: [0, 0, 0, 24] },
                 {
                     columns: [
-                        {
-                            width: '*',
-                            stack: [
-                                { text: 'Billed To:', bold: true, margin: [0, 0, 0, 5] },
-                                { text: invoice.customerName, bold: true },
-                                invoice.customerEmail ? { text: invoice.customerEmail } : '',
-                            ]
-                        },
-                        {
-                            width: 'auto',
-                            stack: [
-                                {
-                                    columns: [
-                                        { text: 'Invoice No:', width: 80, bold: true },
-                                        { text: invoice.invoiceNumber, alignment: 'right' }
-                                    ],
-                                    margin: [0, 0, 0, 2]
-                                },
-                                {
-                                    columns: [
-                                        { text: 'Date:', width: 80, bold: true },
-                                        { text: this.formatDate(invoice.issuedAt), alignment: 'right' }
-                                    ],
-                                    margin: [0, 0, 0, 2]
-                                },
-                            ]
-                        }
+                        { width: '*', stack: customerStack },
+                        { width: 'auto', text: '' },
                     ],
-                    margin: [0, 0, 0, 40]
+                    margin: [0, 0, 0, 24],
                 },
+                { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] },
                 {
-                    table: {
-                        headerRows: 1,
-                        widths: ['*', 'auto', 'auto', 'auto', 'auto'],
-                        body: tableBody
-                    },
+                    table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },
                     layout: 'lightHorizontalLines',
-                    margin: [0, 0, 0, 20]
+                    margin: [0, 0, 0, 16],
                 },
+                { text: 'VAT Breakdown', style: 'subheader', margin: [0, 0, 0, 6] },
                 {
-                    columns: [
-                        { width: '*', text: '' },
-                        {
-                            width: 'auto',
-                            layout: 'noBorders',
-                            table: {
-                                body: [
-                                    [
-                                        { text: 'Subtotal:', alignment: 'right', margin: [0, 2, 10, 2] },
-                                        { text: this.formatCurrency(invoice.subtotalEur), alignment: 'right', margin: [0, 2, 0, 2] }
-                                    ],
-                                    [
-                                        { text: 'VAT:', alignment: 'right', margin: [0, 2, 10, 2] },
-                                        { text: this.formatCurrency(invoice.vatEur), alignment: 'right', margin: [0, 2, 0, 2] }
-                                    ],
-                                    [
-                                        { text: 'Total:', bold: true, alignment: 'right', margin: [0, 5, 10, 0] },
-                                        { text: this.formatCurrency(invoice.totalEur), bold: true, alignment: 'right', margin: [0, 5, 0, 0] }
-                                    ],
-                                ]
-                            }
-                        }
-                    ]
+                    layout: 'noBorders',
+                    table: { body: vatBreakdownBody },
+                    margin: [0, 0, 0, 24],
                 },
-                invoice.notes ? { text: 'Notes', style: 'subheader', margin: [0, 20, 0, 5] } : '',
-                invoice.notes ? { text: invoice.notes, fontSize: 10, color: '#555' } : '',
+                ...(invoice.notes ? [{ text: 'Notes', style: 'subheader' as const, margin: [0, 0, 0, 5] }, { text: invoice.notes, fontSize: 10, color: '#555' }] : []),
+                { stack: footerContent, margin: [0, 24, 0, 0] },
             ],
             styles: {
-                headerLeft: {
-                    fontSize: 18,
-                    bold: true
-                },
-                headerRight: {
-                    fontSize: 10,
-                    color: '#555',
-                    lineHeight: 1.3
-                },
-                tableHeader: {
-                    bold: true,
-                    fontSize: 10,
-                    color: 'black',
-                    fillColor: '#f9fafb'
-                },
-                subheader: {
-                    fontSize: 12,
-                    bold: true
-                }
+                companyName: { fontSize: 11, bold: true, lineHeight: 1.3 },
+                companyAddress: { fontSize: 10, lineHeight: 1.3 },
+                invoiceTitle: { fontSize: 20, bold: true },
+                tableHeader: { bold: true, fontSize: 10, fillColor: '#f9fafb' },
+                subheader: { fontSize: 12, bold: true },
             },
-            defaultStyle: {
-                font: 'Roboto',
-                fontSize: 10
-            }
+            defaultStyle: { font: 'Roboto', fontSize: 10 },
         }
     }
 }

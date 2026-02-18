@@ -66,6 +66,12 @@ const AuctionLandedCostInputSchema = z.object({
   importVatPct: z.coerce.number().min(0).max(100).optional(),
 })
 
+const PriceCheckInputSchema = z.object({
+  query: z.string().min(1, 'Search query is required'),
+  condition: z.string().optional().default(''),
+  notes: z.string().optional().default(''),
+})
+
 // Analyse pricing
 router.post('/analyse', async (req, res, next) => {
   try {
@@ -134,6 +140,75 @@ router.post('/auction-landed-cost', async (req, res, next) => {
     })
 
     res.json({ data: result })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/pricing/price-check — query-based market research (Irish + Vestiaire), returns avg price, max buy, max bid
+router.post('/price-check', async (req, res, next) => {
+  try {
+    const { query, condition, notes } = PriceCheckInputSchema.parse(req.body)
+
+    type Comp = { title: string; price: number; source: string; sourceUrl?: string }
+    let averageSellingPriceEur: number
+    let comps: Comp[] = []
+
+    if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+      const refine = [condition, notes].filter(Boolean).join('. ')
+      const prompt = `You are a luxury resale pricing expert. Research the second-hand market for this item.
+
+Item search query: "${query}"
+${refine ? `Refine / filter: ${refine}` : ''}
+
+Use ONLY these sources: Irish competitors (Designer Exchange designerexchange.ie, Luxury Exchange luxuryexchange.ie, Siopella siopaella.com) and Vestiaire Collective (vestiairecollective.com). Do not use any other marketplaces.
+
+Return ONLY a JSON object (no markdown):
+{
+  "averageSellingPriceEur": <number - realistic average selling price in EUR for this item on the second-hand market>,
+  "comps": [
+    { "title": "<listing title>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<url if known>" }
+  ]
+}
+Provide 3-6 comparables. Prices should reflect the Irish/EU resale market.`
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 600,
+        temperature: 0.3,
+      })
+      const text = response.choices[0]?.message?.content ?? ''
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('No JSON in price-check response')
+      const parsed = JSON.parse(jsonMatch[0]) as { averageSellingPriceEur?: number; comps?: Comp[] }
+      averageSellingPriceEur = Math.round(Number(parsed.averageSellingPriceEur) || 0)
+      comps = Array.isArray(parsed.comps) ? parsed.comps : []
+    } else {
+      // Mock
+      const base = 1200
+      averageSellingPriceEur = base
+      comps = [
+        { title: 'Similar item (Designer Exchange)', price: 1150, source: 'Designer Exchange', sourceUrl: 'https://designerexchange.ie' },
+        { title: 'Similar item (Vestiaire Collective)', price: 1250, source: 'Vestiaire Collective', sourceUrl: 'https://vestiairecollective.com' },
+      ]
+    }
+
+    // Max buy = avg selling price − 23% VAT − 20% margin => (avg/1.23)*0.80
+    // Max bid = max buy − 7% auction fee => maxBuy/1.07
+    const maxBuyEur = Math.round((averageSellingPriceEur / 1.23) * 0.8)
+    const maxBidEur = Math.round(maxBuyEur / 1.07)
+
+    res.json({
+      data: {
+        averageSellingPriceEur,
+        comps,
+        maxBuyEur,
+        maxBidEur,
+      },
+    })
   } catch (error) {
     next(error)
   }
@@ -217,7 +292,15 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
       }
     }
 
-    res.json({ data: detectedAttributes })
+    // Build a search-query string for the Price Check search bar (e.g. "Chanel Classic Flap Black")
+    const queryParts = [
+      detectedAttributes.brand,
+      detectedAttributes.model,
+      detectedAttributes.colour,
+    ].filter(Boolean)
+    const query = queryParts.join(' ')
+
+    res.json({ data: { ...detectedAttributes, query } })
   } catch (error) {
     next(error)
   }
