@@ -185,11 +185,11 @@ export default function BuyingListView() {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Buying List</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-display font-bold text-lux-800">Buying List</h1>
+          <p className="text-sm text-lux-600 mt-1">
             Review pending purchases.
           </p>
         </div>
@@ -203,7 +203,7 @@ export default function BuyingListView() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter by status"
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -255,17 +255,17 @@ export default function BuyingListView() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading buying list...</span>
         </div>
       ) : error ? (
-        <div className="rounded-lg bg-red-50 p-6 text-red-600">{error}</div>
+        <div className="lux-card p-8 text-center"><p className="text-rose-600 font-medium">{error}</p></div>
       ) : filteredItems.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
           <ClipboardList className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-          <p className="text-gray-500 font-medium">No items in buying list</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-lux-600 font-medium">No items in buying list</p>
+          <p className="text-sm text-lux-500 mt-1">
             {statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Use the Evaluator to add items to your buying list.'}
           </p>
         </div>
@@ -275,12 +275,12 @@ export default function BuyingListView() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Details</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Est. Cost</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Supplier</th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Item</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Details</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Est. Cost</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Supplier</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-lux-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
@@ -358,7 +358,7 @@ export default function BuyingListView() {
             </table>
           </div>
           
-          <div className="flex items-center justify-end gap-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
+          <div className="flex items-center justify-end gap-6 rounded-lg bg-white/80 p-4 border border-black/[0.04]">
              <div className="text-right">
                <div className="text-xs text-gray-500 uppercase tracking-wide">Total Est. Cost</div>
                <div className="text-xl font-bold text-gray-900">{formatCurrency(totalValue)}</div>

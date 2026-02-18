@@ -49,10 +49,10 @@ export default function RetailPriceView() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-lux-800">
           What was this retail?
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-lux-600">
           Paste the item description (e.g. brand, model, style) to get an estimate of the
           <strong> brand’s official retail price</strong> — what it costs new, directly from the brand.
           This helps you compare against second-hand and make better buying decisions.
@@ -69,7 +69,7 @@ export default function RetailPriceView() {
               id="retail-description"
               data-testid="retail-description"
               rows={4}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="lux-input"
               placeholder="e.g. Chanel Classic Flap Medium, black caviar leather, gold hardware"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -82,7 +82,7 @@ export default function RetailPriceView() {
               data-testid="retail-lookup-btn"
               onClick={handleLookup}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
+              className="lux-btn-primary flex items-center gap-2"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -95,7 +95,7 @@ export default function RetailPriceView() {
               type="button"
               onClick={handleClear}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:opacity-60"
+              className="lux-btn-secondary flex items-center gap-2"
             >
               Clear
             </button>
@@ -129,7 +129,7 @@ export default function RetailPriceView() {
                 <p className="text-sm font-medium text-gray-800">{result.productName}</p>
               )}
               {result.retailPriceEur != null && (
-                <p className="mt-1 font-display text-2xl font-semibold text-gray-900">
+                <p className="mt-1 font-display text-2xl font-semibold text-lux-800">
                   {formatCurrency(result.retailPriceEur)}
                 </p>
               )}

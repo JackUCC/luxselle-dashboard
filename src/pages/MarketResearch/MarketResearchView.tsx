@@ -277,11 +277,11 @@ export default function MarketResearchView() {
         <section className="mx-auto max-w-6xl space-y-8">
             {/* Header */}
             <div className="text-center">
-                <h1 className="text-2xl font-display font-bold text-gray-900 flex items-center justify-center gap-3">
+                <h1 className="text-2xl font-display font-bold text-lux-800 flex items-center justify-center gap-3">
                     <BarChart3 className="h-7 w-7 text-indigo-600" />
                     Market Research
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-2 flex-wrap">
+                <p className="text-sm text-lux-600 mt-1 flex items-center justify-center gap-2 flex-wrap">
                     <span>Irish & EU market · Designer Exchange, Luxury Exchange, Siopella, Vestiaire</span>
                     {status?.aiProvider === 'mock' && (
                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">

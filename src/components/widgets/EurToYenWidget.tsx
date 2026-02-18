@@ -69,11 +69,11 @@ export default function EurToYenWidget() {
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="rounded-xl bg-amber-50 p-2 text-amber-600 border border-amber-100">
+          <div className="rounded-xl bg-amber-50/70 p-2 text-amber-500">
             <ArrowRightLeft className="h-4 w-4" />
           </div>
           <div className="flex items-center gap-1.5">
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-lux-800">
               {direction === 'eur-to-jpy' ? 'EUR → JPY' : 'JPY → EUR'}
             </h3>
             <button
@@ -120,14 +120,14 @@ export default function EurToYenWidget() {
       ) : (
         <>
           {fx && (
-            <div className="mb-3 text-xs text-gray-500">
+            <div className="mb-3 text-xs text-lux-600">
               {rateLine}
               <span className="ml-1">· {fx.date}</span>
             </div>
           )}
           <div className="space-y-3">
             <div>
-              <label htmlFor="eur-yen-input" className="block text-xs text-gray-500 mb-1">{sourceLabel}</label>
+              <label htmlFor="eur-yen-input" className="block text-xs text-lux-600 mb-1">{sourceLabel}</label>
               <input
                 id="eur-yen-input"
                 type="text"
@@ -135,7 +135,7 @@ export default function EurToYenWidget() {
                 placeholder="0"
                 value={amountInput}
                 onChange={(e) => setAmountInput(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-right font-mono text-gray-900 placeholder:text-gray-300 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                className="lux-input text-right font-mono"
               />
             </div>
             {amount > 0 && fx && (

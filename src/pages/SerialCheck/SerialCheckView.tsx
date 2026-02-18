@@ -24,15 +24,15 @@ export default function SerialCheckView() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-lux-800">
           Serial number check
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-lux-600">
           Paste the serial or date code and select the brand to see when the bag was likely made.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="lux-card p-6">
         <div className="space-y-4">
           <div>
             <label htmlFor="serial-input" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -42,7 +42,7 @@ export default function SerialCheckView() {
               id="serial-input"
               data-testid="serial-input"
               rows={2}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="lux-input"
               placeholder="e.g. SR3179 or 25xxxxxx"
               value={serial}
               onChange={(e) => setSerial(e.target.value)}
@@ -55,7 +55,7 @@ export default function SerialCheckView() {
             <select
               id="brand-select"
               data-testid="brand-select"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="lux-input"
               value={brand}
               onChange={(e) => setBrand(e.target.value as SerialCheckBrand)}
             >
@@ -71,7 +71,7 @@ export default function SerialCheckView() {
               type="button"
               data-testid="decode-btn"
               onClick={handleDecode}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="lux-btn-primary flex items-center gap-2"
             >
               <Search className="h-4 w-4" />
               Find year
@@ -79,7 +79,7 @@ export default function SerialCheckView() {
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+              className="lux-btn-secondary flex items-center gap-2"
             >
               Clear
             </button>
@@ -110,14 +110,14 @@ export default function SerialCheckView() {
             </div>
             <div className="min-w-0 flex-1">
               {result.success && result.year != null && (
-                <p className="font-display text-xl font-semibold text-gray-900">
+                <p className="font-display text-xl font-semibold text-lux-800">
                   Year: {result.year}
                   {result.period ? ` · ${result.period}` : ''}
                 </p>
               )}
               <p className="mt-1 text-sm text-gray-700">{result.message}</p>
               {result.note && (
-                <p className="mt-2 text-xs text-gray-500">{result.note}</p>
+                <p className="mt-2 text-xs text-lux-500">{result.note}</p>
               )}
             </div>
           </div>

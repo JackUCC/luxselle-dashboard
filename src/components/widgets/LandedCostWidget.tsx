@@ -36,29 +36,29 @@ export default function LandedCostWidget() {
       style={{ '--stagger': 1 } as React.CSSProperties}
     >
       <div className="mb-3 flex items-center gap-2">
-        <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
+        <div className="rounded-xl bg-gray-100/80 p-2 text-lux-600">
           <Calculator className="h-4 w-4" />
         </div>
-        <h3 className="text-sm font-semibold text-gray-900">Landed cost</h3>
+        <h3 className="text-sm font-semibold text-lux-800">Landed cost</h3>
       </div>
       <div className="space-y-3">
-        <label className="block text-xs text-gray-500">Bid price (€)</label>
+        <label className="block text-xs text-lux-600">Bid price (€)</label>
         <input
           type="text"
           inputMode="decimal"
           placeholder="0"
           value={bidInput}
           onChange={(e) => setBidInput(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-right font-mono text-gray-900 placeholder:text-gray-300 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="lux-input text-right font-mono"
         />
       </div>
       {bid > 0 && (
         <div className="mt-4 border-t border-gray-100 pt-4">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm text-gray-500">Landed price</span>
-            <span className="text-xl font-bold font-mono text-gray-900">{formatEur(landed)}</span>
+            <span className="text-sm text-lux-600">Landed price</span>
+            <span className="text-xl font-bold font-mono text-lux-800">{formatEur(landed)}</span>
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-lux-500">
             <span>+{AUCTION_PCT}% fee {formatEur(auctionFee)}</span>
             <span>+{CUSTOMS_PCT}% customs {formatEur(customs)}</span>
             <span>+{VAT_PCT}% VAT {formatEur(vat)}</span>

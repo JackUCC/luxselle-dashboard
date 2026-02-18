@@ -59,7 +59,7 @@ const AppContent = () => {
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-50 border-b border-gray-100/80 bg-white/90 shadow-sm shadow-gray-200/50 backdrop-blur-xl">
+          <header className="sticky top-0 z-50 border-b border-gray-200/60 bg-white/80 backdrop-blur-xl">
             <div className="mx-auto max-w-8xl px-4 sm:px-6">
               <div className="flex h-14 items-center">
                 <div className="flex min-w-[40px] items-center xl:invisible">
@@ -86,7 +86,7 @@ const AppContent = () => {
           <Toaster
             position="top-center"
             toastOptions={{
-              className: 'text-sm font-medium !bg-white !text-gray-900 !border !border-gray-100 !shadow-lg',
+              className: 'text-sm font-medium !bg-white !text-gray-900 !border !border-black/[0.04] !shadow-elevated !rounded-xl',
               duration: 4000,
             }}
           />

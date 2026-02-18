@@ -171,11 +171,11 @@ export default function JobsView() {
       : jobs.filter((job) => normalizedStatus(job.status) === statusFilter)
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">System Jobs</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-display font-bold text-lux-800">System Jobs</h1>
+          <p className="text-sm text-lux-600 mt-1">
             Monitor imports, background tasks, and system operations.
           </p>
         </div>
@@ -209,25 +209,27 @@ export default function JobsView() {
       </div>
 
       {isLoading && jobs.length === 0 ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading jobs...</span>
         </div>
       ) : error ? (
-        <div className="rounded-lg bg-red-50 p-4 text-red-600">{error}</div>
+        <div className="lux-card p-8 text-center">
+          <p className="text-rose-600 font-medium">{error}</p>
+        </div>
       ) : jobs.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
-          <FileSpreadsheet className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-          <p className="text-gray-500 font-medium">No jobs yet</p>
-          <p className="text-sm text-gray-400 mt-1">
+        <div className="lux-card p-12 text-center">
+          <FileSpreadsheet className="mx-auto h-8 w-8 text-lux-500 mb-3" />
+          <p className="text-lux-600 font-medium">No jobs yet</p>
+          <p className="text-sm text-lux-500 mt-1">
             Jobs will appear here when you run imports or background tasks.
           </p>
         </div>
       ) : filteredJobs.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
-          <FileSpreadsheet className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-          <p className="text-gray-500 font-medium">No jobs match this status</p>
-          <p className="text-sm text-gray-400 mt-1">
+        <div className="lux-card p-12 text-center">
+          <FileSpreadsheet className="mx-auto h-8 w-8 text-lux-500 mb-3" />
+          <p className="text-lux-600 font-medium">No jobs match this status</p>
+          <p className="text-sm text-lux-500 mt-1">
             Try a different status filter or refresh the list.
           </p>
         </div>
@@ -236,19 +238,19 @@ export default function JobsView() {
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50/50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Progress
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Started
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Duration
                 </th>
                 <th className="relative px-6 py-4">
@@ -284,7 +286,7 @@ export default function JobsView() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border ${statusConfig.color}`}>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${statusConfig.color}`}>
                         <StatusIcon className="h-3 w-3" />
                         {statusConfig.label}
                       </span>
@@ -417,7 +419,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
             <h3 className="text-sm font-medium text-gray-700 mb-3">Status</h3>
             <div className="rounded-lg border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-4">
-                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium border ${statusConfig.color}`}>
+                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold border ${statusConfig.color}`}>
                   <StatusIcon className="h-4 w-4" />
                   {statusConfig.label}
                 </span>

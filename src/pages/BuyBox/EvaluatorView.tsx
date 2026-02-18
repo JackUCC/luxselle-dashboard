@@ -143,8 +143,8 @@ export default function EvaluatorView() {
   return (
     <section className="mx-auto max-w-5xl space-y-8">
       <div className="text-center">
-        <h1 className="text-2xl font-display font-bold text-gray-900">Price Check</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-display font-bold text-lux-800">Price Check</h1>
+        <p className="text-sm text-lux-600 mt-1">
           Research market price (Irish + Vestiaire), then see max buy and max bid.
         </p>
       </div>
@@ -274,40 +274,40 @@ export default function EvaluatorView() {
                 {isResearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {isResearching ? 'Researching…' : 'Research market'}
               </button>
-              {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+              {error && <p className="text-sm text-rose-600 font-medium text-center">{error}</p>}
             </form>
           </div>
 
           {/* Results + Landed cost */}
           <div className="space-y-6">
             {!result ? (
-              <div className="lux-card border-dashed border-2 min-h-[280px] flex flex-col items-center justify-center text-gray-400 p-6">
-                <Search className="h-12 w-12 mb-4 opacity-30" />
-                <p className="font-medium">Enter an item and run research</p>
-                <p className="text-sm mt-1">Irish competitors + Vestiaire Collective</p>
+              <div className="lux-card border-dashed border-2 min-h-[280px] flex flex-col items-center justify-center p-6">
+                <Search className="h-12 w-12 mb-4 opacity-30 text-lux-500" />
+                <p className="font-medium text-lux-600">Enter an item and run research</p>
+                <p className="text-sm text-lux-500 mt-1">Irish competitors + Vestiaire Collective</p>
               </div>
             ) : (
               <div className="lux-card p-6 space-y-6">
-                <h2 className="text-lg font-medium text-gray-900">Market breakdown</h2>
+                <h2 className="text-lg font-medium text-lux-800">Market breakdown</h2>
                 <div className="rounded-xl bg-gray-50 p-4 text-center">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Avg. selling price (second-hand)</div>
-                  <div className="text-2xl font-bold text-gray-900">{formatCurrency(result.averageSellingPriceEur)}</div>
+                  <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Avg. selling price (second-hand)</div>
+                  <div className="text-2xl font-bold text-lux-800">{formatCurrency(result.averageSellingPriceEur)}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-xl border border-gray-100 p-4 bg-white">
-                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Max buy</div>
-                    <div className="text-xl font-bold text-gray-900">{formatCurrency(result.maxBuyEur)}</div>
-                    <div className="text-xs text-gray-500 mt-1">−23% VAT, −20% margin</div>
+                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max buy</div>
+                    <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBuyEur)}</div>
+                    <div className="text-xs text-lux-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
                   <div className="rounded-xl border border-gray-100 p-4 bg-white">
-                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Max bid</div>
-                    <div className="text-xl font-bold text-gray-900">{formatCurrency(result.maxBidEur)}</div>
-                    <div className="text-xs text-gray-500 mt-1">−7% auction fee</div>
+                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max bid</div>
+                    <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBidEur)}</div>
+                    <div className="text-xs text-lux-500 mt-1">−7% auction fee</div>
                   </div>
                 </div>
                 {result.comps.length > 0 && (
                   <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Comparables</div>
+                    <div className="text-xs font-semibold text-lux-500 uppercase tracking-wide mb-2">Comparables</div>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {result.comps.map((c, i) => (
                         <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">

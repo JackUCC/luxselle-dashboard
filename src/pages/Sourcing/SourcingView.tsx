@@ -182,11 +182,11 @@ export default function SourcingView() {
       : requests.filter((req) => req.status === statusFilter)
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Sourcing</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-display font-bold text-lux-800">Sourcing</h1>
+          <p className="text-sm text-lux-600 mt-1">
             Customer requests pipeline.
           </p>
         </div>
@@ -199,7 +199,7 @@ export default function SourcingView() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter by status"
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
             >
               <option value="all">All Status</option>
               <option value="open">Open</option>
@@ -223,8 +223,8 @@ export default function SourcingView() {
 
       {/* Create Form Overlay */}
       {showCreateForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-glass-lg animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-gray-900">New Sourcing Request</h2>
               <button 
@@ -332,8 +332,8 @@ export default function SourcingView() {
 
       {/* Edit Form Overlay */}
       {editingRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-glass-lg animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-gray-900">Edit Sourcing Request</h2>
               <button
@@ -479,17 +479,17 @@ export default function SourcingView() {
       {/* Requests List */}
       <div className="lux-card overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 p-12 text-gray-500">
+          <div className="flex items-center justify-center gap-2 p-12 text-lux-600">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Loading requests...</span>
           </div>
         ) : error ? (
-          <div className="p-6 text-red-600 bg-red-50">{error}</div>
+          <div className="p-6 text-rose-600 bg-rose-50/50">{error}</div>
         ) : filteredRequests.length === 0 ? (
           <div className="p-12 text-center">
             <Users className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-            <p className="text-gray-500 font-medium">No sourcing requests found</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-lux-600 font-medium">No sourcing requests found</p>
+            <p className="text-sm text-lux-500 mt-1">
               {statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Create a new request to start sourcing items for customers.'}
             </p>
           </div>
@@ -497,10 +497,10 @@ export default function SourcingView() {
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50/50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Item</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Budget</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Item</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Budget</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Status</th>
                 <th className="relative px-6 py-4">
                   <span className="sr-only">Edit</span>
                 </th>
@@ -521,7 +521,7 @@ export default function SourcingView() {
                     {formatCurrency(request.budget)}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold border ${getStatusStyles(request.status)} uppercase tracking-wide`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${getStatusStyles(request.status)} uppercase tracking-wide`}>
                       {request.status}
                     </span>
                   </td>

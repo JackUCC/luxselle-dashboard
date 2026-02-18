@@ -8,42 +8,25 @@
   --font-body: 'Manrope', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Apple Light Palette */
   --lux-canvas: #F5F5F7;
-  /* Off-white background */
-  --lux-surface: rgba(255, 255, 255, 0.72);
-  /* High blur glass */
-  --lux-surface-hover: rgba(255, 255, 255, 0.85);
-  --lux-border: rgba(0, 0, 0, 0.05);
-  --lux-border-hover: rgba(0, 0, 0, 0.1);
+  --lux-surface: rgba(255, 255, 255, 0.95);
+  --lux-surface-hover: rgba(255, 255, 255, 1);
+  --lux-border: rgba(0, 0, 0, 0.04);
+  --lux-border-hover: rgba(0, 0, 0, 0.07);
   --lux-text: #1D1D1F;
-  /* Apple Primary Text */
   --lux-text-secondary: #86868B;
-  /* Apple Secondary Text */
+  --lux-text-tertiary: #AEAEB2;
   --lux-primary: #007AFF;
-  /* Apple Blue */
 }
 
 body {
   margin: 0;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: gray;
+  -moz-osx-font-smoothing: grayscale;
   background: var(--lux-canvas);
   color: var(--lux-text);
-  line-height: 1.5;
-}
-
-/* Subtle grain overlay (optional, for texture) or just clean */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(circle at 15% 50%, rgba(0, 122, 255, 0.03), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(88, 86, 214, 0.03), transparent 25%);
-  pointer-events: none;
+  line-height: 1.6;
 }
 
 h1,
@@ -54,29 +37,25 @@ h5,
 h6 {
   font-family: var(--font-display);
   color: var(--lux-text);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
-/* ─── Apple Glass Card ─── */
+/* ─── Apple Surface Card ─── */
 .lux-card {
-  @apply rounded-2xl border border-white/50 bg-white/60 shadow-glass;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  @apply rounded-2xl bg-white/95 shadow-elevated;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .lux-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
-  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
 }
 
-/* EvaluatorView search card: dynamic layout, aligns with grid */
 .lux-card.evaluator-form-card {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 @media (min-width: 1024px) {
   .lux-card.evaluator-form-card {
@@ -84,52 +63,70 @@ h6 {
   }
 }
 
-/* ─── Apple Form Inputs ─── */
+/* ─── Form Inputs ─── */
 .lux-input {
-  @apply w-full rounded-xl border border-gray-200 bg-white/50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 font-medium;
-  backdrop-filter: blur(10px);
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 font-medium;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lux-input:focus {
-  @apply outline-none bg-white border-blue-500/50;
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+  @apply outline-none border-blue-400 bg-white;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
 }
 
 .lux-input:disabled {
-  @apply bg-gray-100 text-gray-400 cursor-not-allowed border-transparent;
+  @apply bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100;
 }
 
 /* ─── Buttons ─── */
 .lux-btn-primary {
-  @apply rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-md;
+  @apply rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm;
   background: #007AFF;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
 }
 
 .lux-btn-primary:hover {
-  background: #006ADC;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  background: #0071E3;
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
 }
 
 .lux-btn-primary:active {
-  transform: translateY(0);
-  background: #005BB5;
+  transform: scale(0.98);
+  background: #0068D6;
+}
+
+.lux-btn-primary:disabled {
+  @apply opacity-40 cursor-not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .lux-btn-secondary {
-  @apply rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all shadow-sm;
+  @apply rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-xs;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .lux-btn-secondary:hover {
-  @apply border-gray-300 bg-gray-50 text-gray-900;
-  transform: translateY(-0.5px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  @apply bg-gray-50 border-gray-300 text-gray-900;
+}
+
+.lux-btn-secondary:active {
+  @apply bg-gray-100;
+}
+
+.lux-btn-secondary:disabled {
+  @apply opacity-40 cursor-not-allowed bg-white;
+}
+
+/* Pill variant for compact inline actions */
+.lux-btn-pill {
+  @apply rounded-full px-4 py-2 text-xs font-semibold;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 /* ─── Skeleton (Light) ─── */
 .lux-skeleton {
-  @apply relative overflow-hidden rounded-xl bg-gray-200;
+  @apply relative overflow-hidden rounded-xl bg-gray-100;
 }
 
 .lux-skeleton::after {
@@ -137,8 +134,8 @@ h6 {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-  animation: lux-shimmer 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: lux-shimmer 1.8s infinite;
 }
 
 /* ─── Sparkline ─── */
@@ -169,4 +166,20 @@ h6 {
   .animate-bento-enter {
     animation-delay: calc(var(--stagger, 0) * 80ms);
   }
+}
+
+/* Webkit scrollbar — thin, Apple-style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
 }

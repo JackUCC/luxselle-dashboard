@@ -387,23 +387,23 @@ export default function SupplierHubView() {
   return (
     <section className="space-y-8">
       <div>
-        <h1 className="text-2xl font-display font-bold text-gray-900">Connected Sources</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage external inventory feeds and integrations.</p>
+        <h1 className="text-2xl font-display font-bold text-lux-800">Connected Sources</h1>
+        <p className="text-sm text-lux-600 mt-1">Manage external inventory feeds and integrations.</p>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading sources...</span>
         </div>
       ) : error ? (
-        <div className="rounded-lg bg-red-50 p-4 text-red-600">{error}</div>
+        <div className="lux-card p-8 text-center"><p className="text-rose-600 font-medium">{error}</p></div>
       ) : (
         <>
           {/* Connected Sources Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {suppliers.map((supplier) => (
-              <div key={supplier.id} className="lux-card p-6 flex flex-col justify-between group hover:shadow-md transition-all">
+              <div key={supplier.id} className="lux-card p-6 flex flex-col justify-between group">
                 <div>
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-2 rounded-lg ${
@@ -411,7 +411,7 @@ export default function SupplierHubView() {
                     }`}>
                       <FileText className="h-5 w-5" />
                     </div>
-                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
                       supplier.status === 'active' ? 'bg-green-100 text-green-700' : 
                       supplier.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
                     }`}>
@@ -419,7 +419,7 @@ export default function SupplierHubView() {
                     </span>
                   </div>
                   
-                  <h3 className="font-bold text-gray-900 mb-1">{supplier.name}</h3>
+                  <h3 className="font-bold text-lux-800 mb-1">{supplier.name}</h3>
                   <p className="text-sm text-gray-500 line-clamp-2 min-h-[2.5em]">{supplier.notes}</p>
                 </div>
 
@@ -448,7 +448,7 @@ export default function SupplierHubView() {
           {/* Gallery / Feed */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">
+              <h2 className="text-lg font-medium text-lux-800">
                 Recent Arrivals
                 {hasActiveFilters && (
                   <span className="ml-2 text-sm font-normal text-gray-500">
@@ -460,7 +460,7 @@ export default function SupplierHubView() {
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5 text-sm text-lux-600">
                 <Filter className="h-4 w-4" />
                 <span>Filter:</span>
               </div>
@@ -470,7 +470,7 @@ export default function SupplierHubView() {
                 <select
                   value={supplierFilter}
                   onChange={(e) => setFilter('supplier', e.target.value)}
-                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
                 >
                   <option value="">All Suppliers</option>
                   {suppliers.map(s => (
@@ -485,7 +485,7 @@ export default function SupplierHubView() {
                 <select
                   value={brandFilter}
                   onChange={(e) => setFilter('brand', e.target.value)}
-                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
                 >
                   <option value="">All Brands</option>
                   {brands.map(brand => (
@@ -500,7 +500,7 @@ export default function SupplierHubView() {
                 <select
                   value={availabilityFilter}
                   onChange={(e) => setFilter('availability', e.target.value)}
-                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
                 >
                   <option value="">All Status</option>
                   <option value="uploaded">Uploaded</option>
@@ -524,11 +524,11 @@ export default function SupplierHubView() {
 
             {filteredItems.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
-                <FileText className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-                <p className="text-gray-500 font-medium">
+                <FileText className="mx-auto h-8 w-8 text-lux-500 mb-3" />
+                <p className="text-lux-600 font-medium">
                   {hasActiveFilters ? 'No items match your filters' : 'No supplier items yet'}
                 </p>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-lux-500 mt-1">
                   {hasActiveFilters 
                     ? 'Try adjusting your filters or clear them to see all items.' 
                     : 'Connect a source and run an import to see items here.'}
@@ -566,7 +566,7 @@ export default function SupplierHubView() {
           <div ref={importRef} className="border-t border-gray-200 pt-8">
             <button 
               onClick={() => setIsImportExpanded(!isImportExpanded)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-sm font-medium text-lux-600 hover:text-lux-800 transition-colors"
             >
               <FileSpreadsheet className="h-4 w-4" />
               <span>Admin / Data Import</span>
@@ -586,7 +586,7 @@ export default function SupplierHubView() {
                         <Mail className="h-4 w-4" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-900">Shared Inbox Sync</h3>
+                        <h3 className="text-sm font-semibold text-lux-800">Shared Inbox Sync</h3>
                         <p className="text-xs text-gray-500">
                           {emailStatus?.enabled
                             ? emailStatus.connected
@@ -618,7 +618,7 @@ export default function SupplierHubView() {
 
                 <div className="rounded-xl border border-gray-200 bg-white p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-base font-semibold text-gray-900">Import Supplier File</h2>
+                    <h2 className="text-base font-semibold text-lux-800">Import Supplier File</h2>
                     <span className="text-xs text-gray-500">CSV fallback stays available</span>
                   </div>
 
@@ -679,7 +679,7 @@ export default function SupplierHubView() {
                 <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-gray-500" />
-                    <h2 className="text-base font-semibold text-gray-900">Supplier Mapping Template</h2>
+                    <h2 className="text-base font-semibold text-lux-800">Supplier Mapping Template</h2>
                   </div>
                   <p className="text-sm text-gray-500">
                     Configure sender email aliases and file column mappings for auto-import from Gmail.

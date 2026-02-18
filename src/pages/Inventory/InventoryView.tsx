@@ -381,21 +381,21 @@ export default function InventoryView() {
   });
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       {/* Header & Controls */}
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-display font-bold tracking-tight text-lux-800">
               Inventory
             </h1>
-            <p className="text-base text-gray-500 mt-1">
+            <p className="text-base text-lux-600 mt-1">
               Manage stock levels and product details.
             </p>
           </div>
           <button
             onClick={() => setShowAddDrawer(true)}
-            className="lux-btn-primary flex items-center gap-2 shadow-lg shadow-blue-500/20"
+            className="lux-btn-primary flex items-center gap-2"
           >
             <Plus className="h-5 w-5" />
             Add Product
@@ -412,7 +412,7 @@ export default function InventoryView() {
                 placeholder="Search by brand, model, SKU..."
                 value={query}
                 onChange={handleSearchChange}
-                className="lux-input pl-10 w-full shadow-sm"
+                className="lux-input pl-10 w-full"
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">
                 /
@@ -572,21 +572,21 @@ export default function InventoryView() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading inventory...</span>
         </div>
       ) : error ? (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-red-400">
-          {error}
+        <div className="lux-card p-8 text-center">
+          <p className="text-rose-600 font-medium">{error}</p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white/50 p-12 text-center">
           <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <Package className="h-6 w-6 text-gray-400" />
           </div>
-          <p className="text-gray-900 font-semibold mb-1">No matching products</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-lux-800 font-semibold mb-1">No matching products</p>
+          <p className="text-sm text-lux-600">
             {query ||
             brandFilter ||
             statusFilter ||
@@ -609,25 +609,25 @@ export default function InventoryView() {
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Brand / Title / SKU
                 </th>
-                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-right text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Cost
                 </th>
-                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-right text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Customs
                 </th>
-                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-right text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   VAT
                 </th>
-                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-right text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Sell Price
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Qty
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="relative px-4 py-3 w-10">

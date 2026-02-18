@@ -166,11 +166,11 @@ export default function InvoicesView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Invoices</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-display font-bold text-lux-800">Invoices</h1>
+          <p className="text-sm text-lux-600 mt-1">
             Create invoices from sales and store them for accounting.
           </p>
         </div>
@@ -197,15 +197,15 @@ export default function InvoicesView() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading invoices...</span>
         </div>
       ) : invoices.length === 0 ? (
         <div className="lux-card p-12 text-center">
-          <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-          <p className="text-gray-600 font-medium">No invoices yet</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <FileText className="mx-auto h-12 w-12 text-lux-500 mb-4" />
+          <p className="text-lux-600 font-medium">No invoices yet</p>
+          <p className="text-sm text-lux-500 mt-1">
             Create an in-person invoice or upload a PDF invoice to get started.
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -230,7 +230,7 @@ export default function InvoicesView() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="lux-card p-4">
-            <h2 className="font-semibold text-gray-900 mb-4">All invoices</h2>
+            <h2 className="font-semibold text-lux-800 mb-4">All invoices</h2>
             <ul className="space-y-2">
               {invoices.map((inv) => (
                 <li key={inv.id}>
@@ -260,7 +260,7 @@ export default function InvoicesView() {
           {selected && (
             <div className="lux-card p-6 print:shadow-none">
               <div className="flex items-start justify-between mb-6 no-print">
-                <h2 className="font-semibold text-gray-900">Invoice detail</h2>
+                <h2 className="font-semibold text-lux-800">Invoice detail</h2>
                 <div className="flex gap-2">
                   {selected.pdfUrl && (
                     <a
@@ -306,12 +306,12 @@ export default function InvoicesView() {
                 </div>
                 <table className="w-full mt-6 text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 text-left text-gray-500">
-                      <th className="pb-2 font-medium">Description</th>
-                      <th className="pb-2 font-medium text-right">Qty</th>
-                      <th className="pb-2 font-medium text-right">Unit price</th>
-                      <th className="pb-2 font-medium text-right">VAT %</th>
-                      <th className="pb-2 font-medium text-right">Amount</th>
+                    <tr className="border-b border-gray-200 text-left text-lux-500">
+                      <th className="pb-2 font-semibold">Description</th>
+                      <th className="pb-2 font-semibold text-right">Qty</th>
+                      <th className="pb-2 font-semibold text-right">Unit price</th>
+                      <th className="pb-2 font-semibold text-right">VAT %</th>
+                      <th className="pb-2 font-semibold text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -354,9 +354,9 @@ export default function InvoicesView() {
         <>
           <div className="fixed inset-0 bg-black/30 z-40" aria-hidden onClick={closeAddModal} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="create-invoice-title">
-            <div className="lux-card w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="lux-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-                <h2 id="create-invoice-title" className="text-lg font-semibold text-gray-900">Create in-person invoice</h2>
+                <h2 id="create-invoice-title" className="text-lg font-semibold text-lux-800">Create in-person invoice</h2>
                 <button type="button" onClick={closeAddModal} className="p-2 text-gray-400 hover:text-gray-600" aria-label="Close">
                   <X className="h-5 w-5" />
                 </button>
@@ -473,9 +473,9 @@ export default function InvoicesView() {
         <>
           <div className="fixed inset-0 bg-black/30 z-40" aria-hidden onClick={closeAddModal} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upload-invoice-title">
-            <div className="lux-card w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="lux-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-                <h2 id="upload-invoice-title" className="text-lg font-semibold text-gray-900">Add invoice (PDF)</h2>
+                <h2 id="upload-invoice-title" className="text-lg font-semibold text-lux-800">Add invoice (PDF)</h2>
                 <button type="button" onClick={closeAddModal} className="p-2 text-gray-400 hover:text-gray-600" aria-label="Close">
                   <X className="h-5 w-5" />
                 </button>

@@ -82,12 +82,12 @@ function ProfitBar({ label, value, maxValue, color }: { label: string; value: nu
   const barColor = color === 'text-emerald-600' ? '#10B981' : color === 'text-rose-600' ? '#E11D48' : '#6366F1'
   const barColorEnd = color === 'text-emerald-600' ? '#059669' : color === 'text-rose-600' ? '#BE123C' : '#4F46E5'
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-500">{label}</span>
+        <span className="text-lux-600">{label}</span>
         <span className={`font-bold font-mono ${color}`}>{formatCurrency(value)}</span>
       </div>
-      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-1000 ease-out"
           style={{ width: `${Math.min(pct, 100)}%`, background: `linear-gradient(90deg, ${barColor}, ${barColorEnd})` }}
@@ -146,17 +146,16 @@ export default function DashboardView() {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      {/* ─── Header ─── */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-gray-900">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-lux-800">
           {getGreeting()}, Jack
         </h1>
         <button
           type="button"
           onClick={handleRefresh}
           disabled={isLoading || isRefreshing}
-          className="self-start sm:self-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 flex items-center gap-2"
+          className="lux-btn-secondary self-start sm:self-center flex items-center gap-2 !px-4 !py-2.5 disabled:opacity-40"
           title="Refresh data"
           aria-label="Refresh dashboard data"
         >
@@ -168,50 +167,48 @@ export default function DashboardView() {
       {isLoading ? (
         <DashboardSkeleton />
       ) : error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
-          <p>{error}</p>
+        <div className="lux-card p-8 text-center">
+          <p className="text-rose-600 font-medium">{error}</p>
           <button
             type="button"
             onClick={handleRefresh}
-            className="mt-3 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+            className="lux-btn-secondary mt-4 !text-rose-600"
           >
             Retry
           </button>
         </div>
       ) : (
-        <div className="space-y-10">
-          {/* ─── AI prompt ─── */}
+        <div className="space-y-12">
           <AiPromptBar />
 
-          {/* ─── Overview (KPIs) ─── */}
           <section aria-labelledby="overview-heading">
-            <h2 id="overview-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+            <h2 id="overview-heading" className="text-xs font-semibold uppercase tracking-widest text-lux-500 mb-5">
               Overview
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="lux-card p-7 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Inventory cost</p>
-                    <p className="text-2xl font-bold font-mono text-gray-900">
+                    <p className="text-sm text-lux-600 mb-1.5">Inventory cost</p>
+                    <p className="text-2xl font-bold font-mono text-lux-800">
                       <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
                     </p>
                   </div>
-                  <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600 border border-blue-100 shrink-0">
+                  <div className="rounded-xl bg-blue-50/70 p-2.5 text-blue-500 shrink-0">
                     <Package className="h-5 w-5" />
                   </div>
                 </div>
                 <KPISparkline color="#3B82F6" />
               </div>
-              <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+              <div className="lux-card p-7 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Potential value</p>
-                    <p className="text-2xl font-bold font-mono text-gray-900">
+                    <p className="text-sm text-lux-600 mb-1.5">Potential value</p>
+                    <p className="text-2xl font-bold font-mono text-lux-800">
                       <AnimatedNumber value={kpis?.totalInventoryPotentialValue ?? 0} prefix="€" />
                     </p>
                   </div>
-                  <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600 border border-emerald-100 shrink-0">
+                  <div className="rounded-xl bg-emerald-50/70 p-2.5 text-emerald-500 shrink-0">
                     <TrendingUp className="h-5 w-5" />
                   </div>
                 </div>
@@ -220,12 +217,11 @@ export default function DashboardView() {
             </div>
           </section>
 
-          {/* ─── Quick tools (2×2 grid, responsive) ─── */}
           <section aria-labelledby="tools-heading">
-            <h2 id="tools-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+            <h2 id="tools-heading" className="text-xs font-semibold uppercase tracking-widest text-lux-500 mb-5">
               Quick tools
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6 [&>*]:min-w-0">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6 [&>*]:min-w-0">
               <LandedCostWidget />
               <SerialCheckWidget />
               <EurToYenWidget />
@@ -233,12 +229,11 @@ export default function DashboardView() {
             </div>
           </section>
 
-          {/* ─── Profit ─── */}
           <section aria-labelledby="profit-heading">
-            <h2 id="profit-heading" className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+            <h2 id="profit-heading" className="text-xs font-semibold uppercase tracking-widest text-lux-500 mb-5">
               Profit
             </h2>
-            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
+            <div className="lux-card p-7 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <ProfitBar
                   label="Revenue"
