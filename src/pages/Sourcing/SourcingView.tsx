@@ -40,6 +40,7 @@ export default function SourcingView() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [statusFilter, setStatusFilterState] = useState<string>('all')
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingRequest, setEditingRequest] = useState<SourcingRequestWithId | null>(null)
   const [formData, setFormData] = useState({
     customerName: '',
     queryText: '',
@@ -47,6 +48,7 @@ export default function SourcingView() {
     budget: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
     notes: '',
+    status: 'open' as 'open' | 'sourcing' | 'sourced' | 'fulfilled' | 'lost',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -122,12 +124,52 @@ export default function SourcingView() {
         budget: '',
         priority: 'medium',
         notes: '',
+        status: 'open',
       })
       setShowCreateForm(false)
       loadRequests()
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to create sourcing request'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openEditForm = (request: SourcingRequestWithId) => {
+    setFormData({
+      customerName: request.customerName,
+      queryText: request.queryText,
+      brand: request.brand ?? '',
+      budget: String(request.budget),
+      priority: request.priority,
+      notes: request.notes ?? '',
+      status: request.status,
+    })
+    setEditingRequest(request)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingRequest) return
+    setIsSubmitting(true)
+    try {
+      await apiPut(`/sourcing/${editingRequest.id}`, {
+        customerName: formData.customerName,
+        queryText: formData.queryText,
+        brand: formData.brand,
+        budget: Number(formData.budget),
+        priority: formData.priority,
+        notes: formData.notes,
+        status: formData.status,
+      })
+      toast.success('Sourcing request updated')
+      setEditingRequest(null)
+      loadRequests()
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update sourcing request'
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -288,6 +330,152 @@ export default function SourcingView() {
         </div>
       )}
 
+      {/* Edit Form Overlay */}
+      {editingRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gray-900">Edit Sourcing Request</h2>
+              <button
+                type="button"
+                onClick={() => setEditingRequest(null)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Customer Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={formData.customerName}
+                    onChange={handleChange}
+                    required
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Brand
+                  </label>
+                  <input
+                    type="text"
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleChange}
+                    className="lux-input"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Query / Description *
+                </label>
+                <textarea
+                  name="queryText"
+                  value={formData.queryText}
+                  onChange={handleChange}
+                  required
+                  rows={3}
+                  className="lux-input"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Budget (EUR) *
+                  </label>
+                  <input
+                    type="number"
+                    name="budget"
+                    value={formData.budget}
+                    onChange={handleChange}
+                    required
+                    className="lux-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="lux-input"
+                    aria-label="Status"
+                  >
+                    <option value="open">Open</option>
+                    <option value="sourcing">Sourcing</option>
+                    <option value="sourced">Sourced</option>
+                    <option value="fulfilled">Fulfilled</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                    Priority
+                  </label>
+                  <select
+                    name="priority"
+                    value={formData.priority}
+                    onChange={handleChange}
+                    className="lux-input"
+                    aria-label="Priority"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Notes
+                </label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={2}
+                  className="lux-input"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingRequest(null)}
+                  className="lux-btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="lux-btn-primary flex-1"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Requests List */}
       <div className="lux-card overflow-hidden">
         {isLoading ? (
@@ -338,7 +526,12 @@ export default function SourcingView() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => openEditForm(request)}
+                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Edit request"
+                    >
                       <Pencil className="h-4 w-4" />
                     </button>
                   </td>
