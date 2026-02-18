@@ -70,12 +70,6 @@ const getStatusLabel = (status: string) => {
   }
 };
 
-const STATUS_FILTER_OPTIONS = [
-  { value: "in_stock", label: "In stock" },
-  { value: "reserved", label: "Reserved" },
-  { value: "sold", label: "Sold" },
-] as const;
-
 function InventoryRowActions({
   product,
   onEdit,
@@ -363,17 +357,6 @@ export default function InventoryView() {
     [products],
   );
 
-  const topBrands = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const product of products) {
-      counts.set(product.brand, (counts.get(product.brand) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([brand]) => brand);
-  }, [products]);
-
   const activeFilterCount =
     Number(Boolean(query)) +
     Number(Boolean(brandFilter)) +
@@ -539,126 +522,52 @@ export default function InventoryView() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filter by
-            </span>
-            {STATUS_FILTER_OPTIONS.map((option) => {
-              const isActive = statusFilter === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() =>
-                    updateParam("status", isActive ? null : option.value)
-                  }
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() =>
-                updateParam("lowStock", lowStockFilter ? null : "1")
-              }
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                lowStockFilter
-                  ? "bg-orange-600 text-white"
-                  : "bg-orange-100 text-orange-700 hover:bg-orange-200"
-              }`}
+        {/* Filters: Brand and Status dropdowns only */}
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filter by
+          </span>
+          <div className="relative">
+            <select
+              aria-label="Filter by brand"
+              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
+              value={brandFilter}
+              onChange={(e) => updateParam("brand", e.target.value)}
             >
-              Low stock
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                updateParam("missingInfo", missingInfoFilter ? null : "1")
-              }
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                missingInfoFilter
-                  ? "bg-amber-600 text-white"
-                  : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-              }`}
-            >
-              Missing info
-            </button>
-
-            {activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="ml-auto inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100"
-              >
-                <X className="h-3.5 w-3.5" />
-                Clear all ({activeFilterCount})
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">
-              Brands:
-            </span>
-            {topBrands.map((brand) => {
-              const isActive =
-                brandFilter.toLowerCase() === brand.toLowerCase();
-              return (
-                <button
-                  key={brand}
-                  type="button"
-                  onClick={() => updateParam("brand", isActive ? null : brand)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                    isActive
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
+              <option value="">All Brands</option>
+              {brands.map((brand) => (
+                <option key={brand} value={brand}>
                   {brand}
-                </button>
-              );
-            })}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
-
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <select
-                className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
-                value={brandFilter}
-                onChange={(e) => updateParam("brand", e.target.value)}
-              >
-                <option value="">All Brands</option>
-                {brands.map((brand) => (
-                  <option key={brand} value={brand}>
-                    {brand}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-
-            <div className="relative">
-              <select
-                className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
-                value={statusFilter}
-                onChange={(e) => updateParam("status", e.target.value)}
-              >
-                <option value="">All Statuses</option>
-                <option value="in_stock">In Stock</option>
-                <option value="sold">Sold</option>
-                <option value="reserved">Reserved</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
+          <div className="relative">
+            <select
+              aria-label="Filter by status"
+              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
+              value={statusFilter}
+              onChange={(e) => updateParam("status", e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="in_stock">In Stock</option>
+              <option value="sold">Sold</option>
+              <option value="reserved">Reserved</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="ml-auto inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear all ({activeFilterCount})
+            </button>
+          )}
         </div>
       </div>
 
