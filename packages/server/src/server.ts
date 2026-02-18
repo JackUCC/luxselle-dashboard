@@ -73,11 +73,17 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
 
   if (err instanceof ZodError) {
     errorTracker.track('validation')
+    const flat = err.flatten()
+    const firstIssue = err.issues[0]
+    const pathStr = firstIssue?.path?.length ? firstIssue.path.join('.') : ''
+    const detailMsg = firstIssue ? `${pathStr ? pathStr + ': ' : ''}${firstIssue.message}` : ''
+    const message = detailMsg ? `Validation error: ${detailMsg}` : 'Validation error'
     logger.warn('validation_error', {
       requestId,
-      errors: err.flatten(),
+      message,
+      errors: flat,
     })
-    res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'Validation error', err.flatten() as unknown as object))
+    res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, message, flat as unknown as object))
     return
   }
 

@@ -4,6 +4,7 @@
  * References: Express, repos
  */
 import { Router } from 'express'
+import { ZodError } from 'zod'
 import { env } from '../config/env'
 import { ProductRepo } from '../repos/ProductRepo'
 import { BuyingListItemRepo } from '../repos/BuyingListItemRepo'
@@ -25,12 +26,35 @@ const settingsRepo = new SettingsRepo()
 // KPIs: inventory value (in_stock), pending buy list value, active sourcing pipeline, low stock count
 router.get('/kpis', async (_req, res, next) => {
   try {
-    const [products, buyingListItems, sourcingRequests, settings] = await Promise.all([
-      productRepo.list(),
-      buyingListRepo.list(),
-      sourcingRepo.list(),
-      settingsRepo.getSettings(),
-    ])
+    const logValidationSource = (source: string, e: unknown) => {
+      const details = e instanceof ZodError ? e.issues : undefined
+      console.warn(JSON.stringify({ level: 'warn', message: 'kpis_validation_source', source, error: e instanceof Error ? e.message : String(e), details }))
+    }
+    let products, buyingListItems, sourcingRequests, settings
+    try {
+      products = await productRepo.list()
+    } catch (e) {
+      logValidationSource('products', e)
+      throw e
+    }
+    try {
+      buyingListItems = await buyingListRepo.list()
+    } catch (e) {
+      logValidationSource('buyingList', e)
+      throw e
+    }
+    try {
+      sourcingRequests = await sourcingRepo.list()
+    } catch (e) {
+      logValidationSource('sourcing', e)
+      throw e
+    }
+    try {
+      settings = await settingsRepo.getSettings()
+    } catch (e) {
+      logValidationSource('settings', e)
+      throw e
+    }
 
     // Total Inventory Cost (sum cost where status=in_stock)
     const totalInventoryValue = products
