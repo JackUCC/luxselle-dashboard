@@ -11,6 +11,7 @@ export interface FxResult {
   source: string
 }
 
+/** EUR → JPY: 1 EUR = rate JPY. For JPY → EUR use inverseRate = 1 / rate. */
 export async function fetchEurToJpy(): Promise<FxResult> {
   const url = import.meta.env.VITE_FX_API_URL || FRANKFURTER_URL
   const res = await fetch(url)
