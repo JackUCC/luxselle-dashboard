@@ -12,7 +12,20 @@ export const SettingsSchema = BaseDocSchema.extend({
   businessName: z.string().optional().default('Luxselle'),
   businessAddress: z.string().optional().default(''), // Multi-line address
   businessVatNumber: z.string().optional().default(''),
-  businessEmail: z.union([z.string().email(), z.literal('')]).optional().default(''),
+  businessEmail: z.preprocess(
+    (v) => {
+      if (v == null || v === undefined) return ''
+      const s = String(v).trim()
+      if (s === '' || /^(n\/a|none|-|null)$/i.test(s)) return ''
+      try {
+        z.string().email().parse(s)
+        return s
+      } catch {
+        return ''
+      }
+    },
+    z.string().default('')
+  ),
   businessPhone: z.string().optional().default(''),
   businessWebsite: z.string().optional().default(''),
   businessLogoUrl: z.string().optional().default(''),
