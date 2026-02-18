@@ -13,7 +13,7 @@ export const BuyingListItemSchema = BaseDocSchema.extend({
   category: z.string().optional().default(''),
   condition: z.string().optional().default(''),
   colour: z.string().optional().default(''),
-  targetBuyPriceEur: z.number(),
+  targetBuyPriceEur: z.coerce.number(),
   status: BuyingListStatusSchema,
   notes: z.string().optional().default(''),
   landedCostSnapshot: LandedCostSnapshotSchema.optional(),

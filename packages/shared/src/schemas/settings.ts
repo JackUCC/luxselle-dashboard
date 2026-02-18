@@ -18,16 +18,16 @@ export const SettingsSchema = BaseDocSchema.extend({
   businessLogoUrl: z.string().optional().default(''),
 
   baseCurrency: CurrencySchema.default('EUR'),
-  targetMarginPct: z.number(),
-  lowStockThreshold: z.number(),
-  fxUsdToEur: z.number(),
+  targetMarginPct: z.coerce.number(),
+  lowStockThreshold: z.coerce.number(),
+  fxUsdToEur: z.coerce.number(),
   /** VAT rate as percentage (e.g. 20 for 20%); used by VAT calculator and invoices. */
-  vatRatePct: z.number().min(0).max(100).optional().default(20),
+  vatRatePct: z.coerce.number().min(0).max(100).optional().default(20),
   pricingMarketCountryDefault: PricingMarketCountrySchema.default('IE'),
   pricingMarketMode: PricingMarketModeSchema.default('ie_first_eu_fallback'),
   pricingIeSourceAllowlist: z.array(z.string()).default([]),
   auctionPlatforms: z.array(AuctionPlatformProfileSchema).default([]),
-  importVatPctDefault: z.number().min(0).max(100).default(23),
+  importVatPctDefault: z.coerce.number().min(0).max(100).default(23),
 })
 
 export type Settings = z.infer<typeof SettingsSchema>

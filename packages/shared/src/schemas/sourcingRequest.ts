@@ -6,7 +6,7 @@ export const SourcingRequestSchema = BaseDocSchema.extend({
   customerName: z.string(),
   queryText: z.string(),
   brand: z.string().optional().default(''),
-  budget: z.number(),
+  budget: z.coerce.number(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   status: SourcingStatusSchema,
   notes: z.string().optional().default(''),
