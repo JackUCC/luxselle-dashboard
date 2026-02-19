@@ -2,6 +2,16 @@
 
 Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + Vite + Tailwind frontend, Express API, Firebase Firestore (emulator for local dev).
 
+## 🚀 Frontend-Backend Connection & Cleanup Plan
+
+**New**: Comprehensive documentation for validating and cleaning up the frontend-backend connection:
+
+- **[Executive Summary](docs/planning/EXECUTIVE_SUMMARY.md)** - 📋 Start here for overview
+- **[Quick Action Checklist](docs/planning/QUICK_ACTION_CHECKLIST.md)** - ⚡ 60-minute validation workflow
+- **[Comprehensive Task List](docs/planning/FRONTEND_BACKEND_CONNECTION_TASKS.md)** - 📊 10-phase detailed breakdown with agent assignments
+
+Use these guides to systematically validate and optimize the frontend-backend connection with reliable data loading.
+
 ## Setup
 
 1. **Clone and install**
