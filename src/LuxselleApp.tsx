@@ -38,7 +38,7 @@ const AppContent = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-lux-50 text-gray-900 font-sans">
+    <div className="min-h-screen bg-lux-50 text-black font-sans">
       {isConnected === false && (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-2">
@@ -59,34 +59,24 @@ const AppContent = () => {
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-50 border-b border-gray-200/60 bg-white/80 backdrop-blur-xl">
-            <div className="mx-auto max-w-8xl px-4 sm:px-6">
-              <div className="flex h-14 items-center">
-                <div className="flex min-w-[40px] items-center xl:invisible">
-                  <button
-                    type="button"
-                    className="rounded-lg border border-gray-100 bg-white/80 p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 xl:hidden"
-                    onClick={() => setMobileNavOpen(true)}
-                    aria-label="Open navigation menu"
-                    data-testid="mobile-nav-toggle"
-                  >
-                    <Menu className="h-[18px] w-[18px]" />
-                  </button>
-                </div>
-                <div className="flex flex-1 items-center justify-center">
-                  <span className="font-display text-sm font-semibold tracking-tight text-gray-900">Luxselle</span>
-                </div>
-                <div className="min-w-[40px]" aria-hidden />
-              </div>
-            </div>
-          </header>
+          <div className="sticky top-0 z-50 flex h-14 items-center px-4 sm:px-6 xl:hidden">
+            <button
+              type="button"
+              className="rounded-lg border border-gray-100 bg-white/80 p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open navigation menu"
+              data-testid="mobile-nav-toggle"
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </button>
+          </div>
 
           <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
           <Toaster
             position="top-center"
             toastOptions={{
-              className: 'text-sm font-medium !bg-white !text-gray-900 !border !border-black/[0.04] !shadow-elevated !rounded-xl',
+              className: 'text-sm font-medium !bg-white !text-black !border !border-lux-gold/40 !shadow-elevated !rounded-xl',
               duration: 4000,
             }}
           />

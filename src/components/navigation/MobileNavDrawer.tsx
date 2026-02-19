@@ -59,13 +59,12 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-100 px-5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-bold text-white">
-              L
-            </div>
-            <div>
-              <p className="font-display text-sm font-semibold text-gray-900">Luxselle</p>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-lux-500">Dashboard</p>
-            </div>
+            <img
+              src="/luxselle-logo.svg"
+              alt="Luxselle"
+              className="h-7 w-auto max-w-[100px] object-contain object-left"
+            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-black">Dashboard</p>
           </div>
           <button
             type="button"
@@ -81,7 +80,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
           {NAV_GROUPS.map((group) => (
             <section key={group.section} className="space-y-1.5">
               {group.title ? (
-                <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-lux-500">
+                <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-600">
                   {group.title}
                 </h2>
               ) : null}

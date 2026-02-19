@@ -5,8 +5,8 @@ import { NAV_GROUPS } from './navGroups'
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive
-    ? 'bg-blue-50/80 text-blue-600'
-    : 'text-gray-500 hover:bg-gray-100/60 hover:text-gray-900'
+    ? 'bg-lux-gold/10 text-black border border-lux-gold/30'
+    : 'text-gray-600 hover:bg-gray-100/60 hover:text-black'
   }`
 }
 
@@ -18,20 +18,19 @@ export default function WideScreenSideRail() {
       data-testid="wide-screen-side-rail"
     >
       <div className="flex items-center gap-3 px-2 py-1">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white">
-          L
-        </div>
-        <div>
-          <p className="font-display text-base font-semibold text-gray-900">Luxselle</p>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-lux-500">Dashboard</p>
-        </div>
+        <img
+          src="/luxselle-logo.svg"
+          alt="Luxselle"
+          className="h-9 w-auto max-w-[140px] object-contain object-left"
+        />
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black">Dashboard</p>
       </div>
 
       <div className="mt-8 flex-1 space-y-7 overflow-y-auto pb-3 no-scrollbar [contain:layout]">
         {NAV_GROUPS.map((group) => (
           <section key={group.section} className="space-y-1.5">
             {group.title ? (
-              <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-lux-500">
+              <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-600">
                 {group.title}
               </h2>
             ) : null}
@@ -45,7 +44,7 @@ export default function WideScreenSideRail() {
                     end={route.path === '/'}
                     className={navLinkClass}
                   >
-                    <route.icon className={`h-4 w-4 shrink-0 ${route.path === pathname ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                    <route.icon className={`h-4 w-4 shrink-0 ${route.path === pathname ? 'text-lux-gold' : 'text-gray-400 group-hover:text-gray-600'}`} />
                     <span>{route.navLabel}</span>
                   </NavLink>
                 ))}
@@ -56,7 +55,7 @@ export default function WideScreenSideRail() {
 
       <div className="mt-auto flex items-center gap-2 px-3 py-2">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        <span className="text-xs text-lux-500">All systems online</span>
+        <span className="text-xs text-gray-600">All systems online</span>
       </div>
     </aside>
   )

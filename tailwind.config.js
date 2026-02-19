@@ -8,8 +8,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Manrope', 'sans-serif'],
-        display: ['Sora', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
@@ -25,6 +25,7 @@ module.exports = {
           800: '#1D1D1F',
           900: '#000000',
           950: '#000000',
+          gold: '#c3a363',
         },
         glass: {
           DEFAULT: 'rgba(255, 255, 255, 0.85)',

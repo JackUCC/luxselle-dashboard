@@ -1,22 +1,53 @@
-/* Global styles: Apple-inspired Light Theme. @see docs/CODE_REFERENCE.md */
+/* Global styles: Luxselle theme — Inter font, black text, gold accents. @see docs/CODE_REFERENCE.md */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Inter (24pt optical size) — self-hosted */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter_24pt-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter_24pt-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter_24pt-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter_24pt-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --font-display: 'Sora', sans-serif;
-  --font-body: 'Manrope', sans-serif;
+  --font-display: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --lux-gold: #c3a363;
 
   --lux-canvas: #F5F5F7;
   --lux-surface: rgba(255, 255, 255, 0.95);
   --lux-surface-hover: rgba(255, 255, 255, 1);
   --lux-border: rgba(0, 0, 0, 0.04);
   --lux-border-hover: rgba(0, 0, 0, 0.07);
-  --lux-text: #1D1D1F;
-  --lux-text-secondary: #86868B;
-  --lux-text-tertiary: #AEAEB2;
-  --lux-primary: #007AFF;
+  --lux-text: #000000;
+  --lux-text-secondary: #374151;
+  --lux-text-tertiary: #6b7280;
+  --lux-primary: #c3a363;
 }
 
 body {
@@ -65,34 +96,37 @@ h6 {
 
 /* ─── Form Inputs ─── */
 .lux-input {
-  @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 font-medium;
+  @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-black placeholder:text-gray-400 font-medium;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lux-input:focus {
-  @apply outline-none border-blue-400 bg-white;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+  @apply outline-none bg-white;
+  border-color: var(--lux-gold);
+  box-shadow: 0 0 0 3px rgba(195, 163, 99, 0.15);
 }
 
 .lux-input:disabled {
   @apply bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100;
 }
 
-/* ─── Buttons ─── */
+/* ─── Buttons: white bg, black text, gold outline ─── */
 .lux-btn-primary {
-  @apply rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm;
-  background: #007AFF;
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  @apply rounded-xl px-6 py-3 text-sm font-semibold text-black shadow-sm;
+  background: #ffffff;
+  border: 2px solid var(--lux-gold);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
 }
 
 .lux-btn-primary:hover {
-  background: #0071E3;
-  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
+  background: #fafafa;
+  box-shadow: 0 2px 12px rgba(195, 163, 99, 0.2);
+  border-color: #b8944d;
 }
 
 .lux-btn-primary:active {
   transform: scale(0.98);
-  background: #0068D6;
+  background: #f5f5f5;
 }
 
 .lux-btn-primary:disabled {
@@ -102,20 +136,24 @@ h6 {
 }
 
 .lux-btn-secondary {
-  @apply rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-xs;
+  @apply rounded-xl px-5 py-3 text-sm font-semibold text-black shadow-xs;
+  background: #ffffff;
+  border: 2px solid var(--lux-gold);
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .lux-btn-secondary:hover {
-  @apply bg-gray-50 border-gray-300 text-gray-900;
+  background: #fafafa;
+  border-color: #b8944d;
 }
 
 .lux-btn-secondary:active {
-  @apply bg-gray-100;
+  background: #f5f5f5;
 }
 
 .lux-btn-secondary:disabled {
-  @apply opacity-40 cursor-not-allowed bg-white;
+  @apply opacity-40 cursor-not-allowed;
+  background: #ffffff;
 }
 
 /* Pill variant for compact inline actions */
