@@ -108,16 +108,16 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                 <div className="flex-1 overflow-y-auto p-6 space-y-8">
 
                     {/* Instructions */}
-                    <div className="rounded-lg bg-blue-50 p-4 border border-blue-100">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-blue-700 mb-2">
+                    <div className="rounded-lg bg-lux-200/80 p-4 border border-lux-300">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-lux-800 mb-2">
                             <FileSpreadsheet className="h-4 w-4" />
                             File Requirements
                         </h3>
-                        <p className="text-sm text-blue-600 mb-3">
+                        <p className="text-sm text-lux-700 mb-3">
                             <strong>PDF:</strong> Luxselle inventory pricing PDF — we’ll extract brand, title, SKU, purchase price, customs, VAT, and selling price. Or upload <strong>Excel/CSV</strong> with these columns (case-insensitive). Image is handled separately after import.
                         </p>
-                        <ul className="list-disc list-inside text-sm text-blue-600/80 space-y-1 ml-1">
-                            <li>Brand <span className="text-blue-700 font-medium">(required)</span>, Model <span className="text-blue-700 font-medium">(required)</span></li>
+                        <ul className="list-disc list-inside text-sm text-lux-700 space-y-1 ml-1">
+                            <li>Brand <span className="text-lux-800 font-medium">(required)</span>, Model <span className="text-lux-800 font-medium">(required)</span></li>
                             <li>Category, Condition, Colour</li>
                             <li>Cost EUR, VAT EUR, Customs EUR, Landed EUR</li>
                             <li>Sell EUR, Margin EUR, Margin %</li>
@@ -134,7 +134,7 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                             onDragLeave={handleDragLeave}
                             onClick={() => fileInputRef.current?.click()}
                             className={`relative h-64 rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center gap-4 ${isDragOver
-                                ? 'border-blue-500 bg-blue-50'
+                                ? 'border-lux-600 bg-lux-200/80'
                                 : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
                                 } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
                         >
@@ -148,13 +148,13 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
 
                             {isUploading ? (
                                 <>
-                                    <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
+                                    <Loader2 className="h-10 w-10 text-lux-700 animate-spin" />
                                     <p className="text-sm font-medium text-gray-600">Importing products...</p>
                                 </>
                             ) : (
                                 <>
                                     <div className="h-16 w-16 rounded-full bg-white shadow-sm flex items-center justify-center border border-gray-100">
-                                        <Upload className="h-8 w-8 text-blue-500" />
+                                        <Upload className="h-8 w-8 text-lux-700" />
                                     </div>
                                     <div className="text-center">
                                         <p className="text-lg font-medium text-gray-900">Click to upload or drag and drop</p>

@@ -194,11 +194,11 @@ export default function DashboardView() {
                       <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
                     </p>
                   </div>
-                  <div className="rounded-xl bg-blue-50/70 p-2.5 text-blue-500 shrink-0">
+                  <div className="rounded-xl bg-lux-200/80 p-2.5 text-lux-800 shrink-0">
                     <Package className="h-5 w-5" />
                   </div>
                 </div>
-                <KPISparkline color="#3B82F6" />
+                <KPISparkline color="#1D1D1F" />
               </div>
               <div className="lux-card p-7 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
                 <div className="flex items-start justify-between gap-3">

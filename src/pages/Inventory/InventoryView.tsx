@@ -531,7 +531,7 @@ export default function InventoryView() {
           <div className="relative">
             <select
               aria-label="Filter by brand"
-              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
+              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all shadow-sm cursor-pointer"
               value={brandFilter}
               onChange={(e) => updateParam("brand", e.target.value)}
             >
@@ -547,7 +547,7 @@ export default function InventoryView() {
           <div className="relative">
             <select
               aria-label="Filter by status"
-              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
+              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all shadow-sm cursor-pointer"
               value={statusFilter}
               onChange={(e) => updateParam("status", e.target.value)}
             >
@@ -645,7 +645,7 @@ export default function InventoryView() {
                       <tr
                         key={product.id}
                         onClick={() => openProductDrawer(product.id)}
-                        className={`group hover:bg-blue-50/30 transition-colors cursor-pointer ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
+                        className={`group hover:bg-lux-200/30 transition-colors cursor-pointer ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
                         style={{
                           height: `${virtualRow.size}px`,
                         }}
@@ -734,7 +734,7 @@ export default function InventoryView() {
                     <tr
                       key={product.id}
                       onClick={() => openProductDrawer(product.id)}
-                      className={`group hover:bg-blue-50/30 transition-colors cursor-pointer ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
+                      className={`group hover:bg-lux-200/30 transition-colors cursor-pointer ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -851,7 +851,7 @@ export default function InventoryView() {
                   </div>
                 </div>
                 <div className="p-5">
-                  <div className="mb-1 text-xs font-bold text-blue-600 uppercase tracking-wide">
+                  <div className="mb-1 text-xs font-bold text-lux-700 uppercase tracking-wide">
                     {product.brand}
                   </div>
                   <h3 className="font-bold text-gray-900 text-base mb-4 line-clamp-1">

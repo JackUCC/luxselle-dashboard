@@ -127,7 +127,7 @@ const DEMAND_CONFIG = {
 
 const TREND_CONFIG = {
     rising: { label: 'Rising', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    stable: { label: 'Stable', icon: Minus, color: 'text-blue-600', bg: 'bg-blue-50' },
+    stable: { label: 'Stable', icon: Minus, color: 'text-lux-700', bg: 'bg-lux-200/80' },
     declining: { label: 'Declining', icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
 }
 
@@ -574,9 +574,9 @@ export default function MarketResearchView() {
                                     </div>
                                     <div className="text-center">
                                         <div className="text-xs text-gray-500 mb-1 flex items-center justify-center gap-1">
-                                            <ArrowUpRight className="h-3 w-3 text-blue-600" /> Sell At
+                                            <ArrowUpRight className="h-3 w-3 text-lux-700" /> Sell At
                                         </div>
-                                        <div className="text-xl font-bold text-blue-700">{formatCurrency(result.suggestedSellPriceEur)}</div>
+                                        <div className="text-xl font-bold text-lux-800">{formatCurrency(result.suggestedSellPriceEur)}</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-xs text-gray-500 mb-1">Price Range</div>
@@ -590,7 +590,7 @@ export default function MarketResearchView() {
                                 <div className="mt-4 px-2">
                                     <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
                                         <div
-                                            className="absolute h-full bg-gradient-to-r from-green-400 via-blue-400 to-indigo-400 rounded-full"
+                                            className="absolute h-full bg-gradient-to-r from-green-400 via-amber-400 to-lux-gold rounded-full"
                                             style={{
                                                 left: `${((result.priceRangeLowEur / result.priceRangeHighEur) * 80)}%`,
                                                 width: `${Math.max(20, 100 - (result.priceRangeLowEur / result.priceRangeHighEur) * 80)}%`

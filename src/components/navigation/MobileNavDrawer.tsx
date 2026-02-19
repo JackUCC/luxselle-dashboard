@@ -95,7 +95,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                       onClick={onClose}
                       className={({ isActive }) =>
                         `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive
-                          ? 'bg-blue-50/80 text-blue-600'
+                          ? 'bg-lux-200/80 text-lux-800'
                           : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                         }`
                       }

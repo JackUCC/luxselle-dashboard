@@ -24,7 +24,7 @@ const formatCurrency = (value: number) =>
 
 const getStatusStyles = (status: string) => {
   switch (status) {
-    case 'open': return 'bg-blue-50 text-blue-700 border-blue-200'
+    case 'open': return 'bg-lux-200/80 text-lux-800 border-lux-300'
     case 'sourcing': return 'bg-purple-50 text-purple-700 border-purple-200'
     case 'sourced': return 'bg-green-50 text-green-700 border-green-200'
     case 'fulfilled': return 'bg-gray-50 text-gray-700 border-gray-200'
@@ -199,7 +199,7 @@ export default function SourcingView() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter by status"
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-lux-600"
             >
               <option value="all">All Status</option>
               <option value="open">Open</option>

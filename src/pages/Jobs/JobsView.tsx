@@ -66,7 +66,7 @@ const getStatusConfig = (status: string) => {
       }
     case 'running':
       return {
-        color: 'bg-blue-100 text-blue-700 border-blue-200',
+        color: 'bg-lux-200 text-lux-800 border-lux-300',
         icon: PlayCircle,
         label: 'Running',
       }
@@ -302,7 +302,7 @@ export default function JobsView() {
                                     ? 'bg-red-500'
                                     : job.status === 'succeeded' || job.status === 'success'
                                     ? 'bg-green-500'
-                                    : 'bg-blue-500'
+                                    : 'bg-gray-700'
                                 }`}
                                 style={{
                                   width: `${job.progress.total > 0 ? (job.progress.processed / job.progress.total) * 100 : 0}%`,
@@ -337,7 +337,7 @@ export default function JobsView() {
                             handleRetry(job.id)
                           }}
                           disabled={retryingId === job.id}
-                          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1.5 text-xs font-medium text-lux-800 hover:text-lux-900 transition-colors disabled:opacity-50"
                         >
                           {retryingId === job.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -484,7 +484,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
                     <div className="text-xs text-gray-500 mt-1">Created</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-lux-800">
                       {job.progress.updated}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">Updated</div>
@@ -516,7 +516,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
                           ? 'bg-red-500'
                           : job.status === 'succeeded' || job.status === 'success'
                           ? 'bg-green-500'
-                          : 'bg-blue-500 animate-pulse'
+                          : 'bg-gray-700 animate-pulse'
                       }`}
                       style={{
                         width: `${job.progress.total > 0 ? (job.progress.processed / job.progress.total) * 100 : 0}%`,

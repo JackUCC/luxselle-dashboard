@@ -45,7 +45,7 @@ const formatCurrency = (value: number) =>
 
 const statusColors = {
   pending: 'bg-yellow-50 text-yellow-700',
-  ordered: 'bg-blue-50 text-blue-700',
+  ordered: 'bg-lux-200/80 text-lux-800',
   received: 'bg-green-50 text-green-700',
   cancelled: 'bg-gray-50 text-gray-700',
 }
@@ -203,7 +203,7 @@ export default function BuyingListView() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter by status"
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-lux-600"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -340,7 +340,7 @@ export default function BuyingListView() {
                             {receivingId === item.id ? 'Receiving...' : 'Receive'}
                           </button>
                         ) : null}
-                        <button className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors">
+                        <button className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-lux-800 transition-colors">
                           <MessageSquare className="h-3 w-3" />
                           CONTACT
                         </button>
@@ -446,7 +446,7 @@ export default function BuyingListView() {
                           {emailUrl && (
                              <a
                                 href={emailUrl}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-lux-300 bg-lux-200/80 px-3 py-2 text-sm font-medium text-lux-800 hover:bg-lux-200 transition-colors"
                              >
                                 <Mail className="h-4 w-4" />
                                 Email

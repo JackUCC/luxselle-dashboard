@@ -31,10 +31,10 @@ export default function AiPromptBar() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-center gap-2 rounded-xl border border-black/[0.04] bg-white px-3 py-2 shadow-elevated transition-shadow focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/12 animate-bento-enter"
+      className="flex items-center gap-2 rounded-xl border border-black/[0.04] bg-white px-3 py-2 shadow-elevated transition-shadow focus-within:border-lux-700 focus-within:ring-2 focus-within:ring-black/10 animate-bento-enter"
       style={{ '--stagger': 0 } as React.CSSProperties}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50/70 text-blue-500">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lux-200/80 text-lux-800">
         <Sparkles className="h-4 w-4" />
       </div>
       <input
@@ -49,7 +49,7 @@ export default function AiPromptBar() {
       <button
         type="submit"
         disabled={loading || !prompt.trim()}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-indigo text-white transition-colors hover:bg-[#0071E3] disabled:opacity-40"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-white transition-colors hover:bg-gray-800 disabled:opacity-40"
         aria-label="Send"
       >
         <Send className="h-4 w-4" />

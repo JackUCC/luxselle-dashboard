@@ -407,7 +407,7 @@ export default function SupplierHubView() {
                 <div>
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-2 rounded-lg ${
-                      supplier.status === 'error' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                      supplier.status === 'error' ? 'bg-red-50 text-red-600' : 'bg-lux-200/80 text-lux-800'
                     }`}>
                       <FileText className="h-5 w-5" />
                     </div>
@@ -427,7 +427,7 @@ export default function SupplierHubView() {
                   <div className="text-xs font-medium text-gray-500">
                     {supplier.itemCount || 0} ITEMS
                   </div>
-                  <button className="flex items-center gap-1 text-xs font-bold text-gray-900 uppercase tracking-wide hover:text-blue-600 transition-colors">
+                  <button className="flex items-center gap-1 text-xs font-bold text-gray-900 uppercase tracking-wide hover:text-lux-800 transition-colors">
                     Catalog
                     <ExternalLink className="h-3 w-3" />
                   </button>
@@ -470,7 +470,7 @@ export default function SupplierHubView() {
                 <select
                   value={supplierFilter}
                   onChange={(e) => setFilter('supplier', e.target.value)}
-                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-black/10 focus:border-lux-600"
                 >
                   <option value="">All Suppliers</option>
                   {suppliers.map(s => (
@@ -485,7 +485,7 @@ export default function SupplierHubView() {
                 <select
                   value={brandFilter}
                   onChange={(e) => setFilter('brand', e.target.value)}
-                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-black/10 focus:border-lux-600"
                 >
                   <option value="">All Brands</option>
                   {brands.map(brand => (
@@ -500,7 +500,7 @@ export default function SupplierHubView() {
                 <select
                   value={availabilityFilter}
                   onChange={(e) => setFilter('availability', e.target.value)}
-                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                  className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors focus:ring-2 focus:ring-black/10 focus:border-lux-600"
                 >
                   <option value="">All Status</option>
                   <option value="uploaded">Uploaded</option>
