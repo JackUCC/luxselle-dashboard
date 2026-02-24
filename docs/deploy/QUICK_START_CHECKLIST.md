@@ -200,16 +200,6 @@ curl https://your-backend.railway.app/api/products
   ```
 - [ ] Railway will auto-redeploy
 
-**For Gemini:**
-- [ ] Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-- [ ] Create API key
-- [ ] In Railway → **Variables**:
-  ```bash
-  AI_PROVIDER=gemini
-  GEMINI_API_KEY=your-key
-  ```
-- [ ] Railway will auto-redeploy
-
 **Skip AI for now:**
 - [ ] Keep `AI_PROVIDER=mock` (no API key needed)
 

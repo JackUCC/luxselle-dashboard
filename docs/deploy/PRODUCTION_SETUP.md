@@ -176,10 +176,6 @@ NODE_ENV=production
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-proj-...
 
-# OR use Gemini
-# AI_PROVIDER=gemini
-# GEMINI_API_KEY=...
-
 # OR disable AI features for now
 # AI_PROVIDER=mock
 ```
@@ -302,16 +298,7 @@ gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 5. Add to Railway as `OPENAI_API_KEY`
 6. Set `AI_PROVIDER=openai` in Railway
 
-### 4.2 Google Gemini API Key (alternative to OpenAI)
-
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Click **Get API Key**
-3. Create or select a Google Cloud project
-4. Copy the API key
-5. Add to Railway as `GEMINI_API_KEY`
-6. Set `AI_PROVIDER=gemini` in Railway
-
-### 4.3 Mock AI Provider (for testing without API costs)
+### 4.2 Mock AI Provider (for testing without API costs)
 
 Set in Railway:
 ```bash
@@ -430,8 +417,8 @@ Check `firestore.rules` - make sure rules allow the operations you need.
 
 **Fix**:
 1. Verify API key is correct and active
-2. Check `AI_PROVIDER` matches the key you set (`openai` or `gemini`)
-3. Test API key directly (OpenAI playground or Gemini AI Studio)
+2. Check `AI_PROVIDER` is set to `openai` (only `openai` and `mock` are supported; `gemini` is not a valid value)
+3. Test API key directly (OpenAI playground)
 4. Use `AI_PROVIDER=mock` temporarily to bypass
 
 ### Issue: PERMISSION_DENIED (code 7) in Railway logs
@@ -462,7 +449,7 @@ Check `firestore.rules` - make sure rules allow the operations you need.
 - [ ] Vercel project created
 - [ ] Vercel environment variables set (including `VITE_API_BASE`)
 - [ ] Frontend deployed and accessible
-- [ ] OpenAI/Gemini API key obtained and set
+- [ ] OpenAI API key obtained and set (or `AI_PROVIDER=mock` for testing)
 - [ ] Tested full user flow
 - [ ] No errors in browser console
 - [ ] No errors in Railway logs

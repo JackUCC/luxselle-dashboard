@@ -5,10 +5,11 @@ Use this to connect supplier email sync to your **Luxselle Google Workspace mail
 ## Goal
 
 Get these production values:
-- `GMAIL_CLIENT_ID`
-- `GMAIL_CLIENT_SECRET`
-- `GMAIL_REFRESH_TOKEN`
-- `GMAIL_USER` (your Luxselle mailbox)
+
+- `GMAIL_CLIENT_ID` — ⚠️ Owner input required: generated when you create the OAuth client (step 4)
+- `GMAIL_CLIENT_SECRET` — ⚠️ Owner input required: generated when you create the OAuth client (step 4)
+- `GMAIL_REFRESH_TOKEN` — ⚠️ Owner input required: obtained via OAuth Playground (step 5)
+- `GMAIL_USER` — ⚠️ Owner input required: the Luxselle Workspace mailbox address (e.g. `suppliers@yourdomain.com`)
 
 ---
 

@@ -76,12 +76,24 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/routes/products.ts` | CRUD products; list (search, sort, cursor); image upload (multer + sharp → Firebase Storage); transactions sub-resource. | Express, multer, sharp, Firebase Storage |
 | `packages/server/src/routes/buying-list.ts` | CRUD buying list items. | Express, BuyingListItemRepo |
 | `packages/server/src/routes/pricing.ts` | Pricing suggestions (AI provider); uses fx conversion and margin from env. | Express, PricingService, env |
-| `packages/server/src/routes/suppliers.ts` | CRUD suppliers; CSV import (idempotency, SupplierImportService). | Express, idempotency middleware |
+| `packages/server/src/routes/suppliers.ts` | Suppliers list, CSV/XLSX import preview, import template save, Gmail email sync status and trigger. | Express, multer, SupplierImportService, SupplierEmailSyncService |
 | `packages/server/src/routes/dashboard.ts` | Dashboard aggregates (counts, recent activity). | Express, repos |
 | `packages/server/src/routes/sourcing.ts` | CRUD sourcing requests; PUT enforces valid status transitions via `sourcingStatus`. | Express, sourcingStatus lib |
 | `packages/server/src/routes/jobs.ts` | List system jobs (e.g. import jobs). | Express, SystemJobRepo |
 | `packages/server/src/routes/vat.ts` | VAT calculation: GET/POST `/api/vat/calculate` (amountEur, inclVat, optional ratePct); returns netEur, vatEur, grossEur, ratePct; rate from settings if not provided. | vat.ts, SettingsRepo |
 | `packages/server/src/routes/invoices.ts` | Invoices: POST (from-sale or full body), GET list (limit, cursor, from, to), GET :id. | InvoiceRepo, SettingsRepo, vat |
+
+### API Endpoints — /api/suppliers
+
+The five endpoints added in Wave 1 of the supplier engine sprint:
+
+| Method | Path | Description | Body / Params |
+|--------|------|-------------|---------------|
+| `GET` | `/api/suppliers` | List all suppliers from Firestore. | — |
+| `POST` | `/api/suppliers/import/preview` | Parse an uploaded CSV or XLSX file and return column headers and sample rows. Multipart upload; field name `file`. | `multipart/form-data` field `file` |
+| `PUT` | `/api/suppliers/:id/import-template` | Save a column-mapping template on the supplier document. Validates body against `SupplierImportTemplateSchema`. | JSON body matching `SupplierImportTemplateSchema` |
+| `GET` | `/api/suppliers/email/status` | Return current Gmail email sync status (`enabled`, `connected`, `mailbox`). | — |
+| `POST` | `/api/suppliers/email/sync` | Trigger a Gmail email sync. Optional body to override lookback window. | `{ lookbackDays?: number }` (optional) |
 
 ### Services
 
