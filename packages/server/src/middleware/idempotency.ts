@@ -5,6 +5,7 @@
  * References: Express, Firestore
  */
 import { Request, Response, NextFunction } from 'express'
+import { createHash } from 'node:crypto'
 import { db } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
@@ -110,8 +111,7 @@ export function generateFileIdempotencyKey(
   fileContent: string,
   timestamp: Date
 ): string {
-  const crypto = require('crypto')
-  const hash = crypto.createHash('sha256')
+  const hash = createHash('sha256')
   hash.update(supplierId)
   hash.update(fileContent)
   hash.update(timestamp.toISOString().split('T')[0]) // Date only for daily uniqueness

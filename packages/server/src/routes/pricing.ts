@@ -18,6 +18,7 @@ import { EvaluationRepo } from '../repos/EvaluationRepo'
 import { SettingsRepo } from '../repos/SettingsRepo'
 import { env } from '../config/env'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { logger } from '../middleware/requestId'
 
 const router = Router()
 const pricingService = new PricingService()
@@ -94,6 +95,8 @@ router.post('/analyse', async (req, res, next) => {
       askPriceEur: input.askPriceEur,
       estimatedRetailEur: result.estimatedRetailEur,
       maxBuyPriceEur: result.maxBuyPriceEur,
+      // historyAvgPaidEur: null means no history data available; coerced to 0 so EvaluationSchema
+      // (which requires a number) does not reject the document. UI treats 0 as "no data".
       historyAvgPaidEur: result.historyAvgPaidEur ?? 0,
       comps: result.comps,
       confidence: result.confidence,
@@ -183,7 +186,12 @@ Provide 3-6 comparables. Prices should reflect the Irish/EU resale market.`
       const text = response.choices[0]?.message?.content ?? ''
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (!jsonMatch) throw new Error('No JSON in price-check response')
-      const parsed = JSON.parse(jsonMatch[0]) as { averageSellingPriceEur?: number; comps?: Comp[] }
+      let parsed: { averageSellingPriceEur?: number; comps?: Comp[] }
+      try {
+        parsed = JSON.parse(jsonMatch[0]) as { averageSellingPriceEur?: number; comps?: Comp[] }
+      } catch (e) {
+        return res.status(502).json(formatApiError('INTERNAL', 'AI response parse failed'))
+      }
       averageSellingPriceEur = Math.round(Number(parsed.averageSellingPriceEur) || 0)
       comps = Array.isArray(parsed.comps) ? parsed.comps : []
     } else {
@@ -276,7 +284,7 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
           }
         }
       } catch (error) {
-        console.error('OpenAI Vision API error:', error)
+        logger.error('openai_vision_error', error)
         // Fall through to mock response
       }
     }

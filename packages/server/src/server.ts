@@ -18,6 +18,7 @@ import { invoicesRouter } from './routes/invoices'
 import { settingsRouter } from './routes/settings'
 import { marketResearchRouter } from './routes/market-research'
 import { aiRouter } from './routes/ai'
+import { suppliersRouter } from './routes/suppliers'
 import { API_ERROR_CODES, formatApiError, ApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 // Auth middleware available but not applied yet (deferred to Iteration 6)
@@ -62,6 +63,7 @@ app.use('/api/invoices', invoicesRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/market-research', marketResearchRouter)
 app.use('/api/ai', aiRouter)
+app.use('/api/suppliers', suppliersRouter)
 
 // Global error handler: Zod validation → 400 with error body; all other errors → 500
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -153,6 +153,50 @@ describe('SupplierEmailSyncService', () => {
     expect(createJobMock).toHaveBeenCalledTimes(1)
   })
 
+  it('returns zero imports when sender email does not match any supplier', async () => {
+    const SupplierEmailSyncService = await loadService()
+
+    listSuppliersMock.mockResolvedValueOnce([
+      {
+        id: 'supplier-1',
+        sourceEmails: ['known@example.com'],
+        email: 'known@example.com',
+        importTemplate: {
+          columnMap: { brand: 'Brand' },
+          availabilityMap: {},
+          defaultAvailability: 'uploaded',
+          trimValues: true,
+        },
+      },
+    ])
+
+    gmailListMock.mockResolvedValueOnce({
+      data: { messages: [{ id: 'm2' }] },
+    })
+    gmailGetMock.mockResolvedValueOnce({
+      data: {
+        payload: {
+          headers: [{ name: 'From', value: 'Unknown Sender <unknown@nobody.com>' }],
+          parts: [
+            {
+              filename: 'feed.csv',
+              body: { attachmentId: 'a2' },
+              mimeType: 'text/csv',
+            },
+          ],
+        },
+      },
+    })
+
+    const service = new SupplierEmailSyncService()
+    const result = await service.sync({ lookbackDays: 7 })
+
+    expect(result.processedEmails).toBe(0)
+    expect(result.importedItems).toBe(0)
+    expect(result.skippedAttachments).toBe(0)
+    expect(importWithTemplateMock).not.toHaveBeenCalled()
+  })
+
   it('skips previously imported attachments by dedupe id', async () => {
     const SupplierEmailSyncService = await loadService()
 

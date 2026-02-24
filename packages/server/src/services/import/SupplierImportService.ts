@@ -74,7 +74,7 @@ export class SupplierImportService {
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' })
     const [firstSheetName] = workbook.SheetNames
     if (!firstSheetName) {
-      return { fileType: 'xlsx', headers: [], rows: [], sheetNames: [] }
+      throw new Error('Workbook is empty or contains no parseable sheets')
     }
 
     const sheet = workbook.Sheets[firstSheetName]

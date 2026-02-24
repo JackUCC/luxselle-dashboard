@@ -37,6 +37,7 @@ interface ParsedAttachmentPart {
   filename: string
   attachmentId: string
   mimeType?: string
+  size?: number
 }
 
 interface GmailPart {
@@ -142,6 +143,15 @@ export class SupplierEmailSyncService {
             continue
           }
 
+          const maxBytes = env.SUPPLIER_EMAIL_MAX_ATTACHMENT_MB * 1024 * 1024
+          if (attachment.size != null && attachment.size > maxBytes) {
+            skippedAttachments++
+            errors.push(
+              `${attachment.filename}: skipped before download (reported size ${attachment.size} bytes exceeds ${env.SUPPLIER_EMAIL_MAX_ATTACHMENT_MB}MB)`,
+            )
+            continue
+          }
+
           const attachmentRes = await gmail.users.messages.attachments.get({
             userId: mailbox,
             messageId: messageRef.id,
@@ -154,7 +164,6 @@ export class SupplierEmailSyncService {
           }
 
           const buffer = this.decodeBase64UrlToBuffer(attachmentData)
-          const maxBytes = env.SUPPLIER_EMAIL_MAX_ATTACHMENT_MB * 1024 * 1024
           if (buffer.length > maxBytes) {
             skippedAttachments++
             errors.push(
@@ -299,6 +308,7 @@ export class SupplierEmailSyncService {
           filename,
           attachmentId,
           mimeType: part.mimeType ?? undefined,
+          size: part.body?.size ?? undefined,
         })
       }
 
