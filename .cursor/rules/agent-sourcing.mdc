@@ -13,6 +13,6 @@ alwaysApply: false
 - GET /api/sourcing, POST /api/sourcing, PUT /api/sourcing/:id, DELETE /api/sourcing/:id
 
 ## Jarvis behaviours
-- Proactive: "N open requests have potential matches in Supplier Hub"
+- Proactive: "N open requests have potential matches from recent market checks"
 - Status change: suggest link to product when moving to Sourced
-- Empty state: "Create a request or import from Supplier Hub"
+- Empty state: "Create a request or run Price Check to seed sourcing ideas"

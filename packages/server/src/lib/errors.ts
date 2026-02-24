@@ -22,3 +22,15 @@ export function formatApiError(
 ): { error: { code: string; message: string; details?: object } } {
   return { error: details ? { code, message, details } : { code, message } }
 }
+
+export class ApiError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public details?: object,
+    public status: number = 500
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}

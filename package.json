@@ -26,7 +26,10 @@
     "test:e2e:ui": "playwright test --ui --config config/playwright.config.cjs",
     "typecheck": "tsc --noEmit",
     "auto-commit": "node scripts/auto-commit.js",
-    "agents:launch": "node scripts/launch-agent-swarm.js"
+    "agents:launch": "node scripts/launch-agent-swarm.js",
+    "gsd:sync": "node scripts/sync-gsd-cursor-assets.mjs",
+    "gsd:health": "node ./.claude/get-shit-done/bin/gsd-tools.cjs health",
+    "gsd:quick": "node ./.claude/get-shit-done/bin/gsd-tools.cjs quick"
   },
   "dependencies": {
     "@luxselle/shared": "*",

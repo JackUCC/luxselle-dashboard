@@ -13,7 +13,7 @@ alwaysApply: true
 ## Product: Supplier Engine
 - Two modes: **Overview** (full dashboard) and **Sidecar** (compact panel alongside supplier websites)
 - Core features: Price Check (market price, max buy/bid), Landed Cost, Inventory awareness, Invoicing
-- Removed: Buying List, Supplier Hub (pages, routes, backend APIs)
+- Removed: legacy procurement-list and supplier-feed pages/routes/APIs
 
 ## Current goal (priority order)
 1) Supplier Engine: Overview + Sidecar mode UX

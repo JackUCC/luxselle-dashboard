@@ -5,9 +5,11 @@ import { calculateLandedCost, calculateMaxBuyPrice } from '../../lib/landedCost'
 import type { CostBreakdownItem } from '../../lib/landedCost'
 import { ArrowUpDown, Box, ShoppingBag, Watch } from 'lucide-react'
 
+type Currency = 'EUR' | 'USD' | 'GBP' | 'JPY'
+
 interface CalculatorState {
     calculatorMode: 'forward' | 'reverse'
-    currency: 'EUR' | 'USD' | 'GBP' | 'JPY'
+    currency: Currency
     basePrice: string
     shipping: string
     insurance: string
@@ -207,7 +209,7 @@ export default function CalculatorWidget() {
         setState(prev => ({
             ...prev,
             ...preset.values,
-            currency: preset.validForCurrency as any
+            currency: preset.validForCurrency as Currency
         }))
         toast.success(`Loaded "${preset.name}"`)
     }
@@ -378,7 +380,7 @@ export default function CalculatorWidget() {
                     <div className="flex rounded-lg shadow-sm">
                         <select
                             value={state.currency}
-                            onChange={e => setState(s => ({ ...s, currency: e.target.value as any }))}
+                            onChange={e => setState(s => ({ ...s, currency: e.target.value as Currency }))}
                             className="flex-shrink-0 w-20 rounded-l-lg border-gray-200 bg-gray-50 text-gray-600 text-sm font-medium focus:ring-gray-900 focus:border-gray-900"
                         >
                             <option value="EUR">€ EUR</option>
@@ -459,7 +461,7 @@ export default function CalculatorWidget() {
                     <label className="block text-xs font-medium text-gray-700 mb-1.5">Target Currency</label>
                     <select
                         value={state.currency}
-                        onChange={e => setState(s => ({ ...s, currency: e.target.value as any }))}
+                        onChange={e => setState(s => ({ ...s, currency: e.target.value as Currency }))}
                         className="lux-input"
                     >
                         <option value="EUR">€ EUR</option>

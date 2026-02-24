@@ -12,7 +12,7 @@ In Cursor Chat, ask the Agent to use a specific subagent:
 
 - "Use the Dashboard agent to improve the low-stock alert UX"
 - "Use the Inventory agent to add filtering by low stock"
-- "Use the Evaluator agent to improve the add-to-buy-list flow"
+- "Use the Evaluator agent to improve market-price and landed-cost decision UX"
 - "Use the Quality Lead agent to run a release readiness check"
 - "Use the Backend Contracts QA agent to validate API compatibility"
 - "Use the Docs Improvement agent to sync deployment docs with code"
@@ -23,8 +23,8 @@ The main Agent delegates to subagents when it detects a task that matches an age
 - "Improve the Dashboard low-stock alert UX" → agent-dashboard
 - "Make the low-stock KPI clickable to go to inventory" → agent-dashboard
 - "Add filtering by low stock to the inventory page" → agent-inventory
-- "Improve the Evaluator add-to-buy-list one-tap UX" → agent-evaluator
-- "Improve cross-page flow from Evaluator to Buy list to Receive" → agent-coordinator
+- "Improve the Evaluator market-check one-tap UX" → agent-evaluator
+- "Improve cross-page flow from Evaluator to Inventory to Invoices" → agent-coordinator
 - "Run QA on supplier email ingestion and landed-cost math" → agent-quality-lead
 - "Audit backend endpoint tests for new pricing/supplier routes" → agent-qa-backend-contracts
 - "Document production rollout and missing inputs" → agent-docs-improvement
@@ -55,6 +55,21 @@ The main Agent delegates to subagents when it detects a task that matches an age
 
 - Subagents: `.cursor/agents/agent-*.md`, plus generic `qa.md`, `docs.md`, `backend.md`, `frontend.md`
 - Page and quality rules: `.cursor/rules/agent-*.mdc` (auto-load by file scope)
+
+## GSD Framework (Project Management)
+
+The Get Shit Done framework is installed in both `.claude/` and Cursor-native paths:
+
+- GSD agents: `.cursor/agents/gsd-*.md`
+- GSD commands: `.cursor/commands/gsd/*.md`
+- GSD templates: `.cursor/templates/**`
+- GSD workflows: `.cursor/workflows/gsd/*.md`
+
+Run these from repository root:
+
+- `npm run gsd:sync` to sync/update Cursor GSD assets from `.claude`
+- `npm run gsd:health` for framework health checks
+- `npm run gsd:quick` for rapid project planning scaffolding
 
 ## Full Specs
 

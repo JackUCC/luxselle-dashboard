@@ -39,6 +39,15 @@ interface ParsedAttachmentPart {
   mimeType?: string
 }
 
+interface GmailPart {
+  partId?: string | null
+  mimeType?: string | null
+  filename?: string | null
+  headers?: Array<{ name?: string | null; value?: string | null }> | null
+  body?: { size?: number | null; data?: string | null; attachmentId?: string | null } | null
+  parts?: GmailPart[] | null
+}
+
 export class SupplierEmailSyncService {
   private supplierRepo: SupplierRepo
   private jobRepo: SystemJobRepo
@@ -122,7 +131,7 @@ export class SupplierEmailSyncService {
 
         processedEmails++
 
-        const attachments = this.collectAttachmentParts(message.payload)
+        const attachments = this.collectAttachmentParts(message.payload as GmailPart)
         if (attachments.length === 0) continue
 
         for (const attachment of attachments) {
@@ -273,17 +282,14 @@ export class SupplierEmailSyncService {
     )
   }
 
-  private collectAttachmentParts(
-    payload?: { parts?: any[]; filename?: string | null; body?: { attachmentId?: string | null }; mimeType?: string | null },
-  ): ParsedAttachmentPart[] {
-    if (!payload) return []
+  private collectAttachmentParts(payload: GmailPart): ParsedAttachmentPart[] {
     const output: ParsedAttachmentPart[] = []
 
-    const walk = (part?: { parts?: any[]; filename?: string | null; body?: { attachmentId?: string | null }; mimeType?: string | null }) => {
-      if (!part) return
+    const walk = (part: GmailPart) => {
       const filename = part.filename ?? ''
       const attachmentId = part.body?.attachmentId ?? ''
       const lower = filename.toLowerCase()
+
       if (
         filename &&
         attachmentId &&
@@ -295,8 +301,11 @@ export class SupplierEmailSyncService {
           mimeType: part.mimeType ?? undefined,
         })
       }
-      for (const nested of part.parts ?? []) {
-        walk(nested)
+
+      if (part.parts) {
+        for (const nested of part.parts) {
+          walk(nested)
+        }
       }
     }
 

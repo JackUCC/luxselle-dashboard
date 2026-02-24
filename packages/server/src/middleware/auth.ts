@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express'
 import { getAuth } from 'firebase-admin/auth'
 import type { UserRole } from '@shared/schemas'
 import { adminApp } from '../config/firebase'
-import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { API_ERROR_CODES, formatApiError, ApiError } from '../lib/errors'
 import { env } from '../config/env'
 
 // Extend Express Request type to include user info
@@ -51,9 +51,7 @@ export async function requireAuth(
   const authHeader = req.headers.authorization
   
   if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json(
-      formatApiError(API_ERROR_CODES.UNAUTHORIZED, 'Missing or invalid authorization header')
-    )
+    next(new ApiError(API_ERROR_CODES.UNAUTHORIZED, 'Missing or invalid authorization header', undefined, 401))
     return
   }
 
@@ -76,9 +74,7 @@ export async function requireAuth(
     next()
   } catch (error) {
     console.error('Auth verification failed:', error)
-    res.status(401).json(
-      formatApiError(API_ERROR_CODES.UNAUTHORIZED, 'Invalid or expired token')
-    )
+    next(new ApiError(API_ERROR_CODES.UNAUTHORIZED, 'Invalid or expired token', undefined, 401))
   }
 }
 
@@ -89,16 +85,12 @@ export async function requireAuth(
 export function requireRole(...allowedRoles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json(
-        formatApiError(API_ERROR_CODES.UNAUTHORIZED, 'Not authenticated')
-      )
+      next(new ApiError(API_ERROR_CODES.UNAUTHORIZED, 'Not authenticated', undefined, 401))
       return
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      res.status(403).json(
-        formatApiError(API_ERROR_CODES.FORBIDDEN, 'Insufficient permissions')
-      )
+      next(new ApiError(API_ERROR_CODES.FORBIDDEN, 'Insufficient permissions', undefined, 403))
       return
     }
 
