@@ -50,3 +50,5 @@ scripts/audit-backend.ts
 .cache/
 .temp/
 .tmp/
+.vercel
+.env*.local

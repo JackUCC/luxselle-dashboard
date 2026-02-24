@@ -3,9 +3,10 @@
  * In Sidecar mode, shows QuickCheck (compact price + inventory check) instead.
  * @see docs/CODE_REFERENCE.md
  */
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Package, RefreshCw, TrendingUp } from 'lucide-react'
+import { ArrowRightToLine, Package, RefreshCw, TrendingUp } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
@@ -15,7 +16,7 @@ import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import AuctionLinksWidget from '../../components/widgets/AuctionLinksWidget'
-import QuickCheck from '../../components/sidecar/QuickCheck'
+import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 // ─── Animated Counter ───
@@ -101,6 +102,8 @@ function ProfitBar({ label, value, maxValue, color }: { label: string; value: nu
 }
 
 export default function DashboardView() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isSidecar } = useLayoutMode()
   const [kpis, setKpis] = useState<KPIs | null>(null)
   const [profit, setProfit] = useState<ProfitSummary | null>(null)
@@ -132,13 +135,7 @@ export default function DashboardView() {
   }, [isSidecar])
 
   if (isSidecar) {
-    return (
-      <section className="space-y-3">
-        <h1 className="text-base font-bold text-gray-900">Quick Check</h1>
-        <p className="text-xs text-gray-500">Market price, landed cost, and inventory in one view.</p>
-        <QuickCheck />
-      </section>
-    )
+    return <SidecarView />
   }
 
   const handleRefresh = async () => {
@@ -159,23 +156,41 @@ export default function DashboardView() {
     return 'Good evening'
   }
 
+  const handleSwitchToSidecar = () => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('mode', 'sidecar')
+    navigate({ search: `?${nextParams.toString()}` })
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-lux-800">
           {getGreeting()}, Jack
         </h1>
-        <button
-          type="button"
-          onClick={handleRefresh}
-          disabled={isLoading || isRefreshing}
-          className="lux-btn-secondary self-start sm:self-center flex items-center gap-2 !px-4 !py-2.5 disabled:opacity-40"
-          title="Refresh data"
-          aria-label="Refresh dashboard data"
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+          <button
+            type="button"
+            onClick={handleSwitchToSidecar}
+            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+            title="Switch to sidecar mode"
+            aria-label="Switch dashboard to sidecar mode"
+          >
+            <ArrowRightToLine className="h-4 w-4" />
+            Sidecar mode
+          </button>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isLoading || isRefreshing}
+            className="lux-btn-secondary inline-flex items-center gap-2 !px-4 !py-2.5 disabled:opacity-40"
+            title="Refresh data"
+            aria-label="Refresh dashboard data"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </header>
 
       {isLoading ? (
