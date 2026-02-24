@@ -24,6 +24,7 @@ type AddMode = 'none' | 'in-person' | 'upload'
 export default function InvoicesView() {
   const [invoices, setInvoices] = useState<InvoiceWithId[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<InvoiceWithId | null>(null)
   const [addMode, setAddMode] = useState<AddMode>('none')
   const [createSubmitting, setCreateSubmitting] = useState(false)
@@ -50,9 +51,11 @@ export default function InvoicesView() {
 
   const fetchInvoices = useCallback(() => {
     return apiGet<{ data: InvoiceWithId[] }>('/invoices?limit=100')
-      .then((res) => setInvoices(res.data))
-      .catch(() => {
-        toast.error('Failed to load invoices')
+      .then((res) => { setInvoices(res.data); setError(null) })
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Failed to load invoices'
+        toast.error(message)
+        setError(message)
         setInvoices([])
       })
       .finally(() => setIsLoading(false))
@@ -200,6 +203,17 @@ export default function InvoicesView() {
         <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading invoices...</span>
+        </div>
+      ) : error ? (
+        <div className="lux-card p-8 text-center">
+          <p className="text-rose-600 font-medium">{error}</p>
+          <button
+            type="button"
+            onClick={() => { setIsLoading(true); fetchInvoices() }}
+            className="lux-btn-secondary mt-4"
+          >
+            Retry
+          </button>
         </div>
       ) : invoices.length === 0 ? (
         <div className="lux-card p-12 text-center">

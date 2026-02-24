@@ -105,33 +105,8 @@ export default function DashboardView() {
   const [kpis, setKpis] = useState<KPIs | null>(null)
   const [profit, setProfit] = useState<ProfitSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  if (isSidecar) {
-    return (
-      <section className="space-y-3">
-        <h1 className="text-base font-bold text-gray-900">Quick Check</h1>
-        <p className="text-xs text-gray-500">Market price, landed cost, and inventory in one view.</p>
-        <QuickCheck />
-      </section>
-    )
-  }
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const handleRefresh = async () => {
-    if (isRefreshing) return
-    setIsRefreshing(true)
-    try {
-      await loadData(true)
-      toast.success('Dashboard refreshed')
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   const loadData = async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
@@ -149,6 +124,31 @@ export default function DashboardView() {
       toast.error(message)
     } finally {
       if (!isRefresh) setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isSidecar) loadData()
+  }, [isSidecar])
+
+  if (isSidecar) {
+    return (
+      <section className="space-y-3">
+        <h1 className="text-base font-bold text-gray-900">Quick Check</h1>
+        <p className="text-xs text-gray-500">Market price, landed cost, and inventory in one view.</p>
+        <QuickCheck />
+      </section>
+    )
+  }
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return
+    setIsRefreshing(true)
+    try {
+      await loadData(true)
+      toast.success('Dashboard refreshed')
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
