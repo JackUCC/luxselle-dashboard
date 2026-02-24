@@ -2,7 +2,6 @@ import { DEFAULT_ORG_ID } from '@shared/schemas'
 import { db } from '../src/config/firebase'
 import {
   ActivityEventRepo,
-  BuyingListItemRepo,
   EvaluationRepo,
   ProductRepo,
   SettingsRepo,
@@ -71,7 +70,6 @@ async function seed() {
     'suppliers',
     'supplier_items',
     'sourcing_requests',
-    'buying_list_items',
     'transactions',
     'evaluations',
     'activity_events',
@@ -87,7 +85,6 @@ async function seed() {
   const supplierRepo = new SupplierRepo()
   const supplierItemRepo = new SupplierItemRepo()
   const sourcingRepo = new SourcingRequestRepo()
-  const buyingListRepo = new BuyingListItemRepo()
   const transactionRepo = new TransactionRepo()
   const evaluationRepo = new EvaluationRepo()
   const activityRepo = new ActivityEventRepo()
@@ -247,40 +244,6 @@ async function seed() {
     products.push(product)
   }
 
-  const buyingListItems = []
-  const blStatuses: Array<'pending' | 'ordered' | 'received' | 'cancelled'> = [
-    'pending',
-    'pending',
-    'ordered',
-    'ordered',
-    'received',
-    'cancelled',
-  ]
-  for (let i = 0; i < 35; i += 1) {
-    const brand = brands[i % brands.length]
-    const model = models[i % models.length]
-    const sourceType = i % 3 === 0 ? 'manual' : i % 3 === 1 ? 'supplier' : 'evaluator'
-    const supplierItem = supplierItems[i % supplierItems.length]
-    const evaluation = evaluations[i % evaluations.length]
-    const status = blStatuses[i % blStatuses.length]
-    const item = await buyingListRepo.create({
-      ...withBase(i),
-      sourceType,
-      supplierId: sourceType === 'supplier' ? supplierItem.supplierId : undefined,
-      supplierItemId: sourceType === 'supplier' ? supplierItem.id : undefined,
-      evaluationId: sourceType === 'evaluator' ? evaluation.id : undefined,
-      brand,
-      model,
-      category: categories[i % categories.length],
-      condition: conditions[i % conditions.length],
-      colour: colours[i % colours.length],
-      targetBuyPriceEur: 800 + i * 15,
-      status,
-      notes: 'Seeded buy list item',
-    })
-    buyingListItems.push(item)
-  }
-
   const soStatuses: Array<'open' | 'sourcing' | 'sourced' | 'fulfilled' | 'lost'> = [
     'open',
     'open',
@@ -317,8 +280,6 @@ async function seed() {
 
   const activityTypes = [
     { eventType: 'seed' as const, entityType: 'system' as const },
-    { eventType: 'buylist_added' as const, entityType: 'buying_list_item' as const },
-    { eventType: 'buylist_received' as const, entityType: 'buying_list_item' as const },
     { eventType: 'sourcing_created' as const, entityType: 'sourcing_request' as const },
     { eventType: 'sourcing_status_changed' as const, entityType: 'sourcing_request' as const },
     { eventType: 'supplier_import' as const, entityType: 'system' as const },

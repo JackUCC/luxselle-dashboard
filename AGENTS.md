@@ -1,6 +1,6 @@
-# Luxselle Dashboard — Agent Team
+# Luxselle Supplier Engine — Agent Team
 
-A team of page-specific Cursor agents for improving UX, flow, and capabilities per dashboard page. See [docs/planning/AGENT_TEAM.md](docs/planning/AGENT_TEAM.md) for full API specs and Jarvis vision.
+A team of page-specific Cursor agents for improving UX, flow, and capabilities per page. The app operates in two modes: **Overview** (full dashboard) and **Sidecar** (compact panel for use alongside supplier websites). See [docs/planning/AGENT_TEAM.md](docs/planning/AGENT_TEAM.md) for full API specs.
 
 ## How to Invoke Agents
 
@@ -35,10 +35,8 @@ The main Agent delegates to subagents when it detects a task that matches an age
 |------|-------|------------|-------------|
 | Dashboard | `/` | agent-dashboard | KPIs, activity feed, command bar, low-stock alerts |
 | Inventory | `/inventory` | agent-inventory | Products, drawer, transactions, filters |
-| Evaluator | `/buy-box` | agent-evaluator | Pricing analysis, add-to-buy-list |
-| Supplier Hub | `/supplier-hub` | agent-supplier-hub | Suppliers, CSV import, feed |
+| Evaluator | `/buy-box` | agent-evaluator | Pricing analysis, market price, landed cost |
 | Sourcing | `/sourcing` | agent-sourcing | Sourcing requests, status flow, pipeline |
-| Buying List | `/buying-list` | agent-buying-list | Buy list items, receive flow, messages |
 | Jobs | `/jobs` | agent-jobs | System jobs, import status, retries |
 | Invoices | `/invoices` | agent-invoices | Invoices list, creation, PDF |
 | Coordinator | — | agent-coordinator | Cross-page flows, unified intelligence |

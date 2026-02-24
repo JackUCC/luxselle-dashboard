@@ -70,6 +70,8 @@ const getStatusLabel = (status: string) => {
   }
 };
 
+import ConfirmationModal from "../../components/common/ConfirmationModal";
+
 function InventoryRowActions({
   product,
   onEdit,
@@ -148,7 +150,8 @@ export default function InventoryView() {
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [showAddDrawer, setShowAddDrawer] = useState(false);
   const [showImportDrawer, setShowImportDrawer] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<ProductWithId | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -305,10 +308,6 @@ export default function InventoryView() {
 
   const handleClearAll = useCallback(() => {
     if (products.length === 0) return;
-    const confirmed = window.confirm(
-      `Clear all ${products.length} inventory items? This cannot be undone.`
-    );
-    if (!confirmed) return;
     setIsClearing(true);
     apiPost<{ data: { deleted: number } }>("/products/clear", {})
       .then((res) => {
@@ -326,8 +325,21 @@ export default function InventoryView() {
       })
       .finally(() => {
         setIsClearing(false);
+        setShowClearConfirm(false);
       });
   }, [products.length, fetchProducts, closeProductDrawer]);
+
+  const handleDeleteProduct = useCallback(async (product: ProductWithId) => {
+    try {
+      await apiDelete(`/products/${product.id}`);
+      toast.success("Product deleted");
+      handleProductDeleted(product.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setProductToDelete(null);
+    }
+  }, [handleProductDeleted]);
 
   useEffect(() => {
     fetchProducts();
@@ -466,7 +478,7 @@ export default function InventoryView() {
             </button>
             <button
               type="button"
-              onClick={handleClearAll}
+              onClick={() => setShowClearConfirm(true)}
               disabled={products.length === 0 || isClearing}
               className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Delete all inventory items"
@@ -711,16 +723,7 @@ export default function InventoryView() {
                           <InventoryRowActions
                             product={product}
                             onEdit={() => openProductDrawer(product.id)}
-                            onDelete={async () => {
-                              if (!window.confirm(`Delete "${product.brand} ${product.title || product.model}"?`)) return;
-                              try {
-                                await apiDelete(`/products/${product.id}`);
-                                toast.success("Product deleted");
-                                handleProductDeleted(product.id);
-                              } catch (err) {
-                                toast.error(err instanceof Error ? err.message : "Failed to delete");
-                              }
-                            }}
+                            onDelete={() => setProductToDelete(product)}
                           />
                         </td>
                       </tr>
@@ -797,16 +800,7 @@ export default function InventoryView() {
                         <InventoryRowActions
                           product={product}
                           onEdit={() => openProductDrawer(product.id)}
-                          onDelete={async () => {
-                            if (!window.confirm(`Delete "${product.brand} ${product.title || product.model}"?`)) return;
-                            try {
-                              await apiDelete(`/products/${product.id}`);
-                              toast.success("Product deleted");
-                              handleProductDeleted(product.id);
-                            } catch (err) {
-                              toast.error(err instanceof Error ? err.message : "Failed to delete");
-                            }
-                          }}
+                          onDelete={() => setProductToDelete(product)}
                         />
                       </td>
                     </tr>
@@ -906,6 +900,28 @@ export default function InventoryView() {
           onImportComplete={fetchProducts}
         />
       )}
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={handleClearAll}
+        title="Clear Inventory"
+        message={`Are you sure you want to delete all ${products.length} items? This action cannot be undone.`}
+        confirmLabel="Clear All"
+        isConfirming={isClearing}
+        variant="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={!!productToDelete}
+        onClose={() => setProductToDelete(null)}
+        onConfirm={() => productToDelete && handleDeleteProduct(productToDelete)}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${productToDelete?.brand} ${productToDelete?.title || productToDelete?.model}"?`}
+        confirmLabel="Delete"
+        variant="danger"
+      />
     </section>
   );
 }

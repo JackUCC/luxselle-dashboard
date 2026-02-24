@@ -1,7 +1,7 @@
-# Luxselle Dashboard — Current Status
+# Luxselle Supplier Engine — Current Status
 
-**Last updated**: 2026-01-29  
-**Current State**: Iteration 4 complete + Production enhancements
+**Last updated**: 2026-02-24  
+**Current State**: Scope pivot to Supplier Engine (Overview + Sidecar modes)
 
 ---
 
@@ -9,9 +9,10 @@
 
 ✅ **Iterations 1-4: COMPLETE**  
 ✅ **Production Infrastructure: IMPLEMENTED**  
-⏭️ **Iteration 6: Ready (Auth UI deferred)**
+✅ **Scope Pivot: Supplier Engine with Overview + Sidecar modes**  
+⏭️ **Next: Polish Sidecar UX, browser extension, auth**
 
-The application has exceeded the original Iteration 4 scope with production-ready features including authentication infrastructure, multi-tenancy, job monitoring, structured logging, React Query caching, and table virtualization.
+The application has been refocused from a full supplier tracker/dashboard to a **Supplier Engine** — a buying decision tool that runs in two modes: **Overview** (full dashboard with KPIs, pricing, inventory, invoicing) and **Sidecar** (compact panel for use alongside supplier websites). Buying List and Supplier Hub pages/APIs have been removed. GSD (Get Shit Done) framework is installed for spec-driven development.
 
 ---
 
@@ -24,8 +25,8 @@ All core features from the original plan are implemented and working:
 - ✅ Workspace setup (npm workspaces)
 - ✅ Firebase + Firestore emulators
 - ✅ All schemas and repositories
-- ✅ Products, Suppliers, Buying List, Sourcing, Pricing APIs
-- ✅ All frontend views (Dashboard, Inventory, Buy Box, Supplier Hub, Buying List, Sourcing)
+- ✅ Products, Sourcing, Pricing APIs (Buying List and Suppliers routes removed in scope pivot)
+- ✅ Frontend views: Dashboard, Inventory, Buy Box (Price Check), Sourcing, Invoices, Jobs
 - ✅ Seed script with 90 products, 50 supplier items, 28 sourcing requests
 - ✅ E2E smoke tests
 

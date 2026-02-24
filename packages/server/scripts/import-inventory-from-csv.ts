@@ -12,7 +12,7 @@
  */
 process.env.FIREBASE_USE_EMULATOR = process.env.FIREBASE_USE_EMULATOR ?? 'true'
 
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { DEFAULT_ORG_ID } from '@shared/schemas'
 import { ProductRepo } from '../src/repos/ProductRepo'
 import { ProductSchema } from '@shared/schemas'
@@ -68,6 +68,11 @@ async function run() {
   const csvPath = process.argv[2]
   if (!csvPath) {
     console.error('Usage: npx tsx scripts/import-inventory-from-csv.ts <path-to.csv>')
+    process.exit(1)
+  }
+
+  if (!existsSync(csvPath)) {
+    console.error(`File not found: ${csvPath}`)
     process.exit(1)
   }
 

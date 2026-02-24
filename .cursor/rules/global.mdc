@@ -1,9 +1,5 @@
 ---
-alwaysApply: true
----
-
----
-description: ALWAYS follow these Luxselle Dashboard repo rules.
+description: ALWAYS follow these Luxselle Supplier Engine repo rules.
 alwaysApply: true
 ---
 
@@ -12,11 +8,17 @@ alwaysApply: true
 - Frontend: React + Vite + Tailwind in /src
 - Backend: Express API in packages/server/src
 - Shared: Zod schemas in packages/shared/src/schemas
+- GSD (Get Shit Done) installed in .claude/ for spec-driven planning
 
-## Iteration 4 goal (priority order)
-1) Docs: PLAN.md accurate + root README setup/env/dev/seed/test/e2e
-2) Backend: consistent API error JSON + status transition validation + unit tests
-3) Frontend: toast (no alert), loading/empty states, (optional) apiPost/apiPut/apiDelete helpers
+## Product: Supplier Engine
+- Two modes: **Overview** (full dashboard) and **Sidecar** (compact panel alongside supplier websites)
+- Core features: Price Check (market price, max buy/bid), Landed Cost, Inventory awareness, Invoicing
+- Removed: Buying List, Supplier Hub (pages, routes, backend APIs)
+
+## Current goal (priority order)
+1) Supplier Engine: Overview + Sidecar mode UX
+2) Backend: consistent API error JSON + status transition validation
+3) Frontend: toast (no alert), loading/empty states, mode-adaptive layouts
 4) QA: keep e2e smoke passing
 
 ## Non-negotiables
@@ -25,4 +27,4 @@ alwaysApply: true
 - Every work chunk must output:
   1) changed files list
   2) how to test (exact commands)
-  3) demo path (1–2 bullets)
+  3) demo path (1-2 bullets)

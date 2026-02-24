@@ -23,7 +23,7 @@ export default function WideScreenSideRail() {
           alt="Luxselle"
           className="h-9 w-auto max-w-[140px] object-contain object-left"
         />
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black">Dashboard</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black">Supplier Engine</p>
       </div>
 
       <div className="mt-8 flex-1 space-y-7 overflow-y-auto pb-3 no-scrollbar [contain:layout]">

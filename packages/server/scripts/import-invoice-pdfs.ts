@@ -12,7 +12,7 @@ process.env.FIREBASE_USE_EMULATOR = process.env.FIREBASE_USE_EMULATOR ?? 'true'
 
 import { readdirSync, readFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import { DEFAULT_ORG_ID } from '@shared/schemas'
+import { DEFAULT_ORG_ID, InvoiceSchema } from '@shared/schemas'
 import type { Invoice, InvoiceLineItem } from '@shared/schemas'
 import { db, storage } from '../src/config/firebase'
 
@@ -37,6 +37,7 @@ async function importPdfs(sourceDir: string) {
   }
 
   const bucket = storage.bucket()
+  let successCount = 0
   const batch = db.batch()
 
   for (const filename of files) {
@@ -64,6 +65,7 @@ async function importPdfs(sourceDir: string) {
         unitPriceEur: 0,
         vatPct: 20,
         amountEur: 0,
+        sku: undefined
       }
 
       const invoiceData: Omit<Invoice, 'id'> = {
@@ -72,6 +74,8 @@ async function importPdfs(sourceDir: string) {
         updatedAt: now,
         invoiceNumber: invoiceNumber ?? displayNumber,
         customerName: '',
+        customerEmail: undefined,
+        customerAddress: undefined,
         lineItems: [lineItem],
         subtotalEur: 0,
         vatEur: 0,
@@ -80,10 +84,19 @@ async function importPdfs(sourceDir: string) {
         issuedAt: now,
         notes: `Imported from ${filename}`,
         pdfUrl,
+        transactionId: undefined,
+        productId: undefined
+      }
+
+      // Validate against schema
+      const parsed = InvoiceSchema.omit({ id: true }).safeParse(invoiceData)
+      if (!parsed.success) {
+        throw new Error(`Validation failed: ${parsed.error.message}`)
       }
 
       const docRef = db.collection(INVOICES_COLLECTION).doc()
       batch.set(docRef, invoiceData)
+      successCount++
 
       console.log(`  ✓ ${filename} -> ${invoiceNumber ?? displayNumber}`)
     } catch (err) {
@@ -91,8 +104,10 @@ async function importPdfs(sourceDir: string) {
     }
   }
 
-  await batch.commit()
-  console.log(`\nImported ${files.length} invoice(s) successfully.`)
+  if (successCount > 0) {
+    await batch.commit()
+  }
+  console.log(`\nImported ${successCount} invoice(s) successfully (out of ${files.length}).`)
 }
 
 const defaultSource = join(process.cwd(), 'storage/invoices')

@@ -1,12 +1,10 @@
 /**
- * Dashboard API: KPIs, recent activity, aggregates from products, buying list, sourcing, jobs, transactions.
+ * Dashboard API: KPIs, recent activity, aggregates from products, sourcing, jobs, transactions.
  * @see docs/CODE_REFERENCE.md
- * References: Express, repos
  */
 import { Router } from 'express'
 import { env } from '../config/env'
 import { ProductRepo } from '../repos/ProductRepo'
-import { BuyingListItemRepo } from '../repos/BuyingListItemRepo'
 import { SourcingRequestRepo } from '../repos/SourcingRequestRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { SystemJobRepo } from '../repos/SystemJobRepo'
@@ -15,7 +13,6 @@ import { SettingsRepo } from '../repos/SettingsRepo'
 
 const router = Router()
 const productRepo = new ProductRepo()
-const buyingListRepo = new BuyingListItemRepo()
 const sourcingRepo = new SourcingRequestRepo()
 const activityRepo = new ActivityEventRepo()
 const systemJobRepo = new SystemJobRepo()
@@ -25,9 +22,8 @@ const settingsRepo = new SettingsRepo()
 // KPIs: inventory value (in_stock), pending buy list value, active sourcing pipeline, low stock count
 router.get('/kpis', async (_req, res, next) => {
   try {
-    const [products, buyingListItems, sourcingRequests, settings] = await Promise.all([
+    const [products, sourcingRequests, settings] = await Promise.all([
       productRepo.list(),
-      buyingListRepo.list(),
       sourcingRepo.list(),
       settingsRepo.getSettings(),
     ])
@@ -41,11 +37,6 @@ router.get('/kpis', async (_req, res, next) => {
     const totalInventoryPotentialValue = products
       .filter((p) => p.status === 'in_stock')
       .reduce((sum, p) => sum + p.sellPriceEur * p.quantity, 0)
-
-    // Pending Buy List Value (sum target price where status IN [pending, ordered])
-    const pendingBuyListValue = buyingListItems
-      .filter((item) => item.status === 'pending' || item.status === 'ordered')
-      .reduce((sum, item) => sum + item.targetBuyPriceEur, 0)
 
     // Active Sourcing Pipeline (sum budgets where status IN [open, sourcing])
     const activeSourcingPipeline = sourcingRequests
@@ -65,7 +56,6 @@ router.get('/kpis', async (_req, res, next) => {
       data: {
         totalInventoryValue,
         totalInventoryPotentialValue,
-        pendingBuyListValue,
         activeSourcingPipeline,
         lowStockAlerts,
       },

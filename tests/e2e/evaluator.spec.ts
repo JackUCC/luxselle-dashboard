@@ -45,18 +45,9 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByText('Avg. selling price')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Add to buying list' }).click()
-  await expect(page.getByPlaceholder(/e.g. Chanel Classic Flap/)).toHaveValue('')
-
-  await page.goto('/buying-list')
-  const row = page.locator('tr', { hasText: query }).last()
-  await expect(row).toBeVisible()
-
-  await row.getByRole('button', { name: 'Receive' }).click()
-  await expect(row.getByText('received')).toBeVisible()
-
-  await page.goto('/inventory')
-  await expect(page.getByText(query)).toBeVisible()
+  await expect(page.getByText('Avg. selling price')).toBeVisible()
+  await expect(page.getByText('Max buy')).toBeVisible()
+  await expect(page.getByText('Max bid')).toBeVisible()
 })
 
 test('shows error when price-check fails', async ({ page }) => {
@@ -76,33 +67,6 @@ test('prompts when search is empty', async ({ page }) => {
   await expect(page.getByText('Enter an item name to search')).toBeVisible()
 })
 
-test('receiving an already received item fails gracefully', async ({ request }) => {
-  const createResponse = await request.post('/api/buying-list', {
-    data: {
-      sourceType: 'manual',
-      brand: 'Louis Vuitton',
-      model: 'Neverfull',
-      category: 'handbag',
-      condition: 'excellent',
-      colour: '',
-      targetBuyPriceEur: 7500,
-      status: 'pending',
-      notes: 'Playwright test',
-    },
-  })
-
-  expect(createResponse.ok()).toBeTruthy()
-  const created = await createResponse.json()
-  const itemId = created.data.id
-
-  const firstReceive = await request.post(`/api/buying-list/${itemId}/receive`)
-  expect(firstReceive.ok()).toBeTruthy()
-
-  const secondReceive = await request.post(`/api/buying-list/${itemId}/receive`)
-  expect(secondReceive.status()).toBe(400)
-  expect(await secondReceive.text()).toContain('already received')
-})
-
 test('nav routing works for all main routes', async ({ page }) => {
   const clickVisibleNav = async (path: string) => {
     await page.locator(`a[href="${path}"]:visible`).first().click()
@@ -120,56 +84,14 @@ test('nav routing works for all main routes', async ({ page }) => {
   await clickVisibleNav('/buy-box')
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 
-  // Navigate to Supplier Hub
-  await clickVisibleNav('/supplier-hub')
-  await expect(page.getByRole('heading', { name: 'Connected Sources' })).toBeVisible()
-
   // Navigate to Sourcing
   await clickVisibleNav('/sourcing')
   await expect(page.getByRole('heading', { name: 'Sourcing' })).toBeVisible()
-
-  // Navigate to Buying List
-  await clickVisibleNav('/buying-list')
-  await expect(page.getByRole('heading', { name: 'Buying List' })).toBeVisible()
 })
 
 test('legacy route redirects work', async ({ page }) => {
-  // /evaluator should redirect to /buy-box
   await page.goto('/evaluator')
   await expect(page).toHaveURL('/buy-box')
-
-  // /suppliers should redirect to /supplier-hub
-  await page.goto('/suppliers')
-  await expect(page).toHaveURL('/supplier-hub')
-})
-
-test('buying list bulk order view renders correctly', async ({ page, request }) => {
-  // Create a test item first
-  await request.post('/api/buying-list', {
-    data: {
-      sourceType: 'manual',
-      brand: 'Chanel',
-      model: 'Classic Flap',
-      category: 'handbag',
-      condition: 'excellent',
-      colour: 'black',
-      targetBuyPriceEur: 5000,
-      status: 'pending',
-      notes: 'Playwright bulk test',
-    },
-  })
-
-  await page.goto('/buying-list')
-
-  // Should see list view by default
-  await expect(page.getByText('Chanel Classic Flap')).toBeVisible()
-
-  // Switch to bulk order view
-  await page.click('button:has-text("Bulk Order")')
-
-  // Should see bulk view elements
-  await expect(page.getByText('Message Preview')).toBeVisible()
-  await expect(page.getByText('Copy Bulk Message')).toBeVisible()
 })
 
 test('invoices page loads and shows list or empty state', async ({ page }) => {

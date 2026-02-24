@@ -16,6 +16,7 @@
 process.env.FIREBASE_USE_EMULATOR = process.env.FIREBASE_USE_EMULATOR ?? 'true'
 
 import { createRequire } from 'module'
+import { existsSync } from 'fs'
 import { DEFAULT_ORG_ID } from '@shared/schemas'
 
 const require = createRequire(import.meta.url)
@@ -146,11 +147,19 @@ async function run() {
   const path2 = process.argv[3] ?? DEFAULT_PATHS[1]
 
   console.log('Reading', path1)
+  if (!existsSync(path1)) {
+    console.error(`File not found: ${path1}`)
+    process.exit(1)
+  }
   const wb1 = XLSX.readFile(path1)
   const management = parseManagementSheet(wb1)
   console.log('Management sheet: %d rows', management.length)
 
   console.log('Reading', path2)
+  if (!existsSync(path2)) {
+    console.error(`File not found: ${path2}`)
+    process.exit(1)
+  }
   const wb2 = XLSX.readFile(path2)
   const formulas = parseFormulasSheet(wb2)
   console.log('Formulas sheet: %d rows', formulas.length)

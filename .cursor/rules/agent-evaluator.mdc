@@ -1,18 +1,18 @@
 ---
-description: Evaluator (Buy Box) page agent context. Pricing analysis, add-to-buy-list.
+description: Supplier Engine (Price Check) page agent context. Pricing analysis, market research, landed cost.
 globs:
   - src/pages/BuyBox/**
 alwaysApply: false
 ---
 
 ## Scope
-- In scope: src/pages/BuyBox/**, shared components used by Evaluator.
+- In scope: src/pages/BuyBox/**, shared components used by Evaluator, Sidecar mode components.
 - Out of scope: packages/server/ unless explicitly asked.
 
 ## Current APIs
-- POST /api/pricing/analyse, POST /api/buying-list, GET /api/products
+- POST /api/pricing/analyse, POST /api/pricing/price-check, GET /api/products
 
-## Jarvis behaviours
-- One-tap add to buy list after analyse
+## Behaviours
 - Pre-fill from clipboard or last evaluation
 - Suggest condition from image upload before user fills form
+- Compact layout in Sidecar mode (mode=sidecar query param or narrow viewport)

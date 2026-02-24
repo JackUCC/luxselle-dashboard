@@ -1,5 +1,6 @@
 /**
- * Dashboard overview: Apple-style layout — KPIs, quick tools (landed cost, serial check, EUR→JPY), profit.
+ * Dashboard overview: KPIs, quick tools (landed cost, serial check, EUR-JPY), profit.
+ * In Sidecar mode, shows QuickCheck (compact price + inventory check) instead.
  * @see docs/CODE_REFERENCE.md
  */
 import { useEffect, useState, useRef } from 'react'
@@ -14,6 +15,8 @@ import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import AuctionLinksWidget from '../../components/widgets/AuctionLinksWidget'
+import QuickCheck from '../../components/sidecar/QuickCheck'
+import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 // ─── Animated Counter ───
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
@@ -98,9 +101,20 @@ function ProfitBar({ label, value, maxValue, color }: { label: string; value: nu
 }
 
 export default function DashboardView() {
+  const { isSidecar } = useLayoutMode()
   const [kpis, setKpis] = useState<KPIs | null>(null)
   const [profit, setProfit] = useState<ProfitSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  if (isSidecar) {
+    return (
+      <section className="space-y-3">
+        <h1 className="text-base font-bold text-gray-900">Quick Check</h1>
+        <p className="text-xs text-gray-500">Market price, landed cost, and inventory in one view.</p>
+        <QuickCheck />
+      </section>
+    )
+  }
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

@@ -1,9 +1,5 @@
 ---
-alwaysApply: true
----
-
----
-description: Frontend polish in src/. Toast + loading/empty states + optional API helpers.
+description: Frontend polish in src/. Toast + loading/empty states + mode-adaptive layouts.
 globs:
   - src/**
   - packages/shared/**
@@ -12,7 +8,8 @@ alwaysApply: false
 
 ## UX requirements
 - Replace any alert() in main flows with toasts.
-- Add consistent loading + empty states to Inventory, Buying List, Supplier Hub, Sourcing, Evaluator.
+- Add consistent loading + empty states to Inventory, Sourcing, Evaluator, Invoices.
+- Respect layout mode: use `useLayoutMode()` from `src/lib/LayoutModeContext.tsx` to adapt for Overview vs Sidecar.
 
 ## API usage
 - Reads use apiGet. (Optional) add apiPost/apiPut/apiDelete and refactor 2 flows as template.

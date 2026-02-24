@@ -9,9 +9,7 @@ import cors from 'cors'
 import { ZodError } from 'zod'
 import { env } from './config/env'
 import { productsRouter } from './routes/products'
-import { buyingListRouter } from './routes/buying-list'
 import { pricingRouter } from './routes/pricing'
-import { suppliersRouter } from './routes/suppliers'
 import { dashboardRouter } from './routes/dashboard'
 import { sourcingRouter } from './routes/sourcing'
 import { jobsRouter } from './routes/jobs'
@@ -55,9 +53,7 @@ app.get('/api/health', (_req, res) => {
 
 // Mount API route modules
 app.use('/api/products', productsRouter)
-app.use('/api/buying-list', buyingListRouter)
 app.use('/api/pricing', pricingRouter)
-app.use('/api/suppliers', suppliersRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/sourcing', sourcingRouter)
 app.use('/api/jobs', jobsRouter)

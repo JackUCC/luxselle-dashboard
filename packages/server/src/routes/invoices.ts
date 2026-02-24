@@ -220,7 +220,11 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${path}`
 
     const ratePct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
-    const amountEur = parseFloat(req.body?.amountEur) || 0
+    const amountEur = parseFloat(req.body?.amountEur)
+    if (isNaN(amountEur) || amountEur < 0) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'amountEur must be a non-negative number'))
+      return
+    }
     const description = (req.body?.description ?? `Invoice ${invoiceNumber}`).trim()
     const now = new Date().toISOString()
 

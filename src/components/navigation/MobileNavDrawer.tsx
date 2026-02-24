@@ -64,7 +64,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
               alt="Luxselle"
               className="h-7 w-auto max-w-[100px] object-contain object-left"
             />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-black">Dashboard</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-black">Supplier Engine</p>
           </div>
           <button
             type="button"

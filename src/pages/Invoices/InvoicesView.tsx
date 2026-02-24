@@ -120,7 +120,7 @@ export default function InvoicesView() {
         customerEmail: createForm.customerEmail.trim() || undefined,
         customerAddress: createForm.customerAddress.trim() || undefined,
       })
-      const updated = await apiPost<InvoiceWithId>(`/invoices/${created.id}/generate-pdf`)
+      const updated = await apiPost<InvoiceWithId>(`/invoices/${created.id}/generate-pdf`, {})
       await fetchInvoices()
       closeAddModal()
       setSelected(updated)

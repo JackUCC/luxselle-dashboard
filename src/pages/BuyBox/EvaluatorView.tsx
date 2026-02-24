@@ -1,5 +1,6 @@
 /**
- * Price Check: search-style item lookup, market research (Irish + Vestiaire), max buy/bid, landed cost.
+ * Price Check / Supplier Engine: search-style item lookup, market research, max buy/bid, landed cost.
+ * In Sidecar mode, renders the compact QuickCheck component.
  * @see docs/CODE_REFERENCE.md
  */
 import { useState, useRef } from 'react'
@@ -9,6 +10,8 @@ import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
+import QuickCheck from '../../components/sidecar/QuickCheck'
+import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 interface PriceCheckComp {
   title: string
@@ -34,6 +37,7 @@ const CONDITION_OPTIONS = [
 ]
 
 export default function EvaluatorView() {
+  const { isSidecar } = useLayoutMode()
   const [activeTab, setActiveTab] = useState<'pricecheck' | 'landed'>('pricecheck')
   const [query, setQuery] = useState('')
   const [condition, setCondition] = useState('')
@@ -44,9 +48,17 @@ export default function EvaluatorView() {
   const [isResearching, setIsResearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<PriceCheckResult | null>(null)
-  const [isAddingToBuyList, setIsAddingToBuyList] = useState(false)
   const [refineOpen, setRefineOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  if (isSidecar) {
+    return (
+      <section className="space-y-3">
+        <h1 className="text-base font-bold text-gray-900">Price Check</h1>
+        <QuickCheck />
+      </section>
+    )
+  }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -109,34 +121,6 @@ export default function EvaluatorView() {
       toast.error(msg)
     } finally {
       setIsResearching(false)
-    }
-  }
-
-  const handleAddToBuyList = async () => {
-    if (!result) return
-    setIsAddingToBuyList(true)
-    try {
-      await apiPost('/buying-list', {
-        sourceType: 'evaluator',
-        brand: '',
-        model: '',
-        category: '',
-        condition: condition || 'unknown',
-        colour: '',
-        targetBuyPriceEur: result.maxBuyEur,
-        status: 'pending',
-        notes: query.trim() || 'Price check item',
-      })
-      toast.success('Added to buying list')
-      setResult(null)
-      setQuery('')
-      setCondition('')
-      setNotes('')
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to add'
-      toast.error(msg)
-    } finally {
-      setIsAddingToBuyList(false)
     }
   }
 
@@ -327,14 +311,6 @@ export default function EvaluatorView() {
                     </div>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={handleAddToBuyList}
-                  disabled={isAddingToBuyList}
-                  className="w-full rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-                >
-                  {isAddingToBuyList ? 'Adding…' : 'Add to buying list'}
-                </button>
               </div>
             )}
 

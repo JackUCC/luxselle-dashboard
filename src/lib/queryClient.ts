@@ -50,11 +50,6 @@ export const queryKeys = {
     all: ['supplierItems'] as const,
     list: (filters?: Record<string, unknown>) => ['supplierItems', 'list', filters] as const,
   },
-  buyingList: {
-    all: ['buyingList'] as const,
-    list: (filters?: Record<string, unknown>) => ['buyingList', 'list', filters] as const,
-    detail: (id: string) => ['buyingList', 'detail', id] as const,
-  },
   sourcing: {
     all: ['sourcing'] as const,
     list: (filters?: Record<string, unknown>) => ['sourcing', 'list', filters] as const,

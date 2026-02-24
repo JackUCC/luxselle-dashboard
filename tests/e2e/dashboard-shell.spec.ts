@@ -67,8 +67,14 @@ test('deep-state breadcrumb is hidden on base route and shown on deep state', as
 })
 
 test('dashboard skeleton appears during delayed load and then resolves', async ({ page }) => {
+  let resolveKpis: () => void
+  const kpisPromise = new Promise<void>((resolve) => { resolveKpis = resolve })
+
+  let resolveProfit: () => void
+  const profitPromise = new Promise<void>((resolve) => { resolveProfit = resolve })
+
   await page.route('**/api/dashboard/kpis', async (route) => {
-    await page.waitForTimeout(450)
+    await kpisPromise
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -76,7 +82,6 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
         data: {
           totalInventoryValue: 120000,
           totalInventoryPotentialValue: 165000,
-          pendingBuyListValue: 20000,
           activeSourcingPipeline: 15000,
           lowStockAlerts: 2,
         },
@@ -85,7 +90,7 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
   })
 
   await page.route('**/api/dashboard/profit-summary', async (route) => {
-    await page.waitForTimeout(450)
+    await profitPromise
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -104,7 +109,14 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
 
   await page.goto('/')
 
+  // Verify skeleton is visible while requests are pending
   await expect(page.getByTestId('dashboard-skeleton')).toBeVisible()
+
+  // Resolve requests
+  resolveKpis!()
+  resolveProfit!()
+
+  // Verify skeleton disappears and content loads
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
   await expect(page.getByText('Cost of inventory total')).toBeVisible()
 })

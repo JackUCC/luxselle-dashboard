@@ -1,6 +1,31 @@
-# Luxselle Dashboard
+# Luxselle Supplier Engine
 
-Full-stack dashboard for inventory, buying list, sourcing, and pricing. React + Vite + Tailwind frontend, Express API, Firebase Firestore (emulator for local dev).
+Supplier decision engine for buying and sourcing luxury goods. Speeds up purchasing decisions with market price checks, landed cost calculations, and live inventory awareness. Two modes: **Overview** (full dashboard) and **Sidecar** (compact panel alongside supplier websites). React + Vite + Tailwind frontend, Express API, Firebase Firestore.
+
+## GSD (Get Shit Done) — Spec-Driven Development
+
+This project uses [GSD](https://github.com/gsd-build/get-shit-done) for milestone/phase planning and task execution.
+
+**Already installed** (locally in `.claude/`). To verify or update:
+
+```bash
+npx get-shit-done-cc@latest --claude --local
+```
+
+**How GSD works with Cursor agents/rules:** GSD drives *what* to build (`.planning/`, `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`). The existing Cursor rules in `.cursor/rules/` and agents in `.cursor/agents/` define *how* (patterns, API contracts, UX). When executing GSD phases, open the relevant page files so the correct Cursor rule auto-loads, or invoke agents by name (e.g. "Use the Evaluator agent to ...").
+
+**Workflow:**
+
+```bash
+# Map existing codebase (one-time, creates .planning/ context)
+# In Claude Code: /gsd:map-codebase
+
+# Start a new milestone
+# /gsd:new-milestone
+
+# For each phase: discuss → plan → execute → verify
+# /gsd:discuss-phase N → /gsd:plan-phase N → /gsd:execute-phase N → /gsd:verify-work N
+```
 
 ## Setup
 
@@ -106,7 +131,7 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 | **docs/** | All documentation (planning, design, Firebase, iterations). See [docs/README.md](docs/README.md). |
 | **firebase/** | Firebase project: rules and indexes. See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
 | **packages/** | NPM workspaces: `server` (Express API), `shared` (Zod schemas). See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
-| **src/** | Frontend app: `pages/` (one folder per page), `components/` (shared UI), `lib/` (API, Firebase, query client), `styles/` (global CSS). |
+| **src/** | Frontend app: `pages/` (one folder per page), `components/` (shared UI + `sidecar/` for compact mode), `lib/` (API, Firebase, query client, LayoutModeContext), `styles/` (global CSS). |
 | **tests/** | E2E tests (Playwright). Unit tests live next to server source in `packages/server/src`. See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). |
 | **Root** | `package.json`, `index.html`, `.env.example`, `tsconfig.json`, `tailwind.config.js`, `postcss.config.js`, `.firebaserc`. |
 

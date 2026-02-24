@@ -1,32 +1,29 @@
 /**
  * App shell: React Query, React Router, responsive navigation, deep-state breadcrumbs,
  * Toaster, ErrorBoundary, and route definitions.
- * Legacy redirects: /evaluator → /buy-box, /suppliers → /supplier-hub.
- * On init, checks API health and shows a banner if backend is not configured.
+ * Supports two layout modes: Overview (full dashboard) and Sidecar (compact panel).
  * Route views are lazy-loaded to improve INP (Interaction to Next Paint) on nav clicks.
  * @see docs/CODE_REFERENCE.md
- * References: react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react
  */
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AlertCircle, Menu } from 'lucide-react'
 
-import { API_BASE } from './lib/api'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
 import MobileNavDrawer from './components/navigation/MobileNavDrawer'
 import WideScreenSideRail from './components/navigation/WideScreenSideRail'
+import SidecarNav from './components/navigation/SidecarNav'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
+import { LayoutModeProvider, useLayoutMode } from './lib/LayoutModeContext'
 
 const DashboardView = lazy(() => import('./pages/Dashboard/DashboardView'))
 const InventoryView = lazy(() => import('./pages/Inventory/InventoryView'))
 const EvaluatorView = lazy(() => import('./pages/BuyBox/EvaluatorView'))
-const SupplierHubView = lazy(() => import('./pages/SupplierHub/SupplierHubView'))
 const SourcingView = lazy(() => import('./pages/Sourcing/SourcingView'))
-const BuyingListView = lazy(() => import('./pages/BuyingList/BuyingListView'))
 const JobsView = lazy(() => import('./pages/Jobs/JobsView'))
 const InvoicesView = lazy(() => import('./pages/Invoices/InvoicesView'))
 const MarketResearchView = lazy(() => import('./pages/MarketResearch/MarketResearchView'))
@@ -35,7 +32,41 @@ const RetailPriceView = lazy(() => import('./pages/RetailPrice/RetailPriceView')
 
 const AppContent = () => {
   const { isConnected, refetchStatus } = useServerStatus()
+  const { isSidecar } = useLayoutMode()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  if (isSidecar) {
+    return (
+      <div className="min-h-screen bg-lux-50 text-black font-sans">
+        <SidecarNav />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            className: 'text-sm font-medium !bg-white !text-black !border !border-lux-gold/40 !shadow-elevated !rounded-xl',
+            duration: 3000,
+          }}
+        />
+        <main className="px-3 py-4">
+          <ErrorBoundary>
+            <Suspense fallback={<div className="flex items-center justify-center py-12 text-sm text-gray-500" aria-hidden>Loading…</div>}>
+              <Routes>
+                <Route path="/" element={<DashboardView />} />
+                <Route path="/inventory" element={<InventoryView />} />
+                <Route path="/buy-box" element={<EvaluatorView />} />
+                <Route path="/serial-check" element={<SerialCheckView />} />
+                <Route path="/retail-price" element={<RetailPriceView />} />
+                <Route path="/market-research" element={<MarketResearchView />} />
+                <Route path="/sourcing" element={<SourcingView />} />
+                <Route path="/jobs" element={<JobsView />} />
+                <Route path="/invoices" element={<InvoicesView />} />
+                <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-lux-50 text-black font-sans">
@@ -92,15 +123,12 @@ const AppContent = () => {
                   <Route path="/serial-check" element={<SerialCheckView />} />
                   <Route path="/retail-price" element={<RetailPriceView />} />
                   <Route path="/market-research" element={<MarketResearchView />} />
-                  <Route path="/supplier-hub" element={<SupplierHubView />} />
-                  <Route path="/buying-list" element={<BuyingListView />} />
                   <Route path="/sourcing" element={<SourcingView />} />
                   <Route path="/jobs" element={<JobsView />} />
                   <Route path="/invoices" element={<InvoicesView />} />
 
-                  {/* Redirects for legacy routes */}
+                  {/* Legacy redirect */}
                   <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-                  <Route path="/suppliers" element={<Navigate to="/supplier-hub" replace />} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>
@@ -121,7 +149,9 @@ const LuxselleApp = () => {
             v7_relativeSplatPath: true,
           }}
         >
-          <AppContent />
+          <LayoutModeProvider>
+            <AppContent />
+          </LayoutModeProvider>
         </BrowserRouter>
       </ServerStatusProvider>
     </QueryClientProvider>

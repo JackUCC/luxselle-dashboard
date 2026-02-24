@@ -22,6 +22,7 @@ import {
 import type { Product, ProductImage } from '@shared/schemas'
 import { apiGet, apiPut, apiPost, apiDelete, apiPostFormData, ApiError } from '../../lib/api'
 import { PLACEHOLDER_IMAGE, PLACEHOLDER_IMAGE_SMALL } from '../../lib/placeholder'
+import ConfirmationModal from '../../components/common/ConfirmationModal'
 
 type ProductWithId = Product & { id: string }
 
@@ -71,6 +72,7 @@ export default function ProductDetailDrawer({
   const [activeTab, setActiveTab] = useState<TabId>('details')
   const [editedFields, setEditedFields] = useState<Partial<Product>>({})
   const [hasChanges, setHasChanges] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Fetch product data
   useEffect(() => {
@@ -135,7 +137,6 @@ export default function ProductDetailDrawer({
 
   const handleDeleteProduct = useCallback(async () => {
     if (!product?.id) return
-    if (!window.confirm(`Delete "${product.brand} ${product.title || product.model}"? This cannot be undone.`)) return
     setIsDeleting(true)
     try {
       await apiDelete(`/products/${product.id}`)
@@ -146,6 +147,7 @@ export default function ProductDetailDrawer({
       toast.error(err instanceof Error ? err.message : 'Failed to delete product')
     } finally {
       setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }, [product, onClose, onProductDeleted])
 
@@ -201,7 +203,7 @@ export default function ProductDetailDrawer({
             {!isLoading && product && (
               <button
                 type="button"
-                onClick={handleDeleteProduct}
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={isDeleting}
                 className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                 aria-label="Delete product"
@@ -319,6 +321,17 @@ export default function ProductDetailDrawer({
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteProduct}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${product?.brand} ${product?.title || product?.model}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isConfirming={isDeleting}
+      />
     </>
   )
 }

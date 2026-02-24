@@ -1,10 +1,8 @@
 import {
   BarChart3,
   Calculator,
-  ClipboardList,
   FileSpreadsheet,
   FileText,
-  Globe,
   LayoutGrid,
   Package,
   Search,
@@ -28,16 +26,13 @@ export const appRoutes: RouteMeta[] = [
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'main' },
   { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'main' },
   { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: Search, section: 'main' },
-  // Admin tools — Inventory, Sourcing, Supplier Hub, Jobs
+  // Admin tools — Inventory, Sourcing, Jobs
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'admin' },
   { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'admin' },
-  { path: '/supplier-hub', label: 'Supplier Hub', navLabel: 'Supplier Hub', icon: Globe, section: 'admin' },
   { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'admin' },
   // Extra tools — Market Research, Retail price
   { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'extra' },
   { path: '/retail-price', label: 'What was this retail?', navLabel: 'Retail price', icon: Tag, section: 'extra' },
-  // Also in nav (placed in admin / extra for visibility)
-  { path: '/buying-list', label: 'Buying List', navLabel: 'Buying List', icon: ClipboardList, section: 'admin' },
   { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'extra' },
 ]
 
@@ -73,32 +68,12 @@ export const deepStateRules: DeepStateRule[] = [
     toCrumbLabel: () => ['Prefilled'],
   },
   {
-    route: '/supplier-hub',
-    keys: ['focus', 'supplier', 'brand', 'availability', 'importSupplier'],
-    toCrumbLabel: (params) => {
-      if (params.get('focus') === 'import') return ['Import Focus']
-      if (params.get('importSupplier')) return ['Import Supplier']
-      return ['Filtered']
-    },
-  },
-  {
     route: '/sourcing',
     keys: ['status'],
     toCrumbLabel: (params) => {
       const status = params.get('status')
       if (!status || status === 'all') return []
       return [formatLabel(status)]
-    },
-  },
-  {
-    route: '/buying-list',
-    keys: ['status', 'view'],
-    toCrumbLabel: (params) => {
-      const labels: string[] = []
-      if (params.get('view') === 'bulk') labels.push('Bulk View')
-      const status = params.get('status')
-      if (status && status !== 'all') labels.push(formatLabel(status))
-      return labels
     },
   },
   {
