@@ -36,8 +36,6 @@ With app running, open each route and confirm it loads and nav works:
 - [ ] `/inventory`
 - [ ] `/buy-box`
 - [ ] `/market-research`
-- [ ] `/supplier-hub`
-- [ ] `/buying-list`
 - [ ] `/sourcing`
 - [ ] `/jobs`
 - [ ] `/invoices`

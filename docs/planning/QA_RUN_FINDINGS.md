@@ -76,7 +76,7 @@ Baseline (server tests, typecheck, build) is **green**.
   1. Stopping any existing emulator or dev processes.
   2. Running `npm run dev` in one terminal until Vite and the API are ready.
   3. Running `npm run test:e2e` in another (Playwright will reuse the existing server).
-- **Smoke:** Main routes and flows are covered by the E2E specs (dashboard shell, evaluator → buying list → receive → inventory, nav, legacy redirects, invoices). Manual smoke of all routes remains optional.
+- **Smoke:** Main routes and flows are covered by the E2E specs (dashboard shell, evaluator decision flow, inventory updates, nav, legacy redirects, invoices). Manual smoke of all routes remains optional.
 
 ---
 
@@ -95,7 +95,7 @@ Use this list on your side after pulling the `qa-run-fixes` branch (or merging i
    - In terminal 2: `npm run test:e2e` — all 15 tests should pass (Playwright will reuse the existing server).
 
 3. **Smoke-test main routes**  
-   With the app running, quickly open: `/`, `/inventory`, `/buy-box`, `/supplier-hub`, `/buying-list`, `/sourcing`, `/jobs`, `/invoices`. Confirm each page loads and nav works.
+   With the app running, quickly open: `/`, `/inventory`, `/buy-box`, `/market-research`, `/sourcing`, `/jobs`, `/invoices`. Confirm each page loads and nav works.
 
 4. **Confirm baseline in your env**  
    Run: `npm run test --workspace=@luxselle/server && npm run typecheck && npm run build`. All should pass.

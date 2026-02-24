@@ -1,248 +1,109 @@
-# Luxselle Dashboard MVP - Product Requirements Document (Iteration 4)
+# Luxselle Supplier Engine — Product Requirements
 
 ## Overview
-Ship a working Luxselle Dashboard MVP with real data flow (Firebase), seeded sample data, and a clean phased plan. The app does NOT need to be production-ready; it MUST be usable end-to-end locally.
 
-## Hard Constraints
-- Preserve the existing UI framework and styling. Do not rewrite the app structure unless unavoidable.
-- No auth for Iteration 4. Assume a single workspace/organisation ("default").
-- Use Firebase:
-  - Firestore for data
-  - Firebase Storage for images
-- All AI calls must be server-side (never from the browser).
-- The app must run locally with zero paid services by default:
-  - Firebase Emulator first (default)
-  - Mock AI provider first (default)
-- Provide an easy switch to real services via env vars.
+Build a Supplier Engine that helps operators make faster, safer buying decisions while browsing external supplier websites.
 
-## Primary Workflows (must work end-to-end)
+The product has two adaptive modes:
 
-### 1) Inventory CRUD
-Create product → upload images → edit cost/sell → status changes → appears in inventory + KPIs.
+1. **Overview mode** for full operations planning.
+2. **Sidecar mode** for compact decision support during live buying.
 
-### 2) Evaluate → Buy list → Receive
-Enter item → Analyse (mock/AI) → add to buying list → "Receive" creates an inventory item + transaction + activity event.
+## Product Goals
 
-### 3) Supplier CSV import
-Import Brand Street Tokyo CSV → items appear in Supplier Hub → "Add to buy list" works → Receive works.
+1. Calculate reliable decision metrics quickly (market price, max buy, landed cost).
+2. Bring inventory context into each decision (stock, status, sell-through signals).
+3. Keep sourcing workflows actionable from evaluator output.
+4. Preserve invoicing as a stable downstream operational feature.
 
-## App Views
+## Non-Goals
 
-### A) Dashboard (Command Centre)
-- "Ask Luxselle…" command bar routes by intent:
-  - brand/model query → inventory filtered
-  - "buy / evaluate" → evaluator
-  - "supplier" → supplier hub
-  - "sourcing" → sourcing
-- Command bar parses keywords and forwards filters via query params:
-  - Inventory: `q`, `brand`, `model`
-  - Evaluator: `brand`, `model`
-  - Suppliers: `focus=import` when import intent is detected
-  - Sourcing: `status` when a status keyword is present
-- Example queries: "Chanel Classic Flap", "buy Louis Vuitton Neverfull", "supplier import", "sourcing open requests"
-- KPI cards:
-  - Total Inventory Value (sum cost where status=in_stock)
-  - Pending Buy List Value (sum target_buy_price where status=pending/ordered)
-  - Active Sourcing Pipeline (sum budgets where status=open/sourcing)
-  - Low Stock Alerts (count quantity < threshold)
-- Recent Activity Feed (activity_events)
-- System Status widget:
-  - last supplier import job status
-  - AI provider mode (mock/openai/gemini)
-  - emulator vs real Firebase
+1. Reintroducing legacy procurement queue pages.
+2. Reintroducing legacy supplier-feed browsing pages.
+3. Building a browser extension in this phase (web app sidecar mode only).
 
-### B) Inventory
-- Table + Grid toggle
-- Filters: brand, status, condition, date added range, price range
-- Product drawer: images, details, linked transactions, linked evaluations
-- CRUD + image upload to Firebase Storage
-- Fields show cost vs sell side-by-side
-- Pagination (server-side if needed)
+## Primary Workflows
 
-### C) Evaluator / Buy Box
-Inputs: brand, model, category, condition grade, colour, notes, supplier ask (optional)
+### 1) Price Check During Live Browsing
 
-On Analyse:
-- estimated_retail (EUR)
-- max_buy_price (EUR) based on TARGET_MARGIN_PCT
-- history_avg_paid (EUR) from transactions for similar items
-- comps[] list (mock unless comps provider enabled)
-- confidence score
+1. User enters brand/model/condition and supplier ask.
+2. System returns estimated retail, max buy, landed cost, and confidence.
+3. User decides: source now, inventory-check first, or skip.
 
-Actions:
-- Save evaluation
-- Add to buying list (creates buying_list_item linked to evaluation)
+### 2) Inventory-Aware Decision Loop
 
-### D) Supplier Hub
-- Supplier profiles
-- CSV import (manual upload is enough for MVP; CSV URL later)
-- Unified global feed (supplier_items) with filters
-- "Add to buy list" creates buying_list_item with supplier snapshot
+1. User jumps from evaluator to relevant inventory context.
+2. User validates stock and financial context.
+3. Decision updates sourcing activity or is parked for later.
 
-### E) Sourcing
-- CRUD requests: customer name, query text, brand optional, budget, priority, status, notes
-- Status flow: Open → Sourcing → Sourced → Fulfilled / Lost
-- Link to product or supplier item
-- Pipeline value KPI
+### 3) Sourcing Pipeline Execution
 
-### F) Buying List
-- Line items with source: manual / evaluator / supplier
-- Group-by-supplier view
-- Message generator per supplier:
-  - WhatsApp and Email text (can be template-generated; store per supplier optional)
-- Status flow: Pending → Ordered → Received → Cancelled
-- Receive action:
-  - Creates product in inventory
-  - Creates transaction (purchase)
-  - Writes activity event
-  - Updates buying list item to received
+1. User creates or updates sourcing request from evaluator context.
+2. Status transitions are validated (`open -> sourcing -> sourced -> fulfilled|lost`).
+3. Dashboard and jobs surfaces reflect operational state.
 
-## Data Model (Firestore collections; include organisationId = "default")
+### 4) Invoicing Follow-up
 
-### Top-level collections:
-- products
-- suppliers
-- supplier_items
-- sourcing_requests
-- buying_list_items
-- transactions
-- evaluations
-- activity_events
-- settings
-- system_jobs
+1. User opens invoices route after sourcing/stock actions.
+2. Invoice list and creation/export flows remain operational.
 
-### Minimal document shapes (use TypeScript + zod validation shared between server/client):
+## Mode Requirements
 
-#### settings
-- baseCurrency: "EUR"
-- targetMarginPct: 35
-- lowStockThreshold: 2
-- fxUsdToEur: number (default 0.92; editable later)
+### Overview Mode
 
-#### products
-- brand, model, category, condition, colour
-- costPriceEur, sellPriceEur, currency="EUR"
-- status: in_stock | sold | reserved
-- quantity (default 1)
-- imageUrls: string[]
-- notes
+1. Full KPI and activity context on dashboard.
+2. Rich table and drawer workflows in inventory.
+3. Complete evaluator and sourcing forms with supporting metadata.
 
-#### supplier_items
-- supplierId
-- externalId (SKU if present else hash)
-- title, brand, sku, rank/condition
-- askPriceUsd (raw)
-- askPriceEur (converted using fxUsdToEur at import time)
-- sellingPriceUsd (if present), sellingPriceEur (optional)
-- availability: uploaded | sold | waiting
-- imageUrl, sourceUrl (e.g., google drive folder link)
-- rawPayload (object)
-- lastSeenAt
+### Sidecar Mode
 
-#### buying_list_items
-- sourceType: manual | evaluator | supplier
-- supplierId?, supplierItemId?, evaluationId?
-- brand, model, category, condition, colour
-- targetBuyPriceEur
-- status: pending | ordered | received | cancelled
-- notes
+1. Optimized for narrow viewport (target 300-420 px width).
+2. Prioritize top decision metrics above fold.
+3. Keep key actions reachable with minimal scrolling.
+4. Maintain consistent navigation and route behavior.
 
-#### transactions
-- type: purchase | sale | adjustment
-- productId? and/or buyingListItemId?
-- amountEur
-- occurredAt
-- notes
+## Functional Requirements
 
-#### evaluations
-- input fields
-- estimatedRetailEur, maxBuyPriceEur, historyAvgPaidEur
-- comps[]
-- confidence
-- provider: mock | openai | gemini
-- createdAt
+### Dashboard
 
-#### activity_events
-- actor (string like "system" for now)
-- eventType (product_created, product_updated, evaluation_run, supplier_import, buylist_added, buylist_received, etc.)
-- entityType + entityId
-- payload
+- KPIs: inventory value, low-stock count, sourcing pipeline state, profitability signals.
+- Activity feed and system status remain visible and stable.
 
-#### system_jobs
-- jobType (supplier_import)
-- status (success/fail/running)
-- lastRunAt, lastSuccessAt, lastError
+### Evaluator (`/buy-box`)
 
-## Supplier CSV Mapping (Brand Street Tokyo)
-Importer accepts the supplier CSV and maps these columns:
-- STATUS → availability:
-  - UPLOADED → uploaded
-  - SOLD → sold
-  - WAITING → waiting
-- Brand → brand
-- SKU → externalId + sku
-- Rank → conditionRank
-- For you in USD → askPriceUsd (parse number)
-- Selling Price → sellingPriceUsd (parse number if present)
-- Title → title
-- URL column containing world-switch image link → imageUrl
-- Google drive folder URL column → sourceUrl
-- Store all columns into rawPayload
+- Inputs: brand, model, category, condition, color, notes, supplier ask.
+- Outputs: estimated retail, max buy, landed cost, confidence, market context.
+- Supports sidecar-optimized presentation.
 
-## Currency
-- Base currency is EUR.
-- Supplier imports are typically USD; convert using settings.fxUsdToEur.
-- Keep both raw USD and converted EUR.
+### Inventory (`/inventory`)
 
-## AI Pricing / Analysis
-Implement provider abstraction:
-- MockPricingProvider (default, deterministic)
-- OpenAIProvider (enabled when OPENAI_API_KEY present and AI_PROVIDER=openai)
-- GeminiProvider (enabled when GEMINI_API_KEY present and AI_PROVIDER=gemini)
+- Product lookup, detail drawer, transaction history, and stock status.
+- Supports quick context checks from evaluator.
 
-Endpoint: POST /api/pricing/analyse
+### Sourcing (`/sourcing`)
 
-Input: brand, model, category, condition, colour, notes, askPriceEur?
+- CRUD requests with validated status transitions.
+- Links to products and decision context where available.
 
-Output must include:
-- estimatedRetailEur
-- maxBuyPriceEur = estimatedRetailEur * (1 - targetMarginPct/100)
-- historyAvgPaidEur (query transactions for similar brand/model)
-- comps[] (mock unless comps provider later)
-- confidence (0–1)
+### Invoices (`/invoices`)
 
-MVP preference:
-- Use MockPricingProvider as default so everything works immediately.
-- Implement OpenAIProvider next for richer analysis (still without live scraping).
-- Leave live scraping as a later pluggable provider.
+- List and create/export flow must remain operational in both modes.
 
-## Non-Functional Requirements
-- Deterministic local dev: seeds + mocks.
-- No secrets committed. Use .env and .env.example.
-- Basic tests:
-  - unit test for maxBuyPrice math + fx conversion
-  - one E2E smoke: evaluator → add to buy list → receive → inventory shows item
+## Data and API Requirements
 
-## Environment Variables
+1. Maintain standard API error shape:
+   `{ "error": { "code": string, "message": string, "details"?: object } }`
+2. Keep successful response contracts backward compatible where possible.
+3. Keep landed-cost and pricing math deterministic and test-covered.
+4. Keep ingestion/job status observable via jobs/dashboard endpoints.
 
-### Server:
-- AI_PROVIDER=mock|openai|gemini
-- OPENAI_API_KEY (optional)
-- GEMINI_API_KEY (optional)
-- BASE_CURRENCY=EUR
-- TARGET_MARGIN_PCT=35
+## Quality and Validation
 
-### Firebase:
-- FIREBASE_USE_EMULATOR=true (default)
-- FIREBASE_PROJECT_ID (optional)
-- FIREBASE_STORAGE_BUCKET (optional)
-- GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccount.json (optional for real Firebase)
-
-### Frontend:
-- if needed, VITE_FIREBASE_* vars OR reuse existing firebaseConfig in repo
-
-## Runnability
-- Provide single command dev runner (e.g., pnpm dev) that starts:
-  - firebase emulators
-  - backend API
-  - frontend
+1. Unit tests for pricing math and sourcing transitions must pass.
+2. Typecheck and build must pass on each milestone.
+3. E2E smoke should cover:
+   - dashboard load
+   - evaluator decision flow
+   - inventory navigation
+   - invoices route access
+4. Sidecar checks must confirm compact usability and no blocked actions.

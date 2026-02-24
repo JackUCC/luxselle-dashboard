@@ -77,13 +77,13 @@ Observed warnings to triage:
 6. **agent-dashboard**
    - Audit low-stock/alert KPI interactions and command bar reliability.
 7. **agent-evaluator**
-   - Verify one-tap add-to-buy-list flow and error recovery states.
-8. **agent-buying-list**
-   - Validate clear-list and receive-item transitions with backend confirmations.
+   - Verify one-tap decision handoff to sourcing/inventory and error recovery states.
+8. **agent-inventory**
+   - Validate add/update/stock transitions and invoice handoff signals.
 9. **agent-jobs**
    - Confirm retry runner observability and operator feedback loops.
 10. **agent-coordinator**
-   - Ensure cross-page flow continuity (Evaluator → Buying List → Receive).
+   - Ensure cross-page flow continuity (Evaluator → Inventory → Invoices).
 
 ## Prioritized Fix List (if issues are discovered)
 
@@ -107,7 +107,7 @@ Observed warnings to triage:
 2. Backend Contracts QA + Frontend Flows QA in parallel
 3. Data Pipeline QA
 4. Docs Improvement updates
-5. Page agents (Dashboard/Evaluator/Buying List/Jobs)
+5. Page agents (Dashboard/Evaluator/Inventory/Jobs)
 6. Coordinator final end-to-end signoff
 
 ## Definition of Done

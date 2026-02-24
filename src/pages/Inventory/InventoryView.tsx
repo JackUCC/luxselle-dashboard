@@ -146,6 +146,7 @@ function hasMissingInfo(product: ProductWithId): boolean {
 export default function InventoryView() {
   const [products, setProducts] = useState<ProductWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [showAddDrawer, setShowAddDrawer] = useState(false);

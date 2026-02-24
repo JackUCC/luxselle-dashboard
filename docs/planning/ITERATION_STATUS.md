@@ -11,9 +11,9 @@ All features from Iteration 4 have been implemented and significantly enhanced b
 | Feature | Original Plan | Actual Implementation | Status |
 |---------|--------------|----------------------|--------|
 | **Product Image Upload** | Basic upload to Firebase Storage | ✅ Upload with thumbnails (512px), image objects with metadata (id, url, path, createdAt, createdBy), drag-drop UI | ✅ Enhanced |
-| **Supplier Hub Filters** | Basic filters | ✅ Supplier, brand, availability filters with URL param persistence | ✅ Complete |
+| **Supplier Feed Filters (legacy)** | Basic filters | ✅ Supplier, brand, availability filters with URL param persistence | ✅ Complete |
 | **lowStockThreshold from Settings** | Use settings value | ✅ Dashboard KPIs fetch from settings | ✅ Complete |
-| **Buying List Group-by-Supplier** | Group view | ✅ Bulk Order view with supplier grouping | ✅ Complete |
+| **Procurement Queue Group-by-Supplier (legacy)** | Group view | ✅ Bulk Order view with supplier grouping | ✅ Complete |
 | **Message Generator** | Copy message | ✅ WhatsApp & Email links with pre-filled messages | ✅ Enhanced |
 | **Post-receive Navigation** | Navigate to inventory | ✅ After receive, navigate to /inventory | Complete |
 | **Product Detail Drawer** | Basic drawer | ✅ Full-featured with 5 tabs: Images, Details, Financials, History, Notes | ✅ Enhanced |
