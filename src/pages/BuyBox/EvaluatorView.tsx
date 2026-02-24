@@ -10,7 +10,7 @@ import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
-import QuickCheck from '../../components/sidecar/QuickCheck'
+import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 interface PriceCheckComp {
@@ -52,12 +52,7 @@ export default function EvaluatorView() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (isSidecar) {
-    return (
-      <section className="space-y-3">
-        <h1 className="text-base font-bold text-gray-900">Price Check</h1>
-        <QuickCheck />
-      </section>
-    )
+    return <SidecarView initialTab="quick" />
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Calculator, ChevronDown, ChevronUp, DollarSign, GripVertical, Search } from 'lucide-react'
-import LandedCostWidget from '../widgets/LandedCostWidget'
-import SerialCheckWidget from '../widgets/SerialCheckWidget'
-import EurToYenWidget from '../widgets/EurToYenWidget'
-import CalculatorWidget from '../widgets/CalculatorWidget'
+import { useEffect, useState } from 'react'
+import { Calculator, ChevronDown, ChevronUp, DollarSign, Search } from 'lucide-react'
+import SidecarLandedCostWidget from './widgets/SidecarLandedCostWidget'
+import SidecarSerialCheckWidget from './widgets/SidecarSerialCheckWidget'
+import SidecarFxWidget from './widgets/SidecarFxWidget'
+import SidecarBidWidget from './widgets/SidecarBidWidget'
 
 type WidgetId = 'landed-cost' | 'serial-check' | 'fx-conversion' | 'bid-calculator'
 
@@ -41,83 +41,57 @@ const WIDGETS: WidgetCardConfig[] = [
   },
 ]
 
-const SECTION_HEIGHT = {
-  compact: 'max-h-[280px]',
-  medium: 'max-h-[420px]',
-  expanded: 'max-h-[620px]',
-} as const
-
-type SectionHeightMode = keyof typeof SECTION_HEIGHT
-
-function heightLabel(mode: SectionHeightMode): string {
-  switch (mode) {
-    case 'compact':
-      return 'Compact'
-    case 'medium':
-      return 'Medium'
-    case 'expanded':
-      return 'Expanded'
-    default:
-      return 'Medium'
-  }
-}
-
 function renderWidget(widgetId: WidgetId) {
   switch (widgetId) {
     case 'landed-cost':
-      return <LandedCostWidget />
+      return <SidecarLandedCostWidget />
     case 'serial-check':
-      return <SerialCheckWidget />
+      return <SidecarSerialCheckWidget />
     case 'fx-conversion':
-      return <EurToYenWidget />
+      return <SidecarFxWidget />
     case 'bid-calculator':
-      return <CalculatorWidget />
+      return <SidecarBidWidget />
     default:
       return null
   }
 }
 
+const COLLAPSED_WIDGETS_STORAGE_KEY = 'luxselle-sidecar-collapsed-widgets'
+
+function parseStoredCollapsedState(raw: string | null): Partial<Record<WidgetId, boolean>> {
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw) as Record<string, boolean>
+    return {
+      'landed-cost': Boolean(parsed['landed-cost']),
+      'serial-check': Boolean(parsed['serial-check']),
+      'fx-conversion': Boolean(parsed['fx-conversion']),
+      'bid-calculator': Boolean(parsed['bid-calculator']),
+    }
+  } catch {
+    return {}
+  }
+}
+
 export default function SidecarWidgets() {
-  const [order, setOrder] = useState<WidgetId[]>(['landed-cost', 'serial-check', 'fx-conversion', 'bid-calculator'])
   const [collapsed, setCollapsed] = useState<Record<WidgetId, boolean>>({
-    'landed-cost': false,
-    'serial-check': false,
-    'fx-conversion': false,
+    'landed-cost': true,
+    'serial-check': true,
+    'fx-conversion': true,
     'bid-calculator': true,
   })
-  const [heightMode, setHeightMode] = useState<Record<WidgetId, SectionHeightMode>>({
-    'landed-cost': 'medium',
-    'serial-check': 'medium',
-    'fx-conversion': 'compact',
-    'bid-calculator': 'expanded',
-  })
 
-  const moveWidget = (widgetId: WidgetId, direction: 'up' | 'down') => {
-    setOrder((currentOrder) => {
-      const currentIndex = currentOrder.indexOf(widgetId)
-      if (currentIndex < 0) return currentOrder
+  useEffect(() => {
+    const stored = parseStoredCollapsedState(localStorage.getItem(COLLAPSED_WIDGETS_STORAGE_KEY))
+    setCollapsed((current) => ({
+      ...current,
+      ...stored,
+    }))
+  }, [])
 
-      const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-      if (swapIndex < 0 || swapIndex >= currentOrder.length) return currentOrder
-
-      const nextOrder = [...currentOrder]
-      const [target] = nextOrder.splice(currentIndex, 1)
-      nextOrder.splice(swapIndex, 0, target)
-      return nextOrder
-    })
-  }
-
-  const cycleHeight = (widgetId: WidgetId) => {
-    setHeightMode((current) => {
-      const mode = current[widgetId]
-      const nextMode: SectionHeightMode =
-        mode === 'compact' ? 'medium' : mode === 'medium' ? 'expanded' : 'compact'
-      return {
-        ...current,
-        [widgetId]: nextMode,
-      }
-    })
-  }
+  useEffect(() => {
+    localStorage.setItem(COLLAPSED_WIDGETS_STORAGE_KEY, JSON.stringify(collapsed))
+  }, [collapsed])
 
   const toggleCollapsed = (widgetId: WidgetId) => {
     setCollapsed((current) => ({
@@ -131,79 +105,47 @@ export default function SidecarWidgets() {
       <div className="rounded-xl border border-gray-200 bg-white p-3">
         <h2 className="text-xs font-semibold text-gray-800">Widget workspace</h2>
         <p className="mt-1 text-xs text-gray-500">
-          Reorder widgets, collapse sections, and cycle panel height to fit your sidecar workflow.
+          Sidecar-native widgets designed for narrow vertical sessions. Expand only what you need.
         </p>
       </div>
 
       <div className="space-y-3">
-        {order.map((widgetId, index) => {
-          const config = WIDGETS.find((widget) => widget.id === widgetId)
-          if (!config) return null
-
-          const Icon = config.icon
+        {WIDGETS.map((widget) => {
+          const widgetId = widget.id
+          const Icon = widget.icon
           const isCollapsed = collapsed[widgetId]
-          const sizeMode = heightMode[widgetId]
 
           return (
             <section key={widgetId} className="rounded-xl border border-gray-200 bg-white">
-              <div className="flex items-start justify-between gap-2 border-b border-gray-100 px-3 py-2">
+              <div className="flex items-start justify-between gap-2 px-3 py-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <Icon className="h-3.5 w-3.5 text-gray-500" />
-                    <p className="truncate text-xs font-semibold text-gray-800">{config.title}</p>
+                    <p className="truncate text-xs font-semibold text-gray-800">{widget.title}</p>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-gray-500">{config.description}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{widget.description}</p>
                 </div>
-
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => moveWidget(widgetId, 'up')}
-                    disabled={index === 0}
-                    className="rounded-md border border-gray-200 p-1 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
-                    aria-label="Move widget up"
-                    title="Move up"
-                  >
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveWidget(widgetId, 'down')}
-                    disabled={index === order.length - 1}
-                    className="rounded-md border border-gray-200 p-1 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
-                    aria-label="Move widget down"
-                    title="Move down"
-                  >
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-b border-gray-100 px-3 py-1.5 text-[11px]">
-                <div className="inline-flex items-center gap-1 text-gray-500">
-                  <GripVertical className="h-3 w-3" />
-                  {heightLabel(sizeMode)} height
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => cycleHeight(widgetId)}
-                    className="rounded-md border border-gray-200 px-2 py-1 text-gray-600 hover:bg-gray-50"
-                  >
-                    Resize
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapsed(widgetId)}
-                    className="rounded-md border border-gray-200 px-2 py-1 text-gray-600 hover:bg-gray-50"
-                  >
-                    {isCollapsed ? 'Expand' : 'Collapse'}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleCollapsed(widgetId)}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  {isCollapsed ? (
+                    <>
+                      <ChevronDown className="h-3.5 w-3.5" />
+                      Expand
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="h-3.5 w-3.5" />
+                      Collapse
+                    </>
+                  )}
+                </button>
               </div>
 
               {!isCollapsed && (
-                <div className={`${SECTION_HEIGHT[sizeMode]} overflow-y-auto p-2`}>
+                <div className="border-t border-gray-100 p-2">
                   {renderWidget(widgetId)}
                 </div>
               )}
