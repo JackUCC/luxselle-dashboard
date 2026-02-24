@@ -14,7 +14,7 @@ This playbook defines how to run the QA/documentation swarm for release confiden
 
 - "Use Quality Lead to run release readiness for the current branch."
 - "Use Backend Contracts QA to test new pricing and supplier routes."
-- "Use Frontend Flows QA to check Buy Box and Supplier Hub regressions."
+- "Use Frontend Flows QA to check Buy Box, Inventory, and Sidecar regressions."
 - "Use Data Pipeline QA to validate Gmail import reliability."
 - "Use Docs Improvement to update deployment and runbook docs."
 
@@ -25,7 +25,7 @@ A release is green only when all are true:
 2. Frontend build and typecheck pass.
 3. Supplier email sync path is operationally configured.
 4. Buy Box IE-first behaviour is verified.
-5. Landed-cost snapshots persist from evaluation to buying list.
+5. Landed-cost and decision metrics persist from evaluation to sourcing or inventory actions.
 6. Deployment docs match implementation.
 
 ## Default Command Set
