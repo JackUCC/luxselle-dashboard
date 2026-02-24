@@ -142,4 +142,66 @@ describe('Landed Cost Calculator', () => {
         })
         expect(maxBuyPrice).toBeLessThanOrEqual(0)
     })
+
+    it('calculates correctly with zero duty and zero VAT (duty-free import)', () => {
+        const result = calculateLandedCost({
+            basePrice: 200,
+            currency: 'EUR',
+            rates: mockRates,
+            shipping: 20,
+            insurance: 0,
+            customsPct: 0,
+            importVatPct: 0,
+            platformFeePct: 0,
+            paymentFeePct: 0,
+            fixedFee: 0,
+            sellPriceEur: 300,
+        })
+
+        // No duty, no VAT: landed cost = CIF = 200 + 20 = 220
+        expect(result.dutyEur).toBeCloseTo(0)
+        expect(result.vatEur).toBeCloseTo(0)
+        expect(result.cifEur).toBeCloseTo(220)
+        expect(result.totalLandedEur).toBeCloseTo(220)
+        expect(result.marginEur).toBeCloseTo(80)
+        expect(result.marginPct).toBeCloseTo((80 / 300) * 100)
+    })
+
+    it('returns null margin fields when no sellPriceEur is provided', () => {
+        const result = calculateLandedCost({
+            basePrice: 100,
+            currency: 'EUR',
+            rates: mockRates,
+            shipping: 10,
+            insurance: 0,
+            customsPct: 5,
+            importVatPct: 20,
+            platformFeePct: 0,
+            paymentFeePct: 0,
+            fixedFee: 0,
+            // sellPriceEur intentionally omitted
+        })
+
+        expect(result.marginEur).toBeNull()
+        expect(result.marginPct).toBeNull()
+        expect(result.totalLandedEur).toBeGreaterThan(0)
+    })
+
+    it('returns 0 from calculateMaxBuyPrice when rates is null (unknown currency rate)', () => {
+        const result = calculateMaxBuyPrice({
+            targetSellPriceEur: 500,
+            desiredMarginPct: 30,
+            currency: 'USD',
+            rates: null, // No rate data available
+            shipping: 20,
+            insurance: 0,
+            customsPct: 5,
+            importVatPct: 20,
+            platformFeePct: 5,
+            paymentFeePct: 2,
+            fixedFee: 0,
+        })
+
+        expect(result).toBe(0)
+    })
 })

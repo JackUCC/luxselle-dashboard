@@ -1,3 +1,4 @@
+// Release gates: npm run test | npm run test --workspace=@luxselle/server | npm run typecheck | npm run build
 import { defineConfig } from 'vitest/config'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import path from 'path'
