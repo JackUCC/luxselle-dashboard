@@ -90,3 +90,45 @@ See [docs/planning/DEPLOYMENT_CHECKER_PLAYBOOK.md](docs/planning/DEPLOYMENT_CHEC
 - Deployment checker agents (Vercel, Railway, Firebase)
 - Review and Fix Coordinator workflow
 - Output formats and fix prioritization
+
+## Cursor Cloud specific instructions
+
+### Environment caveat: injected secrets override `.env`
+
+Cloud Agent VMs may have secrets injected as shell environment variables (e.g. `FIREBASE_USE_EMULATOR=false`, `AI_PROVIDER=openai`). These take precedence over the root `.env` file because `dotenv` does not override existing process env vars. To run against the **local Firebase emulators** with mock AI, prefix commands with the required overrides:
+
+```bash
+# Start all services in emulator mode
+FIREBASE_USE_EMULATOR=true FIRESTORE_EMULATOR_HOST=127.0.0.1:8082 \
+  FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9198 AI_PROVIDER=mock \
+  GOOGLE_APPLICATION_CREDENTIALS= GOOGLE_APPLICATION_CREDENTIALS_JSON= \
+  FIRESTORE_DATABASE_ID= npm run dev
+
+# Seed the emulator database (run after emulators are up)
+FIREBASE_USE_EMULATOR=true FIRESTORE_EMULATOR_HOST=127.0.0.1:8082 \
+  FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9198 AI_PROVIDER=mock \
+  GOOGLE_APPLICATION_CREDENTIALS= GOOGLE_APPLICATION_CREDENTIALS_JSON= \
+  FIRESTORE_DATABASE_ID= npm run seed
+```
+
+### Services overview
+
+| Service | Port | Start command |
+|---------|------|---------------|
+| Firebase Emulators (Firestore + Storage) | 8082, 9198, 4010 (UI) | `npm run emulators` |
+| Express API (backend) | 3001 | `npm run dev --workspace=@luxselle/server` |
+| Vite (frontend) | 5173 | `npm run dev:client` |
+| All three together | — | `npm run dev` |
+
+### Key commands
+
+- **Lint/typecheck:** `npm run typecheck`
+- **Unit tests:** `npm run test` (Vitest, 81 tests across 13 files)
+- **E2E tests:** `npx playwright install && npm run test:e2e` (requires dev server running)
+- **Seed data:** `npm run seed` (creates 90 products, suppliers, sourcing requests, etc.)
+
+### Prerequisites
+
+- **Node.js 22** (see `.nvmrc`; engines field allows 18/20/22)
+- **Java 11+** (required by Firebase emulators)
+- **npm workspaces** (NOT pnpm) — always use `npm install` at root
