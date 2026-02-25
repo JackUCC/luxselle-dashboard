@@ -59,27 +59,27 @@ export default function EurToYenWidget() {
 
   const sourceLabel = direction === 'eur-to-jpy' ? 'Amount (€)' : 'Amount (¥)'
   const rateLine = direction === 'eur-to-jpy'
-    ? <>1 EUR = <span className="font-mono font-medium text-gray-700">{eurToJpyRate.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</span> JPY</>
-    : <>1 JPY = <span className="font-mono font-medium text-gray-700">{jpyToEurRate.toLocaleString('en-GB', { minimumFractionDigits: 4, maximumFractionDigits: 6 })}</span> EUR</>
+    ? <>1 EUR = <span className="font-mono font-medium text-lux-700">{eurToJpyRate.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</span> JPY</>
+    : <>1 JPY = <span className="font-mono font-medium text-lux-700">{jpyToEurRate.toLocaleString('en-GB', { minimumFractionDigits: 4, maximumFractionDigits: 6 })}</span> EUR</>
 
   return (
     <div
-      className="lux-card p-6 animate-bento-enter"
+      className="lux-card p-5 animate-bento-enter"
       style={{ '--stagger': 3 } as React.CSSProperties}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="rounded-xl bg-amber-50/70 p-2 text-amber-500">
-            <ArrowRightLeft className="h-4 w-4" />
+          <div className="rounded-lg bg-amber-50 p-1.5 text-amber-600 border border-amber-100">
+            <ArrowRightLeft className="h-3.5 w-3.5" />
           </div>
           <div className="flex items-center gap-1.5">
-            <h3 className="text-sm font-semibold text-lux-800">
+            <h3 className="text-[13px] font-semibold text-lux-800">
               {direction === 'eur-to-jpy' ? 'EUR → JPY' : 'JPY → EUR'}
             </h3>
             <button
               type="button"
               onClick={() => setDirection((d) => (d === 'eur-to-jpy' ? 'jpy-to-eur' : 'eur-to-jpy'))}
-              className="rounded-md px-1.5 py-0.5 text-xs font-medium text-amber-600 hover:bg-amber-100 transition-colors"
+              className="rounded px-1 py-0.5 text-[11px] font-medium text-amber-600 hover:bg-amber-50 transition-colors"
               title={direction === 'eur-to-jpy' ? 'Switch to JPY → EUR' : 'Switch to EUR → JPY'}
               aria-label="Toggle conversion direction"
             >
@@ -92,27 +92,27 @@ export default function EurToYenWidget() {
             type="button"
             onClick={() => loadRate(true)}
             disabled={refreshing}
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+            className="rounded-md p-1 text-lux-400 transition-colors hover:bg-lux-50 hover:text-lux-600 disabled:opacity-50"
             title="Refresh rate"
             aria-label="Refresh exchange rate"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         )}
       </div>
 
       {loading && !fx ? (
-        <div className="space-y-3">
-          <div className="h-10 rounded-lg bg-gray-100 animate-pulse" />
-          <div className="text-xs text-gray-400">Loading live rate…</div>
+        <div className="space-y-2">
+          <div className="h-9 rounded-lg bg-lux-200/60 animate-pulse" />
+          <div className="text-[11px] text-lux-400">Loading live rate…</div>
         </div>
       ) : error && !fx ? (
-        <div className="text-sm text-amber-700">
+        <div className="text-[13px] text-amber-700">
           <p>{error}</p>
           <button
             type="button"
             onClick={() => loadRate()}
-            className="mt-2 text-xs font-medium text-amber-600 hover:underline"
+            className="mt-1.5 text-[11px] font-medium text-amber-600 hover:underline"
           >
             Retry
           </button>
@@ -120,14 +120,14 @@ export default function EurToYenWidget() {
       ) : (
         <>
           {fx && (
-            <div className="mb-3 text-xs text-lux-600">
+            <div className="mb-2 text-[11px] text-lux-500">
               {rateLine}
-              <span className="ml-1">· {fx.date}</span>
+              <span className="ml-1 text-lux-400">· {fx.date}</span>
             </div>
           )}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
-              <label htmlFor="eur-yen-input" className="block text-xs text-lux-600 mb-1">{sourceLabel}</label>
+              <label htmlFor="eur-yen-input" className="block text-[11px] font-medium text-lux-500 mb-1">{sourceLabel}</label>
               <input
                 id="eur-yen-input"
                 type="text"
@@ -139,10 +139,10 @@ export default function EurToYenWidget() {
               />
             </div>
             {amount > 0 && fx && (
-              <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5">
+              <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-xs text-amber-700">≈</span>
-                  <span className="text-lg font-bold font-mono text-amber-900">
+                  <span className="text-[11px] text-amber-600">≈</span>
+                  <span className="text-base font-semibold font-mono text-amber-900">
                     {direction === 'eur-to-jpy' ? formatJpy(result) : formatEur(result)}
                   </span>
                 </div>

@@ -37,18 +37,18 @@ const AppContent = () => {
 
   if (isSidecar) {
     return (
-      <div className="min-h-screen bg-lux-50 text-black font-sans">
+      <div className="min-h-screen bg-lux-50 text-lux-800 font-sans">
         <SidecarNav />
         <Toaster
           position="top-center"
           toastOptions={{
-            className: 'text-sm font-medium !bg-white !text-black !border !border-lux-gold/40 !shadow-elevated !rounded-xl',
+            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-soft !rounded-lg',
             duration: 3000,
           }}
         />
-        <main className="px-3 py-4">
+        <main className="px-3 py-3">
           <ErrorBoundary>
-            <Suspense fallback={<div className="flex items-center justify-center py-12 text-sm text-gray-500" aria-hidden>Loading…</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center py-12 text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
               <Routes>
                 <Route path="/" element={<DashboardView />} />
                 <Route path="/inventory" element={<InventoryView />} />
@@ -69,16 +69,16 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-lux-50 text-black font-sans">
+    <div className="min-h-screen bg-lux-50 text-lux-800 font-sans">
       {isConnected === false && (
-        <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm font-medium text-amber-800">
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-[13px] font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>Backend not configured. Set VITE_API_BASE in Vercel (Settings → Environment Variables) to your Railway URL, then redeploy. Env vars only apply to new builds.</span>
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>Backend not configured. Set VITE_API_BASE in Vercel to your Railway URL, then redeploy.</span>
             <button
               type="button"
               onClick={() => refetchStatus()}
-              className="rounded bg-amber-200 px-2 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-300"
+              className="rounded-md bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-300"
             >
               Retry
             </button>
@@ -90,15 +90,15 @@ const AppContent = () => {
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
-          <div className="sticky top-0 z-50 flex h-14 items-center px-4 sm:px-6 xl:hidden">
+          <div className="sticky top-0 z-50 flex h-12 items-center border-b border-lux-200 bg-white/80 backdrop-blur-sm px-4 xl:hidden">
             <button
               type="button"
-              className="rounded-lg border border-gray-100 bg-white/80 p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="rounded-md p-1.5 text-lux-500 transition-colors hover:bg-lux-50 hover:text-lux-800"
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open navigation menu"
               data-testid="mobile-nav-toggle"
             >
-              <Menu className="h-[18px] w-[18px]" />
+              <Menu className="h-4 w-4" />
             </button>
           </div>
 
@@ -107,15 +107,15 @@ const AppContent = () => {
           <Toaster
             position="top-center"
             toastOptions={{
-              className: 'text-sm font-medium !bg-white !text-black !border !border-lux-gold/40 !shadow-elevated !rounded-xl',
+              className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-soft !rounded-lg',
               duration: 4000,
             }}
           />
 
-          <main className="mx-auto max-w-8xl px-4 py-6 sm:px-6 sm:py-8">
+          <main className="mx-auto max-w-8xl px-5 py-5 sm:px-6 sm:py-6">
             <DeepStateBreadcrumb />
             <ErrorBoundary>
-              <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-sm text-gray-500" aria-hidden>Loading…</div>}>
+              <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
                 <Routes>
                   <Route path="/" element={<DashboardView />} />
                   <Route path="/inventory" element={<InventoryView />} />

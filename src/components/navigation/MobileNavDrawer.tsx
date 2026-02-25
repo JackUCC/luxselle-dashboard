@@ -48,43 +48,43 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
     <div className="fixed inset-0 z-[80] xl:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
       <button
         type="button"
-        className="absolute inset-0 bg-gray-500/20 backdrop-blur-sm"
+        className="absolute inset-0 bg-lux-900/20 backdrop-blur-sm"
         onClick={onClose}
         aria-label="Close navigation menu"
       />
 
       <aside
-        className="relative h-full w-[86%] max-w-sm border-r border-gray-200/60 bg-white animate-in slide-in-from-left duration-300"
+        className="relative h-full w-[280px] max-w-[85%] border-r border-lux-200 bg-white animate-in slide-in-from-left duration-200"
         data-testid="mobile-nav-drawer"
       >
-        <div className="flex h-16 items-center justify-between border-b border-gray-100 px-5">
-          <div className="flex items-center gap-2.5">
+        <div className="flex h-12 items-center justify-between border-b border-lux-200 px-4">
+          <div className="flex items-center gap-2">
             <img
               src="/luxselle-logo.svg"
               alt="Luxselle"
-              className="h-7 w-auto max-w-[100px] object-contain object-left"
+              className="h-6 w-auto max-w-[90px] object-contain object-left"
             />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-black">Supplier Engine</p>
+            <span className="text-[10px] font-medium uppercase tracking-widest text-lux-400">Engine</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+            className="rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-50 hover:text-lux-600"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="space-y-6 overflow-y-auto p-5">
+        <div className="space-y-5 overflow-y-auto p-3 pt-4">
           {NAV_GROUPS.map((group) => (
-            <section key={group.section} className="space-y-1.5">
+            <section key={group.section} className="space-y-0.5">
               {group.title ? (
-                <h2 className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-600">
+                <h2 className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-lux-400">
                   {group.title}
                 </h2>
               ) : null}
-              <nav className="space-y-0.5">
+              <nav className="space-y-px">
                 {appRoutes
                   .filter((route) => route.section === group.section)
                   .map((route) => (
@@ -93,14 +93,14 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                       to={route.path}
                       end={route.path === '/'}
                       onClick={onClose}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive
-                          ? 'bg-lux-200/80 text-lux-800'
-                          : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                      className={({ isActive }: { isActive: boolean }) =>
+                        `flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 ${isActive
+                          ? 'bg-lux-800 text-white'
+                          : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
                         }`
                       }
                     >
-                      <route.icon className="h-4 w-4" />
+                      <route.icon className={`h-[15px] w-[15px] shrink-0`} />
                       <span>{route.navLabel}</span>
                     </NavLink>
                   ))}

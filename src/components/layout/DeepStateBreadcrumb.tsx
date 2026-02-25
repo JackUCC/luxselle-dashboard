@@ -25,18 +25,18 @@ export default function DeepStateBreadcrumb() {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="mb-5 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs font-medium text-gray-500"
+      className="mb-4 flex items-center gap-1 overflow-x-auto no-scrollbar text-[11px] font-medium text-lux-400"
       data-testid="deep-state-breadcrumb"
     >
-      <Link to={route.path} className="rounded px-1.5 py-1 transition-colors hover:text-gray-800">
+      <Link to={route.path} className="rounded px-1.5 py-0.5 transition-colors hover:text-lux-800">
         {route.label}
       </Link>
       {labels.map((label, index) => {
         const last = index === labels.length - 1
         return (
           <div key={`${label}-${index}`} className="flex items-center gap-1">
-            <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-            <span className={last ? 'text-gray-900' : ''}>{label}</span>
+            <ChevronRight className="h-3 w-3 text-lux-300" />
+            <span className={last ? 'text-lux-800' : ''}>{label}</span>
           </div>
         )
       })}

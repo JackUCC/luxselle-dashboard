@@ -31,11 +31,11 @@ export default function AiPromptBar() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-center gap-2 rounded-xl border border-black/[0.04] bg-white px-3 py-2 shadow-elevated transition-shadow focus-within:border-lux-700 focus-within:ring-2 focus-within:ring-black/10 animate-bento-enter"
+      className="flex items-center gap-2 rounded-lg border border-lux-200 bg-white px-3 py-1.5 transition-all focus-within:border-lux-800 focus-within:ring-1 focus-within:ring-lux-800/10 animate-bento-enter"
       style={{ '--stagger': 0 } as React.CSSProperties}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lux-200/80 text-lux-800">
-        <Sparkles className="h-4 w-4" />
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-lux-50 text-lux-500 border border-lux-200/60">
+        <Sparkles className="h-3.5 w-3.5" />
       </div>
       <input
         ref={inputRef}
@@ -43,16 +43,16 @@ export default function AiPromptBar() {
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Ask about inventory, KPIs, buying, or sales..."
-        className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+        className="min-w-0 flex-1 bg-transparent text-[13px] text-lux-800 placeholder:text-lux-400 focus:outline-none"
         disabled={loading}
       />
       <button
         type="submit"
         disabled={loading || !prompt.trim()}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-white transition-colors hover:bg-gray-800 disabled:opacity-40"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-lux-800 text-white transition-colors hover:bg-lux-700 disabled:opacity-40"
         aria-label="Send"
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-3.5 w-3.5" />
       </button>
     </form>
   )
