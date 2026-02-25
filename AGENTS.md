@@ -90,3 +90,53 @@ See [docs/planning/DEPLOYMENT_CHECKER_PLAYBOOK.md](docs/planning/DEPLOYMENT_CHEC
 - Deployment checker agents (Vercel, Railway, Firebase)
 - Review and Fix Coordinator workflow
 - Output formats and fix prioritization
+
+## Cursor Cloud specific instructions
+
+### Architecture overview
+
+NPM workspaces monorepo with three services for local dev:
+
+| Service | Command | Port | Notes |
+|---------|---------|------|-------|
+| Firebase emulators (Firestore + Storage) | `npm run emulators` | 8082 / 9198 | Requires Java (JRE 11+) |
+| Express backend | `npm run dev --workspace=@luxselle/server` | 3001 | Uses `tsx watch` for hot reload |
+| Vite frontend | `npm run dev:client` | 5173 | Proxies `/api` → `localhost:3001` |
+
+All three start together with `npm run dev` (uses `concurrently`).
+
+### Critical: environment variable override for emulator mode
+
+Cursor Cloud injects secrets as shell environment variables (e.g. `FIREBASE_USE_EMULATOR=false`, `AI_PROVIDER=openai`). The backend's `dotenv.config()` does **not** override existing env vars, so injected secrets take precedence over `.env`. To use Firebase emulators locally, you **must** export overrides before starting the backend:
+
+```bash
+export FIREBASE_USE_EMULATOR=true
+export AI_PROVIDER=mock
+export GOOGLE_APPLICATION_CREDENTIALS_JSON=""
+export SUPPLIER_EMAIL_ENABLED=false
+```
+
+### Frontend VITE_API_BASE
+
+The injected `VITE_API_BASE` secret points to the production backend. For local dev, clear it so the Vite proxy is used:
+
+```bash
+VITE_API_BASE="" npm run dev:client
+```
+
+Or: `VITE_API_BASE="" npx vite --config config/vite.config.ts --host 0.0.0.0`
+
+### Seeding data
+
+After emulators and backend are running: `npm run seed`. This populates ~90 products, sourcing requests, and activity data into the emulator Firestore.
+
+### Standard commands (see README.md for full list)
+
+- **Lint/typecheck**: `npm run typecheck`
+- **Unit tests**: `npm run test` (Vitest, 13 test files, 81 tests)
+- **E2E tests**: `npx playwright install && npm run test:e2e` (requires dev stack running)
+- **Build**: `npm run build`
+
+### Server .env symlink
+
+The backend runs via npm workspace which sets CWD to `packages/server/`. A symlink `packages/server/.env -> ../../.env` ensures `dotenv.config()` finds the root `.env` when env vars aren't injected. However, when Cursor Cloud injects secrets, the symlink is moot since shell env vars take precedence — always use the explicit exports above.
