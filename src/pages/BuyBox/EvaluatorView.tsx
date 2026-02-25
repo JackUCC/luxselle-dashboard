@@ -255,12 +255,21 @@ export default function EvaluatorView() {
                 {isResearching ? 'Researching…' : 'Research market'}
               </button>
               {error && (
-                <p
-                  className="text-sm text-rose-600 font-medium text-center"
-                  data-testid="price-check-inline-error"
-                >
-                  {error}
-                </p>
+                <div className="flex flex-col items-center gap-2">
+                  <p
+                    className="text-sm text-rose-600 font-medium text-center"
+                    data-testid="price-check-inline-error"
+                  >
+                    {error}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    className="text-xs font-medium text-rose-600 hover:text-rose-700 underline"
+                  >
+                    Retry
+                  </button>
+                </div>
               )}
             </form>
           </div>

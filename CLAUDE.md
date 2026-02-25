@@ -24,7 +24,7 @@ Deploy: Vercel (frontend), Railway (backend).
 - Data access via repos in `packages/server/src/repos/` (all extend BaseRepo for Firestore CRUD)
 - Frontend pages in `src/pages/` (lazy-loaded via React Router v6)
 - Frontend API calls through `src/lib/api.ts`
-- Server state managed with TanStack React Query
+- Server state: manual useEffect + apiGet + useState per page; React Query client and queryKeys in `src/lib/queryClient.ts` for optional incremental migration
 - Styling with Tailwind CSS
 
 ## Testing Patterns

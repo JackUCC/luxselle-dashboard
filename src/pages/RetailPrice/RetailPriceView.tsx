@@ -19,6 +19,7 @@ export default function RetailPriceView() {
   const [description, setDescription] = useState('')
   const [result, setResult] = useState<RetailLookupResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleLookup = useCallback(async () => {
     const trimmed = description.trim()
@@ -28,6 +29,7 @@ export default function RetailPriceView() {
     }
     setLoading(true)
     setResult(null)
+    setError(null)
     try {
       const { data } = await apiPost<{ data: RetailLookupResult }>('/ai/retail-lookup', {
         description: trimmed,
@@ -35,6 +37,7 @@ export default function RetailPriceView() {
       setResult(data)
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Lookup failed'
+      setError(message)
       toast.error(message)
     } finally {
       setLoading(false)
@@ -102,6 +105,19 @@ export default function RetailPriceView() {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="lux-card p-6 text-center border-rose-200 bg-rose-50/60">
+          <p className="text-sm text-rose-600 font-medium">{error}</p>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {result && (
         <div

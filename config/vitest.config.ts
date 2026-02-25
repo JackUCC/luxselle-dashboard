@@ -12,7 +12,11 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: 'node',
-    include: ['packages/server/src/**/*.{test,spec}.ts', 'src/lib/**/*.{test,spec}.ts'],
+    include: [
+      'packages/server/src/**/*.{test,spec}.ts',
+      'packages/shared/src/**/*.{test,spec}.ts',
+      'src/lib/**/*.{test,spec}.ts',
+    ],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     testTimeout: 10000,
   },

@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import request from 'supertest'
-import express from 'express'
+import express, { type Request, type Response, type NextFunction } from 'express'
 import { ZodError } from 'zod'
 import { aiRouter } from './ai'
+
+interface TestError {
+  status?: number
+  code?: string
+  message?: string
+  details?: unknown
+}
 
 const { mockDecodeSerialHeuristic } = vi.hoisted(() => ({
   mockDecodeSerialHeuristic: vi.fn(),
@@ -23,7 +30,7 @@ vi.mock('../services/ai/AiService', () => {
 const app = express()
 app.use(express.json())
 app.use('/api/ai', aiRouter)
-app.use((err: any, _req: any, res: any, _next: any) => {
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {
     res.status(400).json({
       error: {
@@ -34,11 +41,12 @@ app.use((err: any, _req: any, res: any, _next: any) => {
     })
     return
   }
-  res.status(err.status || 500).json({
+  const e = err as TestError
+  res.status(e.status ?? 500).json({
     error: {
-      code: err.code || 'INTERNAL_ERROR',
-      message: err.message,
-      details: err.details,
+      code: e.code ?? 'INTERNAL_ERROR',
+      message: e.message ?? 'Internal error',
+      details: e.details,
     },
   })
 })
@@ -90,6 +98,8 @@ describe('POST /api/ai/serial-decode', () => {
     expect(res.status).toBe(400)
     expect(res.body.error).toBeDefined()
     expect(res.body.error.code).toBe('VALIDATION_ERROR')
+    expect(res.body.error.message).toBeDefined()
+    expect(typeof res.body.error.message).toBe('string')
   })
 
   it('returns 400 validation error for unknown brand', async () => {
@@ -101,5 +111,7 @@ describe('POST /api/ai/serial-decode', () => {
     expect(res.status).toBe(400)
     expect(res.body.error).toBeDefined()
     expect(res.body.error.code).toBe('VALIDATION_ERROR')
+    expect(res.body.error.message).toBeDefined()
+    expect(typeof res.body.error.message).toBe('string')
   })
 })

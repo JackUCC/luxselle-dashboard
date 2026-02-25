@@ -175,6 +175,13 @@ export default function SerialCheckView() {
         </div>
       </div>
 
+      {!decodeResult && !isLoading && (
+        <div className="lux-card border-dashed border-2 min-h-[120px] flex flex-col items-center justify-center p-6 text-center">
+          <Search className="h-10 w-10 mb-3 opacity-30 text-lux-500" />
+          <p className="text-sm text-lux-600">Enter a serial and item description, then click <strong>Analyze serial</strong> to see decode and price guidance.</p>
+        </div>
+      )}
+
       {decodeResult && (
         <div
           data-testid="decode-result"

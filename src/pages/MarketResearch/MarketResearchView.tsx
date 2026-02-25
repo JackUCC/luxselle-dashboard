@@ -160,6 +160,7 @@ export default function MarketResearchView() {
     })
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState<MarketResearchResult | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     const [trending, setTrending] = useState<TrendingResult | null>(null)
     const [isTrendingLoading, setIsTrendingLoading] = useState(false)
@@ -229,6 +230,7 @@ export default function MarketResearchView() {
     const handleAnalyse = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
+        setError(null)
         try {
             const { data } = await apiPost<{ data: MarketResearchResult }>('/market-research/analyse', {
                 ...formData,
@@ -247,6 +249,7 @@ export default function MarketResearchView() {
             })
         } catch (err) {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analysis failed'
+            setError(msg)
             toast.error(msg)
         } finally {
             setIsLoading(false)
@@ -255,11 +258,13 @@ export default function MarketResearchView() {
 
     const loadTrending = async () => {
         setIsTrendingLoading(true)
+        setError(null)
         try {
             const { data } = await apiGet<{ data: TrendingResult }>('/market-research/trending')
             setTrending(data)
         } catch (err) {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to load trends'
+            setError(msg)
             toast.error(msg)
         } finally {
             setIsTrendingLoading(false)
@@ -295,6 +300,19 @@ export default function MarketResearchView() {
                     )}
                 </p>
             </div>
+
+            {error && (
+                <div className="lux-card p-6 text-center border-rose-200 bg-rose-50/60">
+                    <p className="text-sm text-rose-600 font-medium">{error}</p>
+                    <button
+                        type="button"
+                        onClick={() => setError(null)}
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
 
             <div className="grid gap-8 lg:grid-cols-5">
                 {/* ─── Left: Input + Previous + Key bags + Trending + Competitor ─── */}

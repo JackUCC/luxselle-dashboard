@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import request from 'supertest'
-import express from 'express'
+import express, { type Request, type Response, type NextFunction } from 'express'
 import { sourcingRouter } from './sourcing'
+
+interface TestError {
+  status?: number
+  code?: string
+  message?: string
+  details?: unknown
+}
 
 // Hoisted mocks so they can be used in vi.mock factory
 const { mockGetById, mockSet, mockCreateActivity, mockList, mockRemove } = vi.hoisted(() => ({
@@ -37,13 +44,14 @@ const app = express()
 app.use(express.json())
 app.use('/api/sourcing', sourcingRouter)
 
-// Error handler
-app.use((err: any, req: any, res: any, next: any) => {
-  res.status(err.status || 500).json({
+// Error handler: same shape as production { error: { code, message, details? } }
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const e = err as TestError
+  res.status(e.status ?? 500).json({
     error: {
-      code: err.code || 'INTERNAL_ERROR',
-      message: err.message,
-      details: err.details,
+      code: e.code ?? 'INTERNAL_ERROR',
+      message: e.message ?? 'Internal error',
+      details: e.details,
     },
   })
 })

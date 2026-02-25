@@ -1,5 +1,10 @@
 /**
  * TanStack Query client and shared query keys for cache consistency.
+ *
+ * Server state is currently loaded with manual useEffect + apiGet + useState per page.
+ * The client and queryKeys are in place for optional incremental migration to useQuery/useMutation
+ * (e.g. one list page at a time) to get caching and refetch consistency without a large refactor.
+ *
  * @see docs/CODE_REFERENCE.md
  * References: @tanstack/react-query
  */
