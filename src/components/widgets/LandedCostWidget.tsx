@@ -32,17 +32,17 @@ export default function LandedCostWidget() {
 
   return (
     <div
-      className="lux-card p-6 animate-bento-enter"
+      className="lux-card p-5 animate-bento-enter"
       style={{ '--stagger': 1 } as React.CSSProperties}
     >
       <div className="mb-3 flex items-center gap-2">
-        <div className="rounded-xl bg-gray-100/80 p-2 text-lux-600">
-          <Calculator className="h-4 w-4" />
+        <div className="rounded-lg bg-lux-50 p-1.5 text-lux-500 border border-lux-200/60">
+          <Calculator className="h-3.5 w-3.5" />
         </div>
-        <h3 className="text-sm font-semibold text-lux-800">Landed cost</h3>
+        <h3 className="text-[13px] font-semibold text-lux-800">Landed cost</h3>
       </div>
-      <div className="space-y-3">
-        <label className="block text-xs text-lux-600">Bid price (€)</label>
+      <div className="space-y-2">
+        <label className="block text-[11px] font-medium text-lux-500">Bid price (€)</label>
         <input
           type="text"
           inputMode="decimal"
@@ -53,12 +53,12 @@ export default function LandedCostWidget() {
         />
       </div>
       {bid > 0 && (
-        <div className="mt-4 border-t border-gray-100 pt-4">
+        <div className="mt-3 border-t border-lux-200 pt-3">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm text-lux-600">Landed price</span>
-            <span className="text-xl font-bold font-mono text-lux-800">{formatEur(landed)}</span>
+            <span className="text-[11px] font-medium text-lux-500">Landed price</span>
+            <span className="text-base font-semibold font-mono text-lux-800">{formatEur(landed)}</span>
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-lux-500">
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-lux-400">
             <span>+{AUCTION_PCT}% fee {formatEur(auctionFee)}</span>
             <span>+{CUSTOMS_PCT}% customs {formatEur(customs)}</span>
             <span>+{VAT_PCT}% VAT {formatEur(vat)}</span>

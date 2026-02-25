@@ -22,15 +22,14 @@ export default function SidecarNav() {
   const { pathname } = useLocation()
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-gray-200/60 bg-white/95 backdrop-blur">
-      <div className="flex items-center gap-1.5 px-2 py-1.5">
+    <nav className="sticky top-0 z-40 border-b border-lux-200 bg-white/95 backdrop-blur">
+      <div className="flex items-center gap-1 px-2 py-1">
         <div className="mr-1 flex shrink-0 items-center gap-1">
           <img
             src="/luxselle-logo.svg"
             alt="Luxselle"
-            className="h-5 w-auto object-contain"
+            className="h-4 w-auto object-contain"
           />
-          <span className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Jarvis</span>
         </div>
 
         <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto no-scrollbar">
@@ -43,13 +42,13 @@ export default function SidecarNav() {
                 end={route.path === '/'}
                 title={route.label}
                 aria-label={route.label}
-                className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-medium transition-colors ${
                   isActive
-                    ? 'bg-lux-gold/10 text-black'
-                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                    ? 'bg-lux-800 text-white'
+                    : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
                 }`}
               >
-                <route.icon className="h-3.5 w-3.5" />
+                <route.icon className="h-3 w-3" />
                 <span>{route.label}</span>
               </NavLink>
             )
@@ -58,11 +57,11 @@ export default function SidecarNav() {
 
         <Link
           to="/"
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lux-200 px-1.5 py-1 text-[11px] font-medium text-lux-600 transition-colors hover:bg-lux-50"
           title="Exit sidecar and return to overview"
           aria-label="Exit sidecar and return to overview"
         >
-          <ArrowLeftToLine className="h-3.5 w-3.5" />
+          <ArrowLeftToLine className="h-3 w-3" />
           Exit
         </Link>
       </div>

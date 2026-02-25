@@ -73,22 +73,22 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   return (
     <section className="space-y-2">
       <header className="sticky top-0 z-20">
-        <div className="rounded-xl border border-gray-200 bg-white/95 p-2.5 shadow-sm backdrop-blur">
+        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-semibold text-gray-900">Jarvis sidecar</h1>
-              <p className="mt-0.5 text-[11px] text-gray-500">
-                Clean assistant view for live buying sessions.
+              <h1 className="truncate text-[13px] font-semibold text-lux-800">Sidecar</h1>
+              <p className="mt-0.5 text-[11px] text-lux-400">
+                Compact assistant for live buying sessions.
               </p>
             </div>
             <button
               type="button"
               onClick={handleExitSidecar}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-[11px] font-medium text-lux-600 transition-colors hover:bg-lux-50"
               title="Exit sidecar and return to dashboard overview"
               aria-label="Exit sidecar and return to dashboard overview"
             >
-              <ArrowLeftToLine className="h-3.5 w-3.5" />
+              <ArrowLeftToLine className="h-3 w-3" />
               Exit
             </button>
           </div>
@@ -103,14 +103,14 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
                   aria-label={`${tab.label} mode`}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                  className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors ${
                     isActive
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-lux-800 text-white'
+                      : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
                   }`}
                 >
                   <span className="inline-flex items-center justify-center gap-1">
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-3 w-3" />
                     {tab.label}
                   </span>
                 </button>
@@ -118,7 +118,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
             })}
           </div>
 
-          <p className="mt-2 rounded-lg bg-gray-50 px-2 py-1.5 text-[11px] text-gray-600">
+          <p className="mt-1.5 rounded-md bg-lux-50 px-2 py-1 text-[11px] text-lux-500">
             {activeConfig.helper}
           </p>
         </div>
