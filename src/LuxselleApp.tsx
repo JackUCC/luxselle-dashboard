@@ -8,7 +8,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { AlertCircle, Menu } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -19,6 +19,7 @@ import SidecarNav from './components/navigation/SidecarNav'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
 import { LayoutModeProvider, useLayoutMode } from './lib/LayoutModeContext'
+import { appRoutes } from './components/layout/routeMeta'
 
 const DashboardView = lazy(() => import('./pages/Dashboard/DashboardView'))
 const InventoryView = lazy(() => import('./pages/Inventory/InventoryView'))
@@ -101,6 +102,27 @@ const AppContent = () => {
               <Menu className="h-4 w-4" />
             </button>
           </div>
+
+          <header className="sticky top-0 z-40 hidden h-14 items-center border-b border-gray-200/60 bg-white/95 px-4 backdrop-blur sm:px-6 xl:flex 2xl:hidden">
+            <nav className="flex items-center gap-2">
+              {appRoutes.map((route) => (
+                <NavLink
+                  key={route.path}
+                  to={route.path}
+                  end={route.path === '/'}
+                  className={({ isActive }) =>
+                    `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-lux-200/80 text-lux-800'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  {route.path === '/buy-box' ? 'Buy Box' : route.navLabel}
+                </NavLink>
+              ))}
+            </nav>
+          </header>
 
           <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 

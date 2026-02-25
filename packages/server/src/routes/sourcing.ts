@@ -12,7 +12,7 @@ import {
 } from '@shared/schemas'
 import { SourcingRequestRepo } from '../repos/SourcingRequestRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
-import { isValidSourcingTransition } from '../lib/sourcingStatus'
+import { getValidNextStatuses, isValidSourcingTransition } from '../lib/sourcingStatus'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
 const router = Router()
@@ -174,13 +174,14 @@ router.put('/:id', async (req, res, next) => {
           formatApiError(API_ERROR_CODES.BAD_REQUEST, 'Invalid status transition', {
             from: current.status,
             to: input.status,
+            allowedNextStatuses: getValidNextStatuses(current.status),
           })
         )
         return
       }
     }
 
-    const statusChanged = input.status && input.status !== current.status
+    const statusChanged = input.status !== undefined && input.status !== current.status
 
     const updated = await sourcingRepo.set(req.params.id, {
       ...input,

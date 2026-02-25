@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { mapCsvRowToProductPayload } from './csvProductParser'
+import {
+  getMissingRequiredImportFields,
+  mapCsvRowToProductPayload,
+} from './csvProductParser'
 
 const now = '2026-01-15T12:00:00.000Z'
 
@@ -187,5 +190,40 @@ describe('mapCsvRowToProductPayload', () => {
     expect(payload!.costPriceEur).toBe(600)
     expect(payload!.sellPriceEur).toBe(900)
     expect(payload!.notes).toBe('Customer return')
+  })
+})
+
+describe('getMissingRequiredImportFields', () => {
+  it('returns empty array when required canonical headers are present', () => {
+    const missing = getMissingRequiredImportFields([
+      'brand',
+      'model',
+      'cost eur',
+      'sell eur',
+      'notes',
+    ])
+    expect(missing).toEqual([])
+  })
+
+  it('returns missing required fields when headers are incomplete', () => {
+    const missing = getMissingRequiredImportFields([
+      'brand',
+      'notes',
+      'quantity',
+    ])
+    expect(missing).toEqual(['model', 'costPriceEur', 'sellPriceEur'])
+  })
+
+  it('accepts required fields through explicit column mapping', () => {
+    const missing = getMissingRequiredImportFields(
+      ['brand name', 'product name', 'cost', 'sell'],
+      {
+        brand: 'brand name',
+        model: 'product name',
+        costPriceEur: 'cost',
+        sellPriceEur: 'sell',
+      }
+    )
+    expect(missing).toEqual([])
   })
 })

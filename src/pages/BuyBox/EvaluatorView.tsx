@@ -253,7 +253,14 @@ export default function EvaluatorView() {
                 {isResearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {isResearching ? 'Researching…' : 'Research market'}
               </button>
-              {error && <p className="text-sm text-rose-600 font-medium text-center">{error}</p>}
+              {error && (
+                <p
+                  className="text-sm text-rose-600 font-medium text-center"
+                  data-testid="price-check-inline-error"
+                >
+                  {error}
+                </p>
+              )}
             </form>
           </div>
 
@@ -274,12 +281,12 @@ export default function EvaluatorView() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-xl border border-gray-100 p-4 bg-white">
-                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max buy</div>
+                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max buy target</div>
                     <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBuyEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
                   <div className="rounded-xl border border-gray-100 p-4 bg-white">
-                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max bid</div>
+                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max bid target</div>
                     <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBidEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−7% auction fee</div>
                   </div>

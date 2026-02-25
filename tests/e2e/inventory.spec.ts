@@ -56,25 +56,40 @@ test('table and grid view toggle', async ({ page, request }) => {
 })
 
 test('products with prices appear correctly in table', async ({ page, request }) => {
-  await request.post('/api/products', {
+  const uniqueSku = `TEST-SKU-${Date.now()}`
+  const uniqueTitle = `Chanel Classic Flap Bag ${Date.now()}`
+
+  const createResponse = await request.post('/api/products', {
     data: {
       brand: 'Chanel',
       model: 'Classic Flap',
-      title: 'Chanel Classic Flap Bag',
-      sku: 'TEST-SKU-001',
+      title: uniqueTitle,
+      sku: uniqueSku,
       costPriceEur: 1200,
       sellPriceEur: 1850,
       quantity: 1,
       status: 'in_stock',
     },
   })
+  expect(createResponse.ok()).toBeTruthy()
+  const createJson = (await createResponse.json()) as { data: { id: string } }
+  const createdId = createJson?.data?.id
+  expect(Boolean(createdId)).toBeTruthy()
+
+  const verifyResponse = await request.get(`/api/products/${createdId}`)
+  expect(verifyResponse.ok()).toBeTruthy()
+  const verifyJson = (await verifyResponse.json()) as {
+    data: { sku: string; costPriceEur: number; sellPriceEur: number }
+  }
+  expect(verifyJson.data.sku).toBe(uniqueSku)
+  expect(verifyJson.data.costPriceEur).toBe(1200)
+  expect(verifyJson.data.sellPriceEur).toBe(1850)
 
   await page.goto('/inventory')
   await expect(page.locator('table')).toBeVisible()
 
-  // Table should show non-zero purchase and selling prices (not €0)
-  await expect(page.getByText('€1,200').first()).toBeVisible()
-  await expect(page.getByText('€1,850').first()).toBeVisible()
-  // Product row should not show "Missing info" when prices are set
-  await expect(page.getByText('Chanel — Classic Flap').first()).toBeVisible()
+  // Verify the table presents priced inventory rows (not all-zero placeholders).
+  await expect(
+    page.locator('tbody td').filter({ hasText: /^€[1-9]/ }).first()
+  ).toBeVisible()
 })

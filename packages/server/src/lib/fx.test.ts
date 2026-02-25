@@ -15,4 +15,9 @@ describe('usdToEur', () => {
   it('handles zero', () => {
     expect(usdToEur(0, 0.92)).toBe(0)
   })
+
+  it('keeps two-decimal stability for pricing values', () => {
+    expect(usdToEur(199.99, 0.9234)).toBe(184.67)
+    expect(usdToEur(1499.5, 0.91)).toBe(1364.55)
+  })
 })

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { SerialDecodeHeuristicInputSchema } from '@shared/schemas'
 import { AiService } from '../services/ai/AiService'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
@@ -70,6 +71,17 @@ router.post('/retail-lookup', async (req, res, next) => {
         const { description } = req.body
         const text = typeof description === 'string' ? description.trim() : ''
         const result = await aiService.getRetailPriceFromDescription(text)
+        res.json({ data: result })
+    } catch (error) {
+        next(error)
+    }
+})
+
+// POST /api/ai/serial-decode — AI heuristic decode for all brands
+router.post('/serial-decode', async (req, res, next) => {
+    try {
+        const input = SerialDecodeHeuristicInputSchema.parse(req.body)
+        const result = await aiService.decodeSerialHeuristic(input)
         res.json({ data: result })
     } catch (error) {
         next(error)

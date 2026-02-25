@@ -94,6 +94,13 @@ describe('PUT /api/sourcing/:id - Status Transitions', () => {
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('BAD_REQUEST')
     expect(res.body.error.message).toContain('Invalid status transition')
+    expect(res.body.error.details).toEqual(
+      expect.objectContaining({
+        from: 'open',
+        to: 'fulfilled',
+        allowedNextStatuses: ['sourcing'],
+      })
+    )
     expect(mockSet).not.toHaveBeenCalled()
   })
 

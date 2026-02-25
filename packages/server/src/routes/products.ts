@@ -15,7 +15,11 @@ import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { db, storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
-import { mapCsvRowToProductPayload, type ColumnMapping } from '../lib/csvProductParser'
+import {
+  getMissingRequiredImportFields,
+  mapCsvRowToProductPayload,
+  type ColumnMapping,
+} from '../lib/csvProductParser'
 import { env } from '../config/env'
 import * as XLSX from 'xlsx'
 
@@ -192,6 +196,17 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
       } catch {
         // Fall back to rule-based mapping
       }
+    }
+
+    const missingRequiredFields = getMissingRequiredImportFields(headers, aiMapping)
+    if (missingRequiredFields.length > 0) {
+      res.status(400).json(
+        formatApiError(API_ERROR_CODES.VALIDATION, 'Missing required product import fields', {
+          missingRequiredFields,
+          receivedHeaders: headers,
+        }),
+      )
+      return
     }
 
     for (let i = 0; i < rows.length; i++) {

@@ -116,3 +116,8 @@ Observed warnings to triage:
 - P1 items either fixed or tracked with owners and ETA.
 - Docs/checklists reflect actual commands and deployment expectations.
 - Coordinator signoff confirms critical cross-page business flow is stable.
+
+## Tools & MCP (local setup)
+- **Context7 MCP**: already in Claude local config (`claude mcp add context7 -- npx -y @upstash/context7-mcp@latest`). In Cursor, Context7 is available via the compound-engineering-context7 plugin.
+- **Playwright MCP**: added to Claude local config; also enabled for this repo via `.cursor/mcp.json` so Cursor has Playwright in this project. Restart Cursor for project MCP changes to apply.
+- **commit-commands plugin**: install with `claude plugins install commit-commands` (Claude CLI). If it hangs, run it in a terminal and wait or retry.

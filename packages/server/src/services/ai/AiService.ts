@@ -1,5 +1,11 @@
 import { env } from '../../config/env'
-import { Product } from '@shared/schemas'
+import {
+    Product,
+    SerialDecodeHeuristicInputSchema,
+    SerialDecodeResultSchema,
+    type SerialDecodeHeuristicInput,
+    type SerialDecodeResult,
+} from '@shared/schemas'
 
 export interface BusinessInsights {
     insights: string[]
@@ -223,6 +229,164 @@ If the description is too vague or not a recognisable luxury product, set retail
         }
     }
 
+    async decodeSerialHeuristic(input: SerialDecodeHeuristicInput): Promise<SerialDecodeResult> {
+        const parsedInput = SerialDecodeHeuristicInputSchema.parse(input)
+        const normalizedSerial = parsedInput.serial.replace(/\s+/g, '').trim().toUpperCase()
+        if (!normalizedSerial) {
+            return SerialDecodeResultSchema.parse({
+                success: false,
+                brand: parsedInput.brand,
+                normalizedSerial: '',
+                source: 'ai_heuristic',
+                precision: 'unknown',
+                confidence: 0,
+                message: 'Enter a serial or date code to decode.',
+                rationale: [],
+                uncertainties: [],
+            })
+        }
+
+        if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
+            return this.mockSerialDecodeHeuristic(parsedInput.brand, normalizedSerial)
+        }
+
+        try {
+            const openai = await this.getOpenAI()
+            const prompt = `You are a luxury authentication assistant focused on serial/date code interpretation.
+
+Task:
+- Infer likely production timing from a bag serial/date code.
+- Be conservative and avoid fake precision.
+- Return strict JSON only.
+
+Input:
+- Brand: ${parsedInput.brand}
+- Serial: ${normalizedSerial}
+- Item description: ${parsedInput.itemDescription ?? ''}
+
+Return exactly this JSON shape:
+{
+  "success": boolean,
+  "brand": "${parsedInput.brand}",
+  "normalizedSerial": "${normalizedSerial}",
+  "source": "ai_heuristic",
+  "precision": "exact_week|exact_month|exact_year|year_window|unknown",
+  "confidence": number,
+  "year": number | null,
+  "period": string | null,
+  "productionWindow": {
+    "startYear": number,
+    "endYear": number,
+    "startMonth": number | null,
+    "endMonth": number | null,
+    "label": string | null
+  } | null,
+  "message": string,
+  "note": string | null,
+  "rationale": string[],
+  "uncertainties": string[],
+  "candidates": [
+    {
+      "label": string,
+      "year": number | null,
+      "period": string | null,
+      "productionWindow": {
+        "startYear": number,
+        "endYear": number,
+        "startMonth": number | null,
+        "endMonth": number | null,
+        "label": string | null
+      } | null,
+      "confidence": number,
+      "rationale": string
+    }
+  ] | null,
+  "formatMatched": string | null
+}
+
+Rules:
+- confidence between 0 and 1.
+- If uncertain, use precision "year_window" or "unknown".
+- Do not invent exact months/weeks unless strongly justified.
+- If no reliable inference, set success=false and explain missing signals.
+- Keep rationale/uncertainties concise and practical.`
+
+            const response = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 500,
+                temperature: 0.2,
+            })
+
+            const text = response.choices[0]?.message?.content ?? ''
+            const jsonMatch = text.match(/\{[\s\S]*\}/)
+            if (!jsonMatch) {
+                throw new Error('No JSON in serial heuristic response')
+            }
+
+            const raw = JSON.parse(jsonMatch[0]) as Record<string, unknown>
+            const candidates = Array.isArray(raw.candidates)
+                ? raw.candidates
+                    .filter((candidate): candidate is Record<string, unknown> => Boolean(candidate) && typeof candidate === 'object')
+                    .map((candidate) => ({
+                        ...candidate,
+                        year: typeof candidate.year === 'number' ? candidate.year : undefined,
+                        period: typeof candidate.period === 'string' ? candidate.period : undefined,
+                        productionWindow:
+                            candidate.productionWindow &&
+                            typeof candidate.productionWindow === 'object'
+                                ? {
+                                    ...(candidate.productionWindow as Record<string, unknown>),
+                                    startMonth: typeof (candidate.productionWindow as Record<string, unknown>).startMonth === 'number'
+                                        ? (candidate.productionWindow as Record<string, unknown>).startMonth
+                                        : undefined,
+                                    endMonth: typeof (candidate.productionWindow as Record<string, unknown>).endMonth === 'number'
+                                        ? (candidate.productionWindow as Record<string, unknown>).endMonth
+                                        : undefined,
+                                    label: typeof (candidate.productionWindow as Record<string, unknown>).label === 'string'
+                                        ? (candidate.productionWindow as Record<string, unknown>).label
+                                        : undefined,
+                                }
+                                : undefined,
+                    }))
+                : undefined
+
+            const withDefaults = {
+                ...raw,
+                brand: parsedInput.brand,
+                normalizedSerial,
+                source: 'ai_heuristic',
+                year: typeof raw.year === 'number' ? raw.year : undefined,
+                period: typeof raw.period === 'string' ? raw.period : undefined,
+                productionWindow:
+                    raw.productionWindow && typeof raw.productionWindow === 'object'
+                        ? {
+                            ...(raw.productionWindow as Record<string, unknown>),
+                            startMonth: typeof (raw.productionWindow as Record<string, unknown>).startMonth === 'number'
+                                ? (raw.productionWindow as Record<string, unknown>).startMonth
+                                : undefined,
+                            endMonth: typeof (raw.productionWindow as Record<string, unknown>).endMonth === 'number'
+                                ? (raw.productionWindow as Record<string, unknown>).endMonth
+                                : undefined,
+                            label: typeof (raw.productionWindow as Record<string, unknown>).label === 'string'
+                                ? (raw.productionWindow as Record<string, unknown>).label
+                                : undefined,
+                        }
+                        : undefined,
+                rationale: Array.isArray(raw.rationale) ? raw.rationale : [],
+                uncertainties: Array.isArray(raw.uncertainties) ? raw.uncertainties : [],
+                candidates,
+                note: typeof raw.note === 'string' ? raw.note : undefined,
+                formatMatched: typeof raw.formatMatched === 'string' ? raw.formatMatched : undefined,
+            }
+
+            return SerialDecodeResultSchema.parse(withDefaults)
+        } catch (error) {
+            console.error('AI Serial Decode Failed:', error)
+            return this.mockSerialDecodeHeuristic(parsedInput.brand, normalizedSerial)
+        }
+    }
+
     private mockRetailPrice(description: string): {
         retailPriceEur: number | null
         currency: string
@@ -252,5 +416,69 @@ If the description is too vague or not a recognisable luxury product, set retail
             productName: null,
             note: 'Mock mode: paste a description and connect OpenAI (AI_PROVIDER=openai, OPENAI_API_KEY) for real brand retail price lookups.',
         }
+    }
+
+    private mockSerialDecodeHeuristic(
+        brand: SerialDecodeHeuristicInput['brand'],
+        normalizedSerial: string,
+    ): SerialDecodeResult {
+        const looksNumeric = /^\d+$/.test(normalizedSerial)
+        const length = normalizedSerial.length
+
+        if (looksNumeric && length >= 7 && length <= 8) {
+            const first = Number(normalizedSerial.slice(0, 2))
+            const startYear = first >= 70 ? 1900 + first : 2000 + Math.max(0, Math.min(first, 29))
+            const endYear = Math.min(startYear + 2, new Date().getFullYear())
+            return SerialDecodeResultSchema.parse({
+                success: true,
+                brand,
+                normalizedSerial,
+                source: 'ai_heuristic',
+                precision: 'year_window',
+                confidence: 0.52,
+                productionWindow: {
+                    startYear,
+                    endYear: Math.max(startYear, endYear),
+                    label: 'Mock heuristic window',
+                },
+                message: `Heuristic decode suggests production between ${startYear} and ${Math.max(startYear, endYear)}.`,
+                note: 'Mock heuristic. Connect OpenAI for stronger all-brand serial decoding.',
+                rationale: [
+                    'Numeric serial length matches common luxury serial sticker patterns.',
+                    'Prefix interpreted as broad production-era hint.',
+                ],
+                uncertainties: [
+                    'No brand-specific rule map available in mock mode.',
+                    'Window may be wide without supporting provenance data.',
+                ],
+                candidates: [
+                    {
+                        label: 'Prefix-derived estimate',
+                        productionWindow: {
+                            startYear,
+                            endYear: Math.max(startYear, endYear),
+                            label: 'Prefix era estimate',
+                        },
+                        confidence: 0.52,
+                        rationale: 'Built from serial prefix and common production cadence assumptions.',
+                    },
+                ],
+                formatMatched: 'HEURISTIC_NUMERIC_PREFIX',
+            })
+        }
+
+        return SerialDecodeResultSchema.parse({
+            success: false,
+            brand,
+            normalizedSerial,
+            source: 'ai_heuristic',
+            precision: 'unknown',
+            confidence: 0,
+            message: 'Could not infer a reliable production window from this serial alone.',
+            note: 'Mock heuristic. Connect OpenAI and include full listing details for better results.',
+            rationale: ['Serial pattern does not map to a high-confidence heuristic in mock mode.'],
+            uncertainties: ['Brand-specific serial map unavailable for this format.'],
+            formatMatched: 'HEURISTIC_UNMATCHED',
+        })
     }
 }

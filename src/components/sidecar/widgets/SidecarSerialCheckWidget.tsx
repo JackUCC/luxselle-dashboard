@@ -1,20 +1,80 @@
 import { useCallback, useState } from 'react'
+import toast from 'react-hot-toast'
 import { Calendar, Info, Search } from 'lucide-react'
+import { apiPost, ApiError } from '../../../lib/api'
+import { formatCurrency } from '../../../lib/formatters'
 import {
   decodeSerialToYear,
   SERIAL_CHECK_BRANDS,
   type DecodeResult,
   type SerialCheckBrand,
 } from '../../../lib/serialDateDecoder'
+import { calculateSerialPricingGuidance } from '../../../lib/serialValuation'
+import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
+
+interface PriceCheckResult {
+  averageSellingPriceEur: number
+  maxBuyEur: number
+  maxBidEur: number
+  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string }>
+}
 
 export default function SidecarSerialCheckWidget() {
   const [serial, setSerial] = useState('')
   const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
+  const [description, setDescription] = useState('')
   const [result, setResult] = useState<DecodeResult | null>(null)
+  const [guidance, setGuidance] = useState<SerialPricingGuidance | null>(null)
+  const [hasTriedDecode, setHasTriedDecode] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleDecode = useCallback(() => {
-    setResult(decodeSerialToYear(serial, brand))
-  }, [serial, brand])
+  const handleDecode = useCallback(async () => {
+    const normalizedDescription = description.trim()
+    if (!serial.trim()) {
+      toast.error('Enter serial')
+      return
+    }
+    if (!normalizedDescription) {
+      toast.error('Add description')
+      return
+    }
+    setHasTriedDecode(true)
+    setIsLoading(true)
+    setGuidance(null)
+
+    try {
+      let decoded = decodeSerialToYear(serial, brand)
+      if (decoded.precision === 'unknown' || decoded.confidence < 0.7) {
+        try {
+          const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
+            serial,
+            brand,
+            itemDescription: normalizedDescription,
+          })
+          decoded = data
+        } catch {
+          // keep local decode
+        }
+      }
+
+      const { data: market } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
+        query: normalizedDescription,
+      })
+      const valuation = calculateSerialPricingGuidance({
+        marketAverageEur: market.averageSellingPriceEur,
+        decode: decoded,
+      })
+
+      setResult(decoded)
+      setGuidance(valuation)
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : 'Decode failed'
+      toast.error(message)
+      setResult(decodeSerialToYear(serial, brand))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [serial, brand, description])
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white p-2.5">
@@ -29,6 +89,13 @@ export default function SidecarSerialCheckWidget() {
           value={serial}
           onChange={(event) => setSerial(event.target.value)}
           placeholder="e.g. SR3179"
+          className="w-full rounded border border-gray-200 px-2 py-1.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none"
+        />
+        <input
+          type="text"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="e.g. Chanel flap medium black"
           className="w-full rounded border border-gray-200 px-2 py-1.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none"
         />
 
@@ -47,14 +114,21 @@ export default function SidecarSerialCheckWidget() {
           <button
             type="button"
             onClick={handleDecode}
-            className="rounded bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+            disabled={serial.trim().length === 0 || isLoading}
+            className="rounded bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Decode
+            {isLoading ? 'Analyzing…' : 'Decode'}
           </button>
         </div>
       </div>
 
-      {result && (
+      {!hasTriedDecode && (
+        <div className="mt-2 rounded-md border border-dashed border-gray-200 bg-gray-50/50 px-2 py-1.5 text-[10px] text-gray-500">
+          Enter a serial and choose the brand to decode the likely year.
+        </div>
+      )}
+
+      {result && hasTriedDecode && (
         <div
           className={`mt-2 rounded-md border px-2 py-1.5 text-[11px] ${
             result.success
@@ -72,9 +146,19 @@ export default function SidecarSerialCheckWidget() {
               {result.success && result.year != null && (
                 <p className="font-semibold">Year: {result.year}{result.period ? ` · ${result.period}` : ''}</p>
               )}
+              {result.productionWindow && (
+                <p>Window: {result.productionWindow.startYear}-{result.productionWindow.endYear}</p>
+              )}
+              <p>Confidence: {Math.round(result.confidence * 100)}%</p>
               <p>{result.message}</p>
             </div>
           </div>
+        </div>
+      )}
+      {guidance && (
+        <div className="mt-2 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-[11px] text-indigo-900">
+          <p className="font-semibold">Worth: {formatCurrency(guidance.estimatedWorthEur)}</p>
+          <p>Max pay: {formatCurrency(guidance.recommendedMaxPayEur)}</p>
         </div>
       )}
     </div>

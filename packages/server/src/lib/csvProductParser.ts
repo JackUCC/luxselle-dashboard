@@ -14,6 +14,44 @@ export const CANONICAL_CSV_HEADERS =
   'Brand,Model,Category,Condition,Colour,Cost EUR,VAT EUR,Customs EUR,Landed EUR,Sell EUR,Margin EUR,Margin %,Quantity,Status,SKU,Notes'
 
 export type ColumnMapping = Partial<Record<string, string>>
+export type RequiredProductImportField =
+  | 'brand'
+  | 'model'
+  | 'costPriceEur'
+  | 'sellPriceEur'
+
+export const REQUIRED_PRODUCT_IMPORT_FIELDS: RequiredProductImportField[] = [
+  'brand',
+  'model',
+  'costPriceEur',
+  'sellPriceEur',
+]
+
+const REQUIRED_FIELD_ALIASES: Record<RequiredProductImportField, string[]> = {
+  brand: ['brand', 'brand name'],
+  model: ['model', 'product name', 'title'],
+  costPriceEur: ['cost eur', 'cost', 'cost price', 'invoice price'],
+  sellPriceEur: ['sell eur', 'sell', 'sell price', 'price'],
+}
+
+function normalizeHeaderName(header: string): string {
+  return header.replace(/\uFEFF/g, '').trim().toLowerCase()
+}
+
+export function getMissingRequiredImportFields(
+  headers: string[],
+  colMap: ColumnMapping | null = null
+): RequiredProductImportField[] {
+  const headerSet = new Set(headers.map(normalizeHeaderName))
+
+  return REQUIRED_PRODUCT_IMPORT_FIELDS.filter((field) => {
+    const mappedHeader = colMap?.[field]
+    if (typeof mappedHeader === 'string' && headerSet.has(normalizeHeaderName(mappedHeader))) {
+      return false
+    }
+    return !REQUIRED_FIELD_ALIASES[field].some((alias) => headerSet.has(alias))
+  })
+}
 
 function normalizeKey(obj: Record<string, unknown>, key: string): unknown {
   const keyLower = key.toLowerCase()

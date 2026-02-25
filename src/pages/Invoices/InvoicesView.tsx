@@ -183,6 +183,7 @@ export default function InvoicesView() {
             onClick={openCreateModal}
             className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
             aria-label="Create in-person invoice"
+            data-testid="invoice-create-cta"
           >
             <Plus className="h-4 w-4" />
             Create in-person invoice
@@ -227,6 +228,7 @@ export default function InvoicesView() {
               type="button"
               onClick={openCreateModal}
               className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
+              aria-label="Create in-person invoice (empty state)"
             >
               <Plus className="h-4 w-4" />
               Create in-person invoice
@@ -390,7 +392,7 @@ export default function InvoicesView() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="create-amount" className="block text-sm font-medium text-gray-700 mb-1">Amount (incl. VAT) €</label>
+                      <label htmlFor="create-amount" className="block text-sm font-medium text-gray-700 mb-1">Amount paid (incl. VAT) €</label>
                       <input
                         id="create-amount"
                         type="number"
@@ -408,7 +410,7 @@ export default function InvoicesView() {
                 <section className="space-y-3" aria-labelledby="create-item-heading">
                   <h3 id="create-item-heading" className="text-sm font-medium text-gray-900 border-b border-gray-100 pb-1">Item</h3>
                   <div>
-                    <label htmlFor="create-description" className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
+                    <label htmlFor="create-description" className="block text-sm font-medium text-gray-700 mb-1">Item description <span className="text-red-500">*</span></label>
                     <input
                       id="create-description"
                       type="text"

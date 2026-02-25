@@ -36,6 +36,8 @@ export default function SidecarBidWidget() {
   }, [sellPriceEur, targetMarginPct, shippingJpy])
 
   const maxBuyEur = maxBuyJpy / RATE_EUR_TO_JPY
+  const hasSellPrice = sellPriceEur > 0
+  const marginOutOfRange = targetMarginPct >= 100
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white p-2.5">
@@ -73,11 +75,20 @@ export default function SidecarBidWidget() {
         />
       </div>
 
-      <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
-        <p className="text-[10px] text-gray-500">Suggested max buy (JPY)</p>
-        <p className="text-sm font-semibold text-gray-900">¥{Math.max(0, maxBuyJpy).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
-        <p className="text-[10px] text-gray-500">~ {formatCurrency(Math.max(0, maxBuyEur))}</p>
-      </div>
+      {!hasSellPrice ? (
+        <div className="mt-2 rounded-md border border-dashed border-gray-200 bg-gray-50/50 px-2 py-1.5">
+          <p className="text-[10px] text-gray-500">Enter a sell target to generate a max bid.</p>
+        </div>
+      ) : (
+        <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
+          <p className="text-[10px] text-gray-500">Suggested max buy (JPY)</p>
+          <p className="text-sm font-semibold text-gray-900">¥{Math.max(0, maxBuyJpy).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
+          <p className="text-[10px] text-gray-500">~ {formatCurrency(Math.max(0, maxBuyEur))}</p>
+        </div>
+      )}
+      {marginOutOfRange && (
+        <p className="mt-1 text-[10px] text-amber-700">Target margin should stay below 100%.</p>
+      )}
       <p className="mt-1 text-[10px] text-gray-500">Using quick profile: 7% fee, 3% customs, 23% VAT.</p>
     </div>
   )

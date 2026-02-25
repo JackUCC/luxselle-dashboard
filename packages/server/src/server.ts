@@ -26,6 +26,19 @@ import { requestId, requestLogger, type RequestWithId, logger, errorTracker } fr
 
 const app = express()
 
+type ErrorWithCode = Error & { code?: string }
+type BodyParseError = SyntaxError & { status?: number; type?: string; body?: unknown }
+
+function isErrorWithCode(error: unknown): error is ErrorWithCode {
+  return error instanceof Error && typeof (error as ErrorWithCode).code === 'string'
+}
+
+function isBodyParseError(error: unknown): error is BodyParseError {
+  if (!(error instanceof SyntaxError)) return false
+  const parsed = error as BodyParseError
+  return parsed.type === 'entity.parse.failed' || parsed.status === 400
+}
+
 const configuredFrontendOrigins = env.FRONTEND_ORIGINS
   ? env.FRONTEND_ORIGINS
     .split(',')
@@ -65,9 +78,39 @@ app.use('/api/market-research', marketResearchRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/suppliers', suppliersRouter)
 
+app.use('/api', (_req, res) => {
+  res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Endpoint not found'))
+})
+
 // Global error handler: Zod validation → 400 with error body; all other errors → 500
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const requestId = (req as RequestWithId).requestId
+
+  if (isBodyParseError(err)) {
+    errorTracker.track('validation')
+    logger.warn('body_parse_error', {
+      requestId,
+      message: err.message,
+      type: err.type,
+    })
+    res
+      .status(400)
+      .json(formatApiError(API_ERROR_CODES.VALIDATION, 'Invalid JSON body'))
+    return
+  }
+
+  if (isErrorWithCode(err) && err.code?.startsWith('LIMIT_')) {
+    errorTracker.track('validation')
+    logger.warn('upload_validation_error', {
+      requestId,
+      code: err.code,
+      message: err.message,
+    })
+    res
+      .status(400)
+      .json(formatApiError(API_ERROR_CODES.VALIDATION, err.message || 'Upload validation failed'))
+    return
+  }
 
   if (err instanceof ApiError) {
     errorTracker.track('api_error')
@@ -88,12 +131,16 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
     const pathStr = firstIssue?.path?.length ? firstIssue.path.join('.') : ''
     const detailMsg = firstIssue ? `${pathStr ? pathStr + ': ' : ''}${firstIssue.message}` : ''
     const message = detailMsg ? `Validation error: ${detailMsg}` : 'Validation error'
+    const details = {
+      formErrors: flat.formErrors,
+      fieldErrors: flat.fieldErrors,
+    }
     logger.warn('validation_error', {
       requestId,
       message,
-      errors: flat,
+      errors: details,
     })
-    res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, message, flat as unknown as object))
+    res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, message, details))
     return
   }
 

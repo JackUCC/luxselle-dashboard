@@ -190,7 +190,7 @@ Provide 3-6 comparables. Prices should reflect the Irish/EU resale market.`
       try {
         parsed = JSON.parse(jsonMatch[0]) as { averageSellingPriceEur?: number; comps?: Comp[] }
       } catch (e) {
-        return res.status(502).json(formatApiError('INTERNAL', 'AI response parse failed'))
+        return res.status(502).json(formatApiError(API_ERROR_CODES.INTERNAL, 'AI response parse failed'))
       }
       averageSellingPriceEur = Math.round(Number(parsed.averageSellingPriceEur) || 0)
       comps = Array.isArray(parsed.comps) ? parsed.comps : []

@@ -44,10 +44,8 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
   await page.getByPlaceholder(/e.g. Chanel Classic Flap/).fill(query)
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByText('Avg. selling price')).toBeVisible()
-
-  await expect(page.getByText('Avg. selling price')).toBeVisible()
-  await expect(page.getByText('Max buy')).toBeVisible()
-  await expect(page.getByText('Max bid')).toBeVisible()
+  await expect(page.getByText('Max buy target')).toBeVisible()
+  await expect(page.getByText('Max bid target')).toBeVisible()
 })
 
 test('shows error when price-check fails', async ({ page }) => {
@@ -58,7 +56,7 @@ test('shows error when price-check fails', async ({ page }) => {
   await page.goto('/buy-box')
   await page.getByPlaceholder(/e.g. Chanel Classic Flap/).fill('Chanel Classic Flap')
   await page.getByRole('button', { name: 'Research market' }).click()
-  await expect(page.getByText(/Research failed|Market research unavailable/)).toBeVisible()
+  await expect(page.getByTestId('price-check-inline-error')).toBeVisible()
 })
 
 test('prompts when search is empty', async ({ page }) => {
@@ -68,24 +66,22 @@ test('prompts when search is empty', async ({ page }) => {
 })
 
 test('nav routing works for all main routes', async ({ page }) => {
-  const clickVisibleNav = async (path: string) => {
-    await page.locator(`a[href="${path}"]:visible`).first().click()
-  }
+  await page.setViewportSize({ width: 1440, height: 900 })
 
   // Start at Overview
   await page.goto('/')
   await expect(page.getByText('Good afternoon, Jack')).toBeVisible()
 
   // Navigate to Inventory
-  await clickVisibleNav('/inventory')
+  await page.locator('header').getByRole('link', { name: 'Inventory' }).click()
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
   // Navigate to Buy Box
-  await clickVisibleNav('/buy-box')
+  await page.locator('header').getByRole('link', { name: 'Buy Box' }).click()
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 
   // Navigate to Sourcing
-  await clickVisibleNav('/sourcing')
+  await page.locator('header').getByRole('link', { name: 'Sourcing' }).click()
   await expect(page.getByRole('heading', { name: 'Sourcing' })).toBeVisible()
 })
 
@@ -105,7 +101,7 @@ test('invoices page loads and shows list or empty state', async ({ page }) => {
 test('invoices page create in-person invoice button opens form', async ({ page }) => {
   await page.goto('/invoices')
   await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible()
-  await page.getByRole('button', { name: 'Create in-person invoice' }).click()
+  await page.getByTestId('invoice-create-cta').click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Create in-person invoice' })).toBeVisible()
   await expect(page.getByLabel(/Amount paid \(incl\. VAT\)/)).toBeVisible()

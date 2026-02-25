@@ -59,7 +59,6 @@ test('run research shows result or loading then content', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Research Market' }).click()
 
-  await expect(
-    page.getByText(/Estimated Market Value|market summary|Test summary|€5,000/i)
-  ).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('Price Intelligence')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('€5,000')).toBeVisible({ timeout: 15000 })
 })

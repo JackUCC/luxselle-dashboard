@@ -18,6 +18,7 @@ export default function SidecarLandedCostWidget() {
     if (bid <= 0) return 0
     return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
   }, [bid])
+  const hasBid = bid > 0
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white p-2.5">
@@ -36,10 +37,16 @@ export default function SidecarLandedCostWidget() {
           className="flex-1 rounded border border-gray-200 px-2 py-1 text-right text-sm font-mono text-gray-900 focus:border-indigo-300 focus:outline-none"
         />
       </div>
-      <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
-        <p className="text-[10px] text-gray-500">Estimated landed</p>
-        <p className="text-sm font-semibold text-gray-900">{formatCurrency(landed)}</p>
-      </div>
+      {hasBid ? (
+        <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
+          <p className="text-[10px] text-gray-500">Estimated landed</p>
+          <p className="text-sm font-semibold text-gray-900">{formatCurrency(landed)}</p>
+        </div>
+      ) : (
+        <div className="mt-2 rounded-md border border-dashed border-gray-200 bg-gray-50/50 px-2 py-1.5">
+          <p className="text-[10px] text-gray-500">Enter a bid price to see landed cost.</p>
+        </div>
+      )}
       <p className="mt-1 text-[10px] text-gray-500">+{AUCTION_PCT}% fee +{CUSTOMS_PCT}% customs +{VAT_PCT}% VAT</p>
     </div>
   )
