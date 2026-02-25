@@ -1,11 +1,13 @@
 /**
  * Market Research Service: AI-powered market intelligence for luxury goods.
- * Provides deep market analysis including price trends, demand indicators,
- * competitive landscape, and buy/sell recommendations.
+ * Uses RAG (Retrieval-Augmented Generation): live web search for real listings,
+ * then AI synthesis for structured market intelligence.
  * @see docs/CODE_REFERENCE.md
- * References: OpenAI, env
+ * References: OpenAI, SearchService, env
  */
 import { env } from '../../config/env'
+import { SearchService } from '../search/SearchService'
+import { logger } from '../../middleware/requestId'
 
 export interface MarketResearchInput {
     brand: string
@@ -89,7 +91,69 @@ export interface CompetitorFeedResult {
     generatedAt: string
 }
 
-const MARKET_RESEARCH_PROMPT = (input: MarketResearchInput) => `You are a luxury goods market research analyst specializing in the European resale market, with particular focus on Ireland and the EU.
+function buildSearchQuery(input: MarketResearchInput): string {
+    const parts = [input.brand, input.model]
+    if (input.colour) parts.push(input.colour)
+    if (input.category && input.category !== 'Other') parts.push(input.category)
+    return parts.filter(Boolean).join(' ')
+}
+
+function buildRagExtractionPrompt(input: MarketResearchInput, searchContext: string): string {
+    return `You are a luxury goods market research analyst specializing in the European resale market (Ireland and EU).
+
+You have been provided REAL web search results below. Use ONLY the data from these search results to form your analysis. Do NOT invent listings or prices that are not supported by the search data.
+
+=== WEB SEARCH RESULTS ===
+${searchContext}
+=== END SEARCH RESULTS ===
+
+Item to analyse:
+Brand: ${input.brand}
+Model: ${input.model}
+Category: ${input.category}
+Condition: ${input.condition}
+${input.colour ? `Colour: ${input.colour}` : ''}
+${input.year ? `Year: ${input.year}` : ''}
+${input.notes ? `Notes: ${input.notes}` : ''}
+${input.currentAskPriceEur ? `Current Asking Price: €${input.currentAskPriceEur}` : ''}
+
+Return ONLY a valid JSON object with this exact structure (no markdown, no explanation):
+{
+  "estimatedMarketValueEur": <number - average of real prices found in search results>,
+  "priceRangeLowEur": <number - lowest real price found>,
+  "priceRangeHighEur": <number - highest real price found>,
+  "suggestedBuyPriceEur": <number - max price to pay for 35% margin>,
+  "suggestedSellPriceEur": <number - realistic sell price based on found data>,
+  "demandLevel": "<very_high|high|moderate|low|very_low>",
+  "priceTrend": "<rising|stable|declining>",
+  "marketLiquidity": "<fast_moving|moderate|slow_moving>",
+  "recommendation": "<strong_buy|buy|hold|pass>",
+  "confidence": <0 to 1 - higher if many real listings found, lower if sparse>,
+  "marketSummary": "<2-3 sentence overview citing the real data found>",
+  "keyInsights": ["<insight 1>", "<insight 2>", "<insight 3>"],
+  "riskFactors": ["<risk 1>", "<risk 2>"],
+  "comparables": [
+    {
+      "title": "<listing title from search results>",
+      "priceEur": <number - actual price from listing>,
+      "source": "<marketplace name>",
+      "sourceUrl": "<actual URL from search>",
+      "condition": "<condition if mentioned>",
+      "daysListed": <number or null>
+    }
+  ],
+  "seasonalNotes": "<any seasonal pricing effects>"
+}
+
+Rules:
+- comparables MUST come from the search results — use real titles, prices, and URLs found
+- If a price is in GBP or USD, convert to EUR (1 GBP ≈ 1.17 EUR, 1 USD ≈ 0.92 EUR)
+- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
+- If fewer than 3 comparables found, set confidence below 0.5
+- suggestedBuyPriceEur = estimatedMarketValueEur * 0.65 (35% margin)`
+}
+
+const FALLBACK_PROMPT = (input: MarketResearchInput) => `You are a luxury goods market research analyst specializing in the European resale market, with particular focus on Ireland and the EU.
 
 Analyse the following luxury item and provide comprehensive market intelligence:
 
@@ -162,20 +226,16 @@ Focus on items that:
 - Mix of accessible luxury and high-end pieces`
 
 export class MarketResearchService {
+    private searchService = new SearchService()
+
     async analyse(input: MarketResearchInput): Promise<MarketResearchResult> {
-        if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
-            return this.analyseWithGemini(input)
-        }
         if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
-            return this.analyseWithOpenAI(input)
+            return this.analyseWithRAG(input)
         }
         return this.mockAnalysis(input)
     }
 
     async getTrending(): Promise<TrendingResult> {
-        if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
-            return this.trendingWithGemini()
-        }
         if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
             return this.trendingWithOpenAI()
         }
@@ -187,25 +247,68 @@ export class MarketResearchService {
         return this.mockCompetitorFeed()
     }
 
-    private async analyseWithGemini(input: MarketResearchInput): Promise<MarketResearchResult> {
-        const { GoogleGenerativeAI } = await import('@google/generative-ai')
-        const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY!)
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    /**
+     * RAG pipeline: (1) web search for real listings, (2) AI synthesis of structured data.
+     * Falls back to pure-AI if search returns no results.
+     */
+    private async analyseWithRAG(input: MarketResearchInput): Promise<MarketResearchResult> {
+        const query = buildSearchQuery(input)
+        const searchQuery = `${query} price second-hand pre-owned for sale EUR`
 
-        const result = await model.generateContent(MARKET_RESEARCH_PROMPT(input))
-        const text = result.response.text()
-        const parsed = this.parseJSON(text)
+        const searchResponse = await this.searchService.searchMarket(searchQuery, {
+            userLocation: { country: 'IE' },
+        })
 
-        return this.formatResult(parsed, input, 'gemini')
+        const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
+
+        if (hasSearchData) {
+            return this.synthesizeFromSearch(input, searchResponse)
+        }
+
+        logger.info('market_research_fallback', { reason: 'no_search_results', query })
+        return this.analyseWithOpenAIFallback(input)
     }
 
-    private async analyseWithOpenAI(input: MarketResearchInput): Promise<MarketResearchResult> {
+    private async synthesizeFromSearch(
+        input: MarketResearchInput,
+        searchResponse: { rawText: string; annotations: Array<{ url: string; title: string }> },
+    ): Promise<MarketResearchResult> {
+        const searchContext = searchResponse.rawText
+            + '\n\nSource URLs:\n'
+            + searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
+
+        const prompt = buildRagExtractionPrompt(input, searchContext)
+
         const OpenAI = (await import('openai')).default
         const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: MARKET_RESEARCH_PROMPT(input) }],
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a luxury market analyst. Extract structured market intelligence from web search results. Return ONLY valid JSON.',
+                },
+                { role: 'user', content: prompt },
+            ],
+            max_tokens: 2000,
+            temperature: 0.2,
+        })
+
+        const text = response.choices[0]?.message?.content ?? ''
+        const parsed = this.parseJSON(text)
+
+        return this.formatResult(parsed, input, 'openai+web_search')
+    }
+
+    /** Pure-AI fallback when web search yields no results. */
+    private async analyseWithOpenAIFallback(input: MarketResearchInput): Promise<MarketResearchResult> {
+        const OpenAI = (await import('openai')).default
+        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: FALLBACK_PROMPT(input) }],
             max_tokens: 2000,
             temperature: 0.3,
         })

@@ -14,6 +14,7 @@ import {
   PricingMarketModeSchema,
 } from '@shared/schemas'
 import { PricingService } from '../services/pricing/PricingService'
+import { SearchService } from '../services/search/SearchService'
 import { EvaluationRepo } from '../repos/EvaluationRepo'
 import { SettingsRepo } from '../repos/SettingsRepo'
 import { env } from '../config/env'
@@ -22,6 +23,7 @@ import { logger } from '../middleware/requestId'
 
 const router = Router()
 const pricingService = new PricingService()
+const searchService = new SearchService()
 const evaluationRepo = new EvaluationRepo()
 const settingsRepo = new SettingsRepo()
 
@@ -148,7 +150,7 @@ router.post('/auction-landed-cost', async (req, res, next) => {
   }
 })
 
-// POST /api/pricing/price-check — query-based market research (Irish + Vestiaire), returns avg price, max buy, max bid
+// POST /api/pricing/price-check — RAG: web search for real listings, then AI extraction of avg price, max buy, max bid
 router.post('/price-check', async (req, res, next) => {
   try {
     const { query, condition, notes } = PriceCheckInputSchema.parse(req.body)
@@ -156,46 +158,74 @@ router.post('/price-check', async (req, res, next) => {
     type Comp = { title: string; price: number; source: string; sourceUrl?: string }
     let averageSellingPriceEur: number
     let comps: Comp[] = []
+    let dataSource: 'web_search' | 'ai_fallback' | 'mock' = 'mock'
 
     if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
-      const OpenAI = (await import('openai')).default
-      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
       const refine = [condition, notes].filter(Boolean).join('. ')
-      const prompt = `You are a luxury resale pricing expert. Research the second-hand market for this item.
+      const searchQuery = `${query} ${refine} price second-hand pre-owned for sale EUR`
 
-Item search query: "${query}"
-${refine ? `Refine / filter: ${refine}` : ''}
+      const searchResponse = await searchService.searchMarket(searchQuery, {
+        userLocation: { country: 'IE' },
+      })
 
-Use ONLY these sources: Irish competitors (Designer Exchange designerexchange.ie, Luxury Exchange luxuryexchange.ie, Siopella siopaella.com) and Vestiaire Collective (vestiairecollective.com). Do not use any other marketplaces.
+      const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
+
+      const extractionPrompt = `You are a luxury resale pricing expert. Using ONLY the web search results provided below, extract real listing data.
+
+Item: "${query}"
+${refine ? `Condition/notes: ${refine}` : ''}
+
+=== WEB SEARCH RESULTS ===
+${hasSearchData ? searchResponse.rawText : '(No live results found)'}
+
+Source URLs:
+${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n') || '(none)'}
+=== END SEARCH RESULTS ===
 
 Return ONLY a JSON object (no markdown):
 {
-  "averageSellingPriceEur": <number - realistic average selling price in EUR for this item on the second-hand market>,
+  "averageSellingPriceEur": <number - average of REAL prices found in search results>,
   "comps": [
-    { "title": "<listing title>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<url if known>" }
+    { "title": "<actual listing title from search>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<actual URL from search>" }
   ]
 }
-Provide 3-6 comparables. Prices should reflect the Irish/EU resale market.`
+
+Rules:
+- Extract 3-6 real comparable listings from the search results with their actual prices and URLs
+- averageSellingPriceEur must be calculated from the real prices found
+- If prices are in GBP, convert: 1 GBP ≈ 1.17 EUR
+- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
+- If no real listings were found in the search results, return averageSellingPriceEur: 0 and empty comps`
+
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 600,
-        temperature: 0.3,
+        messages: [
+          {
+            role: 'system',
+            content: 'Extract structured pricing data from web search results. Return ONLY valid JSON.',
+          },
+          { role: 'user', content: extractionPrompt },
+        ],
+        max_tokens: 800,
+        temperature: 0.2,
       })
+
       const text = response.choices[0]?.message?.content ?? ''
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (!jsonMatch) throw new Error('No JSON in price-check response')
       let parsed: { averageSellingPriceEur?: number; comps?: Comp[] }
       try {
         parsed = JSON.parse(jsonMatch[0]) as { averageSellingPriceEur?: number; comps?: Comp[] }
-      } catch (e) {
+      } catch {
         return res.status(502).json(formatApiError(API_ERROR_CODES.INTERNAL, 'AI response parse failed'))
       }
       averageSellingPriceEur = Math.round(Number(parsed.averageSellingPriceEur) || 0)
       comps = Array.isArray(parsed.comps) ? parsed.comps : []
+      dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
     } else {
-      // Mock
       const base = 1200
       averageSellingPriceEur = base
       comps = [
@@ -204,8 +234,6 @@ Provide 3-6 comparables. Prices should reflect the Irish/EU resale market.`
       ]
     }
 
-    // Max buy = avg selling price − 23% VAT − 20% margin => (avg/1.23)*0.80
-    // Max bid = max buy − 7% auction fee => maxBuy/1.07
     const maxBuyEur = Math.round((averageSellingPriceEur / 1.23) * 0.8)
     const maxBidEur = Math.round(maxBuyEur / 1.07)
 
@@ -215,6 +243,7 @@ Provide 3-6 comparables. Prices should reflect the Irish/EU resale market.`
         comps,
         maxBuyEur,
         maxBidEur,
+        dataSource,
       },
     })
   } catch (error) {

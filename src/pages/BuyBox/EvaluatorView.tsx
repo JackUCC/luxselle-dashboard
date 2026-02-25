@@ -25,6 +25,7 @@ interface PriceCheckResult {
   comps: PriceCheckComp[]
   maxBuyEur: number
   maxBidEur: number
+  dataSource?: 'web_search' | 'ai_fallback' | 'mock'
 }
 
 const CONDITION_OPTIONS = [
@@ -274,7 +275,19 @@ export default function EvaluatorView() {
               </div>
             ) : (
               <div className="lux-card p-6 space-y-6">
-                <h2 className="text-lg font-medium text-lux-800">Market breakdown</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-medium text-lux-800">Market breakdown</h2>
+                  {result.dataSource === 'web_search' ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Live data
+                    </span>
+                  ) : result.dataSource === 'ai_fallback' ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20">
+                      AI estimate
+                    </span>
+                  ) : null}
+                </div>
                 <div className="rounded-xl bg-gray-50 p-4 text-center">
                   <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Avg. selling price (second-hand)</div>
                   <div className="text-2xl font-bold text-lux-800">{formatCurrency(result.averageSellingPriceEur)}</div>

@@ -6,6 +6,8 @@ import {
     type SerialDecodeHeuristicInput,
     type SerialDecodeResult,
 } from '@shared/schemas'
+import { SearchService } from '../search/SearchService'
+import { logger } from '../../middleware/requestId'
 
 export interface BusinessInsights {
     insights: string[]
@@ -13,7 +15,9 @@ export interface BusinessInsights {
 }
 
 export class AiService {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private openai: any
+    private searchService = new SearchService()
 
     private async getOpenAI() {
         if (!this.openai) {
@@ -146,8 +150,8 @@ Return ONLY a valid JSON object:
     }
 
     /**
-     * Estimate the official / brand retail price (new, from the brand) for an item from its description.
-     * Used for "What was this retail?" — helps compare brand-new price vs second-hand.
+     * RAG-powered retail price lookup: web search for the brand's current price, then AI extraction.
+     * Falls back to pure AI estimation when search returns no useful results.
      */
     async getRetailPriceFromDescription(description: string): Promise<{
         retailPriceEur: number | null
@@ -170,8 +174,18 @@ Return ONLY a valid JSON object:
         }
 
         try {
+            const searchQuery = `${trimmed} official retail price EUR new boutique`
+            const searchResponse = await this.searchService.searchWeb(searchQuery)
+            const hasSearchData = searchResponse.rawText.length > 50
+
+            const searchContext = hasSearchData
+                ? `=== WEB SEARCH RESULTS ===\n${searchResponse.rawText}\n\nSources:\n${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')}\n=== END ===`
+                : ''
+
             const openai = await this.getOpenAI()
-            const prompt = `You are a luxury retail expert. Given the following item description, estimate the CURRENT OFFICIAL RETAIL PRICE — i.e. what the brand sells this item for NEW, directly from the brand (boutique or official website), NOT second-hand or resale market prices.
+            const prompt = `You are a luxury retail expert. Given the following item description, find the CURRENT OFFICIAL RETAIL PRICE — what the brand sells this item for NEW, directly from the brand (boutique or official website), NOT second-hand or resale market prices.
+
+${searchContext}
 
 Item description:
 """
@@ -179,18 +193,24 @@ ${trimmed}
 """
 
 Return ONLY a valid JSON object with these exact keys:
-- "retailPriceEur": number or null (estimate in EUR; use null if you cannot identify the product or price)
+- "retailPriceEur": number or null (in EUR; use null if you cannot identify the product or price)
 - "currency": "EUR"
 - "productName": string or null (short name e.g. "Chanel Classic Flap Medium")
-- "note": string (one short sentence, e.g. "Current boutique price as of 2024" or "Approximate; check brand website for your region")
+- "note": string (cite the source if found via web search, e.g. "Price from chanel.com as of Feb 2026")
 
-If the description is too vague or not a recognisable luxury product, set retailPriceEur to null and explain in note.`
+${hasSearchData ? 'Use the web search results above to find the real current retail price. Cite the source URL in the note.' : 'No web results available — estimate based on your knowledge and flag as approximate in the note.'}`
 
             const response = await openai.chat.completions.create({
                 model: 'gpt-4o-mini',
-                messages: [{ role: 'user', content: prompt }],
-                max_tokens: 200,
-                temperature: 0.3,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Extract official retail pricing from web search results. Return ONLY valid JSON.',
+                    },
+                    { role: 'user', content: prompt },
+                ],
+                max_tokens: 300,
+                temperature: 0.2,
             })
 
             const text = response.choices[0]?.message?.content?.trim() ?? ''
@@ -211,7 +231,7 @@ If the description is too vague or not a recognisable luxury product, set retail
 
             return {
                 retailPriceEur,
-                currency: parsed.currency === 'EUR' ? 'EUR' : 'EUR',
+                currency: 'EUR',
                 productName:
                     typeof parsed.productName === 'string' && parsed.productName.trim()
                         ? parsed.productName.trim()
@@ -224,11 +244,15 @@ If the description is too vague or not a recognisable luxury product, set retail
                           : 'Could not determine retail price from description.',
             }
         } catch (error) {
-            console.error('AI Retail Price Lookup Failed:', error)
+            logger.error('retail_price_lookup_error', error)
             return this.mockRetailPrice(description)
         }
     }
 
+    /**
+     * RAG-enhanced serial decoding: web search for brand serial format documentation,
+     * then AI interprets the serial using real reference data.
+     */
     async decodeSerialHeuristic(input: SerialDecodeHeuristicInput): Promise<SerialDecodeResult> {
         const parsedInput = SerialDecodeHeuristicInputSchema.parse(input)
         const normalizedSerial = parsedInput.serial.replace(/\s+/g, '').trim().toUpperCase()
@@ -251,11 +275,19 @@ If the description is too vague or not a recognisable luxury product, set retail
         }
 
         try {
+            const searchQuery = `${parsedInput.brand} serial number date code format guide authentication`
+            const searchResponse = await this.searchService.searchWeb(searchQuery)
+            const hasSearchData = searchResponse.rawText.length > 50
+
+            const searchContext = hasSearchData
+                ? `\n=== WEB SEARCH: ${parsedInput.brand} SERIAL FORMAT REFERENCE ===\n${searchResponse.rawText}\n=== END ===\n`
+                : ''
+
             const openai = await this.getOpenAI()
             const prompt = `You are a luxury authentication assistant focused on serial/date code interpretation.
-
+${searchContext}
 Task:
-- Infer likely production timing from a bag serial/date code.
+- Using the reference data above (if available), decode this serial/date code.
 - Be conservative and avoid fake precision.
 - Return strict JSON only.
 
@@ -305,16 +337,23 @@ Return exactly this JSON shape:
 }
 
 Rules:
-- confidence between 0 and 1.
+- confidence between 0 and 1. Increase confidence if web search reference data confirms the format.
 - If uncertain, use precision "year_window" or "unknown".
-- Do not invent exact months/weeks unless strongly justified.
+- Do not invent exact months/weeks unless strongly justified by reference data.
 - If no reliable inference, set success=false and explain missing signals.
-- Keep rationale/uncertainties concise and practical.`
+- Keep rationale/uncertainties concise and practical.
+- Cite the reference source in rationale if web search data helped.`
 
             const response = await openai.chat.completions.create({
                 model: 'gpt-4o-mini',
-                messages: [{ role: 'user', content: prompt }],
-                max_tokens: 500,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You decode luxury goods serial numbers using reference data. Return ONLY valid JSON.',
+                    },
+                    { role: 'user', content: prompt },
+                ],
+                max_tokens: 600,
                 temperature: 0.2,
             })
 
@@ -382,7 +421,7 @@ Rules:
 
             return SerialDecodeResultSchema.parse(withDefaults)
         } catch (error) {
-            console.error('AI Serial Decode Failed:', error)
+            logger.error('serial_decode_error', error)
             return this.mockSerialDecodeHeuristic(parsedInput.brand, normalizedSerial)
         }
     }
