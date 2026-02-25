@@ -73,6 +73,36 @@ describe('serialDateDecoder', () => {
       expect(r.success).toBe(false)
       expect(r.message).toContain('Enter')
     })
+
+    it('returns microchip-era message for 8-digit code with prefix > 32', () => {
+      const r = decodeSerialToYear('33123456', 'Chanel')
+      expect(r.success).toBe(false)
+      expect(r.message).toContain('microchip era')
+      expect(r.note).toContain('2021')
+    })
+  })
+
+  describe('Hermès', () => {
+    it('decodes single-letter blind stamp to year (1997–2014)', () => {
+      const r = decodeSerialToYear('J', 'Hermès')
+      expect(r.success).toBe(true)
+      expect(r.year).toBe(2006)
+      expect(r.precision).toBe('exact_year')
+      expect(r.message).toContain('2006')
+      expect(r.formatMatched).toBe('HERMES_BLIND_STAMP_LETTER')
+    })
+
+    it('decodes letter D as 2000', () => {
+      const r = decodeSerialToYear('D', 'Hermès')
+      expect(r.success).toBe(true)
+      expect(r.year).toBe(2000)
+    })
+
+    it('returns failure for non-letter or multi-char', () => {
+      const r = decodeSerialToYear('99', 'Hermès')
+      expect(r.success).toBe(false)
+      expect(r.message).toContain('blind stamp')
+    })
   })
 
   describe('Other brands', () => {

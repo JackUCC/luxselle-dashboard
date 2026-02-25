@@ -60,7 +60,7 @@ export class SearchService {
             type: 'web_search' as const,
             ...(domains.length > 0
               ? {
-                  search_context_size: 'medium' as const,
+                  search_context_size: 'high' as const,
                 }
               : {}),
             ...(opts?.userLocation
@@ -107,6 +107,44 @@ export class SearchService {
   }
 
   /**
+   * Run 2–3 parallel market searches with site: operators and merge results (dedupe by URL).
+   * Use for price-check and market research to get more listing pages vs generic articles.
+   */
+  async searchMarketMulti(
+    baseQuery: string,
+    opts?: { domains?: string[]; userLocation?: { country: string } },
+  ): Promise<SearchResponse> {
+    const trimmed = baseQuery.trim()
+    const queries = [
+      `${trimmed} site:vestiairecollective.com price`,
+      `${trimmed} site:designerexchange.ie`,
+      `${trimmed} pre-owned for sale price EUR`,
+    ]
+    const responses = await Promise.all(
+      queries.map((q) => this.searchMarket(q, opts)),
+    )
+    const seenUrls = new Set<string>()
+    const annotations: Array<{ url: string; title: string }> = []
+    const rawParts: string[] = []
+    for (const r of responses) {
+      for (const a of r.annotations) {
+        if (a.url && !seenUrls.has(a.url)) {
+          seenUrls.add(a.url)
+          annotations.push(a)
+        }
+      }
+      if (r.rawText.trim()) rawParts.push(r.rawText.trim())
+    }
+    const rawText = rawParts.join('\n\n---\n\n')
+    const results = annotations.map((ann) => ({
+      title: ann.title,
+      url: ann.url,
+      snippet: '',
+    }))
+    return { results, rawText, annotations }
+  }
+
+  /**
    * General-purpose web search (no domain restriction).
    * Used for retail price lookups, serial code research, etc.
    */
@@ -120,7 +158,7 @@ export class SearchService {
 
       const response = await openai.responses.create({
         model: 'gpt-4o-mini',
-        tools: [{ type: 'web_search' as const, search_context_size: 'medium' as const }],
+        tools: [{ type: 'web_search' as const, search_context_size: 'high' as const }],
         input: query,
       })
 
@@ -196,6 +234,7 @@ export class SearchService {
         ],
         max_tokens: 1500,
         temperature: 0.2,
+        response_format: { type: 'json_object' },
       })
 
       const text = response.choices[0]?.message?.content ?? ''

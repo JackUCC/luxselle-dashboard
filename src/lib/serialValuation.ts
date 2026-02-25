@@ -4,6 +4,10 @@ export interface SerialValuationInput {
   marketAverageEur: number
   decode: SerialDecodeResult
   nowYear?: number
+  /** VAT-inclusive multiplier (ex-VAT = value / vatMultiplier). Default 1.23 (23% VAT). */
+  vatMultiplier?: number
+  /** Margin factor applied to ex-VAT (max pay = exVat * marginFactor). Default 0.8 (20% margin). */
+  marginFactor?: number
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -31,9 +35,14 @@ function computeAgeAdjustmentPct(ageYears: number): number {
   return -25
 }
 
+const DEFAULT_VAT_MULTIPLIER = 1.23
+const DEFAULT_MARGIN_FACTOR = 0.8
+
 export function calculateSerialPricingGuidance(input: SerialValuationInput): SerialPricingGuidance {
   const marketAverageEur = Math.max(0, input.marketAverageEur)
   const nowYear = input.nowYear ?? new Date().getFullYear()
+  const vatMultiplier = input.vatMultiplier ?? DEFAULT_VAT_MULTIPLIER
+  const marginFactor = input.marginFactor ?? DEFAULT_MARGIN_FACTOR
   const anchorYear = computeAnchorYear(input.decode)
   const ageYears = anchorYear != null ? Math.max(0, nowYear - anchorYear) : 0
 
@@ -45,7 +54,7 @@ export function calculateSerialPricingGuidance(input: SerialValuationInput): Ser
     marketAverageEur * (1 + totalAdjustmentPct / 100),
   )
   const recommendedMaxPayEur = roundMoney(
-    estimatedWorthEur / 1.23 * 0.8,
+    (estimatedWorthEur / vatMultiplier) * marginFactor,
   )
 
   const summary = anchorYear == null

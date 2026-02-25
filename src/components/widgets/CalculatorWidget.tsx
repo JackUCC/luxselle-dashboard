@@ -54,7 +54,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 }
 
 const CATEGORY_PRESETS = [
-    { label: 'Handbags', icon: ShoppingBag, customs: '8', vat: '23' },
+    { label: 'Handbags', icon: ShoppingBag, customs: '3', vat: '23' },
     { label: 'Watches', icon: Watch, customs: '4.5', vat: '23' },
     { label: 'Accessories', icon: Box, customs: '12', vat: '23' },
 ]
@@ -62,7 +62,7 @@ const CATEGORY_PRESETS = [
 const FEE_TOOLTIPS: Record<string, string> = {
     platformFeeRate: 'Fee charged by the auction/selling platform (e.g. Yahoo Auctions, eBay)',
     paymentFeeRate: 'Payment processing fee (e.g. credit card, PayPal)',
-    customsRate: 'Customs duty rate for importing goods into Ireland/EU',
+    customsRate: 'Customs duty rate for importing goods into Ireland/EU. Leather handbags (HS 4202) are typically 3%. Verify at TARIC: ec.europa.eu/taxation_customs/dds2/taric/taric_consultation.jsp',
     importVatRate: 'Import VAT applied on (CIF value + customs duty)',
     insurance: 'Shipping insurance or other flat-rate costs',
     fixedFee: 'Fixed transaction fees (e.g. handling, proxy service)',
@@ -163,10 +163,21 @@ export default function CalculatorWidget() {
     const fetchRates = async () => {
         setLoadingRates(true)
         try {
-            const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,GBP,JPY')
+            const apiBase = typeof import.meta.env.VITE_API_BASE === 'string' && import.meta.env.VITE_API_BASE
+                ? import.meta.env.VITE_API_BASE.replace(/\/$/, '')
+                : ''
+            const res = await fetch(`${apiBase}/api/fx`)
             if (res.ok) {
-                const data = await res.json()
-                setRates(data.rates)
+                const data = (await res.json()) as { rates?: Record<string, number> }
+                if (data.rates && typeof data.rates === 'object') {
+                    setRates(data.rates)
+                    return
+                }
+            }
+            const fallback = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,GBP,JPY')
+            if (fallback.ok) {
+                const data = (await fallback.json()) as { rates?: Record<string, number> }
+                setRates(data.rates ?? null)
             }
         } catch (e) {
             toast.error('Failed to load exchange rates')

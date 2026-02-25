@@ -7,7 +7,9 @@
  */
 import { env } from '../../config/env'
 import { SearchService } from '../search/SearchService'
+import { getFxService } from '../fx/FxService'
 import { logger } from '../../middleware/requestId'
+import { validatePriceEur, filterValidComps, clampConfidence } from '../../lib/validation'
 
 export interface MarketResearchInput {
     brand: string
@@ -27,6 +29,7 @@ export interface MarketComparable {
     sourceUrl?: string
     condition: string
     daysListed?: number
+    dataOrigin?: 'web_search' | 'ai_estimate'
 }
 
 export interface MarketResearchResult {
@@ -98,7 +101,11 @@ function buildSearchQuery(input: MarketResearchInput): string {
     return parts.filter(Boolean).join(' ')
 }
 
-function buildRagExtractionPrompt(input: MarketResearchInput, searchContext: string): string {
+function buildRagExtractionPrompt(
+    input: MarketResearchInput,
+    searchContext: string,
+    fx: { gbpRate: number; usdRate: number },
+): string {
     return `You are a luxury goods market research analyst specializing in the European resale market (Ireland and EU).
 
 You have been provided REAL web search results below. Use ONLY the data from these search results to form your analysis. Do NOT invent listings or prices that are not supported by the search data.
@@ -139,17 +146,30 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no expla
       "source": "<marketplace name>",
       "sourceUrl": "<actual URL from search>",
       "condition": "<condition if mentioned>",
-      "daysListed": <number or null>
+      "daysListed": <number or null>,
+      "dataOrigin": "web_search"
     }
   ],
   "seasonalNotes": "<any seasonal pricing effects>"
 }
 
+CRITICAL RULES:
+- Every comparable listing MUST have a sourceUrl that came from the search results above.
+- If you cannot find at least 2 real listings with prices, set confidence to 0.3 or below.
+- Do NOT invent or fabricate any listing, price, or URL.
+- If a field cannot be determined from the search data, use null instead of guessing.
+
+Confidence scoring rules:
+- 0.9+: 5+ real listings found with prices from approved sources
+- 0.7-0.89: 3-4 real listings found
+- 0.5-0.69: 1-2 real listings found
+- 0.3-0.49: No real listings but strong knowledge of this specific item
+- Below 0.3: Unfamiliar item or very sparse data
+
 Rules:
-- comparables MUST come from the search results — use real titles, prices, and URLs found
-- If a price is in GBP or USD, convert to EUR (1 GBP ≈ 1.17 EUR, 1 USD ≈ 0.92 EUR)
+- If a price is in GBP, convert to EUR using today's rate: 1 GBP = ${fx.gbpRate.toFixed(2)} EUR
+- If a price is in USD, convert to EUR using today's rate: 1 USD = ${fx.usdRate.toFixed(2)} EUR
 - Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
-- If fewer than 3 comparables found, set confidence below 0.5
 - suggestedBuyPriceEur = estimatedMarketValueEur * 0.65 (35% margin)`
 }
 
@@ -186,13 +206,25 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no expla
       "title": "<listing title>",
       "priceEur": <number>,
       "source": "<marketplace>",
-      "sourceUrl": "<URL>",
+      "sourceUrl": "<URL or null if estimated>",
       "condition": "<condition>",
-      "daysListed": <number or null>
+      "daysListed": <number or null>,
+      "dataOrigin": "ai_estimate"
     }
   ],
   "seasonalNotes": "<any seasonal pricing effects>"
 }
+
+CRITICAL RULES:
+- Do NOT invent or fabricate any listing, price, or URL. If estimating without search data, set dataOrigin to "ai_estimate" and sourceUrl to null where unknown.
+- If a field cannot be determined, use null instead of guessing.
+
+Confidence scoring rules:
+- 0.9+: 5+ real listings found with prices from approved sources
+- 0.7-0.89: 3-4 real listings found
+- 0.5-0.69: 1-2 real listings found
+- 0.3-0.49: No real listings but strong knowledge of this specific item
+- Below 0.3: Unfamiliar item or very sparse data
 
 Important guidelines:
 - ONLY use these 4 approved sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella (siopaella.com). Do NOT include any other marketplace.
@@ -255,7 +287,7 @@ export class MarketResearchService {
         const query = buildSearchQuery(input)
         const searchQuery = `${query} price second-hand pre-owned for sale EUR`
 
-        const searchResponse = await this.searchService.searchMarket(searchQuery, {
+        const searchResponse = await this.searchService.searchMarketMulti(searchQuery, {
             userLocation: { country: 'IE' },
         })
 
@@ -277,7 +309,15 @@ export class MarketResearchService {
             + '\n\nSource URLs:\n'
             + searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
 
-        const prompt = buildRagExtractionPrompt(input, searchContext)
+        const fxService = getFxService()
+        const [gbpRate, usdRate] = await Promise.all([
+            fxService.getRate('GBP', 'EUR'),
+            fxService.getRate('USD', 'EUR'),
+        ])
+        const prompt = buildRagExtractionPrompt(input, searchContext, {
+            gbpRate: gbpRate || 1.17,
+            usdRate: usdRate || 0.92,
+        })
 
         const OpenAI = (await import('openai')).default
         const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
@@ -293,6 +333,7 @@ export class MarketResearchService {
             ],
             max_tokens: 2000,
             temperature: 0.2,
+            response_format: { type: 'json_object' },
         })
 
         const text = response.choices[0]?.message?.content ?? ''
@@ -311,6 +352,7 @@ export class MarketResearchService {
             messages: [{ role: 'user', content: FALLBACK_PROMPT(input) }],
             max_tokens: 2000,
             temperature: 0.3,
+            response_format: { type: 'json_object' },
         })
 
         const text = response.choices[0]?.message?.content ?? ''
@@ -328,6 +370,7 @@ export class MarketResearchService {
             messages: [{ role: 'user', content: TRENDING_PROMPT }],
             max_tokens: 1500,
             temperature: 0.3,
+            response_format: { type: 'json_object' },
         })
 
         const text = response.choices[0]?.message?.content ?? ''
@@ -351,31 +394,37 @@ export class MarketResearchService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private formatResult(parsed: any, input: MarketResearchInput, provider: string): MarketResearchResult {
+        const rawComps = (parsed.comparables ?? []).map((c: MarketComparable) => ({
+            title: c.title ?? '',
+            priceEur: Math.round(Number(c.priceEur) || 0),
+            source: c.source ?? '',
+            sourceUrl: c.sourceUrl,
+            condition: c.condition ?? '',
+            daysListed: c.daysListed,
+            dataOrigin: c.dataOrigin ?? 'web_search',
+        }))
+        const validComps = filterValidComps(rawComps.map((c) => ({ ...c, price: c.priceEur }))).map(
+            ({ price, ...rest }) => ({ ...rest, priceEur: price }),
+        ) as MarketComparable[]
+
         return {
             provider,
             brand: input.brand,
             model: input.model,
-            estimatedMarketValueEur: Math.round(parsed.estimatedMarketValueEur ?? 0),
-            priceRangeLowEur: Math.round(parsed.priceRangeLowEur ?? 0),
-            priceRangeHighEur: Math.round(parsed.priceRangeHighEur ?? 0),
-            suggestedBuyPriceEur: Math.round(parsed.suggestedBuyPriceEur ?? 0),
-            suggestedSellPriceEur: Math.round(parsed.suggestedSellPriceEur ?? 0),
+            estimatedMarketValueEur: validatePriceEur(parsed.estimatedMarketValueEur),
+            priceRangeLowEur: validatePriceEur(parsed.priceRangeLowEur),
+            priceRangeHighEur: validatePriceEur(parsed.priceRangeHighEur),
+            suggestedBuyPriceEur: validatePriceEur(parsed.suggestedBuyPriceEur),
+            suggestedSellPriceEur: validatePriceEur(parsed.suggestedSellPriceEur),
             demandLevel: parsed.demandLevel ?? 'moderate',
             priceTrend: parsed.priceTrend ?? 'stable',
             marketLiquidity: parsed.marketLiquidity ?? 'moderate',
             recommendation: parsed.recommendation ?? 'hold',
-            confidence: Math.min(1, Math.max(0, parsed.confidence ?? 0.5)),
+            confidence: clampConfidence(parsed.confidence ?? 0.5),
             marketSummary: parsed.marketSummary ?? '',
             keyInsights: parsed.keyInsights ?? [],
             riskFactors: parsed.riskFactors ?? [],
-            comparables: (parsed.comparables ?? []).map((c: MarketComparable) => ({
-                title: c.title ?? '',
-                priceEur: Math.round(c.priceEur ?? 0),
-                source: c.source ?? '',
-                sourceUrl: c.sourceUrl,
-                condition: c.condition ?? '',
-                daysListed: c.daysListed,
-            })),
+            comparables: validComps,
             seasonalNotes: parsed.seasonalNotes,
         }
     }

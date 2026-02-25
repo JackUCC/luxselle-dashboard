@@ -19,6 +19,7 @@ import { settingsRouter } from './routes/settings'
 import { marketResearchRouter } from './routes/market-research'
 import { aiRouter } from './routes/ai'
 import { suppliersRouter } from './routes/suppliers'
+import { fxRouter } from './routes/fx'
 import { API_ERROR_CODES, formatApiError, ApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 // Auth middleware available but not applied yet (deferred to Iteration 6)
@@ -77,6 +78,7 @@ app.use('/api/settings', settingsRouter)
 app.use('/api/market-research', marketResearchRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/suppliers', suppliersRouter)
+app.use('/api/fx', fxRouter)
 
 app.use('/api', (_req, res) => {
   res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Endpoint not found'))

@@ -20,6 +20,8 @@ import { SettingsRepo } from '../repos/SettingsRepo'
 import { env } from '../config/env'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 import { logger } from '../middleware/requestId'
+import { validatePriceEur, filterValidComps } from '../lib/validation'
+import { getFxService } from '../services/fx/FxService'
 
 const router = Router()
 const pricingService = new PricingService()
@@ -155,7 +157,7 @@ router.post('/price-check', async (req, res, next) => {
   try {
     const { query, condition, notes } = PriceCheckInputSchema.parse(req.body)
 
-    type Comp = { title: string; price: number; source: string; sourceUrl?: string }
+    type Comp = { title: string; price: number; source: string; sourceUrl?: string; dataOrigin?: 'web_search' | 'ai_estimate' }
     let averageSellingPriceEur: number
     let comps: Comp[] = []
     let dataSource: 'web_search' | 'ai_fallback' | 'mock' = 'mock'
@@ -164,11 +166,19 @@ router.post('/price-check', async (req, res, next) => {
       const refine = [condition, notes].filter(Boolean).join('. ')
       const searchQuery = `${query} ${refine} price second-hand pre-owned for sale EUR`
 
-      const searchResponse = await searchService.searchMarket(searchQuery, {
+      const searchResponse = await searchService.searchMarketMulti(searchQuery, {
         userLocation: { country: 'IE' },
       })
 
       const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
+
+      const fxService = getFxService()
+      const [gbpRate, usdRate] = await Promise.all([
+        fxService.getRate('GBP', 'EUR'),
+        fxService.getRate('USD', 'EUR'),
+      ])
+      const gbpToEur = gbpRate || 1.17
+      const usdToEur = usdRate || 0.92
 
       const extractionPrompt = `You are a luxury resale pricing expert. Using ONLY the web search results provided below, extract real listing data.
 
@@ -186,14 +196,21 @@ Return ONLY a JSON object (no markdown):
 {
   "averageSellingPriceEur": <number - average of REAL prices found in search results>,
   "comps": [
-    { "title": "<actual listing title from search>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<actual URL from search>" }
+    { "title": "<actual listing title from search>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<actual URL from search>", "dataOrigin": "web_search" }
   ]
 }
+
+CRITICAL RULES:
+- Every comparable listing MUST have a sourceUrl that came from the search results above.
+- If you cannot find at least 2 real listings with prices, return averageSellingPriceEur: 0 and empty comps.
+- Do NOT invent or fabricate any listing, price, or URL.
+- If a field cannot be determined from the search data, use null instead of guessing.
 
 Rules:
 - Extract 3-6 real comparable listings from the search results with their actual prices and URLs
 - averageSellingPriceEur must be calculated from the real prices found
-- If prices are in GBP, convert: 1 GBP ≈ 1.17 EUR
+- If prices are in GBP, convert to EUR using today's rate: 1 GBP = ${gbpToEur.toFixed(2)} EUR
+- If prices are in USD, convert to EUR using today's rate: 1 USD = ${usdToEur.toFixed(2)} EUR
 - Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
 - If no real listings were found in the search results, return averageSellingPriceEur: 0 and empty comps`
 
@@ -211,6 +228,7 @@ Rules:
         ],
         max_tokens: 800,
         temperature: 0.2,
+        response_format: { type: 'json_object' },
       })
 
       const text = response.choices[0]?.message?.content ?? ''
@@ -222,8 +240,8 @@ Rules:
       } catch {
         return res.status(502).json(formatApiError(API_ERROR_CODES.INTERNAL, 'AI response parse failed'))
       }
-      averageSellingPriceEur = Math.round(Number(parsed.averageSellingPriceEur) || 0)
-      comps = Array.isArray(parsed.comps) ? parsed.comps : []
+      averageSellingPriceEur = validatePriceEur(parsed.averageSellingPriceEur ?? 0)
+      comps = filterValidComps(Array.isArray(parsed.comps) ? parsed.comps : [])
       dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
     } else {
       const base = 1200
@@ -244,6 +262,7 @@ Rules:
         maxBuyEur,
         maxBidEur,
         dataSource,
+        researchedAt: new Date().toISOString(),
       },
     })
   } catch (error) {

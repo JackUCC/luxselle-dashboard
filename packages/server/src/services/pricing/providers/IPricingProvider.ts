@@ -23,6 +23,7 @@ export interface PricingComparable {
   sourceUrl?: string
   marketCountry?: string
   url?: string
+  dataOrigin?: 'web_search' | 'ai_estimate'
 }
 
 export interface PricingAnalysisResult {

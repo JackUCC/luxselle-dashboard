@@ -187,21 +187,38 @@ describe('Landed Cost Calculator', () => {
         expect(result.totalLandedEur).toBeGreaterThan(0)
     })
 
-    it('returns 0 from calculateMaxBuyPrice when rates is null (unknown currency rate)', () => {
-        const result = calculateMaxBuyPrice({
-            targetSellPriceEur: 500,
-            desiredMarginPct: 30,
-            currency: 'USD',
-            rates: null, // No rate data available
-            shipping: 20,
-            insurance: 0,
-            customsPct: 5,
-            importVatPct: 20,
-            platformFeePct: 5,
-            paymentFeePct: 2,
-            fixedFee: 0,
-        })
+    it('throws when rates is null for non-EUR currency (calculateLandedCost)', () => {
+        expect(() =>
+            calculateLandedCost({
+                basePrice: 100,
+                currency: 'USD',
+                rates: null,
+                shipping: 0,
+                insurance: 0,
+                customsPct: 0,
+                importVatPct: 23,
+                platformFeePct: 0,
+                paymentFeePct: 0,
+                fixedFee: 0,
+            })
+        ).toThrow('FX rate unavailable')
+    })
 
-        expect(result).toBe(0)
+    it('throws when rates is null for non-EUR currency (calculateMaxBuyPrice)', () => {
+        expect(() =>
+            calculateMaxBuyPrice({
+                targetSellPriceEur: 500,
+                desiredMarginPct: 30,
+                currency: 'USD',
+                rates: null,
+                shipping: 20,
+                insurance: 0,
+                customsPct: 5,
+                importVatPct: 20,
+                platformFeePct: 5,
+                paymentFeePct: 2,
+                fixedFee: 0,
+            })
+        ).toThrow('FX rate unavailable')
     })
 })

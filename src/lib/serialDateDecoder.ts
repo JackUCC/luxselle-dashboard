@@ -298,6 +298,51 @@ function decodeLouisVuitton(code: string): DecodeResult {
   )
 }
 
+/** Hermès: single-letter blind stamp in square (1997–2014). A=1997, B=1998, … R=2014. */
+const HERMES_STAMP_LETTER_TO_YEAR: Record<string, number> = {}
+for (let i = 0; i <= 17; i++) {
+  HERMES_STAMP_LETTER_TO_YEAR[String.fromCharCode(65 + i)] = 1997 + i
+}
+
+function decodeHermes(code: string): DecodeResult {
+  const normalized = normalizeCode(code)
+  const letter = normalized.replace(/[\s\[\](){}○●]/g, '').slice(0, 1)
+  if (letter.length !== 1 || !/^[A-Z]$/.test(letter)) {
+    return buildFailure(
+      'Hermès',
+      normalized,
+      "We couldn't read this Hermès blind stamp. Expect a single letter (often in a square 1997–2014) or circle (recent).",
+      'Hermès uses a letter per year: A=1997 through R=2014 in squares; later years may use circles. This decoder covers 1997–2014.',
+      ['No single-letter Hermès stamp matched.'],
+    )
+  }
+  const year = HERMES_STAMP_LETTER_TO_YEAR[letter]
+  if (year == null) {
+    return buildFailure(
+      'Hermès',
+      normalized,
+      `Letter "${letter}" is outside the 1997–2014 square-stamp range (A–R).`,
+      'Hermès square stamps A=1997 through R=2014. Later years use different formats.',
+      ['Letter maps to year outside supported range.'],
+    )
+  }
+  return {
+    success: true,
+    brand: 'Hermès',
+    normalizedSerial: normalized,
+    source: 'rule_based',
+    precision: 'exact_year',
+    confidence: 0.85,
+    year,
+    productionWindow: { startYear: year, endYear: year },
+    message: `Blind stamp "${letter}" indicates production year ${year}.`,
+    note: 'Hermès used letters in squares for 1997–2014. Stamp alone does not prove authenticity.',
+    rationale: [`Hermès blind stamp letter ${letter} = ${year} (square stamp era).`],
+    uncertainties: [],
+    formatMatched: 'HERMES_BLIND_STAMP_LETTER',
+  }
+}
+
 /** Chanel: 8-digit sticker serial (2005-2022) maps by prefix block to year or narrow year window. */
 function decodeChanel8Digit(code: string): DecodeResult | null {
   const digits = digitsOnly(code)
@@ -357,6 +402,18 @@ function decodeChanel7Digit(code: string): DecodeResult | null {
 function decodeChanel(code: string): DecodeResult {
   const normalized = normalizeCode(code)
   const digits = digitsOnly(normalized)
+  if (digits.length >= 8) {
+    const prefix = parseInt(digits.slice(0, 2), 10)
+    if (prefix > 32) {
+      return buildFailure(
+        'Chanel',
+        normalized,
+        "This serial appears to be from Chanel's microchip era (2021+). These codes no longer encode production year.",
+        "Chanel replaced date-coded stickers with microchips from April 2021.",
+        ['8+ digit code with prefix > 32 indicates post-2021 microchip format; year is not encoded.'],
+      )
+    }
+  }
   if (digits.length === 8) {
     const r = decodeChanel8Digit(code)
     if (r) return r
@@ -381,7 +438,7 @@ function decodeOther(code: string, brand: SerialCheckBrand): DecodeResult {
     brand,
     normalized,
     "We don't have a date decoder for this brand yet. You can look up the brand's date code format online or ask an authenticator.",
-    'Supported rule-based decoders: Louis Vuitton and Chanel. You can still run AI heuristic decode for all brands.',
+    'Supported rule-based decoders: Louis Vuitton, Chanel, and Hermès. You can still run AI heuristic decode for all brands.',
     ['Brand-specific serial specification is not in the local deterministic decoder.'],
   )
 }
@@ -396,8 +453,9 @@ export function decodeSerialToYear(serial: string, brand: SerialCheckBrand): Dec
       return decodeLouisVuitton(code)
     case 'Chanel':
       return decodeChanel(code)
-    case 'Gucci':
     case 'Hermès':
+      return decodeHermes(code)
+    case 'Gucci':
     case 'Prada':
     case 'Dior':
     case 'Bottega Veneta':

@@ -5,9 +5,9 @@
  */
 import { useState, useRef } from 'react'
 import toast from 'react-hot-toast'
-import { Search, Calculator, Sparkles, Upload, X, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Calculator, Sparkles, Upload, X, Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
-import { formatCurrency } from '../../lib/formatters'
+import { formatCurrency, formatRelativeDate } from '../../lib/formatters'
 import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
@@ -26,6 +26,7 @@ interface PriceCheckResult {
   maxBuyEur: number
   maxBidEur: number
   dataSource?: 'web_search' | 'ai_fallback' | 'mock'
+  researchedAt?: string
 }
 
 const CONDITION_OPTIONS = [
@@ -50,7 +51,18 @@ export default function EvaluatorView() {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<PriceCheckResult | null>(null)
   const [refineOpen, setRefineOpen] = useState(false)
+  const [formulaOpen, setFormulaOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const confidencePct = result
+    ? result.comps.length >= 5
+      ? 90
+      : result.comps.length >= 3
+        ? 75
+        : result.comps.length >= 1
+          ? 50
+          : 25
+    : 0
 
   if (isSidecar) {
     return <SidecarView initialTab="quick" />
@@ -297,13 +309,30 @@ export default function EvaluatorView() {
                     </span>
                   ) : null}
                 </div>
+                <p className="text-sm text-lux-600">
+                  Based on {result.comps.length} comparable listing{result.comps.length !== 1 ? 's' : ''} | Confidence: {confidencePct}%
+                  {result.researchedAt && (
+                    <span className="ml-2 text-lux-500">· Researched {formatRelativeDate(result.researchedAt)}</span>
+                  )}
+                </p>
                 <div className="rounded-xl bg-gray-50 p-4 text-center">
                   <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Avg. selling price (second-hand)</div>
                   <div className="text-2xl font-bold text-lux-800">{formatCurrency(result.averageSellingPriceEur)}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-xl border border-gray-100 p-4 bg-white">
-                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max buy target</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-lux-500 uppercase tracking-wide">Max buy target</span>
+                      <button
+                        type="button"
+                        onClick={() => setFormulaOpen((o) => !o)}
+                        className="text-gray-400 hover:text-lux-600"
+                        title="Show formula"
+                        aria-label="Show formula breakdown"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                     <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBuyEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
@@ -313,7 +342,15 @@ export default function EvaluatorView() {
                     <div className="text-xs text-lux-500 mt-1">−7% auction fee</div>
                   </div>
                 </div>
-                {result.comps.length > 0 && (
+                {formulaOpen && (
+                  <div className="rounded-lg bg-gray-50 border border-gray-100 p-3 text-xs text-lux-600 font-mono space-y-1">
+                    <div>Avg selling price: {formatCurrency(result.averageSellingPriceEur)}</div>
+                    <div>− VAT (23%): {formatCurrency(result.averageSellingPriceEur)} / 1.23 = {formatCurrency(result.averageSellingPriceEur / 1.23)}</div>
+                    <div>− Margin (20%): ex-VAT × 0.80 = {formatCurrency(result.maxBuyEur)} (Max buy)</div>
+                    <div>− Auction fee (7%): Max buy / 1.07 = {formatCurrency(result.maxBidEur)} (Max bid)</div>
+                  </div>
+                )}
+                {result.comps.length > 0 ? (
                   <div>
                     <div className="text-xs font-semibold text-lux-500 uppercase tracking-wide mb-2">Comparables</div>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -333,6 +370,10 @@ export default function EvaluatorView() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
+                    No comparable listings found. Prices shown are AI estimates and may be less reliable.
                   </div>
                 )}
               </div>

@@ -8,6 +8,7 @@ import {
 } from '@shared/schemas'
 import { SearchService } from '../search/SearchService'
 import { logger } from '../../middleware/requestId'
+import { validatePriceEur } from '../../lib/validation'
 
 export interface BusinessInsights {
     insights: string[]
@@ -86,6 +87,7 @@ Return ONLY a valid JSON object:
                 messages: [{ role: 'user', content: prompt }],
                 max_tokens: 300,
                 temperature: 0.7,
+                response_format: { type: 'json_object' },
             })
 
             const text = response.choices[0]?.message?.content ?? ''
@@ -211,6 +213,7 @@ ${hasSearchData ? 'Use the web search results above to find the real current ret
                 ],
                 max_tokens: 300,
                 temperature: 0.2,
+                response_format: { type: 'json_object' },
             })
 
             const text = response.choices[0]?.message?.content?.trim() ?? ''
@@ -226,7 +229,7 @@ ${hasSearchData ? 'Use the web search results above to find the real current ret
 
             const retailPriceEur =
                 typeof parsed.retailPriceEur === 'number' && parsed.retailPriceEur >= 0
-                    ? parsed.retailPriceEur
+                    ? validatePriceEur(parsed.retailPriceEur)
                     : null
 
             return {

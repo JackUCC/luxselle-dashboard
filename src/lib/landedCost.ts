@@ -52,6 +52,9 @@ export function calculateLandedCost(input: LandedCostInput): LandedCostOutput {
     } = input
 
     const rateToEur = currency === 'EUR' ? 1 : rates ? (1 / rates[currency]) || 0 : 0
+    if (currency !== 'EUR' && rateToEur <= 0) {
+        throw new Error(`FX rate unavailable for ${currency}. Provide rates or retry when exchange rates are loaded.`)
+    }
 
     // 1. Costs in Original Currency (Base + Fees)
     const itemCost = basePrice
@@ -151,6 +154,9 @@ export function calculateMaxBuyPrice(input: MaxBuyPriceInput): number {
     } = input
 
     const rateToEur = currency === 'EUR' ? 1 : rates ? (1 / rates[currency]) || 0 : 0
+    if (currency !== 'EUR' && rateToEur <= 0) {
+        throw new Error(`FX rate unavailable for ${currency}. Provide rates or retry when exchange rates are loaded.`)
+    }
     if (rateToEur <= 0) return 0
 
     // Target Landed Cost derived from Sell Price and Margin
