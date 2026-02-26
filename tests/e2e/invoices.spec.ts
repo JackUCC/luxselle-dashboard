@@ -6,7 +6,8 @@ const emulatorBaseUrl = 'http://127.0.0.1:8082'
 const clearFirestore = async (request: APIRequestContext) => {
   try {
     await request.delete(
-      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`
+      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`,
+      { timeout: 5000 }
     )
   } catch {
     // Emulator may not be ready yet. Tests can continue.

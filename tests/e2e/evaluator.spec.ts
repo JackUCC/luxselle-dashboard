@@ -6,7 +6,8 @@ const emulatorBaseUrl = 'http://127.0.0.1:8082'
 const clearFirestore = async (request: APIRequestContext) => {
   try {
     await request.delete(
-      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`
+      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`,
+      { timeout: 5000 }
     )
   } catch (e) {
     // Emulator may not be ready yet (e.g. ECONNREFUSED); skip clear so tests can run
@@ -66,22 +67,25 @@ test('prompts when search is empty', async ({ page }) => {
 })
 
 test('nav routing works for all main routes', async ({ page }) => {
-  await page.setViewportSize({ width: 1200, height: 900 })
+  await page.setViewportSize({ width: 1440, height: 900 })
 
   // Start at Overview
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
 
+  const sideRail = page.getByTestId('wide-screen-side-rail')
+  await expect(sideRail).toBeVisible()
+
   // Navigate to Inventory
-  await page.locator('header').getByRole('link', { name: 'Inventory' }).click()
+  await sideRail.getByRole('link', { name: 'Inventory' }).click()
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
   // Navigate to Price Check
-  await page.locator('header').getByRole('link', { name: 'Price Check' }).click()
+  await sideRail.getByRole('link', { name: 'Price Check' }).click()
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 
   // Navigate to Sourcing
-  await page.locator('header').getByRole('link', { name: 'Sourcing' }).click()
+  await sideRail.getByRole('link', { name: 'Sourcing' }).click()
   await expect(page.getByRole('heading', { name: 'Sourcing' })).toBeVisible()
 })
 

@@ -6,7 +6,8 @@ const emulatorBaseUrl = 'http://127.0.0.1:8082'
 const clearFirestore = async (request: APIRequestContext) => {
   try {
     await request.delete(
-      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`
+      `${emulatorBaseUrl}/emulator/v1/projects/${projectId}/databases/(default)/documents`,
+      { timeout: 5000 }
     )
   } catch {
     // Emulator may not be ready yet. Tests can continue.
@@ -33,14 +34,16 @@ test('mobile nav drawer opens and routes correctly', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 })
 
-test('desktop top nav is visible below xl and side rail is hidden', async ({ page }) => {
+test('navigation drawer is used below xl and side rail is hidden', async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
 
   await expect(page.getByTestId('wide-screen-side-rail')).toBeHidden()
-  await expect(page.locator('header').getByRole('link', { name: 'Inventory' })).toBeVisible()
+  await expect(page.getByTestId('mobile-nav-toggle')).toBeVisible()
+  await page.getByTestId('mobile-nav-toggle').click()
+  await expect(page.getByTestId('mobile-nav-drawer')).toBeVisible()
 
-  await page.locator('header').getByRole('link', { name: 'Inventory' }).click()
+  await page.getByTestId('mobile-nav-drawer').getByRole('link', { name: 'Inventory' }).click()
   await expect(page).toHaveURL('/inventory')
 })
 
