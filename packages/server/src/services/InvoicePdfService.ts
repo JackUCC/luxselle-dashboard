@@ -1,9 +1,9 @@
-import PdfPrinter from 'pdfmake'
+import pdfmake from 'pdfmake'
 import type { TDocumentDefinitions, Content, TableCell } from 'pdfmake/interfaces'
 import type { Invoice, Settings } from '@shared/schemas'
 
 const fonts = {
-    Roboto: {
+    Helvetica: {
         normal: 'Helvetica',
         bold: 'Helvetica-Bold',
         italics: 'Helvetica-Oblique',
@@ -11,24 +11,13 @@ const fonts = {
     },
 }
 
+pdfmake.addFonts(fonts)
+
 export class InvoicePdfService {
-    private printer: PdfPrinter
-
-    constructor() {
-        this.printer = new PdfPrinter(fonts)
-    }
-
     async generate(invoice: Invoice, settings: Settings | null): Promise<Buffer> {
         const docDefinition = this.buildDocDefinition(invoice, settings)
-        const pdfDoc = this.printer.createPdfKitDocument(docDefinition)
-
-        return new Promise((resolve, reject) => {
-            const chunks: Buffer[] = []
-            pdfDoc.on('data', (chunk) => chunks.push(chunk))
-            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)))
-            pdfDoc.on('error', (err) => reject(err))
-            pdfDoc.end()
-        })
+        const generated = await pdfmake.createPdf(docDefinition).getBuffer()
+        return Buffer.isBuffer(generated) ? generated : Buffer.from(generated)
     }
 
     private formatCurrency(amount: number, currency: string = 'EUR'): string {
@@ -150,7 +139,7 @@ export class InvoicePdfService {
                 tableHeader: { bold: true, fontSize: 10, fillColor: '#f9fafb' },
                 subheader: { fontSize: 12, bold: true },
             },
-            defaultStyle: { font: 'Roboto', fontSize: 10 },
+            defaultStyle: { font: 'Helvetica', fontSize: 10 },
         }
     }
 }

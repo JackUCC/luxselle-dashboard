@@ -9,6 +9,7 @@ import { DEFAULT_ORG_ID, InvoiceLineItemSchema } from '@shared/schemas'
 import type { Invoice, InvoiceLineItem } from '@shared/schemas'
 import { InvoiceRepo } from '../repos/InvoiceRepo'
 import { SettingsRepo } from '../repos/SettingsRepo'
+import { InvoicePdfService } from '../services/InvoicePdfService'
 import { vatFromGross } from '../lib/vat'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
@@ -298,8 +299,6 @@ router.get('/', async (req, res, next) => {
 })
 
 // POST /api/invoices/:id/generate-pdf — generate PDF, upload, update invoice
-import { InvoicePdfService } from '../services/InvoicePdfService'
-
 router.post('/:id/generate-pdf', async (req, res, next) => {
   try {
     const invoice = await invoiceRepo.getById(req.params.id)
