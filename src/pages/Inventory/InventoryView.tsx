@@ -72,7 +72,7 @@ function getStatusBadgeVariant(
 }
 
 import ConfirmationModal from "../../components/common/ConfirmationModal";
-import { Badge, Button, PageHeader } from "../../components/design-system";
+import { Badge, Button, Card, PageHeader, SectionLabel } from "../../components/design-system";
 
 function InventoryRowActions({
   product,
@@ -102,20 +102,20 @@ function InventoryRowActions({
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all"
+        className="text-lux-400 hover:text-lux-600 p-2 rounded-lg hover:bg-lux-100 transition-all"
         aria-label="Row actions"
       >
         <MoreVertical className="h-4 w-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 py-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[120px]">
+        <div className="absolute right-0 top-full mt-1 py-1 bg-white border border-lux-200 rounded-xl shadow-lg z-20 min-w-[120px]">
           <button
             type="button"
             onClick={() => {
               setOpen(false);
               onEdit();
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-lux-700 hover:bg-lux-50"
           >
             <Pencil className="h-3.5 w-3.5" />
             Edit
@@ -441,60 +441,112 @@ export default function InventoryView() {
         }
       />
 
-      <div className="space-y-6">
+      {/* Search & Filters */}
+      <Card className="p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+        <SectionLabel className="mb-4">Search & Filters</SectionLabel>
+        <div className="space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-lux-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search by brand, model, SKU..."
+                  value={query}
+                  onChange={handleSearchChange}
+                  className="lux-input pl-10 w-full"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-[10px] font-semibold text-lux-400">
+                  /
+                </span>
+              </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search by brand, model, SKU..."
-                value={query}
-                onChange={handleSearchChange}
-                className="lux-input pl-10 w-full"
-              />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">
-                /
-              </span>
-            </div>
-
-            {/* View Toggles */}
-            <div className="flex rounded-lg border border-gray-200 bg-gray-100/50 p-1">
-              <button
-                onClick={() => setViewMode("table")}
-                className={`rounded p-2 transition-all ${
-                  viewMode === "table"
-                    ? "bg-white shadow-sm text-gray-900"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                data-testid="inventory-view-table"
-                aria-label="Table view"
-              >
-                <LayoutList className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`rounded p-2 transition-all ${
-                  viewMode === "grid"
-                    ? "bg-white shadow-sm text-gray-900"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                data-testid="inventory-view-grid"
-                aria-label="Grid view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </button>
+              {/* View Toggles */}
+              <div className="flex rounded-xl border border-lux-200 bg-lux-50 p-1">
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`rounded-lg p-2 transition-all ${
+                    viewMode === "table"
+                      ? "bg-white shadow-sm text-lux-900"
+                      : "text-lux-400 hover:text-lux-700"
+                  }`}
+                  data-testid="inventory-view-table"
+                  aria-label="Table view"
+                >
+                  <LayoutList className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`rounded-lg p-2 transition-all ${
+                    viewMode === "grid"
+                      ? "bg-white shadow-sm text-lux-900"
+                      : "text-lux-400 hover:text-lux-700"
+                  }`}
+                  data-testid="inventory-view-grid"
+                  aria-label="Grid view"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
 
+          {/* Filter dropdowns */}
+          <div className="flex flex-wrap items-center gap-3 border-t border-lux-200 pt-4">
+            <SectionLabel as="span" className="inline-flex items-center gap-1.5">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filter by
+            </SectionLabel>
+            <div className="relative">
+              <select
+                aria-label="Filter by brand"
+                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold transition-all cursor-pointer"
+                value={brandFilter}
+                onChange={(e) => updateParam("brand", e.target.value)}
+              >
+                <option value="">All Brands</option>
+                {brands.map((brand) => (
+                  <option key={brand} value={brand}>
+                    {brand}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
+            </div>
+            <div className="relative">
+              <select
+                aria-label="Filter by status"
+                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold transition-all cursor-pointer"
+                value={statusFilter}
+                onChange={(e) => updateParam("status", e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                <option value="in_stock">In Stock</option>
+                <option value="sold">Sold</option>
+                <option value="reserved">Reserved</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
+            </div>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="ml-auto inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-[11px] font-semibold text-lux-600 hover:bg-lux-50 transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear all ({activeFilterCount})
+              </button>
+            )}
+          </div>
         </div>
+      </Card>
 
-        {/* Low stock banner (from Dashboard link) */}
-        {lowStockFilter && (
-          <div className="flex items-center justify-between rounded-xl bg-orange-50 border border-orange-100 px-4 py-3">
-            <p className="text-sm font-medium text-orange-700">
+      {/* Low stock banner */}
+      {lowStockFilter && (
+        <Card accent className="px-5 py-4 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-lux-700">
               Showing low stock items (quantity &lt; {LOW_STOCK_THRESHOLD})
             </p>
             <button
@@ -504,17 +556,19 @@ export default function InventoryView() {
                 newParams.delete("lowStock");
                 setSearchParams(newParams);
               }}
-              className="text-sm font-medium text-orange-600 hover:text-orange-800 transition-colors"
+              className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors"
             >
               Clear filter
             </button>
           </div>
-        )}
+        </Card>
+      )}
 
-        {/* Missing info banner (from Import drawer) */}
-        {missingInfoFilter && (
-          <div className="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
-            <p className="text-sm font-medium text-amber-700">
+      {/* Missing info banner */}
+      {missingInfoFilter && (
+        <Card accent className="px-5 py-4 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-lux-700">
               Showing products with missing information (e.g. cost/sell price or
               category)
             </p>
@@ -525,61 +579,13 @@ export default function InventoryView() {
                 newParams.delete("missingInfo");
                 setSearchParams(newParams);
               }}
-              className="text-sm font-medium text-amber-600 hover:text-amber-800 transition-colors"
+              className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors"
             >
               Clear filter
             </button>
           </div>
-        )}
-
-        {/* Filters: Brand and Status dropdowns only */}
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500">
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filter by
-          </span>
-          <div className="relative">
-            <select
-              aria-label="Filter by brand"
-              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all shadow-sm cursor-pointer"
-              value={brandFilter}
-              onChange={(e) => updateParam("brand", e.target.value)}
-            >
-              <option value="">All Brands</option>
-              {brands.map((brand) => (
-                <option key={brand} value={brand}>
-                  {brand}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-          <div className="relative">
-            <select
-              aria-label="Filter by status"
-              className="appearance-none rounded-xl border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all shadow-sm cursor-pointer"
-              value={statusFilter}
-              onChange={(e) => updateParam("status", e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="in_stock">In Stock</option>
-              <option value="sold">Sold</option>
-              <option value="reserved">Reserved</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-          {activeFilterCount > 0 && (
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="ml-auto inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100"
-            >
-              <X className="h-3.5 w-3.5" />
-              Clear all ({activeFilterCount})
-            </button>
-          )}
-        </div>
-      </div>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
@@ -591,9 +597,9 @@ export default function InventoryView() {
           <p className="text-rose-600 font-medium">{error}</p>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white/50 p-12 text-center">
-          <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Package className="h-6 w-6 text-gray-400" />
+        <Card className="border-dashed p-12 text-center animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+          <div className="mx-auto h-12 w-12 bg-lux-100 rounded-full flex items-center justify-center mb-4">
+            <Package className="h-6 w-6 text-lux-400" />
           </div>
           <p className="text-lux-800 font-semibold mb-1">No matching products</p>
           <p className="text-sm text-lux-600">
@@ -605,19 +611,18 @@ export default function InventoryView() {
               ? "Try a different search or clear your filters."
               : "Add your first product to get started."}
           </p>
-        </div>
+        </Card>
       ) : viewMode === "table" ? (
         <div
           ref={shouldVirtualize ? tableContainerRef : null}
-          className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
-          style={
-            shouldVirtualize
-              ? { maxHeight: "600px", overflow: "auto" }
-              : undefined
-          }
+          className="lux-card overflow-hidden animate-bento-enter"
+          style={{
+            ...(shouldVirtualize ? { maxHeight: "600px", overflow: "auto" } : {}),
+            '--stagger': 2,
+          } as React.CSSProperties}
         >
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
+          <table className="min-w-full divide-y divide-lux-200">
+            <thead className="bg-lux-50/80 sticky top-0 z-10 backdrop-blur-md">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
                   Brand / Title / SKU
@@ -645,7 +650,7 @@ export default function InventoryView() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-transparent">
+            <tbody className="divide-y divide-lux-100 bg-transparent">
               {shouldVirtualize ? (
                 <>
                   {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -662,7 +667,7 @@ export default function InventoryView() {
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-lux-100 border border-lux-200">
                               {product.imageUrls?.[0] ? (
                                 <img
                                   src={product.imageUrls[0]}
@@ -674,15 +679,15 @@ export default function InventoryView() {
                                 />
                               ) : (
                                 <div className="h-full w-full flex items-center justify-center">
-                                  <Package className="h-4 w-4 text-gray-400" />
+                                  <Package className="h-4 w-4 text-lux-400" />
                                 </div>
                               )}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-semibold text-gray-900 truncate max-w-[200px]" title={product.title || product.model}>
+                              <div className="font-semibold text-lux-900 truncate max-w-[200px]" title={product.title || product.model}>
                                 {product.brand} — {product.title || product.model}
                               </div>
-                              <div className="text-xs text-gray-500 font-mono">
+                              <div className="text-xs text-lux-500 font-mono">
                                 {product.sku || `BA${product.id.slice(-4)}`}
                               </div>
                               {isMissingInfo && (
@@ -691,20 +696,20 @@ export default function InventoryView() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-right text-sm tabular-nums text-gray-700">
+                        <td className="px-3 py-3 text-right text-sm tabular-nums text-lux-700">
                           {formatCurrency(product.costPriceEur)}
                         </td>
-                        <td className="px-3 py-3 text-right text-sm tabular-nums text-gray-600">
+                        <td className="px-3 py-3 text-right text-sm tabular-nums text-lux-600">
                           {formatCurrency(product.customsEur ?? 0)}
                         </td>
-                        <td className="px-3 py-3 text-right text-sm tabular-nums text-gray-600">
+                        <td className="px-3 py-3 text-right text-sm tabular-nums text-lux-600">
                           {formatCurrency(product.vatEur ?? 0)}
                         </td>
-                        <td className="px-3 py-3 text-right text-sm font-medium tabular-nums text-gray-900">
+                        <td className="px-3 py-3 text-right text-sm font-medium tabular-nums text-lux-900">
                           {formatCurrency(product.sellPriceEur)}
                         </td>
                         <td className="px-3 py-3">
-                          <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                          <span className="inline-flex rounded-md bg-lux-100 px-2 py-0.5 text-xs font-medium text-lux-600">
                             {product.quantity}
                           </span>
                         </td>
@@ -741,7 +746,7 @@ export default function InventoryView() {
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
+                          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-lux-100 border border-lux-200">
                             {product.imageUrls?.[0] ? (
                               <img
                                 src={product.imageUrls[0]}
@@ -753,39 +758,37 @@ export default function InventoryView() {
                               />
                             ) : (
                               <div className="h-full w-full flex items-center justify-center">
-                                <Package className="h-4 w-4 text-gray-400" />
+                                <Package className="h-4 w-4 text-lux-400" />
                               </div>
                             )}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-semibold text-gray-900 truncate max-w-[200px]" title={product.title || product.model}>
+                            <div className="font-semibold text-lux-900 truncate max-w-[200px]" title={product.title || product.model}>
                               {product.brand} — {product.title || product.model}
                             </div>
-                            <div className="text-xs text-gray-500 font-mono">
+                            <div className="text-xs text-lux-500 font-mono">
                               {product.sku || `BA${product.id.slice(-4)}`}
                             </div>
                             {isMissingInfo && (
-                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700">
-                                Missing info
-                              </span>
+                              <Badge variant="status-warning">Missing info</Badge>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-right text-sm tabular-nums text-gray-700">
+                      <td className="px-3 py-3 text-right text-sm tabular-nums text-lux-700">
                         {formatCurrency(product.costPriceEur)}
                       </td>
-                      <td className="px-3 py-3 text-right text-sm tabular-nums text-gray-600">
+                      <td className="px-3 py-3 text-right text-sm tabular-nums text-lux-600">
                         {formatCurrency(product.customsEur ?? 0)}
                       </td>
-                      <td className="px-3 py-3 text-right text-sm tabular-nums text-gray-600">
+                      <td className="px-3 py-3 text-right text-sm tabular-nums text-lux-600">
                         {formatCurrency(product.vatEur ?? 0)}
                       </td>
-                      <td className="px-3 py-3 text-right text-sm font-medium tabular-nums text-gray-900">
+                      <td className="px-3 py-3 text-right text-sm font-medium tabular-nums text-lux-900">
                         {formatCurrency(product.sellPriceEur)}
                       </td>
                       <td className="px-3 py-3">
-                        <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        <span className="inline-flex rounded-md bg-lux-100 px-2 py-0.5 text-xs font-medium text-lux-600">
                           {product.quantity}
                         </span>
                       </td>
@@ -816,15 +819,16 @@ export default function InventoryView() {
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredProducts.map((product) => {
+          {filteredProducts.map((product, index) => {
             const isMissingInfo = hasMissingInfo(product);
             return (
               <div
                 key={product.id}
                 onClick={() => openProductDrawer(product.id)}
-                className={`group relative overflow-hidden rounded-2xl bg-white border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer ${isMissingInfo ? "border border-gray-200 border-l-4 border-l-amber-400 bg-amber-50/20" : "border border-gray-200"}`}
+                className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
+                style={{ '--stagger': index } as React.CSSProperties}
               >
-                <div className="aspect-[4/3] bg-gray-50 relative overflow-hidden">
+                <div className="aspect-[4/3] bg-lux-50 relative overflow-hidden rounded-t-[15px]">
                   {product.imageUrls?.[0] && (
                     <img
                       src={product.imageUrls[0]}
@@ -837,9 +841,7 @@ export default function InventoryView() {
                   )}
                   <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
                     {isMissingInfo && (
-                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">
-                        Missing info
-                      </span>
+                      <Badge variant="status-warning">Missing info</Badge>
                     )}
                     <Badge
                       variant={getStatusBadgeVariant(
@@ -853,27 +855,23 @@ export default function InventoryView() {
                   </div>
                 </div>
                 <div className="p-5">
-                  <div className="mb-1 text-xs font-bold text-lux-700 uppercase tracking-wide">
+                  <SectionLabel as="span" className="mb-1">
                     {product.brand}
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-base mb-4 line-clamp-1">
+                  </SectionLabel>
+                  <h3 className="font-bold text-lux-900 text-base mb-4 line-clamp-1">
                     {product.model}
                   </h3>
 
-                  <div className="flex items-end justify-between border-t border-gray-100 pt-4">
+                  <div className="flex items-end justify-between border-t border-lux-200 pt-4">
                     <div>
-                      <div className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">
-                        Price
-                      </div>
-                      <div className="font-mono text-lg font-bold text-gray-900">
+                      <SectionLabel as="span">Price</SectionLabel>
+                      <div className="font-mono text-lg font-bold text-lux-900">
                         {formatCurrency(product.sellPriceEur)}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">
-                        Qty
-                      </div>
-                      <div className="text-sm font-medium text-gray-600">
+                      <SectionLabel as="span">Qty</SectionLabel>
+                      <div className="text-sm font-medium text-lux-600">
                         {product.quantity}
                       </div>
                     </div>

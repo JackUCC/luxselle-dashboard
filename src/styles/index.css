@@ -21,19 +21,21 @@
   --space-8: 3rem;
   --space-9: 4rem;
 
-  /* Colors — semantic roles */
-  --lux-canvas: #F7FAFC;
+  /* Colors — warm bento palette */
+  --lux-canvas: #FAF9F7;
   --lux-surface: #FFFFFF;
-  --lux-surface-hover: #F7FAFC;
-  --lux-border: #E2E8F0;
-  --lux-border-hover: #CBD5E0;
+  --lux-surface-hover: #F8F7F5;
+  --lux-border: #E8E6E3;
+  --lux-border-hover: #D5D3CF;
   --lux-text: #1A1A2E;
   --lux-text-secondary: #4A5568;
-  --lux-text-tertiary: #718096;
+  --lux-text-tertiary: #8A8A8A;
   --lux-gold: #B8860B;
   --lux-success: #10B981;
   --lux-warning: #F59E0B;
   --lux-danger: #EF4444;
+  --lux-accent-warm: #FBF8F3;
+  --lux-accent-warm-border: #F0EADE;
 }
 
 /* Inter — self-hosted */
@@ -90,16 +92,31 @@ h3, h4, h5, h6 {
   font-weight: 600;
 }
 
-/* ─── Surface Card (2px border, 12px radius) ─── */
+/* ─── Surface Card (1px border, 16px radius, soft shadow) ─── */
 .lux-card {
   background: var(--lux-surface);
-  border: 2px solid var(--lux-border);
-  border-radius: 12px;
-  transition: border-color 0.15s ease;
+  border: 1px solid var(--lux-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .lux-card:hover {
   border-color: var(--lux-border-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.lux-card-accent {
+  background: var(--lux-accent-warm);
+  border: 1px solid var(--lux-accent-warm-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lux-card-accent:hover {
+  border-color: var(--lux-border-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .lux-card.evaluator-form-card {
@@ -116,14 +133,14 @@ h3, h4, h5, h6 {
 /* ─── Form Inputs (10px radius, gold focus) ─── */
 .lux-input {
   width: 100%;
-  height: 36px;
+  height: 40px;
   padding: 0 var(--space-3);
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.5;
   color: var(--lux-text);
-  background: var(--lux-surface);
-  border: 2px solid var(--lux-border);
+  background: var(--lux-canvas);
+  border: 1px solid var(--lux-border);
   border-radius: 10px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -159,7 +176,7 @@ textarea.lux-input {
   font-weight: 500;
   color: white;
   background: var(--lux-text);
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 10px;
   transition: background 0.1s ease, transform 0.1s ease;
 }
@@ -191,7 +208,7 @@ textarea.lux-input {
   font-weight: 500;
   color: var(--lux-text-secondary);
   background: var(--lux-surface);
-  border: 2px solid var(--lux-border);
+  border: 1px solid var(--lux-border);
   border-radius: 10px;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -225,7 +242,7 @@ textarea.lux-input {
   font-weight: 500;
   color: var(--lux-text-secondary);
   background: transparent;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 10px;
   transition: background 0.15s ease, color 0.15s ease;
 }

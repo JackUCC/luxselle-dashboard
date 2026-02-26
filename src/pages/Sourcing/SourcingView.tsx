@@ -5,10 +5,10 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Plus, Search, Filter, Pencil, X, Loader2, Users, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, X, Loader2, Users } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut } from '../../lib/api'
-import { PageHeader } from '../../components/design-system'
+import { PageHeader, SectionLabel } from '../../components/design-system'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
 
@@ -33,6 +33,19 @@ const getStatusStyles = (status: string) => {
     default: return 'bg-gray-50 text-gray-600 border-gray-200'
   }
 }
+
+const getStatusDotColor = (status: string) => {
+  switch (status) {
+    case 'open': return 'bg-amber-400'
+    case 'sourcing': return 'bg-purple-400'
+    case 'sourced': return 'bg-emerald-400'
+    case 'fulfilled': return 'bg-gray-400'
+    case 'lost': return 'bg-rose-400'
+    default: return 'bg-gray-300'
+  }
+}
+
+const STATUSES = ['all', 'open', 'sourcing', 'sourced', 'fulfilled', 'lost'] as const
 
 export default function SourcingView() {
   const [requests, setRequests] = useState<SourcingRequestWithId[]>([])
@@ -188,25 +201,6 @@ export default function SourcingView() {
         title="Sourcing"
         purpose="Customer requests pipeline."
         actions={
-          <div className="flex items-center gap-3">
-          <div className="relative">
-            <label htmlFor="sourcing-status-filter" className="sr-only">Filter by status</label>
-            <select
-              id="sourcing-status-filter"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filter by status"
-              className="appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-lux-600"
-            >
-              <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="sourcing">Sourcing</option>
-              <option value="sourced">Sourced</option>
-              <option value="fulfilled">Fulfilled</option>
-              <option value="lost">Lost</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
           <button
             type="button"
             onClick={() => setShowCreateForm(true)}
@@ -215,9 +209,25 @@ export default function SourcingView() {
             <Plus className="h-4 w-4" />
             New Request
           </button>
-          </div>
         }
       />
+
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by status">
+        {STATUSES.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setStatusFilter(s)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors ${
+              statusFilter === s
+                ? 'bg-lux-900 text-white border-lux-900'
+                : 'bg-white text-lux-600 border-[var(--lux-border)] hover:border-[var(--lux-border-hover)]'
+            }`}
+          >
+            {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+          </button>
+        ))}
+      </div>
 
       {/* Create Form Overlay */}
       {showCreateForm && (
@@ -474,69 +484,84 @@ export default function SourcingView() {
         </div>
       )}
 
-      {/* Requests List */}
-      <div className="lux-card overflow-hidden">
+      {/* Requests Pipeline */}
+      <div>
+        <SectionLabel className="mb-4">Pipeline</SectionLabel>
+
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 p-12 text-lux-600">
+          <div className="lux-card flex items-center justify-center gap-2 p-12 text-lux-600">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Loading requests...</span>
+            <span>Loading requests…</span>
           </div>
         ) : error ? (
-          <div className="p-6 text-rose-600 bg-rose-50/50">{error}</div>
+          <div className="lux-card p-6 text-rose-600 bg-rose-50/50">{error}</div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-12 text-center">
-            <Users className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+          <div className="lux-card p-12 text-center">
+            <Users className="mx-auto h-8 w-8 text-lux-400 mb-3" />
             <p className="text-lux-600 font-medium">No sourcing requests found</p>
             <p className="text-sm text-lux-500 mt-1">
               {statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Create a new request to start sourcing items for customers.'}
             </p>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Item</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Budget</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">Status</th>
-                <th className="relative px-6 py-4">
-                  <span className="sr-only">Edit</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {filteredRequests.map((request) => (
-                <tr key={request.id} className="group hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{request.customerName}</div>
-                    <div className="text-xs text-gray-500">Added {new Date(request.createdAt).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{request.brand || 'Unspecified Brand'}</div>
-                    <div className="text-sm text-gray-500">{request.queryText}</div>
-                  </td>
-                  <td className="px-6 py-4 font-mono text-sm text-gray-600">
-                    {formatCurrency(request.budget)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${getStatusStyles(request.status)} uppercase tracking-wide`}>
-                      {request.status}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredRequests.map((request, i) => (
+              <div
+                key={request.id}
+                className={`${
+                  request.priority === 'high' && request.status === 'open'
+                    ? 'lux-card-accent'
+                    : 'lux-card'
+                } p-6 animate-bento-enter group`}
+                style={{ '--stagger': i } as React.CSSProperties}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${getStatusDotColor(request.status)}`}
+                    />
+                    <span className="font-medium text-gray-900 truncate">
+                      {request.customerName}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => openEditForm(request)}
-                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Edit request"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openEditForm(request)}
+                    className="text-lux-400 hover:text-lux-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2"
+                    aria-label="Edit request"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <p className="text-sm text-lux-500 mb-4 line-clamp-2">
+                  {request.queryText}
+                </p>
+
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm min-w-0">
+                    {request.brand && (
+                      <span className="text-lux-700 font-medium truncate">
+                        {request.brand}
+                      </span>
+                    )}
+                    <span className="font-mono text-lux-500 shrink-0">
+                      {formatCurrency(request.budget)}
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold border uppercase tracking-wide shrink-0 ${getStatusStyles(request.status)}`}
+                  >
+                    {request.status}
+                  </span>
+                </div>
+
+                <div className="text-[11px] text-lux-400 mt-3">
+                  {new Date(request.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </section>
