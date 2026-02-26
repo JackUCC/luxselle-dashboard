@@ -57,26 +57,23 @@ export class InvoicePdfService {
         const { name: businessName, addressLines: businessAddressLines } = this.companyBlock(settings)
         const vatPct = invoice.lineItems[0]?.vatPct ?? 23
 
-        // Header: company at top (left)
-        const headerContent: Content[] = [
-            { text: businessName, style: 'companyName' },
-            ...businessAddressLines.map((line) => ({ text: line, style: 'companyAddress' as const })),
-            { text: ' ', margin: [0, 0, 0, 10] },
-            { text: 'Invoice', style: 'invoiceTitle' },
-            { text: `Order ID: ${invoice.invoiceNumber}`, margin: [0, 4, 0, 0] },
-            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, margin: [0, 2, 0, 0] },
-        ]
-
-        // Customer block
-        const customerStack: Content[] = [
-            { text: 'Billed To:', bold: true, margin: [0, 0, 0, 5] },
-            { text: invoice.customerName || '—', bold: true },
-        ]
-        if (invoice.customerEmail) customerStack.push({ text: invoice.customerEmail })
+        // Customer block (Top Left)
+        const customerStack: Content[] = []
+        if (invoice.customerName) customerStack.push({ text: invoice.customerName, bold: true, fontSize: 11, margin: [0, 0, 0, 2] })
         if (invoice.customerAddress?.trim()) {
             const addrLines = invoice.customerAddress.trim().split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
-            addrLines.forEach((line) => customerStack.push({ text: line }))
+            addrLines.forEach((line) => customerStack.push({ text: line, fontSize: 10, margin: [0, 0, 0, 1] }))
         }
+        if (invoice.customerEmail) customerStack.push({ text: invoice.customerEmail, fontSize: 10, margin: [0, 2, 0, 0] })
+        // If no customer info, placeholder
+        if (customerStack.length === 0) customerStack.push({ text: '—', fontSize: 10 })
+
+        // Invoice Info (Top Right)
+        const invoiceInfoStack: Content[] = [
+            { text: 'Invoice', style: 'invoiceTitle', alignment: 'right' },
+            { text: `Order ID: ${invoice.invoiceNumber}`, alignment: 'right', margin: [0, 4, 0, 0] },
+            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, alignment: 'right', margin: [0, 2, 0, 0] },
+        ]
 
         // Order Items: Product | Qty only
         const orderItemsBody: TableCell[][] = [
@@ -112,7 +109,7 @@ export class InvoicePdfService {
             ],
         ]
 
-        // Footer: thank you text + company again
+        // Footer: thank you text + company info at bottom
         const footerContent: Content[] = [
             { text: 'Thank you for shopping with Luxselle.', margin: [0, 20, 0, 4] },
             { text: 'This is an automatically generated invoice.', fontSize: 9, color: '#555', margin: [0, 0, 0, 16] },
@@ -122,14 +119,15 @@ export class InvoicePdfService {
 
         return {
             content: [
-                { stack: headerContent, margin: [0, 0, 0, 24] },
+                // Header Row: Customer (Left) | Invoice (Right)
                 {
                     columns: [
-                        { width: '*', stack: customerStack },
-                        { width: 'auto', text: '' },
+                        { stack: customerStack, width: '*' },
+                        { stack: invoiceInfoStack, width: 'auto' },
                     ],
-                    margin: [0, 0, 0, 24],
+                    margin: [0, 0, 0, 32],
                 },
+                
                 { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] },
                 {
                     table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },

@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { ExternalLink, FileText, Loader2, Plus, Printer, Upload, X } from 'lucide-react'
+import { Download, FileText, Loader2, Plus, Upload, X } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
 import { apiGet, apiPost, apiPostFormData } from '../../lib/api'
 import { Button, Input, ListRow, Modal, PageHeader } from '../../components/design-system'
@@ -67,8 +67,26 @@ export default function InvoicesView() {
     fetchInvoices()
   }, [fetchInvoices])
 
-  const handlePrint = () => {
-    window.print()
+  const handleExportPdf = async () => {
+    if (!selected) return
+
+    if (selected.pdfUrl) {
+      window.open(selected.pdfUrl, '_blank')
+      return
+    }
+
+    const toastId = toast.loading('Generating PDF...')
+    try {
+      const updated = await apiPost<InvoiceWithId>(`/invoices/${selected.id}/generate-pdf`, {})
+      setSelected(updated)
+      setInvoices((prev) => prev.map((inv) => (inv.id === updated.id ? updated : inv)))
+      toast.success('PDF generated', { id: toastId })
+      if (updated.pdfUrl) {
+        window.open(updated.pdfUrl, '_blank')
+      }
+    } catch (err) {
+      toast.error('Failed to generate PDF', { id: toastId })
+    }
   }
 
   const openCreateModal = () => {
@@ -256,21 +274,9 @@ export default function InvoicesView() {
               <div className="mb-6 flex items-start justify-between no-print">
                 <h2 className="font-semibold text-lux-800">Invoice detail</h2>
                 <div className="flex gap-2">
-                  {selected.pdfUrl && (
-                    <a
-                      href={selected.pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-lux-input border border-lux-200 bg-lux-50 px-3 py-2 text-body-sm font-medium text-lux-700 hover:bg-lux-100"
-                      aria-label="View PDF"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      View PDF
-                    </a>
-                  )}
-                  <Button variant="secondary" onClick={handlePrint} className="inline-flex items-center gap-2" aria-label="Print invoice">
-                    <Printer className="h-4 w-4" />
-                    Print
+                  <Button variant="secondary" onClick={handleExportPdf} className="inline-flex items-center gap-2" aria-label="Export PDF">
+                    <Download className="h-4 w-4" />
+                    {selected.pdfUrl ? 'Download PDF' : 'Generate PDF'}
                   </Button>
                   <button
                     type="button"
