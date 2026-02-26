@@ -12,7 +12,7 @@ import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
-import { PageHeader } from '../../components/design-system'
+import { PageHeader, SectionLabel } from '../../components/design-system'
 
 interface PriceCheckComp {
   title: string
@@ -172,11 +172,11 @@ export default function EvaluatorView() {
         purpose="Research market price (Irish + Vestiaire), then see max buy and max bid."
       />
 
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-lux-200">
         <button
           type="button"
           onClick={() => setActiveTab('pricecheck')}
-          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'pricecheck' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'pricecheck' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
         >
           <Search className="mb-1 mr-2 inline-block h-4 w-4" />
           Price Check
@@ -184,7 +184,7 @@ export default function EvaluatorView() {
         <button
           type="button"
           onClick={() => setActiveTab('landed')}
-          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'landed' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'landed' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
         >
           <Calculator className="mb-1 mr-2 inline-block h-4 w-4" />
           Landed Cost
@@ -192,37 +192,36 @@ export default function EvaluatorView() {
       </div>
 
       {activeTab === 'landed' ? (
-        <div className="lux-card p-6">
+        <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
           <CalculatorWidget />
         </div>
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Search + Refine */}
-          <div className="lux-card evaluator-form-card flex flex-col p-4 sm:p-5 lg:p-6 h-fit">
+          <div className="lux-card evaluator-form-card flex flex-col p-4 sm:p-5 lg:p-6 h-fit animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
             <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mb-1.5">
                   Search for item
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-lux-400" />
                   <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="e.g. Chanel Classic Flap Medium Black"
-                    className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full rounded-[10px] border border-lux-200 bg-lux-50 py-2.5 pl-10 pr-3 text-lux-900 placeholder:text-lux-400 focus:border-lux-gold focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
                   />
                 </div>
               </div>
 
-              {/* Optional image */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mb-1.5">
                   Or drop / upload image
                 </label>
                 {imagePreview ? (
-                  <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-lux-200">
                     <img src={imagePreview} alt="Upload" className="w-full h-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
                       <div className="flex items-center gap-2">
@@ -251,35 +250,35 @@ export default function EvaluatorView() {
                     </div>
                   </div>
                 ) : (
-                  <label className="block border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-gray-300 transition-colors">
+                  <label className="block border-2 border-dashed border-lux-200 rounded-xl p-6 text-center cursor-pointer hover:border-lux-300 transition-colors">
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">Drop image or click to upload</p>
-                    <p className="text-xs text-gray-400 mt-1">AI will suggest search text</p>
+                    <Upload className="mx-auto h-8 w-8 text-lux-400 mb-2" />
+                    <p className="text-sm text-lux-500">Drop image or click to upload</p>
+                    <p className="text-xs text-lux-400 mt-1">AI will suggest search text</p>
                   </label>
                 )}
               </div>
 
               {/* Refine (collapsible) */}
-              <div className="border border-gray-100 rounded-lg overflow-hidden">
+              <div className="border border-lux-200 rounded-xl overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setRefineOpen(!refineOpen)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-lux-600 hover:bg-lux-50"
                 >
                   Refine results (condition, notes)
                   {refineOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
                 {refineOpen && (
-                  <div className="px-3 pb-3 pt-0 space-y-3 border-t border-gray-100">
+                  <div className="px-3 pb-3 pt-0 space-y-3 border-t border-lux-100">
                     <div>
-                      <label id="refine-condition-label" className="block text-xs text-gray-500 mb-1">Condition</label>
+                      <label id="refine-condition-label" className="block text-xs text-lux-500 mb-1">Condition</label>
                       <select
                         id="refine-condition"
                         aria-labelledby="refine-condition-label"
                         value={condition}
                         onChange={(e) => setCondition(e.target.value)}
-                        className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm text-gray-900"
+                        className="w-full rounded-[10px] border border-lux-200 bg-lux-50 px-2 py-1.5 text-sm text-lux-900 focus:border-lux-gold focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
                       >
                         {CONDITION_OPTIONS.map((o) => (
                           <option key={o.value || 'any'} value={o.value}>{o.label}</option>
@@ -287,13 +286,13 @@ export default function EvaluatorView() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Notes</label>
+                      <label className="block text-xs text-lux-500 mb-1">Notes</label>
                       <input
                         type="text"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Size, colour, features…"
-                        className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-400"
+                        className="w-full rounded-[10px] border border-lux-200 bg-lux-50 px-2 py-1.5 text-sm text-lux-900 placeholder:text-lux-400 focus:border-lux-gold focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
                       />
                     </div>
                   </div>
@@ -303,7 +302,7 @@ export default function EvaluatorView() {
               <button
                 type="submit"
                 disabled={isResearching}
-                className="w-full rounded-lg bg-gray-900 py-3 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="lux-btn-primary w-full rounded-[10px] py-3 text-sm flex items-center justify-center gap-2"
               >
                 {isResearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {isResearching ? 'Researching…' : 'Research market'}
@@ -331,15 +330,15 @@ export default function EvaluatorView() {
           {/* Results + Landed cost */}
           <div className="space-y-6">
             {!result ? (
-              <div className="lux-card border-dashed border-2 min-h-[280px] flex flex-col items-center justify-center p-6">
-                <Search className="h-12 w-12 mb-4 opacity-30 text-lux-500" />
+              <div className="lux-card border-dashed border-2 border-lux-200 min-h-[280px] flex flex-col items-center justify-center p-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+                <Search className="h-12 w-12 mb-4 opacity-30 text-lux-400" />
                 <p className="font-medium text-lux-600">Enter an item and run research</p>
                 <p className="text-sm text-lux-500 mt-1">Irish competitors + Vestiaire Collective</p>
               </div>
             ) : (
-              <div className="lux-card p-6 space-y-6">
+              <div className="lux-card p-6 space-y-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-medium text-lux-800">Market breakdown</h2>
+                  <SectionLabel>Market Research</SectionLabel>
                   {result.dataSource === 'web_search' ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -351,41 +350,41 @@ export default function EvaluatorView() {
                     </span>
                   ) : null}
                 </div>
-                <p className="text-sm text-lux-600">
+                <p className="text-sm text-lux-500">
                   Based on {result.comps.length} comparable listing{result.comps.length !== 1 ? 's' : ''} | Confidence: {confidencePct}%
                   {result.researchedAt && (
-                    <span className="ml-2 text-lux-500">· Researched {formatRelativeDate(result.researchedAt)}</span>
+                    <span className="ml-2 text-lux-400">· Researched {formatRelativeDate(result.researchedAt)}</span>
                   )}
                 </p>
-                <div className="rounded-xl bg-gray-50 p-4 text-center">
-                  <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Avg. selling price (second-hand)</div>
-                  <div className="text-2xl font-bold text-lux-800">{formatCurrency(result.averageSellingPriceEur)}</div>
+                <div className="lux-card-accent rounded-2xl p-4 text-center">
+                  <SectionLabel as="span" className="mb-1 block">Avg. selling price (second-hand)</SectionLabel>
+                  <div className="text-2xl font-bold text-lux-900">{formatCurrency(result.averageSellingPriceEur)}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-gray-100 p-4 bg-white">
+                  <div className="lux-card-accent rounded-2xl p-4">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-lux-500 uppercase tracking-wide">Max buy target</span>
+                      <SectionLabel as="span">Max buy target</SectionLabel>
                       <button
                         type="button"
                         onClick={() => setFormulaOpen((o) => !o)}
-                        className="text-gray-400 hover:text-lux-600"
+                        className="text-lux-400 hover:text-lux-600"
                         title="Show formula"
                         aria-label="Show formula breakdown"
                       >
                         <Info className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBuyEur)}</div>
+                    <div className="text-xl font-bold text-lux-900 mt-1">{formatCurrency(result.maxBuyEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
-                  <div className="rounded-xl border border-gray-100 p-4 bg-white">
-                    <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Max bid target</div>
-                    <div className="text-xl font-bold text-lux-800">{formatCurrency(result.maxBidEur)}</div>
+                  <div className="lux-card-accent rounded-2xl p-4">
+                    <SectionLabel as="span" className="mb-1 block">Max bid target</SectionLabel>
+                    <div className="text-xl font-bold text-lux-900">{formatCurrency(result.maxBidEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−7% auction fee</div>
                   </div>
                 </div>
                 {formulaOpen && (
-                  <div className="rounded-lg bg-gray-50 border border-gray-100 p-3 text-xs text-lux-600 font-mono space-y-1">
+                  <div className="rounded-xl bg-lux-50 border border-lux-200 p-3 text-xs text-lux-600 font-mono space-y-1">
                     <div>Avg selling price: {formatCurrency(result.averageSellingPriceEur)}</div>
                     <div>− VAT (23%): {formatCurrency(result.averageSellingPriceEur)} / 1.23 = {formatCurrency(result.averageSellingPriceEur / 1.23)}</div>
                     <div>− Margin (20%): ex-VAT × 0.80 = {formatCurrency(result.maxBuyEur)} (Max buy)</div>
@@ -394,27 +393,27 @@ export default function EvaluatorView() {
                 )}
                 {result.comps.length > 0 ? (
                   <div>
-                    <div className="text-xs font-semibold text-lux-500 uppercase tracking-wide mb-2">Comparables</div>
+                    <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {result.comps.map((c, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
+                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-lux-100 last:border-0">
                           <div className="min-w-0 pr-2">
                             {c.sourceUrl ? (
-                              <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-gray-900 hover:text-indigo-600 truncate block">
+                              <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block">
                                 {c.title}
                               </a>
                             ) : (
-                              <span className="text-gray-900 truncate block">{c.title}</span>
+                              <span className="text-lux-800 truncate block">{c.title}</span>
                             )}
-                            <span className="text-xs text-gray-500">{c.source}</span>
+                            <span className="text-xs text-lux-500">{c.source}</span>
                           </div>
-                          <span className="font-mono text-gray-700 whitespace-nowrap">{formatCurrency(c.price)}</span>
+                          <span className="font-mono text-lux-700 whitespace-nowrap">{formatCurrency(c.price)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
                     No comparable listings found. Prices shown are AI estimates and may be less reliable.
                   </div>
                 )}
@@ -423,27 +422,27 @@ export default function EvaluatorView() {
 
             {/* Visual search results (when user clicked Find similar) */}
             {visualResults !== null && (
-              <div className="lux-card p-6">
-                <h2 className="text-lg font-medium text-lux-800 mb-2">Visually similar items</h2>
+              <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+                <SectionLabel className="mb-2">Visual Matches</SectionLabel>
                 <p className="text-sm text-lux-500 mb-4">From your inventory and supplier catalogs.</p>
                 {visualResults.length === 0 ? (
-                  <p className="text-sm text-gray-500">No similar items in the index yet. Add product images or import supplier catalogs.</p>
+                  <p className="text-sm text-lux-500">No similar items in the index yet. Add product images or import supplier catalogs.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {visualResults.map((r, i) => (
-                      <div key={i} className="rounded-lg border border-gray-100 overflow-hidden bg-white">
+                      <div key={i} className="rounded-xl border border-lux-200 overflow-hidden bg-white">
                         {r.imageUrl ? (
                           <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
                         ) : (
-                          <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
-                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          <div className="w-full aspect-square bg-lux-50 flex items-center justify-center">
+                            <ImageIcon className="h-8 w-8 text-lux-400" />
                           </div>
                         )}
                         <div className="p-2">
-                          <p className="text-xs text-gray-900 truncate" title={r.title}>{r.title ?? '—'}</p>
-                          <p className="text-xs text-gray-500">{Math.round(r.score * 100)}% match</p>
+                          <p className="text-xs text-lux-800 truncate" title={r.title}>{r.title ?? '—'}</p>
+                          <p className="text-xs text-lux-500">{Math.round(r.score * 100)}% match</p>
                           {r.productId && (
-                            <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-indigo-600 hover:underline mt-0.5 inline-block">View in Inventory</a>
+                            <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-lux-gold hover:underline mt-0.5 inline-block">View in Inventory</a>
                           )}
                         </div>
                       </div>
@@ -453,8 +452,7 @@ export default function EvaluatorView() {
               </div>
             )}
 
-            {/* Landed cost from bid (7% + 3% + 23%) */}
-            <div className="lux-card p-6">
+            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
               <LandedCostWidget />
             </div>
           </div>

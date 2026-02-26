@@ -1,21 +1,25 @@
 /**
- * Dashboard overview: KPIs + quick tools.
+ * Dashboard overview: bento-grid layout with KPIs + quick tools.
  * In Sidecar mode, shows QuickCheck (compact price + inventory check) instead.
  * @see docs/CODE_REFERENCE.md
  */
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { ArrowRightToLine, Package, RefreshCw, TrendingUp } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowRightToLine, RefreshCw, TrendingUp } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
-import AuctionLinksWidget from '../../components/widgets/AuctionLinksWidget'
-import EurToYenWidget from '../../components/widgets/EurToYenWidget'
-import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import { Button, PageHeader } from '../../components/design-system'
+import SectionLabel from '../../components/design-system/SectionLabel'
+import MarketIntelligenceWidget from '../../components/widgets/MarketIntelligenceWidget'
+import LandedCostWidget from '../../components/widgets/LandedCostWidget'
+import EurToYenWidget from '../../components/widgets/EurToYenWidget'
+import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
+import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
+import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
   const [display, setDisplay] = useState('—')
@@ -103,15 +107,19 @@ export default function DashboardView() {
     navigate({ search: `?${nextParams.toString()}` })
   }
 
+  const inventoryValue = kpis?.totalInventoryValue ?? 0
+  const potentialValue = kpis?.totalInventoryPotentialValue ?? 0
+  const margin = potentialValue - inventoryValue
+
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto">
       <PageHeader
         title="Overview"
-        purpose="Key metrics and quick access to tools."
+        purpose="Daily metrics and quick tools."
         actions={
           <>
             <Button
-              variant="primary"
+              variant="secondary"
               onClick={handleSwitchToSidecar}
               className="inline-flex items-center gap-1.5 text-xs py-1.5"
               title="Switch to sidecar mode"
@@ -120,17 +128,16 @@ export default function DashboardView() {
               <ArrowRightToLine className="h-3.5 w-3.5" />
               Sidecar
             </Button>
-            <Button
-              variant="secondary"
+            <button
+              type="button"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="inline-flex items-center gap-1.5 text-xs py-1.5 disabled:opacity-40"
+              className="rounded-lg p-2 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 disabled:opacity-40"
               title="Refresh data"
               aria-label="Refresh dashboard data"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
           </>
         }
       />
@@ -149,60 +156,54 @@ export default function DashboardView() {
           </button>
         </div>
       ) : (
-        <div className="space-y-10 pt-2">
-          <section aria-labelledby="overview-heading" className="scroll-mt-4">
-            <h2 id="overview-heading" className="mb-4 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
-              Key metrics
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="lux-card p-5 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Inventory cost</p>
-                    <p className="font-mono text-lg font-semibold text-lux-800">
-                      <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
-                    </p>
-                  </div>
-                  <div className="shrink-0 rounded-lg border border-lux-200/60 bg-lux-50 p-2 text-lux-600">
-                    <Package className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
-              <div className="lux-card p-5 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Potential value</p>
-                    <p className="font-mono text-lg font-semibold text-lux-800">
-                      <AnimatedNumber value={kpis?.totalInventoryPotentialValue ?? 0} prefix="€" />
-                    </p>
-                  </div>
-                  <div className="shrink-0 rounded-lg border border-emerald-100 bg-emerald-50 p-2 text-emerald-600">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+        <div className="space-y-4">
+          {/* Row 1: Market Intelligence (2-col) + Landed Cost */}
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+            <MarketIntelligenceWidget />
+            <LandedCostWidget />
+          </div>
 
-          <section aria-labelledby="tools-heading" className="scroll-mt-4">
-            <h2 id="tools-heading" className="mb-4 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
-              Quick tools
-            </h2>
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <LandedCostWidget />
-                <EurToYenWidget />
-                <AuctionLinksWidget />
+          {/* Row 2: Currency Converter + Inventory Cost + Potential Value */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <EurToYenWidget />
+
+            <div
+              className="lux-card p-6 animate-bento-enter"
+              style={{ '--stagger': 4 } as React.CSSProperties}
+            >
+              <SectionLabel className="mb-4">Inventory Cost</SectionLabel>
+              <p className="text-[32px] font-semibold font-mono text-lux-800 leading-none">
+                <AnimatedNumber value={inventoryValue} prefix="€" />
+              </p>
+              <div className="mt-3 flex items-center gap-1.5 text-[13px] text-emerald-600 font-medium">
+                <TrendingUp className="h-3.5 w-3.5" />
+                <span>+2.4%</span>
+                <span className="text-lux-400 font-normal">vs last month</span>
               </div>
-              <Link
-                to="/market-research"
-                className="inline-flex items-center gap-1.5 text-body-sm font-medium text-lux-gold hover:text-lux-700"
-              >
-                More tools
-                <ArrowRightToLine className="h-4 w-4" />
-              </Link>
             </div>
-          </section>
+
+            <div
+              className="lux-card-accent p-6 animate-bento-enter"
+              style={{ '--stagger': 5 } as React.CSSProperties}
+            >
+              <SectionLabel className="mb-4">Potential Value</SectionLabel>
+              <p className="text-[32px] font-semibold font-mono text-lux-800 leading-none">
+                <AnimatedNumber value={potentialValue} prefix="€" />
+              </p>
+              <div className="mt-3">
+                <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-[12px] font-medium text-lux-700">
+                  €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Serial Check + Sourcing Sites + Active Sourcing */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <SerialCheckWidget />
+            <SourcingSitesWidget />
+            <ActiveSourcingWidget />
+          </div>
         </div>
       )}
     </div>

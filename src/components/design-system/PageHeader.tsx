@@ -8,14 +8,14 @@ export interface PageHeaderProps {
 
 export default function PageHeader({ title, purpose, actions }: PageHeaderProps) {
   return (
-    <header className="mb-6">
+    <header className="mb-8">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-page-title font-semibold text-lux-900">
+          <h1 className="font-display text-page-title font-semibold italic text-lux-900">
             {title}
           </h1>
           {purpose ? (
-            <p className="mt-1 text-body-sm text-lux-600">{purpose}</p>
+            <p className="mt-0.5 text-body-sm text-lux-500">{purpose}</p>
           ) : null}
         </div>
         {actions ? (

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import { Download, FileText, Loader2, Plus, Upload, X } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
 import { apiGet, apiPost, apiPostFormData } from '../../lib/api'
-import { Button, Input, ListRow, Modal, PageHeader } from '../../components/design-system'
+import { Button, Input, ListRow, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 
 type InvoiceWithId = Invoice & { id: string }
 
@@ -243,8 +243,8 @@ export default function InvoicesView() {
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="lux-card p-4">
-            <h2 className="mb-4 font-semibold text-lux-800">All invoices</h2>
+          <div className="lux-card p-4 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+            <SectionLabel className="mb-4 px-2">All invoices</SectionLabel>
             <ul className="space-y-0">
               {invoices.map((inv) => (
                 <li key={inv.id}>
@@ -270,9 +270,9 @@ export default function InvoicesView() {
           </div>
 
           {selected && (
-            <div className="lux-card p-6 print:border-2 print:shadow-none print:border-lux-200">
+            <div className="lux-card p-6 animate-bento-enter print:border-2 print:shadow-none print:border-lux-200" style={{ '--stagger': 1 } as React.CSSProperties}>
               <div className="mb-6 flex items-start justify-between no-print">
-                <h2 className="font-semibold text-lux-800">Invoice detail</h2>
+                <SectionLabel>Invoice detail</SectionLabel>
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={handleExportPdf} className="inline-flex items-center gap-2" aria-label="Export PDF">
                     <Download className="h-4 w-4" />
@@ -330,7 +330,7 @@ export default function InvoicesView() {
                     <span>VAT</span>
                     <span>{formatCurrency(selected.vatEur)}</span>
                   </div>
-                  <div className="flex justify-between pt-2 text-body font-semibold text-lux-900">
+                  <div className="lux-card-accent mt-3 flex justify-between rounded-xl p-3 text-body font-semibold text-lux-900">
                     <span>Total</span>
                     <span>{formatCurrency(selected.totalEur)}</span>
                   </div>
@@ -355,7 +355,7 @@ export default function InvoicesView() {
           </div>
           <form onSubmit={handleCreateInPerson} className="space-y-6">
             <section className="space-y-3" aria-labelledby="create-sale-heading">
-              <h3 id="create-sale-heading" className="border-b border-lux-100 pb-1 text-body-sm font-medium text-lux-900">Sale details</h3>
+              <SectionLabel as="h3" id="create-sale-heading" className="border-b border-lux-100 pb-1">Sale details</SectionLabel>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="create-date" className="mb-1 block text-ui-label font-medium text-lux-700">Date</label>
@@ -382,7 +382,7 @@ export default function InvoicesView() {
               </div>
             </section>
             <section className="space-y-3" aria-labelledby="create-item-heading">
-              <h3 id="create-item-heading" className="border-b border-lux-100 pb-1 text-body-sm font-medium text-lux-900">Item</h3>
+              <SectionLabel as="h3" id="create-item-heading" className="border-b border-lux-100 pb-1">Item</SectionLabel>
               <div>
                 <label htmlFor="create-description" className="mb-1 block text-ui-label font-medium text-lux-700">Item description <span className="text-rose-500">*</span></label>
                 <Input
@@ -406,7 +406,7 @@ export default function InvoicesView() {
               </div>
             </section>
             <section className="space-y-3" aria-labelledby="create-customer-heading">
-              <h3 id="create-customer-heading" className="border-b border-lux-100 pb-1 text-body-sm font-medium text-lux-900">Customer <span className="font-normal text-lux-400">(optional)</span></h3>
+              <SectionLabel as="h3" id="create-customer-heading" className="border-b border-lux-100 pb-1">Customer <span className="font-normal text-lux-400">(optional)</span></SectionLabel>
               <div>
                 <label htmlFor="create-customer-name" className="mb-1 block text-ui-label font-medium text-lux-700">Name</label>
                 <Input
@@ -494,7 +494,7 @@ export default function InvoicesView() {
               />
             </div>
             <section className="space-y-3 border-t border-lux-100 pt-4" aria-labelledby="upload-optional-heading">
-              <h3 id="upload-optional-heading" className="text-body-sm font-medium text-lux-600">Optional details</h3>
+              <SectionLabel as="h3" id="upload-optional-heading">Optional details</SectionLabel>
               <div>
                 <label htmlFor="upload-customer-name" className="mb-1 block text-ui-label font-medium text-lux-700">Customer name</label>
                 <Input

@@ -8,7 +8,7 @@ import { Search, Calendar, Info, Loader2 } from 'lucide-react'
 import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
-import { PageHeader } from '../../components/design-system'
+import { PageHeader, SectionLabel } from '../../components/design-system'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 
@@ -103,10 +103,11 @@ export default function SerialCheckView() {
         purpose="Paste serial, select brand, and add item details to get a tighter decode plus age-adjusted price guidance."
       />
 
-      <div className="lux-card p-6">
+      <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+        <SectionLabel className="mb-4">Lookup details</SectionLabel>
         <div className="space-y-4">
           <div>
-            <label htmlFor="serial-input" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="serial-input" className="block text-sm font-medium text-lux-700 mb-1.5">
               Serial / date code
             </label>
             <textarea
@@ -120,7 +121,7 @@ export default function SerialCheckView() {
             />
           </div>
           <div>
-            <label htmlFor="description-input" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="description-input" className="block text-sm font-medium text-lux-700 mb-1.5">
               Item description (for market lookup)
             </label>
             <textarea
@@ -133,7 +134,7 @@ export default function SerialCheckView() {
             />
           </div>
           <div>
-            <label htmlFor="brand-select" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="brand-select" className="block text-sm font-medium text-lux-700 mb-1.5">
               Brand
             </label>
             <select
@@ -173,8 +174,8 @@ export default function SerialCheckView() {
       </div>
 
       {!decodeResult && !isLoading && (
-        <div className="lux-card border-dashed border-2 min-h-[120px] flex flex-col items-center justify-center p-6 text-center">
-          <Search className="h-10 w-10 mb-3 opacity-30 text-lux-500" />
+        <div className="lux-card border-dashed min-h-[120px] flex flex-col items-center justify-center p-6 text-center animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+          <Search className="h-10 w-10 mb-3 opacity-30 text-lux-400" />
           <p className="text-sm text-lux-600">Enter a serial and item description, then click <strong>Analyze serial</strong> to see decode and price guidance.</p>
         </div>
       )}
@@ -182,12 +183,14 @@ export default function SerialCheckView() {
       {decodeResult && (
         <div
           data-testid="decode-result"
-          className={`rounded-2xl border p-6 shadow-sm ${
+          className={`lux-card p-6 animate-bento-enter ${
             decodeResult.success
               ? 'border-emerald-200 bg-emerald-50/60'
               : 'border-amber-200 bg-amber-50/60'
           }`}
+          style={{ '--stagger': 1 } as React.CSSProperties}
         >
+          <SectionLabel className="mb-3">Decode result</SectionLabel>
           <div className="flex items-start gap-3">
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
@@ -208,12 +211,12 @@ export default function SerialCheckView() {
                 </p>
               )}
               {decodeResult.productionWindow && (
-                <p className="mt-1 text-sm text-gray-700">
+                <p className="mt-1 text-sm text-lux-700">
                   Production window: {decodeResult.productionWindow.startYear} - {decodeResult.productionWindow.endYear}
                 </p>
               )}
-              <p className="mt-1 text-sm text-gray-700">{decodeResult.message}</p>
-              <p className="mt-1 text-xs text-gray-600">
+              <p className="mt-1 text-sm text-lux-700">{decodeResult.message}</p>
+              <p className="mt-1 text-xs text-lux-600">
                 Confidence: {Math.round(decodeResult.confidence * 100)}% · Source: {decodeResult.source === 'rule_based' ? 'Rule based' : 'AI heuristic'}
               </p>
               {decodeResult.note && <p className="mt-2 text-xs text-lux-500">{decodeResult.note}</p>}
@@ -223,35 +226,35 @@ export default function SerialCheckView() {
       )}
 
       {pricingGuidance && (
-        <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-6 shadow-sm">
-          <h2 className="font-display text-lg font-semibold text-lux-800">Price guidance</h2>
+        <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+          <SectionLabel className="mb-3">Price guidance</SectionLabel>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-indigo-100 bg-white p-3">
-              <p className="text-xs text-lux-500 uppercase tracking-wide">Market average</p>
+            <div className="lux-card-accent rounded-xl p-3 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">Market average</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.marketAverageEur)}</p>
             </div>
-            <div className="rounded-xl border border-indigo-100 bg-white p-3">
-              <p className="text-xs text-lux-500 uppercase tracking-wide">Estimated worth</p>
+            <div className="lux-card-accent rounded-xl p-3 animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">Estimated worth</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.estimatedWorthEur)}</p>
             </div>
-            <div className="rounded-xl border border-indigo-100 bg-white p-3">
-              <p className="text-xs text-lux-500 uppercase tracking-wide">Recommended max pay</p>
+            <div className="lux-card-accent rounded-xl p-3 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">Recommended max pay</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.recommendedMaxPayEur)}</p>
             </div>
           </div>
-          <p className="mt-3 text-sm text-gray-700">{pricingGuidance.summary}</p>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-3 text-sm text-lux-700">{pricingGuidance.summary}</p>
+          <p className="mt-1 text-xs text-lux-600">
             Adjustment: age {pricingGuidance.adjustment.ageAdjustmentPct}% · confidence penalty -{pricingGuidance.adjustment.confidencePenaltyPct.toFixed(1)}%
           </p>
           {marketResult && marketResult.comps.length > 0 && (
-            <p className="mt-1 text-xs text-gray-600">
+            <p className="mt-1 text-xs text-lux-600">
               Based on {marketResult.comps.length} market comparables.
             </p>
           )}
         </div>
       )}
 
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-lux-400">
         This tool is a guide only. Date codes do not confirm authenticity; use a professional
         authenticator when in doubt.
       </p>

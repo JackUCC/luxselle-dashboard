@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Calculator } from 'lucide-react'
+import SectionLabel from '../design-system/SectionLabel'
 
 const AUCTION_PCT = 7
 const CUSTOMS_PCT = 3
@@ -17,54 +17,43 @@ export default function LandedCostWidget() {
     return Number.isFinite(n) && n >= 0 ? n : 0
   }, [bidInput])
 
-  const { auctionFee, customs, vat, landed } = useMemo(() => {
-    if (bid <= 0) return { auctionFee: 0, customs: 0, vat: 0, landed: 0 }
-    const afterAuction = bid * (1 + AUCTION_PCT / 100)
-    const afterCustoms = afterAuction * (1 + CUSTOMS_PCT / 100)
-    const afterVat = afterCustoms * (1 + VAT_PCT / 100)
-    return {
-      auctionFee: afterAuction - bid,
-      customs: afterCustoms - afterAuction,
-      vat: afterVat - afterCustoms,
-      landed: afterVat,
-    }
+  const landed = useMemo(() => {
+    if (bid <= 0) return 0
+    return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
   }, [bid])
 
   return (
     <div
-      className="lux-card p-5 animate-bento-enter"
+      className="lux-card p-6 animate-bento-enter"
       style={{ '--stagger': 1 } as React.CSSProperties}
     >
-      <div className="mb-3 flex items-center gap-2">
-        <div className="rounded-lg bg-lux-50 p-1.5 text-lux-500 border border-lux-200/60">
-          <Calculator className="h-3.5 w-3.5" />
-        </div>
-        <h3 className="text-[13px] font-semibold text-lux-800">Landed cost</h3>
-      </div>
-      <div className="space-y-2">
-        <label className="block text-[11px] font-medium text-lux-500">Bid price (€)</label>
+      <SectionLabel className="mb-4">Landed Cost Calculator</SectionLabel>
+
+      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-lux-400">
+        Bid Price
+      </label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[15px] font-medium text-lux-400">
+          €
+        </span>
         <input
           type="text"
           inputMode="decimal"
-          placeholder="0"
+          placeholder="0.00"
           value={bidInput}
           onChange={(e) => setBidInput(e.target.value)}
-          className="lux-input text-right font-mono"
+          className="lux-input h-12 pl-8 text-[20px] font-semibold font-mono text-lux-800"
         />
       </div>
-      {bid > 0 && (
-        <div className="mt-3 border-t border-lux-200 pt-3">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[11px] font-medium text-lux-500">Landed price</span>
-            <span className="text-base font-semibold font-mono text-lux-800">{formatEur(landed)}</span>
-          </div>
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-lux-400">
-            <span>+{AUCTION_PCT}% fee {formatEur(auctionFee)}</span>
-            <span>+{CUSTOMS_PCT}% customs {formatEur(customs)}</span>
-            <span>+{VAT_PCT}% VAT {formatEur(vat)}</span>
-          </div>
-        </div>
-      )}
+
+      <div className="mt-5 flex items-baseline justify-between border-t border-lux-200/60 pt-4">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">
+          Est. Landed
+        </span>
+        <span className="text-[20px] font-semibold font-mono text-lux-800">
+          {formatEur(landed)}
+        </span>
+      </div>
     </div>
   )
 }
