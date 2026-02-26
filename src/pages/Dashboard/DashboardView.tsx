@@ -10,12 +10,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
-import AiPromptBar from '../../components/widgets/AiPromptBar'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import { Button, PageHeader } from '../../components/design-system'
-import { Briefcase } from 'lucide-react'
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
   const [display, setDisplay] = useState('—')
@@ -149,11 +147,9 @@ export default function DashboardView() {
           </button>
         </div>
       ) : (
-        <div className="space-y-8">
-          <AiPromptBar />
-
-          <section aria-labelledby="overview-heading">
-            <h2 id="overview-heading" className="mb-3 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
+        <div className="space-y-10 pt-2">
+          <section aria-labelledby="overview-heading" className="scroll-mt-4">
+            <h2 id="overview-heading" className="mb-4 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
               Key metrics
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -183,42 +179,11 @@ export default function DashboardView() {
                   </div>
                 </div>
               </div>
-              <div className="lux-card p-5 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Active pipeline</p>
-                    <p className="font-mono text-lg font-semibold text-lux-800">
-                      <AnimatedNumber value={kpis?.activeSourcingPipeline ?? 0} />
-                    </p>
-                  </div>
-                  <div className="shrink-0 rounded-lg border border-lux-200/60 bg-lux-50 p-2 text-lux-600">
-                    <Briefcase className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate('/inventory?lowStock=1')}
-                className="lux-card p-5 animate-bento-enter text-left transition-colors hover:border-lux-300"
-                style={{ '--stagger': 3 } as React.CSSProperties}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Low stock alerts</p>
-                    <p className="font-mono text-lg font-semibold text-lux-800">
-                      <AnimatedNumber value={kpis?.lowStockAlerts ?? 0} />
-                    </p>
-                  </div>
-                  <div className="shrink-0 rounded-lg border border-amber-100 bg-amber-50 p-2 text-amber-600">
-                    <Package className="h-4 w-4" />
-                  </div>
-                </div>
-              </button>
             </div>
           </section>
 
-          <section aria-labelledby="tools-heading">
-            <h2 id="tools-heading" className="mb-3 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
+          <section aria-labelledby="tools-heading" className="scroll-mt-4">
+            <h2 id="tools-heading" className="mb-4 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
               Quick tool
             </h2>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -232,15 +197,6 @@ export default function DashboardView() {
                 More tools
                 <ArrowRightToLine className="h-4 w-4" />
               </Link>
-            </div>
-          </section>
-
-          <section aria-labelledby="recent-activity-heading">
-            <h2 id="recent-activity-heading" className="mb-3 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
-              Recent activity
-            </h2>
-            <div className="lux-card p-5">
-              <p className="text-body-sm text-lux-500">Activity feed will appear here.</p>
             </div>
           </section>
         </div>
