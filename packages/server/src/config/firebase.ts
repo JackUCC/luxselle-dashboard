@@ -57,7 +57,13 @@ const databaseId =
     ? env.FIRESTORE_DATABASE_ID
     : undefined)
 const db = databaseId ? getFirestore(adminApp, databaseId) : getFirestore(adminApp)
-db.settings({ ignoreUndefinedProperties: true })
+
+// Firestore allows settings() only once; guard so module reloads (e.g. vi.resetModules()) do not throw
+const settingsKey = '__luxselle_firestore_settings_applied'
+if (!(globalThis as Record<string, boolean>)[settingsKey]) {
+  db.settings({ ignoreUndefinedProperties: true })
+  ;(globalThis as Record<string, boolean>)[settingsKey] = true
+}
 
 const storage = getStorage(adminApp)
 

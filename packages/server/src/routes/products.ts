@@ -21,6 +21,10 @@ import {
   type ColumnMapping,
 } from '../lib/csvProductParser'
 import { env } from '../config/env'
+import {
+  indexProductImage,
+  removeProductImageFromIndex,
+} from '../services/visualSearch/VisualSearchPipeline'
 import * as XLSX from 'xlsx'
 
 const router = Router()
@@ -555,6 +559,10 @@ router.post('/:id/images', upload.single('image'), async (req, res, next) => {
       updatedAt: now,
     })
 
+    indexProductImage(id, imageId, originalUrl).catch(() => {
+      // Non-blocking: visual search index update best-effort
+    })
+
     res.status(201).json({ data: newImage, product: updated })
   } catch (error) {
     next(error)
@@ -600,6 +608,10 @@ router.delete('/:id/images/:imageId', async (req, res, next) => {
       images: updatedImages,
       imageUrls: updatedImageUrls,
       updatedAt: now,
+    })
+
+    removeProductImageFromIndex(id, imageId).catch(() => {
+      // Best-effort remove from visual search index
     })
 
     res.json({ data: updated })

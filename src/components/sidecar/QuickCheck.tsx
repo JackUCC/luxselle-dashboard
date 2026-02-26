@@ -1,8 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
-import { Search, Loader2, Package, Calculator } from 'lucide-react'
-import { apiGet, apiPost, ApiError } from '../../lib/api'
+import { Search, Loader2, Package, Calculator, Upload, ImageIcon, X } from 'lucide-react'
+import { apiGet, apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
+
+interface VisualSearchResult {
+  productId?: string
+  supplierItemId?: string
+  imageUrl?: string
+  title?: string
+  score: number
+}
 
 interface PriceCheckComp {
   title: string
@@ -39,6 +47,11 @@ export default function QuickCheck() {
   const [result, setResult] = useState<PriceCheckResult | null>(null)
   const [inventoryMatches, setInventoryMatches] = useState<InventoryMatch[]>([])
   const [bidInput, setBidInput] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isFindingSimilar, setIsFindingSimilar] = useState(false)
+  const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const bid = useMemo(() => {
     const n = parseFloat(bidInput.replace(/,/g, ''))
@@ -94,6 +107,44 @@ export default function QuickCheck() {
     }
   }
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !file.type.startsWith('image/')) return
+    setImageFile(file)
+    setVisualResults(null)
+    const reader = new FileReader()
+    reader.onloadend = () => setImagePreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemoveImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    setVisualResults(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleFindSimilar = async () => {
+    if (!imageFile) return
+    setIsFindingSimilar(true)
+    setVisualResults(null)
+    try {
+      const formData = new FormData()
+      formData.append('image', imageFile)
+      const { data } = await apiPostFormData<{ data: { results: VisualSearchResult[] } }>(
+        '/search/visual',
+        formData
+      )
+      setVisualResults(data?.results ?? [])
+      toast.success(data?.results?.length ? `Found ${data.results.length} similar` : 'No similar items')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Find similar failed'
+      toast.error(msg)
+    } finally {
+      setIsFindingSimilar(false)
+    }
+  }
+
   return (
     <div className="space-y-2">
       <form onSubmit={handleSearch} className="rounded-xl border border-gray-200 bg-white p-2.5">
@@ -121,7 +172,60 @@ export default function QuickCheck() {
           </button>
         </div>
         <p className="mt-1 text-[11px] text-gray-500">Summary first, with details available below when needed.</p>
+
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <label className="text-[11px] font-medium text-gray-700">Or search by image</label>
+          {imagePreview ? (
+            <div className="mt-1 flex items-center gap-2">
+              <img src={imagePreview} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
+              <div className="flex-1 min-w-0 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handleFindSimilar}
+                  disabled={isFindingSimilar}
+                  className="rounded bg-gray-800 px-2 py-1 text-[11px] font-medium text-white hover:bg-gray-700 disabled:opacity-50 flex items-center gap-1"
+                >
+                  {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+                  {isFindingSimilar ? 'Finding…' : 'Find similar'}
+                </button>
+                <button type="button" onClick={handleRemoveImage} className="p-1 text-gray-400 hover:text-gray-600" aria-label="Remove image">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label className="mt-1 flex items-center gap-2 rounded border border-dashed border-gray-200 px-2 py-1.5 cursor-pointer hover:border-gray-300">
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+              <Upload className="h-3.5 w-3.5 text-gray-400" />
+              <span className="text-[11px] text-gray-500">Upload image</span>
+            </label>
+          )}
+        </div>
       </form>
+
+      {visualResults !== null && (
+        <div className="rounded-xl border border-gray-200 bg-white p-2.5">
+          <p className="text-[11px] font-medium text-gray-700 mb-2">Visually similar</p>
+          {visualResults.length === 0 ? (
+            <p className="text-[11px] text-gray-500">No similar items in index.</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-1.5 max-h-32 overflow-y-auto">
+              {visualResults.slice(0, 9).map((r, i) => (
+                <div key={i} className="rounded border border-gray-100 overflow-hidden">
+                  {r.imageUrl ? (
+                    <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                  )}
+                  <p className="truncate text-[10px] text-gray-600 px-1 py-0.5" title={r.title}>{r.title ?? '—'}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {isResearching && (
         <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">

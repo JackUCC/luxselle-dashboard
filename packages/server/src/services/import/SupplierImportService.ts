@@ -15,6 +15,7 @@ import {
   SupplierItemSchema,
   type SupplierImportTemplate,
 } from '@shared/schemas'
+import { indexSupplierItemImage } from '../visualSearch/VisualSearchPipeline'
 
 export interface ImportResult {
   success: number
@@ -190,8 +191,11 @@ export class SupplierImportService {
             now,
             index,
           )
-          await this.supplierItemRepo.create(item)
+          const created = await this.supplierItemRepo.create(item)
           result.success++
+          if (created.imageUrl) {
+            indexSupplierItemImage(created.id, created.imageUrl).catch(() => {})
+          }
         } catch (error) {
           result.errors++
           const message = error instanceof Error ? error.message : 'Unknown error'

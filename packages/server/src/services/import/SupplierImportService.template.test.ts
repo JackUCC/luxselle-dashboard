@@ -38,6 +38,11 @@ const loadService = async () => {
     },
   }))
 
+  // create() must resolve with an object (service reads created.id and created.imageUrl after create)
+  supplierItemCreateMock.mockImplementation((item: Record<string, unknown>) =>
+    Promise.resolve({ id: 'mock-id', imageUrl: '', ...item })
+  )
+
   const module = await import('./SupplierImportService')
   return module.SupplierImportService
 }

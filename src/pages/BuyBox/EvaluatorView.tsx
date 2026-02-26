@@ -5,7 +5,7 @@
  */
 import { useState, useRef } from 'react'
 import toast from 'react-hot-toast'
-import { Search, Calculator, Sparkles, Upload, X, Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react'
+import { Search, Calculator, Sparkles, Upload, X, Loader2, ChevronDown, ChevronUp, Info, ImageIcon } from 'lucide-react'
 import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { formatCurrency, formatRelativeDate } from '../../lib/formatters'
 import { CalculatorWidget } from '../../components/widgets'
@@ -27,6 +27,14 @@ interface PriceCheckResult {
   maxBidEur: number
   dataSource?: 'web_search' | 'ai_fallback' | 'mock'
   researchedAt?: string
+}
+
+interface VisualSearchResult {
+  productId?: string
+  supplierItemId?: string
+  imageUrl?: string
+  title?: string
+  score: number
 }
 
 const CONDITION_OPTIONS = [
@@ -52,6 +60,8 @@ export default function EvaluatorView() {
   const [result, setResult] = useState<PriceCheckResult | null>(null)
   const [refineOpen, setRefineOpen] = useState(false)
   const [formulaOpen, setFormulaOpen] = useState(false)
+  const [isFindingSimilar, setIsFindingSimilar] = useState(false)
+  const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const confidencePct = result
@@ -80,6 +90,7 @@ export default function EvaluatorView() {
   const handleRemoveImage = () => {
     setUploadedImage(null)
     setImagePreview(null)
+    setVisualResults(null)
     fileInputRef.current && (fileInputRef.current.value = '')
   }
 
@@ -102,6 +113,27 @@ export default function EvaluatorView() {
       toast.error(msg)
     } finally {
       setIsAnalyzingImage(false)
+    }
+  }
+
+  const handleFindSimilar = async () => {
+    if (!uploadedImage) return
+    setIsFindingSimilar(true)
+    setVisualResults(null)
+    try {
+      const formData = new FormData()
+      formData.append('image', uploadedImage)
+      const { data } = await apiPostFormData<{ data: { results: VisualSearchResult[] } }>(
+        '/search/visual',
+        formData
+      )
+      setVisualResults(data?.results ?? [])
+      toast.success(data?.results?.length ? `Found ${data.results.length} similar items` : 'No similar items found')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Find similar failed'
+      toast.error(msg)
+    } finally {
+      setIsFindingSimilar(false)
     }
   }
 
@@ -193,16 +225,27 @@ export default function EvaluatorView() {
                 {imagePreview ? (
                   <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
                     <img src={imagePreview} alt="Upload" className="w-full h-full object-cover" />
-                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 px-2 py-1.5">
-                      <button
-                        type="button"
-                        onClick={handleAnalyzeImage}
-                        disabled={isAnalyzingImage}
-                        className="text-xs text-white hover:text-indigo-200 flex items-center gap-1"
-                      >
-                        {isAnalyzingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                        {isAnalyzingImage ? 'Analyzing…' : 'Analyze with AI'}
-                      </button>
+                    <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleAnalyzeImage}
+                          disabled={isAnalyzingImage}
+                          className="text-xs text-white hover:text-indigo-200 flex items-center gap-1"
+                        >
+                          {isAnalyzingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                          {isAnalyzingImage ? 'Analyzing…' : 'Analyze with AI'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleFindSimilar}
+                          disabled={isFindingSimilar}
+                          className="text-xs text-white hover:text-indigo-200 flex items-center gap-1"
+                        >
+                          {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+                          {isFindingSimilar ? 'Finding…' : 'Find similar'}
+                        </button>
+                      </div>
                       <button type="button" onClick={handleRemoveImage} className="text-white hover:text-red-300" aria-label="Remove image">
                         <X className="h-4 w-4" />
                       </button>
@@ -374,6 +417,38 @@ export default function EvaluatorView() {
                 ) : (
                   <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
                     No comparable listings found. Prices shown are AI estimates and may be less reliable.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Visual search results (when user clicked Find similar) */}
+            {visualResults !== null && (
+              <div className="lux-card p-6">
+                <h2 className="text-lg font-medium text-lux-800 mb-2">Visually similar items</h2>
+                <p className="text-sm text-lux-500 mb-4">From your inventory and supplier catalogs.</p>
+                {visualResults.length === 0 ? (
+                  <p className="text-sm text-gray-500">No similar items in the index yet. Add product images or import supplier catalogs.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {visualResults.map((r, i) => (
+                      <div key={i} className="rounded-lg border border-gray-100 overflow-hidden bg-white">
+                        {r.imageUrl ? (
+                          <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                        ) : (
+                          <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
+                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="p-2">
+                          <p className="text-xs text-gray-900 truncate" title={r.title}>{r.title ?? '—'}</p>
+                          <p className="text-xs text-gray-500">{Math.round(r.score * 100)}% match</p>
+                          {r.productId && (
+                            <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-indigo-600 hover:underline mt-0.5 inline-block">View in Inventory</a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

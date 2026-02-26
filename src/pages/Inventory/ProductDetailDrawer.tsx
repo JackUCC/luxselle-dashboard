@@ -18,6 +18,7 @@ import {
   Plus,
   Upload,
   Trash2,
+  Search,
 } from 'lucide-react'
 import type { Product, ProductImage } from '@shared/schemas'
 import { apiGet, apiPut, apiPost, apiDelete, apiPostFormData, ApiError } from '../../lib/api'
@@ -338,6 +339,14 @@ export default function ProductDetailDrawer({
 
 // === Tab Components ===
 
+interface VisualSearchResult {
+  productId?: string
+  supplierItemId?: string
+  imageUrl?: string
+  title?: string
+  score: number
+}
+
 interface ImagesTabProps {
   product: ProductWithId
   onProductUpdated: (product: ProductWithId) => void
@@ -347,6 +356,8 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isFindingSimilar, setIsFindingSimilar] = useState(false)
+  const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Use new images array if available, fall back to legacy imageUrls
@@ -420,10 +431,42 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
     setIsDragOver(false)
   }
 
+  const primaryImageUrl = images[0]?.url ?? legacyUrls[0]
+  const handleFindSimilar = async () => {
+    if (!primaryImageUrl) return
+    setIsFindingSimilar(true)
+    setVisualResults(null)
+    try {
+      const { data } = await apiPost<{ data: { results: VisualSearchResult[] } }>('/search/visual', {
+        imageUrl: primaryImageUrl,
+      })
+      const results = (data?.results ?? []).filter((r) => r.productId !== product.id)
+      setVisualResults(results)
+      toast.success(results.length ? `Found ${results.length} similar items` : 'No similar items found')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Find similar failed'
+      toast.error(msg)
+    } finally {
+      setIsFindingSimilar(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-medium text-gray-900">Product Images</h3>
+        <div className="flex items-center gap-2">
+          {primaryImageUrl && (
+            <button
+              type="button"
+              onClick={handleFindSimilar}
+              disabled={isFindingSimilar}
+              className="lux-btn-secondary text-sm flex items-center gap-2"
+            >
+              {isFindingSimilar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              {isFindingSimilar ? 'Finding…' : 'Find similar'}
+            </button>
+          )}
         <input
           ref={fileInputRef}
           type="file"
@@ -431,18 +474,19 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="lux-btn-secondary text-sm flex items-center gap-2"
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          Upload
-        </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="lux-btn-secondary text-sm flex items-center gap-2"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            Upload
+          </button>
+        </div>
       </div>
 
       {/* Drop Zone */}
@@ -514,6 +558,38 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
         <div className="text-center py-4">
           <ImageIcon className="mx-auto h-8 w-8 text-gray-300 mb-2" />
           <p className="text-sm text-gray-400">No images yet</p>
+        </div>
+      )}
+
+      {visualResults !== null && (
+        <div className="pt-4 border-t border-gray-200">
+          <h3 className="font-medium text-gray-900 mb-2">Visually similar items</h3>
+          {visualResults.length === 0 ? (
+            <p className="text-sm text-gray-500">No similar items in the index.</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {visualResults.map((r, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                  {r.imageUrl ? (
+                    <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="p-2">
+                    <p className="text-xs text-gray-900 truncate" title={r.title}>{r.title ?? '—'}</p>
+                    <p className="text-xs text-gray-500">{Math.round(r.score * 100)}% match</p>
+                    {r.productId && (
+                      <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-indigo-600 hover:underline mt-0.5 inline-block">
+                        View in Inventory
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
