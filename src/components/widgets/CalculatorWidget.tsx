@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Calculator, Save, Trash2, ChevronDown, ChevronUp, Info, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { apiGet } from '../../lib/api'
 import { calculateLandedCost, calculateMaxBuyPrice } from '../../lib/landedCost'
 import type { CostBreakdownItem } from '../../lib/landedCost'
 import { ArrowUpDown, Box, ShoppingBag, Watch } from 'lucide-react'
@@ -163,23 +164,22 @@ export default function CalculatorWidget() {
     const fetchRates = async () => {
         setLoadingRates(true)
         try {
-            const apiBase = typeof import.meta.env.VITE_API_BASE === 'string' && import.meta.env.VITE_API_BASE
-                ? import.meta.env.VITE_API_BASE.replace(/\/$/, '')
-                : ''
-            const res = await fetch(`${apiBase}/api/fx`)
-            if (res.ok) {
-                const data = (await res.json()) as { rates?: Record<string, number> }
-                if (data.rates && typeof data.rates === 'object') {
-                    setRates(data.rates)
-                    return
-                }
+            const data = await apiGet<{ rates?: Record<string, number> }>('/fx')
+            if (data?.rates && typeof data.rates === 'object') {
+                setRates(data.rates)
+                setLoadingRates(false)
+                return
             }
+        } catch {
+            // Backend /fx failed; try external fallback
+        }
+        try {
             const fallback = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,GBP,JPY')
             if (fallback.ok) {
                 const data = (await fallback.json()) as { rates?: Record<string, number> }
                 setRates(data.rates ?? null)
             }
-        } catch (e) {
+        } catch {
             toast.error('Failed to load exchange rates')
         } finally {
             setLoadingRates(false)

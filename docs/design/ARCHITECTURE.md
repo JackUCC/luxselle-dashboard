@@ -71,7 +71,7 @@ luxselle-dashboard/
 │   │   ├── evaluator/
 │   │   ├── supplier/
 │   │   ├── sourcing/
-│   │   └── buying-list/
+│   │   └── (buying-list removed; no route)
 │   ├── hooks/               # React hooks
 │   ├── lib/                 # Frontend utilities
 │   │   ├── firebase.ts      # Firebase client config
@@ -85,7 +85,6 @@ luxselle-dashboard/
 │   │   │   ├── pricing.ts
 │   │   │   ├── products.ts
 │   │   │   ├── suppliers.ts
-│   │   │   ├── buying-list.ts
 │   │   │   ├── dashboard.ts
 │   │   │   └── sourcing.ts
 │   │   ├── services/       # Business logic
@@ -141,23 +140,10 @@ User Input → Frontend Form → POST /api/pricing/analyse
   → TransactionRepo (query history)
   → Response (estimatedRetail, maxBuyPrice, etc.)
   → Frontend displays results
-  → User clicks "Add to Buy List"
-  → POST /api/buying-list → BuyingListRepo → Firestore
+  → (Buying list feature removed; no add-to-buying-list flow.)
 ```
 
-### 3. Receive Flow
-```
-User clicks "Receive" on Buying List Item
-  → POST /api/buying-list/:id/receive
-  → ReceiveService:
-    1. Create Product in Firestore
-    2. Create Transaction (purchase)
-    3. Create ActivityEvent
-    4. Update BuyingListItem status to "received"
-  → Response → Frontend updates UI
-```
-
-### 4. Supplier Import Flow
+### 3. Supplier Import Flow
 ```
 User uploads CSV → POST /api/suppliers/import
   → SupplierImportService:
@@ -182,7 +168,6 @@ products/{productId}
 suppliers/{supplierId}
 supplier_items/{itemId}
 sourcing_requests/{requestId}
-buying_list_items/{itemId}
 transactions/{transactionId}
 evaluations/{evaluationId}
 activity_events/{eventId}
@@ -193,7 +178,6 @@ system_jobs/{jobId}
 ### Indexes Required
 - `products`: brand, status, createdAt (for filtering)
 - `supplier_items`: supplierId, availability, lastSeenAt
-- `buying_list_items`: status, supplierId
 - `transactions`: productId, type, occurredAt
 - `activity_events`: createdAt (descending for feed)
 
@@ -218,12 +202,6 @@ system_jobs/{jobId}
 - `GET /api/suppliers/items/all` - Unified supplier items feed (define before `/:id`)
 - `GET /api/suppliers/:id/items` - Get supplier items
 - `POST /api/suppliers/import` - Import CSV
-
-### Buying List
-- `GET /api/buying-list` - List buying list items
-- `POST /api/buying-list` - Add to buying list
-- `PUT /api/buying-list/:id` - Update buying list item
-- `POST /api/buying-list/:id/receive` - Receive item
 
 ### Sourcing
 - `GET /api/sourcing` - List sourcing requests

@@ -53,7 +53,6 @@ This document provides an overview of the project's directory structure and the 
   - `Evaluator` (`/buy-box`): Product analysis and buy box calculator.
   - `SupplierHub` (`/supplier-hub`): Supplier management and CSV imports.
   - `Sourcing` (`/sourcing`): Sourcing request pipeline.
-  - `BuyingList` (`/buying-list`): Items to purchase.
   - `Jobs` (`/jobs`): System background jobs.
 - **Shared Code**: Global components in `src/components/`, API/Config in `src/lib/`.
 

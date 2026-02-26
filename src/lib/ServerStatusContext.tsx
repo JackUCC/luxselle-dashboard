@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { API_BASE, apiGet } from './api'
+import { apiGet } from './api'
 
 interface ServerStatus {
     aiProvider: 'mock' | 'openai'
@@ -21,26 +21,15 @@ export function ServerStatusProvider({ children }: { children: ReactNode }) {
 
     const checkStatus = async () => {
         try {
-            const response = await fetch(`${API_BASE}/dashboard/status`)
-            const contentType = response.headers.get('content-type') ?? ''
-
-            if (!response.ok || contentType.includes('text/html')) {
-                setIsConnected(false)
-                setStatus(null)
-                return
-            }
-
-            const data = await response.json()
-            // API returns { data: { ... } }
-            if (data && data.data) {
-                setStatus(data.data as ServerStatus)
+            const data = await apiGet<{ data?: ServerStatus }>('/dashboard/status')
+            if (data?.data) {
+                setStatus(data.data)
                 setIsConnected(true)
             } else {
                 setIsConnected(false)
+                setStatus(null)
             }
-
-        } catch (error) {
-            console.error('Failed to connect to backend:', error)
+        } catch {
             setIsConnected(false)
             setStatus(null)
         }

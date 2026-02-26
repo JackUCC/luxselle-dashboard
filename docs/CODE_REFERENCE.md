@@ -58,7 +58,6 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `packages/server/src/repos/BaseRepo.ts` | Base CRUD over Firestore; supports org subcollections (`orgs/{orgId}/{collection}`) or legacy root collection + `organisationId`. | firebase-admin/firestore, Zod |
 | `packages/server/src/repos/index.ts` | Re-exports all repos. | — |
 | `packages/server/src/repos/ProductRepo.ts` | Products collection. | BaseRepo, ProductSchema |
-| `packages/server/src/repos/BuyingListItemRepo.ts` | Buying list items. | BaseRepo, BuyingListItemSchema |
 | `packages/server/src/repos/SupplierRepo.ts` | Suppliers. | BaseRepo, SupplierSchema |
 | `packages/server/src/repos/SupplierItemRepo.ts` | Supplier items (nested or linked). | BaseRepo, SupplierItemSchema |
 | `packages/server/src/repos/TransactionRepo.ts` | Transactions; `findByProductId`. | BaseRepo, TransactionSchema |
@@ -74,7 +73,6 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | File | Purpose | References |
 |------|--------|------------|
 | `packages/server/src/routes/products.ts` | CRUD products; list (search, sort, cursor); image upload (multer + sharp → Firebase Storage); transactions sub-resource. | Express, multer, sharp, Firebase Storage |
-| `packages/server/src/routes/buying-list.ts` | CRUD buying list items. | Express, BuyingListItemRepo |
 | `packages/server/src/routes/pricing.ts` | Pricing suggestions (AI provider); uses fx conversion and margin from env. | Express, PricingService, env |
 | `packages/server/src/routes/suppliers.ts` | Suppliers list, CSV/XLSX import preview, import template save, Gmail email sync status and trigger. | Express, multer, SupplierImportService, SupplierEmailSyncService |
 | `packages/server/src/routes/dashboard.ts` | Dashboard aggregates (counts, recent activity). | Express, repos |
@@ -115,7 +113,7 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | `packages/shared/src/schemas/base.ts` | Base enums and `BaseDocSchema` (organisationId, createdAt, updatedAt, createdBy, updatedBy); currency, product/buying/sourcing/transaction/evaluation/supplier status enums. | Zod |
 | `packages/shared/src/schemas/product.ts` | Product and ProductImage schemas. | base |
 | `docs/INVENTORY_PRODUCT_AND_CSV_IMPORT.md` | Product fields and CSV/Excel column mapping for inventory import. | — |
-| `packages/shared/src/schemas/buyingListItem.ts` | Buying list item schema. | base |
+| `packages/shared/src/schemas/buyingListItem.ts` | Buying list item schema (legacy; no route). | base |
 | `packages/shared/src/schemas/supplier.ts` | Supplier schema. | base |
 | `packages/shared/src/schemas/supplierItem.ts` | Supplier item schema. | base |
 | `packages/shared/src/schemas/sourcingRequest.ts` | Sourcing request schema. | base |
@@ -171,7 +169,6 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | `src/pages/BuyBox/EvaluatorView.tsx` | Buy-box / evaluator UI. | apiGet, pricing API |
 | `src/pages/SupplierHub/SupplierHubView.tsx` | Suppliers list and import. | apiGet, apiPostFormData |
 | `src/pages/Sourcing/SourcingView.tsx` | Sourcing requests list and status. | apiGet, apiPut |
-| `src/pages/BuyingList/BuyingListView.tsx` | Buying list CRUD. | apiGet, apiPost, apiPut, apiDelete |
 | `src/pages/Jobs/JobsView.tsx` | System jobs list. | apiGet |
 | `src/pages/Invoices/InvoicesView.tsx` | Invoices list and detail; view/print for accounting. | apiGet |
 
@@ -210,7 +207,7 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | `packages/server/src/lib/sourcingStatus.test.ts` | Unit tests for sourcing status transitions. | Vitest |
 | `packages/server/src/services/pricing/PricingService.test.ts` | Pricing service tests. | Vitest |
 | `packages/server/src/services/import/SupplierImportService.test.ts` | CSV import and mapping tests. | Vitest |
-| `tests/e2e/evaluator.spec.ts` | E2E smoke (evaluator, buying list, invoices page). | Playwright |
+| `tests/e2e/evaluator.spec.ts` | E2E smoke (evaluator, invoices page). | Playwright |
 | `tests/e2e/dashboard-shell.spec.ts` | E2E shell coverage: mobile drawer, desktop/ultra-wide nav variants, deep-state breadcrumb visibility, dashboard skeleton, insights drawer URL sync. | Playwright |
 
 ---
