@@ -23,6 +23,7 @@
     "@luxselle/shared": "*",
     "@types/pdfmake": "^0.3.1",
     "cors": "^2.8.5",
+    "firebase-admin": "^13.0.0",
     "csv-parse": "^6.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
