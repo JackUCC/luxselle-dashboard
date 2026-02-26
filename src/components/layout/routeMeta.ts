@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-export type AppNavSection = 'main' | 'admin' | 'extra'
+export type AppNavSection = 'check' | 'manage' | 'finance' | 'tools'
 
 export interface RouteMeta {
   path: string
@@ -23,17 +23,18 @@ export interface RouteMeta {
 
 export const appRoutes: RouteMeta[] = [
   // Main — Overview, Price Check, Serial Check
-  { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'main' },
-  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'main' },
-  { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: Search, section: 'main' },
-  // Admin tools — Inventory, Sourcing, Jobs
-  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'admin' },
-  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'admin' },
-  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'admin' },
-  // Extra tools — Market Research, Retail price
-  { path: '/market-research', label: 'Market Research', navLabel: 'Research', icon: BarChart3, section: 'extra' },
-  { path: '/retail-price', label: 'What was this retail?', navLabel: 'Retail price', icon: Tag, section: 'extra' },
-  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'extra' },
+  { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'check' },
+  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'check' },
+  { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: Search, section: 'check' },
+  // Manage — Inventory, Sourcing, Jobs
+  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'manage' },
+  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'manage' },
+  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'manage' },
+  // Finance
+  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'finance' },
+  // Tools — Market Research, Retail Price
+  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: BarChart3, section: 'tools' },
+  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tag, section: 'tools' },
 ]
 
 const formatLabel = (value: string) =>

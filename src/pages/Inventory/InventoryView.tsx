@@ -44,19 +44,6 @@ interface ProductsResponse {
   data: ProductWithId[];
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "in_stock":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200";
-    case "sold":
-      return "bg-gray-100 text-gray-600 border-gray-200";
-    case "reserved":
-      return "bg-amber-100 text-amber-700 border-amber-200";
-    default:
-      return "bg-gray-100 text-gray-600 border-gray-200";
-  }
-};
-
 const getStatusLabel = (status: string) => {
   switch (status) {
     case "in_stock":
@@ -70,7 +57,22 @@ const getStatusLabel = (status: string) => {
   }
 };
 
+/** Badge variant by status: success (in_stock), warning (reserved / low stock), danger (sold), count (other). */
+function getStatusBadgeVariant(
+  status: string,
+  quantity: number,
+  lowStockThreshold: number
+): "status-success" | "status-warning" | "status-danger" | "count" {
+  if (status === "sold") return "status-danger";
+  if (status === "reserved") return "status-warning";
+  if (status === "in_stock") {
+    return quantity < lowStockThreshold ? "status-warning" : "status-success";
+  }
+  return "count";
+}
+
 import ConfirmationModal from "../../components/common/ConfirmationModal";
+import { Badge, Button, PageHeader } from "../../components/design-system";
 
 function InventoryRowActions({
   product,
@@ -395,25 +397,51 @@ export default function InventoryView() {
 
   return (
     <section className="space-y-8">
-      {/* Header & Controls */}
+      <PageHeader
+        title="Inventory"
+        purpose="Manage stock levels and product details."
+        actions={
+          <>
+            <Button
+              variant="primary"
+              onClick={() => setShowAddDrawer(true)}
+              className="inline-flex items-center gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              Add Product
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleExportCSV}
+              disabled={filteredProducts.length === 0}
+              className="inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowImportDrawer(true)}
+              className="inline-flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Import
+            </Button>
+            <button
+              type="button"
+              onClick={() => setShowClearConfirm(true)}
+              disabled={products.length === 0 || isClearing}
+              className="inline-flex items-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Delete all inventory items"
+            >
+              {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Clear all
+            </button>
+          </>
+        }
+      />
+
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight text-lux-800">
-              Inventory
-            </h1>
-            <p className="text-base text-lux-600 mt-1">
-              Manage stock levels and product details.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAddDrawer(true)}
-            className="lux-btn-primary flex items-center gap-2"
-          >
-            <Plus className="h-5 w-5" />
-            Add Product
-          </button>
-        </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3 flex-1">
@@ -461,37 +489,6 @@ export default function InventoryView() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportCSV}
-              disabled={filteredProducts.length === 0}
-              className="lux-btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </button>
-            <button
-              onClick={() => setShowImportDrawer(true)}
-              className="lux-btn-secondary flex items-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Import
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowClearConfirm(true)}
-              disabled={products.length === 0 || isClearing}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Delete all inventory items"
-            >
-              {isClearing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              Clear all
-            </button>
-          </div>
         </div>
 
         {/* Low stock banner (from Dashboard link) */}
@@ -689,9 +686,7 @@ export default function InventoryView() {
                                 {product.sku || `BA${product.id.slice(-4)}`}
                               </div>
                               {isMissingInfo && (
-                                <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700">
-                                  Missing info
-                                </span>
+                                <Badge variant="status-warning" className="ml-1">Missing info</Badge>
                               )}
                             </div>
                           </div>
@@ -714,11 +709,15 @@ export default function InventoryView() {
                           </span>
                         </td>
                         <td className="px-3 py-3">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium border ${getStatusColor(product.status)}`}
+                          <Badge
+                            variant={getStatusBadgeVariant(
+                              product.status,
+                              product.quantity,
+                              LOW_STOCK_THRESHOLD
+                            )}
                           >
                             {getStatusLabel(product.status)}
-                          </span>
+                          </Badge>
                         </td>
                         <td className="px-4 py-3 text-right relative">
                           <InventoryRowActions
@@ -791,11 +790,15 @@ export default function InventoryView() {
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium border ${getStatusColor(product.status)}`}
+                        <Badge
+                          variant={getStatusBadgeVariant(
+                            product.status,
+                            product.quantity,
+                            LOW_STOCK_THRESHOLD
+                          )}
                         >
                           {getStatusLabel(product.status)}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <InventoryRowActions
@@ -838,11 +841,15 @@ export default function InventoryView() {
                         Missing info
                       </span>
                     )}
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase border text-white shadow-sm ${getStatusColor(product.status).replace("bg-emerald-100", "bg-emerald-500").replace("text-emerald-700", "text-white")}`}
+                    <Badge
+                      variant={getStatusBadgeVariant(
+                        product.status,
+                        product.quantity,
+                        LOW_STOCK_THRESHOLD
+                      )}
                     >
                       {getStatusLabel(product.status)}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
                 <div className="p-5">

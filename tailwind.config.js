@@ -9,23 +9,44 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Inter', 'sans-serif'],
+        display: ['Ibarra Real Nova', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'monospace'],
+      },
+      fontSize: {
+        'display-hero': ['60px', { lineHeight: 1, letterSpacing: '-0.025em' }],
+        'page-title': ['36px', { lineHeight: 1.1, letterSpacing: '-0.01em' }],
+        'section-head': ['28px', { lineHeight: 1.2, letterSpacing: '-0.0075em' }],
+        'card-header': ['20px', { lineHeight: 1.3, letterSpacing: '-0.005em' }],
+        'body': ['16px', { lineHeight: 1.5 }],
+        'body-sm': ['14px', { lineHeight: 1.5, letterSpacing: '0.0025em' }],
+        'ui-label': ['12px', { lineHeight: 1.4, letterSpacing: '0.005em' }],
+        'data': ['14px', { lineHeight: 1.5 }],
+      },
+      spacing: {
+        '1': '0.25rem',   /* 4px - space-1 */
+        '2': '0.5rem',    /* 8px - space-2 */
+        '3': '0.75rem',   /* 12px - space-3 */
+        '4': '1rem',      /* 16px - space-4 */
+        '5': '1.5rem',    /* 24px - space-5 */
+        '6': '2rem',      /* 32px - space-6 */
+        '7': '2.5rem',    /* 40px - space-7 */
+        '8': '3rem',      /* 48px - space-8 */
+        '9': '4rem',      /* 64px - space-9 */
       },
       colors: {
         lux: {
-          50: '#FAFAFA',
-          100: '#FFFFFF',
-          200: '#E5E7EB',
-          300: '#D1D5DB',
-          400: '#9CA3AF',
-          500: '#6B7280',
-          600: '#4B5563',
-          700: '#374151',
-          800: '#1F2937',
-          900: '#111827',
-          950: '#030712',
-          gold: '#c3a363',
+          50: '#F7FAFC',
+          100: '#EDF2F7',
+          200: '#E2E8F0',
+          300: '#CBD5E0',
+          400: '#A0AEC0',
+          500: '#718096',
+          600: '#4A5568',
+          700: '#4A5568',
+          800: '#2D3748',
+          900: '#1A1A2E',
+          950: '#0D0D1A',
+          gold: '#B8860B',
         },
         glass: {
           DEFAULT: 'rgba(255, 255, 255, 0.85)',
@@ -34,14 +55,15 @@ module.exports = {
           'border-hover': 'rgba(0, 0, 0, 0.1)',
         },
         accent: {
-          indigo: '#007AFF',
-          violet: '#5856D6',
-          cyan: '#32ADE6',
-          emerald: '#34C759',
-          rose: '#FF2D55',
-          amber: '#FFCC00',
-          orange: '#FF9500',
+          emerald: '#10B981',
+          amber: '#F59E0B',
+          rose: '#EF4444',
         },
+      },
+      borderRadius: {
+        'lux-card': '12px',
+        'lux-input': '10px',
+        'lux-modal': '16px',
       },
       boxShadow: {
         'xs': '0 1px 2px rgba(0, 0, 0, 0.05)',
@@ -52,22 +74,8 @@ module.exports = {
         'glass-lg': '0 12px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.03)',
         'float': '0 20px 60px rgba(0, 0, 0, 0.08)',
       },
-      borderRadius: {
-        '3xl': '1.5rem',
-      },
       maxWidth: {
         '8xl': '96rem',
-      },
-      backdropBlur: {
-        'xs': '4px',
-        'glass': '24px',
-      },
-      animation: {
-        'fade-in': 'lux-fade-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both',
-        'slide-up': 'lux-slide-up 400ms cubic-bezier(0.16, 1, 0.3, 1) both',
-        'scale-in': 'lux-scale-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both',
-        'bento-enter': 'lux-bento-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) both',
-        'pulse-slow': 'lux-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         'lux-fade-in': {
@@ -90,6 +98,23 @@ module.exports = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.6' },
         },
+        'lux-slide-left': {
+          from: { opacity: '0', transform: 'translateX(100%)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        'lux-slide-right': {
+          from: { opacity: '0', transform: 'translateX(-100%)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+      },
+      animation: {
+        'fade-in': 'lux-fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'slide-up': 'lux-slide-up 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'slide-left': 'lux-slide-left 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'slide-right': 'lux-slide-right 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'scale-in': 'lux-scale-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'bento-enter': 'lux-bento-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'pulse-slow': 'lux-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

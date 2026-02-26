@@ -1,13 +1,14 @@
 /**
  * Invoices list and detail: list saved invoices, view/print for accounting.
  * Create in-person invoices or add invoices by uploading a PDF.
- * @see docs/CODE_REFERENCE.md
+ * Uses design-system: PageHeader, ListRow, Modal, Button, Input.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ExternalLink, FileText, Loader2, Plus, Printer, Upload, X } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
 import { apiGet, apiPost, apiPostFormData } from '../../lib/api'
+import { Button, Input, ListRow, Modal, PageHeader } from '../../components/design-system'
 
 type InvoiceWithId = Invoice & { id: string }
 
@@ -169,36 +170,34 @@ export default function InvoicesView() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-lux-800">Invoices</h1>
-          <p className="text-sm text-lux-600 mt-1">
-            Create invoices from sales and store them for accounting.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
-            aria-label="Create in-person invoice"
-            data-testid="invoice-create-cta"
-          >
-            <Plus className="h-4 w-4" />
-            Create in-person invoice
-          </button>
-          <button
-            type="button"
-            onClick={openUploadModal}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            aria-label="Add invoice from PDF"
-          >
-            <Upload className="h-4 w-4" />
-            Add invoice (PDF)
-          </button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Invoices"
+        purpose="Create invoices from sales and store them for accounting."
+        actions={
+          <>
+            <Button
+              variant="primary"
+              onClick={openCreateModal}
+              aria-label="Create invoice"
+              data-testid="invoice-create-cta"
+              className="inline-flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Invoice
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={openUploadModal}
+              aria-label="Add invoice from PDF"
+              className="inline-flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Add PDF
+            </Button>
+          </>
+        }
+      />
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
@@ -207,75 +206,54 @@ export default function InvoicesView() {
         </div>
       ) : error ? (
         <div className="lux-card p-8 text-center">
-          <p className="text-rose-600 font-medium">{error}</p>
-          <button
-            type="button"
-            onClick={() => { setIsLoading(true); fetchInvoices() }}
-            className="lux-btn-secondary mt-4"
-          >
+          <p className="font-medium text-rose-600">{error}</p>
+          <Button variant="secondary" onClick={() => { setIsLoading(true); fetchInvoices() }} className="mt-4">
             Retry
-          </button>
+          </Button>
         </div>
       ) : invoices.length === 0 ? (
         <div className="lux-card p-12 text-center">
-          <FileText className="mx-auto h-12 w-12 text-lux-500 mb-4" />
-          <p className="text-lux-600 font-medium">No invoices yet</p>
-          <p className="text-sm text-lux-500 mt-1">
-            Create an in-person invoice or upload a PDF invoice to get started.
+          <FileText className="mx-auto mb-4 h-12 w-12 text-lux-500" />
+          <p className="font-medium text-lux-600">No invoices yet</p>
+          <p className="mt-1 text-body-sm text-lux-500">
+            Create an invoice or upload a PDF to get started.
           </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
-              aria-label="Create in-person invoice (empty state)"
-            >
-              <Plus className="h-4 w-4" />
-              Create in-person invoice
-            </button>
-            <button
-              type="button"
-              onClick={openUploadModal}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <Upload className="h-4 w-4" />
-              Add invoice (PDF)
-            </button>
-          </div>
+          <Button variant="primary" onClick={openCreateModal} className="mt-6 inline-flex items-center gap-2" aria-label="Create invoice (empty state)">
+            <Plus className="h-4 w-4" />
+            Create Invoice
+          </Button>
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="lux-card p-4">
-            <h2 className="font-semibold text-lux-800 mb-4">All invoices</h2>
-            <ul className="space-y-2">
+            <h2 className="mb-4 font-semibold text-lux-800">All invoices</h2>
+            <ul className="space-y-0">
               {invoices.map((inv) => (
                 <li key={inv.id}>
-                  <button
-                    type="button"
+                  <ListRow
+                    isSelected={selected?.id === inv.id}
                     onClick={() => setSelected(inv)}
-                    className={`w-full text-left rounded-lg border p-4 transition-colors ${
-                      selected?.id === inv.id
-                        ? 'border-gray-900 bg-gray-50 ring-1 ring-gray-900'
-                        : 'border-gray-200 hover:bg-gray-50'
-                    }`}
+                    as="button"
                   >
-                    <div className="flex justify-between items-start">
-                      <span className="font-mono text-sm font-medium text-gray-900">{inv.invoiceNumber}</span>
-                      <span className="text-sm text-gray-500">{formatDate(inv.issuedAt)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="font-mono text-body-sm font-medium text-lux-900">{inv.invoiceNumber}</span>
+                        <span className="text-body-sm text-lux-500 shrink-0">{formatDate(inv.issuedAt)}</span>
+                      </div>
+                      <div className="mt-0.5 text-body-sm text-lux-600">
+                        {formatCurrency(inv.totalEur)}
+                        {inv.customerName ? ` · ${inv.customerName}` : ''}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {formatCurrency(inv.totalEur)}
-                      {inv.customerName ? ` · ${inv.customerName}` : ''}
-                    </div>
-                  </button>
+                  </ListRow>
                 </li>
               ))}
             </ul>
           </div>
 
           {selected && (
-            <div className="lux-card p-6 print:shadow-none">
-              <div className="flex items-start justify-between mb-6 no-print">
+            <div className="lux-card p-6 print:border-2 print:shadow-none print:border-lux-200">
+              <div className="mb-6 flex items-start justify-between no-print">
                 <h2 className="font-semibold text-lux-800">Invoice detail</h2>
                 <div className="flex gap-2">
                   {selected.pdfUrl && (
@@ -283,26 +261,21 @@ export default function InvoicesView() {
                       href={selected.pdfUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                      className="flex items-center gap-2 rounded-lux-input border border-lux-200 bg-lux-50 px-3 py-2 text-body-sm font-medium text-lux-700 hover:bg-lux-100"
                       aria-label="View PDF"
                     >
                       <ExternalLink className="h-4 w-4" />
                       View PDF
                     </a>
                   )}
-                  <button
-                    type="button"
-                    onClick={handlePrint}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                    aria-label="Print invoice"
-                  >
+                  <Button variant="secondary" onClick={handlePrint} className="inline-flex items-center gap-2" aria-label="Print invoice">
                     <Printer className="h-4 w-4" />
                     Print
-                  </button>
+                  </Button>
                   <button
                     type="button"
                     onClick={() => setSelected(null)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
+                    className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700"
                     aria-label="Close"
                   >
                     <X className="h-5 w-5" />
@@ -310,19 +283,19 @@ export default function InvoicesView() {
                 </div>
               </div>
               <div className="invoice-content">
-                <div className="flex justify-between items-start border-b border-gray-200 pb-4">
+                <div className="flex items-start justify-between border-b border-lux-200 pb-4">
                   <div>
-                    <div className="font-mono font-bold text-lg text-gray-900">{selected.invoiceNumber}</div>
-                    <div className="text-sm text-gray-500 mt-1">Issued {formatDate(selected.issuedAt)}</div>
+                    <div className="font-mono text-card-header font-bold text-lux-900">{selected.invoiceNumber}</div>
+                    <div className="mt-1 text-body-sm text-lux-500">Issued {formatDate(selected.issuedAt)}</div>
                   </div>
-                  <div className="text-right text-sm text-gray-600">
+                  <div className="text-right text-body-sm text-lux-600">
                     {selected.customerName && <div>{selected.customerName}</div>}
                     {selected.customerEmail && <div>{selected.customerEmail}</div>}
                   </div>
                 </div>
-                <table className="w-full mt-6 text-sm">
+                <table className="mt-6 w-full text-body-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 text-left text-lux-500">
+                    <tr className="border-b border-lux-200 text-left text-lux-500">
                       <th className="pb-2 font-semibold">Description</th>
                       <th className="pb-2 font-semibold text-right">Qty</th>
                       <th className="pb-2 font-semibold text-right">Unit price</th>
@@ -332,7 +305,7 @@ export default function InvoicesView() {
                   </thead>
                   <tbody>
                     {selected.lineItems.map((line, i) => (
-                      <tr key={i} className="border-b border-gray-100">
+                      <tr key={i} className="border-b border-lux-100">
                         <td className="py-2">{line.description}</td>
                         <td className="py-2 text-right">{line.quantity}</td>
                         <td className="py-2 text-right">{formatCurrency(line.unitPriceEur)}</td>
@@ -342,22 +315,22 @@ export default function InvoicesView() {
                     ))}
                   </tbody>
                 </table>
-                <div className="mt-6 pt-4 border-t border-gray-200 space-y-1 text-sm">
-                  <div className="flex justify-between text-gray-600">
+                <div className="mt-6 space-y-1 border-t border-lux-200 pt-4 text-body-sm">
+                  <div className="flex justify-between text-lux-600">
                     <span>Subtotal</span>
                     <span>{formatCurrency(selected.subtotalEur)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-600">
+                  <div className="flex justify-between text-lux-600">
                     <span>VAT</span>
                     <span>{formatCurrency(selected.vatEur)}</span>
                   </div>
-                  <div className="flex justify-between font-semibold text-gray-900 text-base pt-2">
+                  <div className="flex justify-between pt-2 text-body font-semibold text-lux-900">
                     <span>Total</span>
                     <span>{formatCurrency(selected.totalEur)}</span>
                   </div>
                 </div>
                 {selected.notes && (
-                  <p className="mt-4 text-sm text-gray-500 border-t border-gray-100 pt-4">{selected.notes}</p>
+                  <p className="mt-4 border-t border-lux-100 pt-4 text-body-sm text-lux-500">{selected.notes}</p>
                 )}
               </div>
             </div>
@@ -366,241 +339,224 @@ export default function InvoicesView() {
       )}
 
       {/* Create in-person invoice modal */}
-      {addMode === 'in-person' && (
-        <>
-          <div className="fixed inset-0 bg-black/30 z-40" aria-hidden onClick={closeAddModal} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="create-invoice-title">
-            <div className="lux-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-                <h2 id="create-invoice-title" className="text-lg font-semibold text-lux-800">Create in-person invoice</h2>
-                <button type="button" onClick={closeAddModal} className="p-2 text-gray-400 hover:text-gray-600" aria-label="Close">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <form onSubmit={handleCreateInPerson} className="space-y-6">
-                <section className="space-y-3" aria-labelledby="create-sale-heading">
-                  <h3 id="create-sale-heading" className="text-sm font-medium text-gray-900 border-b border-gray-100 pb-1">Sale details</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="create-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                      <input
-                        id="create-date"
-                        type="date"
-                        value={createForm.issuedAt}
-                        onChange={(e) => setCreateForm((f) => ({ ...f, issuedAt: e.target.value }))}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="create-amount" className="block text-sm font-medium text-gray-700 mb-1">Amount paid (incl. VAT) €</label>
-                      <input
-                        id="create-amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        required
-                        value={createForm.amountPaidEur}
-                        onChange={(e) => setCreateForm((f) => ({ ...f, amountPaidEur: e.target.value }))}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                </section>
-                <section className="space-y-3" aria-labelledby="create-item-heading">
-                  <h3 id="create-item-heading" className="text-sm font-medium text-gray-900 border-b border-gray-100 pb-1">Item</h3>
-                  <div>
-                    <label htmlFor="create-description" className="block text-sm font-medium text-gray-700 mb-1">Item description <span className="text-red-500">*</span></label>
-                    <input
-                      id="create-description"
-                      type="text"
-                      required
-                      value={createForm.description}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="e.g. Chanel Matelasse bag"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="create-sku" className="block text-sm font-medium text-gray-600 mb-1">SKU <span className="text-gray-400 font-normal">(optional)</span></label>
-                    <input
-                      id="create-sku"
-                      type="text"
-                      value={createForm.sku}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, sku: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="e.g. 158105SAV"
-                    />
-                  </div>
-                </section>
-                <section className="space-y-3" aria-labelledby="create-customer-heading">
-                  <h3 id="create-customer-heading" className="text-sm font-medium text-gray-900 border-b border-gray-100 pb-1">Customer <span className="text-gray-400 font-normal">(optional)</span></h3>
-                  <div>
-                    <label htmlFor="create-customer-name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input
-                      id="create-customer-name"
-                      type="text"
-                      value={createForm.customerName}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, customerName: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="Customer name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="create-customer-email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
-                      id="create-customer-email"
-                      type="email"
-                      value={createForm.customerEmail}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, customerEmail: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="create-customer-address" className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <textarea
-                      id="create-customer-address"
-                      rows={2}
-                      value={createForm.customerAddress}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, customerAddress: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="Street, City, Postcode, Country"
-                    />
-                  </div>
-                </section>
-                <div className="flex gap-2 pt-2 border-t border-gray-200">
-                  <button type="button" onClick={closeAddModal} className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={createSubmitting} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50">
-                    {createSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    Create invoice
-                  </button>
-                </div>
-              </form>
-            </div>
+      <Modal isOpen={addMode === 'in-person'} onClose={closeAddModal} size="md" titleId="create-invoice-title">
+        <div className="max-h-[90vh] overflow-y-auto p-6">
+          <div className="mb-4 flex items-center justify-between border-b border-lux-200 pb-4">
+            <h2 id="create-invoice-title" className="text-card-header font-semibold text-lux-800">Create in-person invoice</h2>
+            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700" aria-label="Close">
+              <X className="h-5 w-5" />
+            </button>
           </div>
-        </>
-      )}
+          <form onSubmit={handleCreateInPerson} className="space-y-6">
+            <section className="space-y-3" aria-labelledby="create-sale-heading">
+              <h3 id="create-sale-heading" className="border-b border-lux-100 pb-1 text-body-sm font-medium text-lux-900">Sale details</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="create-date" className="mb-1 block text-ui-label font-medium text-lux-700">Date</label>
+                  <Input
+                    id="create-date"
+                    type="date"
+                    value={createForm.issuedAt}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, issuedAt: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="create-amount" className="mb-1 block text-ui-label font-medium text-lux-700">Amount paid (incl. VAT) €</label>
+                  <Input
+                    id="create-amount"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    required
+                    value={createForm.amountPaidEur}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, amountPaidEur: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </section>
+            <section className="space-y-3" aria-labelledby="create-item-heading">
+              <h3 id="create-item-heading" className="border-b border-lux-100 pb-1 text-body-sm font-medium text-lux-900">Item</h3>
+              <div>
+                <label htmlFor="create-description" className="mb-1 block text-ui-label font-medium text-lux-700">Item description <span className="text-rose-500">*</span></label>
+                <Input
+                  id="create-description"
+                  type="text"
+                  required
+                  value={createForm.description}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="e.g. Chanel Matelasse bag"
+                />
+              </div>
+              <div>
+                <label htmlFor="create-sku" className="mb-1 block text-ui-label font-medium text-lux-600">SKU <span className="font-normal text-lux-400">(optional)</span></label>
+                <Input
+                  id="create-sku"
+                  type="text"
+                  value={createForm.sku}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, sku: e.target.value }))}
+                  placeholder="e.g. 158105SAV"
+                />
+              </div>
+            </section>
+            <section className="space-y-3" aria-labelledby="create-customer-heading">
+              <h3 id="create-customer-heading" className="border-b border-lux-100 pb-1 text-body-sm font-medium text-lux-900">Customer <span className="font-normal text-lux-400">(optional)</span></h3>
+              <div>
+                <label htmlFor="create-customer-name" className="mb-1 block text-ui-label font-medium text-lux-700">Name</label>
+                <Input
+                  id="create-customer-name"
+                  type="text"
+                  value={createForm.customerName}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, customerName: e.target.value }))}
+                  placeholder="Customer name"
+                />
+              </div>
+              <div>
+                <label htmlFor="create-customer-email" className="mb-1 block text-ui-label font-medium text-lux-700">Email</label>
+                <Input
+                  id="create-customer-email"
+                  type="email"
+                  value={createForm.customerEmail}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, customerEmail: e.target.value }))}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label htmlFor="create-customer-address" className="mb-1 block text-ui-label font-medium text-lux-700">Address</label>
+                <textarea
+                  id="create-customer-address"
+                  rows={2}
+                  value={createForm.customerAddress}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, customerAddress: e.target.value }))}
+                  className="lux-input w-full resize-y"
+                  placeholder="Street, City, Postcode, Country"
+                />
+              </div>
+            </section>
+            <div className="flex gap-2 border-t border-lux-200 pt-4">
+              <Button type="button" variant="secondary" onClick={closeAddModal} className="flex-1">Cancel</Button>
+              <button
+                type="submit"
+                disabled={createSubmitting}
+                className="lux-btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {createSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Create invoice
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
 
       {/* Add invoice (PDF upload) modal */}
-      {addMode === 'upload' && (
-        <>
-          <div className="fixed inset-0 bg-black/30 z-40" aria-hidden onClick={closeAddModal} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upload-invoice-title">
-            <div className="lux-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-                <h2 id="upload-invoice-title" className="text-lg font-semibold text-lux-800">Add invoice (PDF)</h2>
-                <button type="button" onClick={closeAddModal} className="p-2 text-gray-400 hover:text-gray-600" aria-label="Close">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mb-4">
-                Upload a PDF invoice to store it here. Enter the invoice number (required); other fields are optional.
-              </p>
-              <form onSubmit={handleUploadInvoice} className="space-y-4">
-                <div>
-                  <label htmlFor="upload-file" className="block text-sm font-medium text-gray-700 mb-1">PDF file <span className="text-red-500">*</span></label>
-                  <input
-                    id="upload-file"
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    aria-label="Choose PDF invoice file"
-                    onChange={(e) => setUploadForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))}
-                    className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-300 file:bg-gray-50 file:font-medium file:text-gray-700 hover:file:bg-gray-100"
-                  />
-                  {uploadForm.file && (
-                    <p className="mt-1 text-sm text-gray-500">{uploadForm.file.name}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="upload-invoice-number" className="block text-sm font-medium text-gray-700 mb-1">Invoice number <span className="text-red-500">*</span></label>
-                  <input
-                    id="upload-invoice-number"
-                    type="text"
-                    required
-                    value={uploadForm.invoiceNumber}
-                    onChange={(e) => setUploadForm((f) => ({ ...f, invoiceNumber: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                    placeholder="e.g. INV-2024-001"
-                  />
-                </div>
-                <section className="space-y-3 pt-2 border-t border-gray-100" aria-labelledby="upload-optional-heading">
-                  <h3 id="upload-optional-heading" className="text-sm font-medium text-gray-600">Optional details</h3>
-                  <div>
-                    <label htmlFor="upload-customer-name" className="block text-sm font-medium text-gray-700 mb-1">Customer name</label>
-                    <input
-                      id="upload-customer-name"
-                      type="text"
-                      value={uploadForm.customerName}
-                      onChange={(e) => setUploadForm((f) => ({ ...f, customerName: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="Customer name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="upload-customer-email" className="block text-sm font-medium text-gray-700 mb-1">Customer email</label>
-                    <input
-                      id="upload-customer-email"
-                      type="email"
-                      value={uploadForm.customerEmail}
-                      onChange={(e) => setUploadForm((f) => ({ ...f, customerEmail: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="upload-amount" className="block text-sm font-medium text-gray-700 mb-1">Amount (€)</label>
-                    <input
-                      id="upload-amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={uploadForm.amountEur}
-                      onChange={(e) => setUploadForm((f) => ({ ...f, amountEur: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="upload-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <input
-                      id="upload-description"
-                      type="text"
-                      value={uploadForm.description}
-                      onChange={(e) => setUploadForm((f) => ({ ...f, description: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="Brief description"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="upload-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                    <textarea
-                      id="upload-notes"
-                      rows={2}
-                      value={uploadForm.notes}
-                      onChange={(e) => setUploadForm((f) => ({ ...f, notes: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                      placeholder="Internal notes"
-                    />
-                  </div>
-                </section>
-                <div className="flex gap-2 pt-2 border-t border-gray-200">
-                  <button type="button" onClick={closeAddModal} className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={uploadSubmitting} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50">
-                    {uploadSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    Add invoice
-                  </button>
-                </div>
-              </form>
-            </div>
+      <Modal isOpen={addMode === 'upload'} onClose={closeAddModal} size="md" titleId="upload-invoice-title">
+        <div className="max-h-[90vh] overflow-y-auto p-6">
+          <div className="mb-4 flex items-center justify-between border-b border-lux-200 pb-4">
+            <h2 id="upload-invoice-title" className="text-card-header font-semibold text-lux-800">Add invoice (PDF)</h2>
+            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700" aria-label="Close">
+              <X className="h-5 w-5" />
+            </button>
           </div>
-        </>
-      )}
+          <p className="mb-4 text-body-sm text-lux-500">
+            Upload a PDF invoice to store it here. Enter the invoice number (required); other fields are optional.
+          </p>
+          <form onSubmit={handleUploadInvoice} className="space-y-4">
+            <div>
+              <label htmlFor="upload-file" className="mb-1 block text-ui-label font-medium text-lux-700">PDF file <span className="text-rose-500">*</span></label>
+              <input
+                id="upload-file"
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                aria-label="Choose PDF invoice file"
+                onChange={(e) => setUploadForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))}
+                className="w-full text-body-sm text-lux-600 file:mr-3 file:rounded-lux-input file:border-2 file:border-lux-200 file:bg-lux-50 file:px-4 file:py-2 file:font-medium file:text-lux-700 hover:file:bg-lux-100"
+              />
+              {uploadForm.file && (
+                <p className="mt-1 text-body-sm text-lux-500">{uploadForm.file.name}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="upload-invoice-number" className="mb-1 block text-ui-label font-medium text-lux-700">Invoice number <span className="text-rose-500">*</span></label>
+              <Input
+                id="upload-invoice-number"
+                type="text"
+                required
+                value={uploadForm.invoiceNumber}
+                onChange={(e) => setUploadForm((f) => ({ ...f, invoiceNumber: e.target.value }))}
+                placeholder="e.g. INV-2024-001"
+              />
+            </div>
+            <section className="space-y-3 border-t border-lux-100 pt-4" aria-labelledby="upload-optional-heading">
+              <h3 id="upload-optional-heading" className="text-body-sm font-medium text-lux-600">Optional details</h3>
+              <div>
+                <label htmlFor="upload-customer-name" className="mb-1 block text-ui-label font-medium text-lux-700">Customer name</label>
+                <Input
+                  id="upload-customer-name"
+                  type="text"
+                  value={uploadForm.customerName}
+                  onChange={(e) => setUploadForm((f) => ({ ...f, customerName: e.target.value }))}
+                  placeholder="Customer name"
+                />
+              </div>
+              <div>
+                <label htmlFor="upload-customer-email" className="mb-1 block text-ui-label font-medium text-lux-700">Customer email</label>
+                <Input
+                  id="upload-customer-email"
+                  type="email"
+                  value={uploadForm.customerEmail}
+                  onChange={(e) => setUploadForm((f) => ({ ...f, customerEmail: e.target.value }))}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label htmlFor="upload-amount" className="mb-1 block text-ui-label font-medium text-lux-700">Amount (€)</label>
+                <Input
+                  id="upload-amount"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  value={uploadForm.amountEur}
+                  onChange={(e) => setUploadForm((f) => ({ ...f, amountEur: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label htmlFor="upload-description" className="mb-1 block text-ui-label font-medium text-lux-700">Description</label>
+                <Input
+                  id="upload-description"
+                  type="text"
+                  value={uploadForm.description}
+                  onChange={(e) => setUploadForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Brief description"
+                />
+              </div>
+              <div>
+                <label htmlFor="upload-notes" className="mb-1 block text-ui-label font-medium text-lux-700">Notes</label>
+                <textarea
+                  id="upload-notes"
+                  rows={2}
+                  value={uploadForm.notes}
+                  onChange={(e) => setUploadForm((f) => ({ ...f, notes: e.target.value }))}
+                  className="lux-input w-full resize-y"
+                  placeholder="Internal notes"
+                />
+              </div>
+            </section>
+            <div className="flex gap-2 border-t border-lux-200 pt-4">
+              <Button type="button" variant="secondary" onClick={closeAddModal} className="flex-1">Cancel</Button>
+              <button
+                type="submit"
+                disabled={uploadSubmitting}
+                className="lux-btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {uploadSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Add invoice
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </div>
   )
 }

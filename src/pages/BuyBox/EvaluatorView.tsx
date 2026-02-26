@@ -12,6 +12,7 @@ import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import { PageHeader } from '../../components/design-system'
 
 interface PriceCheckComp {
   title: string
@@ -166,12 +167,10 @@ export default function EvaluatorView() {
 
   return (
     <section className="mx-auto max-w-5xl space-y-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-display font-bold text-lux-800">Price Check</h1>
-        <p className="text-sm text-lux-600 mt-1">
-          Research market price (Irish + Vestiaire), then see max buy and max bid.
-        </p>
-      </div>
+      <PageHeader
+        title="Price Check"
+        purpose="Research market price (Irish + Vestiaire), then see max buy and max bid."
+      />
 
       <div className="flex border-b border-gray-200">
         <button

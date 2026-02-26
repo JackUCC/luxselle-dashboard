@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import type { SystemJob } from '@shared/schemas'
 import { apiGet, apiPost } from '../../lib/api'
+import { PageHeader } from '../../components/design-system'
 
 type SystemJobWithId = SystemJob & { id: string }
 
@@ -172,14 +173,11 @@ export default function JobsView() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-lux-800">System Jobs</h1>
-          <p className="text-sm text-lux-600 mt-1">
-            Monitor imports, background tasks, and system operations.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+      <PageHeader
+        title="System Jobs"
+        purpose="Monitor imports, background tasks, and system operations."
+        actions={
+          <div className="flex items-center gap-3">
           <div className="relative">
             <label htmlFor="jobs-status-filter" className="sr-only">Filter by status</label>
             <select
@@ -206,7 +204,8 @@ export default function JobsView() {
             Refresh
           </button>
         </div>
-      </div>
+        }
+      />
 
       {isLoading && jobs.length === 0 ? (
         <div className="flex items-center justify-center gap-2 py-12 text-lux-600">

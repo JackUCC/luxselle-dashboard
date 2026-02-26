@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { Tag, Loader2, Euro, Info } from 'lucide-react'
 import { apiPost } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
+import { PageHeader } from '../../components/design-system'
 
 interface RetailLookupResult {
   retailPriceEur: number | null
@@ -53,7 +54,7 @@ export default function RetailPriceView() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight text-lux-800">
-          What was this retail?
+          Retail Price
         </h1>
         <p className="mt-1 text-sm text-lux-600">
           Paste the item description (e.g. brand, model, style) to get an estimate of the

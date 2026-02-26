@@ -103,27 +103,6 @@ const AppContent = () => {
             </button>
           </div>
 
-          <header className="sticky top-0 z-40 hidden h-14 items-center border-b border-gray-200/60 bg-white/95 px-4 backdrop-blur sm:px-6 xl:flex 2xl:hidden">
-            <nav className="flex items-center gap-2">
-              {appRoutes.map((route) => (
-                <NavLink
-                  key={route.path}
-                  to={route.path}
-                  end={route.path === '/'}
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-lux-200/80 text-lux-800'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`
-                  }
-                >
-                  {route.path === '/buy-box' ? 'Buy Box' : route.navLabel}
-                </NavLink>
-              ))}
-            </nav>
-          </header>
-
           <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
           <Toaster

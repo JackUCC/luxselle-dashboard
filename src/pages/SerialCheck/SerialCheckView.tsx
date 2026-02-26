@@ -8,6 +8,7 @@ import { Search, Calendar, Info, Loader2 } from 'lucide-react'
 import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
+import { PageHeader } from '../../components/design-system'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 
@@ -97,14 +98,10 @@ export default function SerialCheckView() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-lux-800">
-          Serial number check
-        </h1>
-        <p className="mt-1 text-sm text-lux-600">
-          Paste serial, select brand, and add item details to get a tighter decode plus age-adjusted price guidance.
-        </p>
-      </div>
+      <PageHeader
+        title="Serial Check"
+        purpose="Paste serial, select brand, and add item details to get a tighter decode plus age-adjusted price guidance."
+      />
 
       <div className="lux-card p-6">
         <div className="space-y-4">

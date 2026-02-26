@@ -29,6 +29,7 @@ import {
 import { apiGet, apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { useServerStatus } from '../../lib/ServerStatusContext'
+import { PageHeader } from '../../components/design-system'
 
 // ─── Brand database ────────────────────────────────────────────
 const BRAND_MODELS: Record<string, string[]> = {
@@ -280,26 +281,20 @@ export default function MarketResearchView() {
 
     return (
         <section className="mx-auto max-w-6xl space-y-8">
-            {/* Header */}
-            <div className="text-center">
-                <h1 className="text-2xl font-display font-bold text-lux-800 flex items-center justify-center gap-3">
-                    <BarChart3 className="h-7 w-7 text-indigo-600" />
-                    Market Research
-                </h1>
-                <p className="text-sm text-lux-600 mt-1 flex items-center justify-center gap-2 flex-wrap">
-                    <span>Irish & EU market · Designer Exchange, Luxury Exchange, Siopella, Vestiaire</span>
-                    {status?.aiProvider === 'mock' && (
-                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            Mock Data
-                        </span>
-                    )}
-                    {status?.aiProvider === 'openai' && (
-                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                            AI: OpenAI
-                        </span>
-                    )}
-                </p>
-            </div>
+            <PageHeader
+                title="Market Research"
+                purpose="Irish & EU market — Designer Exchange, Luxury Exchange, Siopella, Vestiaire."
+                actions={
+                    <>
+                        {status?.aiProvider === 'mock' && (
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-ui-label font-medium text-amber-800">Mock Data</span>
+                        )}
+                        {status?.aiProvider === 'openai' && (
+                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-ui-label font-medium text-emerald-800">AI: OpenAI</span>
+                        )}
+                    </>
+                }
+            />
 
             {error && (
                 <div className="lux-card p-6 text-center border-rose-200 bg-rose-50/60">

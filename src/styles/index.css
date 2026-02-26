@@ -1,9 +1,42 @@
-/* Global styles: Luxselle — modern SaaS dashboard. @see docs/CODE_REFERENCE.md */
+/* Global styles: Luxselle — design system tokens. @see docs/CODE_REFERENCE.md */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Inter (24pt optical size) — self-hosted */
+/* Design tokens (single source of truth) */
+:root {
+  /* Typography */
+  --font-display: 'Ibarra Real Nova', Georgia, serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+  --space-9: 4rem;
+
+  /* Colors — semantic roles */
+  --lux-canvas: #F7FAFC;
+  --lux-surface: #FFFFFF;
+  --lux-surface-hover: #F7FAFC;
+  --lux-border: #E2E8F0;
+  --lux-border-hover: #CBD5E0;
+  --lux-text: #1A1A2E;
+  --lux-text-secondary: #4A5568;
+  --lux-text-tertiary: #718096;
+  --lux-gold: #B8860B;
+  --lux-success: #10B981;
+  --lux-warning: #F59E0B;
+  --lux-danger: #EF4444;
+}
+
+/* Inter — self-hosted */
 @font-face {
   font-family: 'Inter';
   src: url('/fonts/Inter_24pt-Regular.ttf') format('truetype');
@@ -33,49 +66,35 @@
   font-display: swap;
 }
 
-:root {
-  --font-display: 'Inter', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --lux-gold: #c3a363;
-
-  --lux-canvas: #FAFAFA;
-  --lux-surface: #FFFFFF;
-  --lux-surface-hover: #FAFAFA;
-  --lux-border: #E5E7EB;
-  --lux-border-hover: #D1D5DB;
-  --lux-text: #111827;
-  --lux-text-secondary: #374151;
-  --lux-text-tertiary: #6B7280;
-  --lux-primary: #c3a363;
-}
-
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--lux-canvas);
   color: var(--lux-text);
-  line-height: 1.5;
-  font-size: 14px;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Display typography: serif for H1/H2 only */
+h1, h2 {
   font-family: var(--font-display);
   color: var(--lux-text);
-  letter-spacing: -0.02em;
+}
+h1 { font-size: 36px; line-height: 1.1; letter-spacing: -0.01em; font-weight: 600; }
+h2 { font-size: 28px; line-height: 1.2; letter-spacing: -0.0075em; font-weight: 500; }
+h3, h4, h5, h6 {
+  font-family: var(--font-body);
+  color: var(--lux-text);
+  font-weight: 600;
 }
 
-/* ─── Surface Card ─── */
+/* ─── Surface Card (2px border, 12px radius) ─── */
 .lux-card {
-  @apply rounded-xl bg-white shadow-xs;
-  border: 1px solid var(--lux-border);
+  background: var(--lux-surface);
+  border: 2px solid var(--lux-border);
+  border-radius: 12px;
   transition: border-color 0.15s ease;
 }
 
@@ -94,48 +113,86 @@ h6 {
   }
 }
 
-/* ─── Form Inputs ─── */
+/* ─── Form Inputs (10px radius, gold focus) ─── */
 .lux-input {
-  @apply w-full rounded-lg border border-lux-200 bg-white px-3 py-2 text-sm text-lux-800 placeholder:text-lux-400 font-normal;
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--lux-text);
+  background: var(--lux-surface);
+  border: 2px solid var(--lux-border);
+  border-radius: 10px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.lux-input::placeholder {
+  color: var(--lux-text-tertiary);
+}
+
 .lux-input:focus {
-  @apply outline-none bg-white;
+  outline: none;
   border-color: var(--lux-gold);
-  box-shadow: 0 0 0 2px rgba(195, 163, 99, 0.12);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2);
 }
 
 .lux-input:disabled {
-  @apply bg-lux-50 text-lux-400 cursor-not-allowed border-lux-200;
+  background: var(--lux-canvas);
+  color: var(--lux-text-tertiary);
+  cursor: not-allowed;
+  border-color: var(--lux-border);
+}
+
+textarea.lux-input {
+  height: auto;
+  min-height: 72px;
+  padding: var(--space-3);
 }
 
 /* ─── Primary button ─── */
 .lux-btn-primary {
-  @apply rounded-lg px-4 py-2 text-sm font-medium text-white;
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
   background: var(--lux-text);
-  border: 1px solid transparent;
-  transition: background 0.15s ease, transform 0.1s ease;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: background 0.1s ease, transform 0.1s ease;
 }
 
 .lux-btn-primary:hover {
-  background: #374151;
+  background: var(--lux-text-secondary);
 }
 
 .lux-btn-primary:active {
   transform: scale(0.98);
 }
 
+.lux-btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.35);
+}
+
 .lux-btn-primary:disabled {
-  @apply opacity-40 cursor-not-allowed;
+  opacity: 0.4;
+  cursor: not-allowed;
   transform: none;
 }
 
 /* ─── Secondary button ─── */
 .lux-btn-secondary {
-  @apply rounded-lg px-4 py-2 text-sm font-medium text-lux-700;
-  background: #ffffff;
-  border: 1px solid var(--lux-border);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lux-text-secondary);
+  background: var(--lux-surface);
+  border: 2px solid var(--lux-border);
+  border-radius: 10px;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -145,23 +202,60 @@ h6 {
 }
 
 .lux-btn-secondary:active {
-  background: #F3F4F6;
+  background: var(--lux-canvas);
+}
+
+.lux-btn-secondary:focus-visible {
+  outline: none;
+  border-color: var(--lux-gold);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2);
 }
 
 .lux-btn-secondary:disabled {
-  @apply opacity-40 cursor-not-allowed;
-  background: #ffffff;
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--lux-surface);
+}
+
+/* Ghost button (tertiary) */
+.lux-btn-ghost {
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lux-text-secondary);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lux-btn-ghost:hover {
+  background: var(--lux-surface-hover);
+  color: var(--lux-text);
+}
+
+.lux-btn-ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Pill variant for compact inline actions */
 .lux-btn-pill {
-  @apply rounded-full px-3 py-1.5 text-xs font-medium;
+  padding: var(--space-2) var(--space-3);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 9999px;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-/* ─── Skeleton (Light) ─── */
+/* ─── Skeleton ─── */
 .lux-skeleton {
-  @apply relative overflow-hidden rounded-lg bg-lux-200/60;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--lux-border);
+  opacity: 0.6;
 }
 
 .lux-skeleton::after {
@@ -183,9 +277,7 @@ h6 {
 
 /* ─── Animations ─── */
 @keyframes lux-shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+  100% { transform: translateX(100%); }
 }
 
 @layer utilities {
@@ -193,17 +285,24 @@ h6 {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
   .animate-bento-enter {
     animation-delay: calc(var(--stagger, 0) * 60ms);
   }
 }
 
-/* Webkit scrollbar — thin */
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Webkit scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

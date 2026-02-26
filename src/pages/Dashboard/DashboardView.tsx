@@ -6,17 +6,16 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ArrowRightToLine, Package, RefreshCw, TrendingUp } from 'lucide-react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
 import AiPromptBar from '../../components/widgets/AiPromptBar'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
-import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
-import EurToYenWidget from '../../components/widgets/EurToYenWidget'
-import AuctionLinksWidget from '../../components/widgets/AuctionLinksWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import { Button, PageHeader } from '../../components/design-system'
+import { Briefcase } from 'lucide-react'
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
   const [display, setDisplay] = useState('—')
@@ -106,34 +105,35 @@ export default function DashboardView() {
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <header className="flex items-center justify-between gap-4 mb-8">
-        <h1 className="text-xl font-semibold tracking-tight text-lux-800">
-          Overview
-        </h1>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleSwitchToSidecar}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-lux-800 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-lux-700"
-            title="Switch to sidecar mode"
-            aria-label="Switch dashboard to sidecar mode"
-          >
-            <ArrowRightToLine className="h-3.5 w-3.5" />
-            Sidecar
-          </button>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={isLoading || isRefreshing}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-40"
-            title="Refresh data"
-            aria-label="Refresh dashboard data"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        title="Overview"
+        purpose="Key metrics and quick access to tools."
+        actions={
+          <>
+            <Button
+              variant="primary"
+              onClick={handleSwitchToSidecar}
+              className="inline-flex items-center gap-1.5 text-xs py-1.5"
+              title="Switch to sidecar mode"
+              aria-label="Switch dashboard to sidecar mode"
+            >
+              <ArrowRightToLine className="h-3.5 w-3.5" />
+              Sidecar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleRefresh}
+              disabled={isLoading || isRefreshing}
+              className="inline-flex items-center gap-1.5 text-xs py-1.5 disabled:opacity-40"
+              title="Refresh data"
+              aria-label="Refresh dashboard data"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
       {isLoading ? (
         <DashboardSkeleton />
@@ -153,19 +153,19 @@ export default function DashboardView() {
           <AiPromptBar />
 
           <section aria-labelledby="overview-heading">
-            <h2 id="overview-heading" className="text-[11px] font-semibold uppercase tracking-wider text-lux-500 mb-3">
+            <h2 id="overview-heading" className="mb-3 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
               Key metrics
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="lux-card p-5 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-lux-500 mb-1">Inventory cost</p>
-                    <p className="text-lg font-semibold font-mono text-lux-800">
+                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Inventory cost</p>
+                    <p className="font-mono text-lg font-semibold text-lux-800">
                       <AnimatedNumber value={kpis?.totalInventoryValue ?? 0} prefix="€" />
                     </p>
                   </div>
-                  <div className="rounded-lg bg-lux-50 p-2 text-lux-600 shrink-0 border border-lux-200/60">
+                  <div className="shrink-0 rounded-lg border border-lux-200/60 bg-lux-50 p-2 text-lux-600">
                     <Package className="h-4 w-4" />
                   </div>
                 </div>
@@ -173,28 +173,74 @@ export default function DashboardView() {
               <div className="lux-card p-5 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-lux-500 mb-1">Potential value</p>
-                    <p className="text-lg font-semibold font-mono text-lux-800">
+                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Potential value</p>
+                    <p className="font-mono text-lg font-semibold text-lux-800">
                       <AnimatedNumber value={kpis?.totalInventoryPotentialValue ?? 0} prefix="€" />
                     </p>
                   </div>
-                  <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600 shrink-0 border border-emerald-100">
+                  <div className="shrink-0 rounded-lg border border-emerald-100 bg-emerald-50 p-2 text-emerald-600">
                     <TrendingUp className="h-4 w-4" />
                   </div>
                 </div>
               </div>
+              <div className="lux-card p-5 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Active pipeline</p>
+                    <p className="font-mono text-lg font-semibold text-lux-800">
+                      <AnimatedNumber value={kpis?.activeSourcingPipeline ?? 0} />
+                    </p>
+                  </div>
+                  <div className="shrink-0 rounded-lg border border-lux-200/60 bg-lux-50 p-2 text-lux-600">
+                    <Briefcase className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/inventory?lowStock=1')}
+                className="lux-card p-5 animate-bento-enter text-left transition-colors hover:border-lux-300"
+                style={{ '--stagger': 3 } as React.CSSProperties}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="mb-1 text-ui-label font-medium uppercase tracking-wider text-lux-500">Low stock alerts</p>
+                    <p className="font-mono text-lg font-semibold text-lux-800">
+                      <AnimatedNumber value={kpis?.lowStockAlerts ?? 0} />
+                    </p>
+                  </div>
+                  <div className="shrink-0 rounded-lg border border-amber-100 bg-amber-50 p-2 text-amber-600">
+                    <Package className="h-4 w-4" />
+                  </div>
+                </div>
+              </button>
             </div>
           </section>
 
           <section aria-labelledby="tools-heading">
-            <h2 id="tools-heading" className="text-[11px] font-semibold uppercase tracking-wider text-lux-500 mb-3">
-              Quick tools
+            <h2 id="tools-heading" className="mb-3 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
+              Quick tool
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>*]:min-w-0">
-              <LandedCostWidget />
-              <SerialCheckWidget />
-              <EurToYenWidget />
-              <AuctionLinksWidget />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1 max-w-md">
+                <LandedCostWidget />
+              </div>
+              <Link
+                to="/market-research"
+                className="inline-flex items-center gap-1.5 text-body-sm font-medium text-lux-gold hover:text-lux-700"
+              >
+                More tools
+                <ArrowRightToLine className="h-4 w-4" />
+              </Link>
+            </div>
+          </section>
+
+          <section aria-labelledby="recent-activity-heading">
+            <h2 id="recent-activity-heading" className="mb-3 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
+              Recent activity
+            </h2>
+            <div className="lux-card p-5">
+              <p className="text-body-sm text-lux-500">Activity feed will appear here.</p>
             </div>
           </section>
         </div>

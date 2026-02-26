@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { Plus, Search, Filter, Pencil, X, Loader2, Users, ChevronDown } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut } from '../../lib/api'
+import { PageHeader } from '../../components/design-system'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
 
@@ -183,15 +184,11 @@ export default function SourcingView() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-lux-800">Sourcing</h1>
-          <p className="text-sm text-lux-600 mt-1">
-            Customer requests pipeline.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <PageHeader
+        title="Sourcing"
+        purpose="Customer requests pipeline."
+        actions={
+          <div className="flex items-center gap-3">
           <div className="relative">
             <label htmlFor="sourcing-status-filter" className="sr-only">Filter by status</label>
             <select
@@ -218,8 +215,9 @@ export default function SourcingView() {
             <Plus className="h-4 w-4" />
             New Request
           </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* Create Form Overlay */}
       {showCreateForm && (
