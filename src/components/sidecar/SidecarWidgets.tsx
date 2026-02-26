@@ -73,13 +73,15 @@ function parseStoredCollapsedState(raw: string | null): Partial<Record<WidgetId,
   }
 }
 
+const INITIAL_COLLAPSED: Record<WidgetId, boolean> = {
+  'landed-cost': false,
+  'serial-check': true,
+  'fx-conversion': true,
+  'bid-calculator': true,
+}
+
 export default function SidecarWidgets() {
-  const [collapsed, setCollapsed] = useState<Record<WidgetId, boolean>>({
-    'landed-cost': true,
-    'serial-check': true,
-    'fx-conversion': true,
-    'bid-calculator': true,
-  })
+  const [collapsed, setCollapsed] = useState<Record<WidgetId, boolean>>(INITIAL_COLLAPSED)
 
   useEffect(() => {
     const stored = parseStoredCollapsedState(localStorage.getItem(COLLAPSED_WIDGETS_STORAGE_KEY))
@@ -101,26 +103,31 @@ export default function SidecarWidgets() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-gray-200 bg-white p-3">
-        <h2 className="text-xs font-semibold text-gray-800">Widget workspace</h2>
-        <p className="mt-1 text-xs text-gray-500">
+    <div className="space-y-4">
+      <div className="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Widget workspace</h2>
+        <p className="mt-0.5 text-[11px] text-gray-500">
           Sidecar-native widgets designed for narrow vertical sessions. Expand only what you need.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {WIDGETS.map((widget) => {
           const widgetId = widget.id
           const Icon = widget.icon
           const isCollapsed = collapsed[widgetId]
 
           return (
-            <section key={widgetId} className="rounded-xl border border-gray-200 bg-white">
-              <div className="flex items-start justify-between gap-2 px-3 py-2">
-                <div className="min-w-0">
+            <section
+              key={widgetId}
+              className={`rounded-xl border border-gray-200 bg-white transition-shadow duration-200 overflow-hidden ${!isCollapsed ? 'shadow-sm' : ''}`}
+            >
+              <div className="flex items-start justify-between gap-2 px-3 py-2 border-l-2 border-l-indigo-200 hover:bg-gray-50/50 transition-colors">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <Icon className="h-3.5 w-3.5 text-gray-500" />
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
                     <p className="truncate text-xs font-semibold text-gray-800">{widget.title}</p>
                   </div>
                   <p className="mt-0.5 text-[11px] text-gray-500">{widget.description}</p>
@@ -128,7 +135,7 @@ export default function SidecarWidgets() {
                 <button
                   type="button"
                   onClick={() => toggleCollapsed(widgetId)}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                  className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-600 hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-1 transition-colors"
                 >
                   {isCollapsed ? (
                     <>
@@ -143,12 +150,15 @@ export default function SidecarWidgets() {
                   )}
                 </button>
               </div>
-
-              {!isCollapsed && (
-                <div className="border-t border-gray-100 p-2">
-                  {renderWidget(widgetId)}
+              <div
+                className={`grid transition-[grid-template-rows] duration-200 ease-out ${isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className="border-t border-gray-100 p-2">
+                    {renderWidget(widgetId)}
+                  </div>
                 </div>
-              )}
+              </div>
             </section>
           )
         })}

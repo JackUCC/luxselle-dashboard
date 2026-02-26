@@ -173,10 +173,10 @@ export default function QuickCheck() {
         </div>
         <p className="mt-1 text-[11px] text-gray-500">Summary first, with details available below when needed.</p>
 
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <label className="text-[11px] font-medium text-gray-700">Or search by image</label>
+        <div className="mt-2 pt-2 border-t border-gray-200 bg-gray-50/50 rounded-lg px-2 py-2 min-h-[72px] flex flex-col justify-center">
+          <label className="text-[11px] font-medium text-gray-700 block">Or search by image</label>
           {imagePreview ? (
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               <img src={imagePreview} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
               <div className="flex-1 min-w-0 flex items-center gap-1">
                 <button
@@ -194,9 +194,9 @@ export default function QuickCheck() {
               </div>
             </div>
           ) : (
-            <label className="mt-1 flex items-center gap-2 rounded border border-dashed border-gray-200 px-2 py-1.5 cursor-pointer hover:border-gray-300">
+            <label className="mt-1.5 flex items-center gap-2 rounded border border-dashed border-gray-200 bg-white px-2 py-2 cursor-pointer hover:border-gray-300 min-h-[40px]">
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-              <Upload className="h-3.5 w-3.5 text-gray-400" />
+              <Upload className="h-3.5 w-3.5 text-gray-400 shrink-0" />
               <span className="text-[11px] text-gray-500">Upload image</span>
             </label>
           )}
