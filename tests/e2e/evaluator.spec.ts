@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 
-const projectId = 'luxselle-dashboard'
+const projectId = '[REDACTED]'
 const emulatorBaseUrl = 'http://127.0.0.1:8082'
 
 const clearFirestore = async (request: APIRequestContext) => {
@@ -66,18 +66,18 @@ test('prompts when search is empty', async ({ page }) => {
 })
 
 test('nav routing works for all main routes', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.setViewportSize({ width: 1200, height: 900 })
 
   // Start at Overview
   await page.goto('/')
-  await expect(page.getByText('Good afternoon, Jack')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
 
   // Navigate to Inventory
   await page.locator('header').getByRole('link', { name: 'Inventory' }).click()
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
-  // Navigate to Buy Box
-  await page.locator('header').getByRole('link', { name: 'Buy Box' }).click()
+  // Navigate to Price Check
+  await page.locator('header').getByRole('link', { name: 'Price Check' }).click()
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 
   // Navigate to Sourcing
@@ -94,7 +94,7 @@ test('invoices page loads and shows list or empty state', async ({ page }) => {
   await page.goto('/invoices')
   await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible()
   await expect(
-    page.getByText(/No invoices yet|All invoices|Create an in-person invoice/).first()
+    page.getByText(/No invoices yet|All invoices|Create Invoice/).first()
   ).toBeVisible()
 })
 

@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 
-const projectId = 'luxselle-dashboard'
+const projectId = '[REDACTED]'
 const emulatorBaseUrl = 'http://127.0.0.1:8082'
 
 const clearFirestore = async (request: APIRequestContext) => {
@@ -33,8 +33,8 @@ test('mobile nav drawer opens and routes correctly', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 })
 
-test('desktop top nav is visible below 2xl and side rail is hidden', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
+test('desktop top nav is visible below xl and side rail is hidden', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
 
   await expect(page.getByTestId('wide-screen-side-rail')).toBeHidden()
@@ -51,7 +51,7 @@ test('ultra-wide side rail is visible and routes correctly', async ({ page }) =>
   const sideRail = page.getByTestId('wide-screen-side-rail')
   await expect(sideRail).toBeVisible()
 
-  await sideRail.getByRole('link', { name: 'Buy Box' }).click()
+  await sideRail.getByRole('link', { name: 'Price Check' }).click()
   await expect(page).toHaveURL('/buy-box')
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 })
@@ -70,9 +70,6 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
   let resolveKpis: () => void
   const kpisPromise = new Promise<void>((resolve) => { resolveKpis = resolve })
 
-  let resolveProfit: () => void
-  const profitPromise = new Promise<void>((resolve) => { resolveProfit = resolve })
-
   await page.route('**/api/dashboard/kpis', async (route) => {
     await kpisPromise
     await route.fulfill({
@@ -89,24 +86,6 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
     })
   })
 
-  await page.route('**/api/dashboard/profit-summary', async (route) => {
-    await profitPromise
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: {
-          totalCost: 65000,
-          totalRevenue: 98000,
-          totalProfit: 33000,
-          marginPct: 33.6,
-          itemsSold: 12,
-          avgMarginPct: 27.5,
-        },
-      }),
-    })
-  })
-
   await page.goto('/')
 
   // Verify skeleton is visible while requests are pending
@@ -114,11 +93,10 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
 
   // Resolve requests
   resolveKpis!()
-  resolveProfit!()
 
   // Verify skeleton disappears and content loads
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
-  await expect(page.getByText('Cost of inventory total')).toBeVisible()
+  await expect(page.getByText('Inventory Cost')).toBeVisible()
 })
 
 test('inventory low-stock filter works via URL', async ({ page }) => {
