@@ -10,6 +10,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
+import AuctionLinksWidget from '../../components/widgets/AuctionLinksWidget'
+import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
@@ -184,11 +186,13 @@ export default function DashboardView() {
 
           <section aria-labelledby="tools-heading" className="scroll-mt-4">
             <h2 id="tools-heading" className="mb-4 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
-              Quick tool
+              Quick tools
             </h2>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 flex-1 max-w-md">
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <LandedCostWidget />
+                <EurToYenWidget />
+                <AuctionLinksWidget />
               </div>
               <Link
                 to="/market-research"
