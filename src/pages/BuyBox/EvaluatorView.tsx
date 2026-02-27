@@ -3,7 +3,8 @@
  * In Sidecar mode, renders the compact QuickCheck component.
  * @see docs/CODE_REFERENCE.md
  */
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Search, Calculator, Sparkles, Upload, X, Loader2, ChevronDown, ChevronUp, Info, ImageIcon } from 'lucide-react'
 import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
@@ -50,6 +51,7 @@ const CONDITION_OPTIONS = [
 
 export default function EvaluatorView() {
   const { isSidecar } = useLayoutMode()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<'pricecheck' | 'landed'>('pricecheck')
   const [query, setQuery] = useState('')
   const [condition, setCondition] = useState('')
@@ -65,6 +67,40 @@ export default function EvaluatorView() {
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const autoRanQueryRef = useRef<string | null>(null)
+
+  const runResearch = useCallback(async (q: string, opts?: { condition?: string; notes?: string }) => {
+    setIsResearching(true)
+    setError(null)
+    setResult(null)
+    try {
+      const { data } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
+        query: q,
+        condition: opts?.condition || undefined,
+        notes: opts?.notes || undefined,
+      })
+      setResult(data)
+      toast.success('Market research complete')
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Research failed'
+      setError(msg)
+      toast.error(msg)
+    } finally {
+      setIsResearching(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const urlQuery = searchParams.get('q')
+    if (!urlQuery || autoRanQueryRef.current === urlQuery) return
+    autoRanQueryRef.current = urlQuery
+    const shouldRun = searchParams.get('run') === '1'
+    setQuery(urlQuery)
+    setSearchParams({}, { replace: true })
+    if (shouldRun) {
+      runResearch(urlQuery)
+    }
+  }, [searchParams, setSearchParams, runResearch])
 
   const confidencePct = result
     ? result.comps.length >= 5
@@ -146,24 +182,7 @@ export default function EvaluatorView() {
       toast.error('Enter an item name to search')
       return
     }
-    setIsResearching(true)
-    setError(null)
-    setResult(null)
-    try {
-      const { data } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: q,
-        condition: condition || undefined,
-        notes: notes.trim() || undefined,
-      })
-      setResult(data)
-      toast.success('Market research complete')
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Research failed'
-      setError(msg)
-      toast.error(msg)
-    } finally {
-      setIsResearching(false)
-    }
+    runResearch(q, { condition, notes: notes.trim() })
   }
 
   return (
