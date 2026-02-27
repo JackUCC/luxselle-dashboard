@@ -49,7 +49,6 @@ const MOCK_SETTINGS = {
   updatedAt: '2024-01-01T00:00:00.000Z',
   baseCurrency: 'EUR',
   targetMarginPct: 35,
-  lowStockThreshold: 2,
   fxUsdToEur: 0.92,
   vatRatePct: 20,
   pricingMarketCountryDefault: 'IE',
@@ -107,20 +106,6 @@ describe('PATCH /api/settings', () => {
   })
 
   it('should return 200 with updated field when given a valid patch body', async () => {
-    const updated = { ...MOCK_SETTINGS, lowStockThreshold: 5 }
-    mockGetSettings.mockResolvedValue(MOCK_SETTINGS)
-    mockUpsertSettings.mockResolvedValue(updated)
-
-    const res = await request(app)
-      .patch('/api/settings')
-      .send({ lowStockThreshold: 5 })
-
-    expect(res.status).toBe(200)
-    expect(res.body.data.lowStockThreshold).toBe(5)
-    expect(mockUpsertSettings).toHaveBeenCalledTimes(1)
-  })
-
-  it('should return 200 and update targetMarginPct', async () => {
     const updated = { ...MOCK_SETTINGS, targetMarginPct: 40 }
     mockGetSettings.mockResolvedValue(MOCK_SETTINGS)
     mockUpsertSettings.mockResolvedValue(updated)
@@ -131,6 +116,7 @@ describe('PATCH /api/settings', () => {
 
     expect(res.status).toBe(200)
     expect(res.body.data.targetMarginPct).toBe(40)
+    expect(mockUpsertSettings).toHaveBeenCalledTimes(1)
   })
 
   it('should return 400 with VALIDATION_ERROR code when body has an invalid field type', async () => {

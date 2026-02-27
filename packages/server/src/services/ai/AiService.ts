@@ -73,7 +73,6 @@ KPIs:
 - Total Inventory Value: €${kpis.totalInventoryValue}
 - Pending Buy List Value: €${kpis.pendingBuyListValue}
 - Active Sourcing Pipeline: €${kpis.activeSourcingPipeline}
-- Low Stock Items: ${kpis.lowStockAlerts}
 - Total Revenue (Recent): €${kpis.revenue || 0}
 - Margin: ${kpis.margin || 0}%
 
@@ -114,9 +113,9 @@ Return ONLY a valid JSON object:
     private mockInsights(): BusinessInsights {
         return {
             insights: [
-                "Inventory levels are optimal, but consider increasing sourcing for high-demand items.",
+                "Inventory levels are optimal; consider increasing sourcing for high-demand items.",
                 "Pending buy list value is high; prioritize closing these deals to boost stock.",
-                "Margin is healthy, but keep an eye on aging low-stock items."
+                "Margin is healthy; focus on turning inventory efficiently."
             ],
             generatedAt: new Date().toISOString()
         }

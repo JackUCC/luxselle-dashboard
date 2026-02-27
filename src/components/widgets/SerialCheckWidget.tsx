@@ -2,62 +2,26 @@
  * Compact Serial Check widget for the Dashboard overview. Paste serial + brand → see year.
  * Links to full Serial Check page for more detail.
  */
-import { useState, useCallback } from 'react'
-import toast from 'react-hot-toast'
 import { Search, Calendar, Info } from 'lucide-react'
-import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
-import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
-import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
-import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
+import { SERIAL_CHECK_BRANDS } from '../../lib/serialDateDecoder'
+import { useSerialDecode } from '../../hooks/useSerialDecode'
 import SectionLabel from '../design-system/SectionLabel'
 
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  maxBuyEur: number
-  maxBidEur: number
-  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string }>
-}
-
 export default function SerialCheckWidget() {
-  const [serial, setSerial] = useState('')
-  const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
-  const [description, setDescription] = useState('')
-  const [result, setResult] = useState<DecodeResult | null>(null)
-  const [guidance, setGuidance] = useState<SerialPricingGuidance | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleDecode = useCallback(async () => {
-    const normalizedDescription = description.trim()
-    if (!serial.trim()) { toast.error('Enter serial'); return }
-    if (!normalizedDescription) { toast.error('Add item description'); return }
-    setIsLoading(true)
-    setGuidance(null)
-    try {
-      let decoded = decodeSerialToYear(serial, brand)
-      if (decoded.precision === 'unknown' || decoded.confidence < 0.7) {
-        try {
-          const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
-            brand, serial, itemDescription: normalizedDescription,
-          })
-          decoded = data
-        } catch { /* keep local result */ }
-      }
-      const { data: market } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: normalizedDescription,
-      })
-      setResult(decoded)
-      setGuidance(calculateSerialPricingGuidance({
-        marketAverageEur: market.averageSellingPriceEur,
-        decode: decoded,
-      }))
-    } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : 'Decode failed')
-      setResult(decodeSerialToYear(serial, brand))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [serial, brand, description])
+  const {
+    serial,
+    setSerial,
+    brand,
+    setBrand,
+    description,
+    setDescription,
+    result,
+    guidance,
+    isLoading,
+    handleDecode,
+    clear,
+  } = useSerialDecode()
 
   return (
     <div
@@ -113,7 +77,7 @@ export default function SerialCheckWidget() {
           </button>
           <button
             type="button"
-            onClick={() => { setSerial(''); setResult(null); setGuidance(null) }}
+            onClick={clear}
             className="text-[13px] font-medium text-lux-500 hover:text-lux-700 transition-colors px-3"
           >
             Clear

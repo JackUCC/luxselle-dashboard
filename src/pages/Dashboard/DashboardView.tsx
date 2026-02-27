@@ -20,7 +20,6 @@ import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
-import LowStockKpiWidget from '../../components/widgets/LowStockKpiWidget'
 import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
@@ -170,10 +169,9 @@ export default function DashboardView() {
             <LandedCostWidget />
           </BentoGrid>
 
-          {/* Row 2: Currency Converter + Low Stock + Inventory Cost + Potential Value */}
-          <BentoGrid columns={4}>
+          {/* Row 2: Currency Converter + Inventory Cost + Potential Value */}
+          <BentoGrid columns={3}>
             <EurToYenWidget />
-            <LowStockKpiWidget kpis={kpis} stagger={4} />
             <StatCard
               label="Inventory Cost"
               value={<AnimatedNumber value={inventoryValue} prefix="€" />}
@@ -184,7 +182,7 @@ export default function DashboardView() {
                   <span className="text-lux-400 font-normal">vs last month</span>
                 </div>
               }
-              stagger={5}
+              stagger={4}
             />
             <StatCard
               label="Potential Value"
@@ -195,7 +193,7 @@ export default function DashboardView() {
                 </span>
               }
               accent
-              stagger={6}
+              stagger={5}
             />
           </BentoGrid>
 

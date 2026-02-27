@@ -594,7 +594,6 @@ KPIs:
 - Total Inventory Value: {totalInventoryValue}
 - Pending Buy List Value: {pendingBuyListValue}
 - Active Sourcing Pipeline: {activeSourcingPipeline}
-- Low Stock Items: {lowStockAlerts}
 - Total Revenue (Recent): {revenue}
 - Margin: {margin}%
 

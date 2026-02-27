@@ -7,7 +7,6 @@ export interface KPIs {
     totalInventoryValue: number
     totalInventoryPotentialValue: number
     activeSourcingPipeline: number
-    lowStockAlerts: number
 }
 
 export interface ProfitSummary {

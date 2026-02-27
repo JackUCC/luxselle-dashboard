@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { Search, Loader2, Package, Calculator, Upload, ImageIcon, X } from 'lucide-react'
 import { apiGet, apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
+import { computeSimpleLandedCost, AUCTION_PCT, CUSTOMS_PCT, VAT_PCT } from '../../lib/constants'
 
 interface VisualSearchResult {
   productId?: string
@@ -35,10 +36,6 @@ interface InventoryMatch {
   sellPriceEur: number
 }
 
-const AUCTION_PCT = 7
-const CUSTOMS_PCT = 3
-const VAT_PCT = 23
-
 export default function QuickCheck() {
   const [query, setQuery] = useState('')
   const [isResearching, setIsResearching] = useState(false)
@@ -58,10 +55,10 @@ export default function QuickCheck() {
     return Number.isFinite(n) && n >= 0 ? n : 0
   }, [bidInput])
 
-  const landed = useMemo(() => {
-    if (bid <= 0) return 0
-    return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
-  }, [bid])
+  const landed = useMemo(
+    () => computeSimpleLandedCost(bid, AUCTION_PCT, CUSTOMS_PCT, VAT_PCT),
+    [bid]
+  )
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()

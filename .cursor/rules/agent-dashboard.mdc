@@ -19,5 +19,4 @@ alwaysApply: false
 - Sidecar: Shows QuickCheck (compact price check + landed cost + inventory awareness)
 
 ## Behaviours
-- Low stock KPI clickable → navigate to /inventory?lowStock=1
 - Command bar: parse intent, navigate + pre-filter

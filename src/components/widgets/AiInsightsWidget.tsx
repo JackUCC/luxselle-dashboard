@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Sparkles, RefreshCw, Lightbulb } from 'lucide-react'
+import { useState } from 'react'
+import { Sparkles, RefreshCw, Lightbulb, AlertCircle } from 'lucide-react'
 import { apiPost } from '../../lib/api'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
 import toast from 'react-hot-toast'
@@ -17,12 +17,13 @@ interface BusinessInsights {
 export default function AiInsightsWidget({ kpis, profit }: AiInsightsWidgetProps) {
     const [insights, setInsights] = useState<BusinessInsights | null>(null)
     const [loading, setLoading] = useState(false)
-    const [hasGenerated, setHasGenerated] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const generateInsights = async () => {
         if (!kpis || loading) return
 
         setLoading(true)
+        setError(null)
         try {
             const response = await apiPost<{ data: BusinessInsights }>('/ai/insights', {
                 kpis: {
@@ -32,11 +33,11 @@ export default function AiInsightsWidget({ kpis, profit }: AiInsightsWidgetProps
                 }
             })
             setInsights(response.data)
-            setHasGenerated(true)
             toast.success('AI Insights generated')
-        } catch (error) {
-            console.error(error)
-            toast.error('Failed to generate insights')
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to generate insights'
+            setError(message)
+            toast.error(message)
         } finally {
             setLoading(false)
         }
@@ -69,10 +70,27 @@ export default function AiInsightsWidget({ kpis, profit }: AiInsightsWidgetProps
                 </button>
             </div>
 
-            {!insights && !loading && (
+            {!insights && !loading && !error && (
                 <div className="flex flex-col items-center justify-center py-6 text-center text-sm text-lux-500 bg-lux-50/80 rounded-xl border border-dashed border-lux-200">
                     <Lightbulb className="h-8 w-8 text-lux-300 mb-2" />
                     <p>Click Generate to analyze your inventory & sales data.</p>
+                </div>
+            )}
+
+            {error && !insights && (
+                <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <p className="inline-flex items-center gap-1.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        {error}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={generateInsights}
+                        disabled={loading}
+                        className="rounded border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                        Retry
+                    </button>
                 </div>
             )}
 

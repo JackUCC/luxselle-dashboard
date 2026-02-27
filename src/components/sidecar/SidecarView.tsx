@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeftToLine, Boxes, LayoutGrid, Search } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import QuickCheck from './QuickCheck'
 import BatchProcessor from './BatchProcessor'
 import SidecarWidgets from './SidecarWidgets'
@@ -26,14 +26,17 @@ function isSidecarTab(value: string): value is SidecarTab {
   return value === 'quick' || value === 'batch' || value === 'widgets'
 }
 
-function resolveInitialTab(initialTab: SidecarTab): SidecarTab {
+function resolveInitialTab(urlTab: string | null, fallback: SidecarTab): SidecarTab {
+  if (urlTab && isSidecarTab(urlTab)) return urlTab
   try {
-    const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
-    if (saved && isSidecarTab(saved)) return saved
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
+      if (saved && isSidecarTab(saved)) return saved
+    }
   } catch {
     // Ignore localStorage read errors in private mode or restricted contexts.
   }
-  return initialTab
+  return fallback
 }
 
 function renderTabPanel(tab: SidecarTab) {
@@ -51,7 +54,11 @@ function renderTabPanel(tab: SidecarTab) {
 
 export default function SidecarView({ initialTab = 'quick' }: { initialTab?: SidecarTab }) {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<SidecarTab>(() => resolveInitialTab(initialTab))
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlTab = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<SidecarTab>(() =>
+    resolveInitialTab(urlTab, initialTab)
+  )
 
   const activeConfig = useMemo(
     () => TABS.find((tab) => tab.id === activeTab) ?? TABS[0],
@@ -60,14 +67,38 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
 
   useEffect(() => {
     try {
-      localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab)
+      }
     } catch {
       // Ignore localStorage write errors in restricted environments.
     }
   }, [activeTab])
 
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set('tab', activeTab)
+        return next
+      },
+      { replace: true }
+    )
+  }, [activeTab, setSearchParams])
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab')
+    if (tabFromUrl && isSidecarTab(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [searchParams])
+
+  const handleTabSelect = (tab: SidecarTab) => {
+    setActiveTab(tab)
+  }
+
   const handleExitSidecar = () => {
-    navigate('/')
+    navigate({ pathname: '/', search: '' })
   }
 
   return (
@@ -102,7 +133,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
                   key={tab.id}
                   aria-label={`${tab.label} mode`}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabSelect(tab.id)}
                   className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors ${
                     isActive
                       ? 'bg-lux-800 text-white'

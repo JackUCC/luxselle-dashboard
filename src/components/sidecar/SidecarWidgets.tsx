@@ -80,16 +80,14 @@ const INITIAL_COLLAPSED: Record<WidgetId, boolean> = {
   'bid-calculator': true,
 }
 
-export default function SidecarWidgets() {
-  const [collapsed, setCollapsed] = useState<Record<WidgetId, boolean>>(INITIAL_COLLAPSED)
+function readInitialCollapsed(): Record<WidgetId, boolean> {
+  if (typeof window === 'undefined') return { ...INITIAL_COLLAPSED }
+  const stored = parseStoredCollapsedState(localStorage.getItem(COLLAPSED_WIDGETS_STORAGE_KEY))
+  return { ...INITIAL_COLLAPSED, ...stored }
+}
 
-  useEffect(() => {
-    const stored = parseStoredCollapsedState(localStorage.getItem(COLLAPSED_WIDGETS_STORAGE_KEY))
-    setCollapsed((current) => ({
-      ...current,
-      ...stored,
-    }))
-  }, [])
+export default function SidecarWidgets() {
+  const [collapsed, setCollapsed] = useState<Record<WidgetId, boolean>>(readInitialCollapsed)
 
   useEffect(() => {
     localStorage.setItem(COLLAPSED_WIDGETS_STORAGE_KEY, JSON.stringify(collapsed))

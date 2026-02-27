@@ -1,80 +1,22 @@
-import { useCallback, useState } from 'react'
-import toast from 'react-hot-toast'
 import { Calendar, Info, Search } from 'lucide-react'
-import { apiPost, ApiError } from '../../../lib/api'
 import { formatCurrency } from '../../../lib/formatters'
-import {
-  decodeSerialToYear,
-  SERIAL_CHECK_BRANDS,
-  type DecodeResult,
-  type SerialCheckBrand,
-} from '../../../lib/serialDateDecoder'
-import { calculateSerialPricingGuidance } from '../../../lib/serialValuation'
-import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  maxBuyEur: number
-  maxBidEur: number
-  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string }>
-}
+import { SERIAL_CHECK_BRANDS } from '../../../lib/serialDateDecoder'
+import { useSerialDecode } from '../../../hooks/useSerialDecode'
 
 export default function SidecarSerialCheckWidget() {
-  const [serial, setSerial] = useState('')
-  const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
-  const [description, setDescription] = useState('')
-  const [result, setResult] = useState<DecodeResult | null>(null)
-  const [guidance, setGuidance] = useState<SerialPricingGuidance | null>(null)
-  const [hasTriedDecode, setHasTriedDecode] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleDecode = useCallback(async () => {
-    const normalizedDescription = description.trim()
-    if (!serial.trim()) {
-      toast.error('Enter serial')
-      return
-    }
-    if (!normalizedDescription) {
-      toast.error('Add description')
-      return
-    }
-    setHasTriedDecode(true)
-    setIsLoading(true)
-    setGuidance(null)
-
-    try {
-      let decoded = decodeSerialToYear(serial, brand)
-      if (decoded.precision === 'unknown' || decoded.confidence < 0.7) {
-        try {
-          const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
-            serial,
-            brand,
-            itemDescription: normalizedDescription,
-          })
-          decoded = data
-        } catch {
-          // keep local decode
-        }
-      }
-
-      const { data: market } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: normalizedDescription,
-      })
-      const valuation = calculateSerialPricingGuidance({
-        marketAverageEur: market.averageSellingPriceEur,
-        decode: decoded,
-      })
-
-      setResult(decoded)
-      setGuidance(valuation)
-    } catch (error) {
-      const message = error instanceof ApiError ? error.message : 'Decode failed'
-      toast.error(message)
-      setResult(decodeSerialToYear(serial, brand))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [serial, brand, description])
+  const {
+    serial,
+    setSerial,
+    brand,
+    setBrand,
+    description,
+    setDescription,
+    result,
+    guidance,
+    isLoading,
+    hasTriedDecode,
+    handleDecode,
+  } = useSerialDecode()
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white p-2.5">

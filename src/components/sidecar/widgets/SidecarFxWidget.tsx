@@ -1,43 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useMemo, useState } from 'react'
 import { AlertTriangle, ArrowRightLeft, Loader2, RefreshCw } from 'lucide-react'
-import { fetchEurToJpy, type FxResult } from '../../../lib/fxRate'
+import { formatEur, formatJpy } from '../../../lib/formatters'
+import { useFxRate } from '../../../hooks/useFxRate'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
 
-function formatJpy(value: number): string {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value)
-}
-
-function formatEur(value: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
-}
-
 export default function SidecarFxWidget() {
-  const [fx, setFx] = useState<FxResult | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { fx, loading: isLoading, error: errorMessage, retry: loadRate } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('')
-
-  const loadRate = async () => {
-    setIsLoading(true)
-    setErrorMessage(null)
-    try {
-      const next = await fetchEurToJpy()
-      setFx(next)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load FX rate'
-      setErrorMessage(message)
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadRate()
-  }, [])
 
   const amount = useMemo(() => {
     const n = parseFloat(amountInput.replace(/,/g, ''))
@@ -47,7 +18,6 @@ export default function SidecarFxWidget() {
   const eurToJpyRate = fx?.rate ?? 0
   const jpyToEurRate = eurToJpyRate > 0 ? 1 / eurToJpyRate : 0
   const converted = direction === 'eur-to-jpy' ? amount * eurToJpyRate : amount * jpyToEurRate
-  const sourceLabel = direction === 'eur-to-jpy' ? 'Amount €' : 'Amount ¥'
   const hasRate = eurToJpyRate > 0
 
   return (
@@ -96,7 +66,7 @@ export default function SidecarFxWidget() {
               inputMode="decimal"
               value={amountInput}
               onChange={(event) => setAmountInput(event.target.value)}
-              placeholder={sourceLabel}
+              placeholder={direction === 'eur-to-jpy' ? 'Amount €' : 'Amount ¥'}
               className="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none"
             />
             <button

@@ -15,6 +15,5 @@ alwaysApply: false
 - GET /api/vat/calculate, POST /api/invoices
 
 ## Jarvis behaviours
-- Filter by lowStock query param when linked from Dashboard
 - Pre-fill sell price suggestion from comps when editing
 - Empty state: "Add from Evaluator or create a product manually"
