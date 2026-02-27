@@ -59,8 +59,7 @@ const getStatusLabel = (status: string) => {
 
 /** Badge variant by status: success (in_stock), warning (reserved), danger (sold), count (other). */
 function getStatusBadgeVariant(
-  status: string,
-  _quantity: number
+  status: string
 ): "status-success" | "status-warning" | "status-danger" | "count" {
   if (status === "sold") return "status-danger";
   if (status === "reserved") return "status-warning";
@@ -729,12 +728,7 @@ export default function InventoryView() {
                           </span>
                         </td>
                         <td className="px-3 py-3">
-                          <Badge
-                            variant={getStatusBadgeVariant(
-                              product.status,
-                              product.quantity
-                            )}
-                          >
+                          <Badge variant={getStatusBadgeVariant(product.status)}>
                             {getStatusLabel(product.status)}
                           </Badge>
                         </td>
@@ -807,12 +801,7 @@ export default function InventoryView() {
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <Badge
-                          variant={getStatusBadgeVariant(
-                            product.status,
-                            product.quantity
-                          )}
-                        >
+                        <Badge variant={getStatusBadgeVariant(product.status)}>
                           {getStatusLabel(product.status)}
                         </Badge>
                       </td>
@@ -856,12 +845,7 @@ export default function InventoryView() {
                     {isMissingInfo && (
                       <Badge variant="status-warning">Missing info</Badge>
                     )}
-                    <Badge
-                      variant={getStatusBadgeVariant(
-                        product.status,
-                        product.quantity
-                      )}
-                    >
+                    <Badge variant={getStatusBadgeVariant(product.status)}>
                       {getStatusLabel(product.status)}
                     </Badge>
                   </div>

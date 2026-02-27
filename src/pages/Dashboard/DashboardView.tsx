@@ -3,7 +3,7 @@
  * In Sidecar mode, shows QuickCheck (compact price + inventory check) instead.
  * @see docs/CODE_REFERENCE.md
  */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ArrowRightToLine, RefreshCw } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -32,7 +32,7 @@ export default function DashboardView() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadData = async (isRefresh = false) => {
+  const loadData = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
     try {
       const [kpisRes, profitRes] = await Promise.all([
@@ -49,11 +49,11 @@ export default function DashboardView() {
     } finally {
       if (!isRefresh) setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (!isSidecar) loadData()
-  }, [isSidecar])
+  }, [isSidecar, loadData])
 
   if (isSidecar) {
     return <SidecarView />

@@ -1,62 +1,60 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpDown } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ArrowUpDown, Loader2 } from 'lucide-react'
 import { calculateMaxBuyPrice } from '../../../lib/landedCost'
-import { formatCurrency, formatJpy, parseNumericInput } from '../../../lib/formatters'
-import { fetchEurToJpy } from '../../../lib/fxRate'
+import { formatCurrency, formatJpy } from '../../../lib/formatters'
+import { useFxRate } from '../../../hooks/useFxRate'
+import {
+  DEFAULT_AUCTION_FEE_PCT,
+  DEFAULT_CUSTOMS_PCT,
+  DEFAULT_IMPORT_VAT_PCT,
+  DEFAULT_PAYMENT_FEE_PCT
+} from '../../../lib/constants'
 
-const FALLBACK_EUR_TO_JPY = 160
+function parseNumber(value: string): number {
+  const n = parseFloat(value.replace(/,/g, ''))
+  return Number.isFinite(n) && n >= 0 ? n : 0
+}
 
 export default function SidecarBidWidget() {
+  const { data: fx, isLoading } = useFxRate()
   const [sellPriceInput, setSellPriceInput] = useState('')
   const [targetMarginInput, setTargetMarginInput] = useState('30')
   const [shippingInput, setShippingInput] = useState('0')
-  const [rateEurToJpy, setRateEurToJpy] = useState<number>(FALLBACK_EUR_TO_JPY)
-  const mountedRef = useRef(true)
 
-  useEffect(() => {
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
+  const sellPriceEur = parseNumber(sellPriceInput)
+  const targetMarginPct = parseNumber(targetMarginInput)
+  const shippingJpy = parseNumber(shippingInput)
 
-  useEffect(() => {
-    fetchEurToJpy()
-      .then((res) => {
-        if (mountedRef.current && res.rate > 0) setRateEurToJpy(res.rate)
-      })
-      .catch(() => {})
-  }, [])
-
-  const sellPriceEur = parseNumericInput(sellPriceInput)
-  const targetMarginPct = parseNumericInput(targetMarginInput)
-  const shippingJpy = parseNumericInput(shippingInput)
+  const rate = fx?.rate ?? 160
 
   const maxBuyJpy = useMemo(() => {
     return calculateMaxBuyPrice({
       targetSellPriceEur: sellPriceEur,
       desiredMarginPct: targetMarginPct,
       currency: 'JPY',
-      rates: { JPY: rateEurToJpy },
+      rates: { JPY: rate },
       shipping: shippingJpy,
       insurance: 0,
-      customsPct: 3,
-      importVatPct: 23,
-      platformFeePct: 7,
-      paymentFeePct: 0,
+      customsPct: DEFAULT_CUSTOMS_PCT,
+      importVatPct: DEFAULT_IMPORT_VAT_PCT,
+      platformFeePct: DEFAULT_AUCTION_FEE_PCT,
+      paymentFeePct: DEFAULT_PAYMENT_FEE_PCT,
       fixedFee: 0,
     })
-  }, [sellPriceEur, targetMarginPct, shippingJpy, rateEurToJpy])
+  }, [sellPriceEur, targetMarginPct, shippingJpy, rate])
 
-  const maxBuyEur = maxBuyJpy / rateEurToJpy
+  const maxBuyEur = rate > 0 ? maxBuyJpy / rate : 0
   const hasSellPrice = sellPriceEur > 0
   const marginOutOfRange = targetMarginPct >= 100
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white p-2.5">
-      <div className="mb-1.5 flex items-center gap-1.5">
-        <ArrowUpDown className="h-3.5 w-3.5 text-gray-500" />
-        <p className="text-xs font-semibold text-gray-800">Bid target</p>
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <ArrowUpDown className="h-3.5 w-3.5 text-gray-500" />
+          <p className="text-xs font-semibold text-gray-800">Bid target</p>
+        </div>
+        {isLoading && <Loader2 className="h-3 w-3 animate-spin text-gray-400" />}
       </div>
 
       <div className="space-y-1.5">
@@ -102,7 +100,7 @@ export default function SidecarBidWidget() {
       {marginOutOfRange && (
         <p className="mt-1 text-[10px] text-amber-700">Target margin should stay below 100%.</p>
       )}
-      <p className="mt-1 text-[10px] text-gray-500">Using quick profile: 7% fee, 3% customs, 23% VAT.</p>
+      <p className="mt-1 text-[10px] text-gray-500">Using quick profile: {DEFAULT_AUCTION_FEE_PCT}% fee, {DEFAULT_CUSTOMS_PCT}% customs, {DEFAULT_IMPORT_VAT_PCT}% VAT.</p>
     </div>
   )
 }

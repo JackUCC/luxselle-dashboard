@@ -120,7 +120,7 @@ export default function SidecarWidgets() {
           return (
             <section
               key={widgetId}
-              className={`rounded-xl border border-gray-200 bg-white transition-shadow duration-200 overflow-hidden ${!isCollapsed ? 'shadow-sm' : ''}`}
+              className={`rounded-xl border border-gray-200 bg-white transition-shadow duration-200 ${!isCollapsed ? 'shadow-sm' : ''}`}
             >
               <div className="flex items-start justify-between gap-2 px-3 py-2 border-l-2 border-l-indigo-200 hover:bg-gray-50/50 transition-colors">
                 <div className="min-w-0 flex-1">

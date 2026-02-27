@@ -106,16 +106,16 @@ describe('PATCH /api/settings', () => {
   })
 
   it('should return 200 with updated field when given a valid patch body', async () => {
-    const updated = { ...MOCK_SETTINGS, vatRatePct: 22 }
+    const updated = { ...MOCK_SETTINGS, vatRatePct: 23 }
     mockGetSettings.mockResolvedValue(MOCK_SETTINGS)
     mockUpsertSettings.mockResolvedValue(updated)
 
     const res = await request(app)
       .patch('/api/settings')
-      .send({ vatRatePct: 22 })
+      .send({ vatRatePct: 23 })
 
     expect(res.status).toBe(200)
-    expect(res.body.data.vatRatePct).toBe(22)
+    expect(res.body.data.vatRatePct).toBe(23)
     expect(mockUpsertSettings).toHaveBeenCalledTimes(1)
   })
 

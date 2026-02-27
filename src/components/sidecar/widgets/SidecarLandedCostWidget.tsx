@@ -1,13 +1,24 @@
 import { useMemo, useState } from 'react'
 import { Calculator } from 'lucide-react'
-import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DEFAULT_VAT_PCT } from '../../../lib/landedCost'
-import { formatCurrency, parseNumericInput } from '../../../lib/formatters'
+import { formatCurrency } from '../../../lib/formatters'
+import {
+  DEFAULT_AUCTION_FEE_PCT,
+  DEFAULT_CUSTOMS_PCT,
+  DEFAULT_IMPORT_VAT_PCT
+} from '../../../lib/constants'
 
 export default function SidecarLandedCostWidget() {
   const [bidInput, setBidInput] = useState('')
 
-  const bid = useMemo(() => parseNumericInput(bidInput), [bidInput])
-  const landed = useMemo(() => calculateSimpleLandedCost(bid), [bid])
+  const bid = useMemo(() => {
+    const n = parseFloat(bidInput.replace(/,/g, ''))
+    return Number.isFinite(n) && n >= 0 ? n : 0
+  }, [bidInput])
+
+  const landed = useMemo(() => {
+    if (bid <= 0) return 0
+    return bid * (1 + DEFAULT_AUCTION_FEE_PCT / 100) * (1 + DEFAULT_CUSTOMS_PCT / 100) * (1 + DEFAULT_IMPORT_VAT_PCT / 100)
+  }, [bid])
   const hasBid = bid > 0
 
   return (
@@ -37,7 +48,7 @@ export default function SidecarLandedCostWidget() {
           <p className="text-[10px] text-gray-500">Enter a bid price to see landed cost.</p>
         </div>
       )}
-      <p className="mt-1 text-[10px] text-gray-500">+{DEFAULT_AUCTION_PCT}% fee +{DEFAULT_CUSTOMS_PCT}% customs +{DEFAULT_VAT_PCT}% VAT</p>
+      <p className="mt-1 text-[10px] text-gray-500">+{DEFAULT_AUCTION_FEE_PCT}% fee +{DEFAULT_CUSTOMS_PCT}% customs +{DEFAULT_IMPORT_VAT_PCT}% VAT</p>
     </div>
   )
 }

@@ -1,52 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useMemo, useState } from 'react'
 import { AlertTriangle, ArrowRightLeft, Loader2, RefreshCw } from 'lucide-react'
-import { fetchEurToJpy, type FxResult } from '../../../lib/fxRate'
-import { formatEur, formatJpy, parseNumericInput } from '../../../lib/formatters'
+import { useFxRate } from '../../../hooks/useFxRate'
+import { formatEur, formatJpy } from '../../../lib/formatters'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
 
 export default function SidecarFxWidget() {
-  const mountedRef = useRef(true)
-  const [fx, setFx] = useState<FxResult | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { data: fx, isLoading, error: errorMessage, refresh: loadRate } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('')
 
-  useEffect(() => {
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
-
-  const loadRate = async () => {
-    setIsLoading(true)
-    setErrorMessage(null)
-    try {
-      const next = await fetchEurToJpy()
-      if (mountedRef.current) {
-        setFx(next)
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load FX rate'
-      if (mountedRef.current) {
-        setErrorMessage(message)
-        toast.error(message)
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false)
-      }
-    }
-  }
-
-  useEffect(() => {
-    loadRate()
-  }, [])
-
-  const amount = useMemo(() => parseNumericInput(amountInput), [amountInput])
+  const amount = useMemo(() => {
+    const n = parseFloat(amountInput.replace(/,/g, ''))
+    return Number.isFinite(n) && n >= 0 ? n : 0
+  }, [amountInput])
 
   const eurToJpyRate = fx?.rate ?? 0
   const jpyToEurRate = eurToJpyRate > 0 ? 1 / eurToJpyRate : 0
@@ -82,7 +49,7 @@ export default function SidecarFxWidget() {
         <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-[11px] text-amber-800">
           <p className="inline-flex items-start gap-1.5">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            {errorMessage}
+            {errorMessage instanceof Error ? errorMessage.message : 'Failed to load FX rate'}
           </p>
           <button
             type="button"
