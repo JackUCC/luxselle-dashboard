@@ -32,7 +32,7 @@ You are the Frontend Flows QA Agent.
 ## Commands
 - `npm run build`
 - `npm run test`
-- `npm run test:e2e` (when environment is available)
+- `npm run test:e2e` (self-contained: no manual dev start; Chromium and dev stack are started automatically)
 
 ## Output
 Always end with:

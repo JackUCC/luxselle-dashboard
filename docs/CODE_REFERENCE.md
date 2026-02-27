@@ -20,7 +20,7 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | `postcss.config.js` | PostCSS pipeline (Tailwind). | PostCSS |
 | `config/vite.config.ts` | Vite dev server, proxy `/api` to backend. | Vite |
 | `config/vitest.config.ts` | Vitest for unit tests (server). | Vitest |
-| `config/playwright.config.ts` | Playwright for E2E tests. | Playwright |
+| `config/playwright.config.cjs` | Playwright for E2E tests. | Playwright |
 
 ---
 

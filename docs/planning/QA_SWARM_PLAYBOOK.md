@@ -38,7 +38,7 @@ npm run typecheck
 
 (`typecheck` runs `tsc --noEmit` from the repo root; see root `package.json`.)
 
-Optional when e2e environment is available (start dev + emulators first for reliable runs):
+Optional: `npm run test:e2e` (self-contained; starts dev stack via Playwright webServer if needed):
 
 ```bash
 npm run test:e2e
@@ -46,25 +46,7 @@ npm run test:e2e
 
 ## E2E Reliability Runbook
 
-For reliable E2E test runs, use two terminal sessions:
-
-**Terminal 1** — start the full dev stack and wait for it to be ready:
-
-```bash
-npm run dev
-```
-
-Wait until you see both:
-- `VITE ready in … ms` (Vite frontend on http://localhost:5173)
-- `API server running on http://0.0.0.0:3001` (Express backend on :3001)
-
-**Terminal 2** — run E2E tests only after both services are up:
-
-```bash
-npm run test:e2e
-```
-
-`npm run dev` launches the Firebase emulators, the Express API (`:3001`), and the Vite dev server (`:5173`) concurrently via `concurrently -k`. Do not run `npm run test:e2e` before both services report ready, or tests will fail with connection-refused errors.
+`npm run test:e2e` is self-contained: `pretest:e2e` installs Chromium if missing, and Playwright's webServer runs `npm run dev:e2e`, which starts the backend and frontend with emulator-safe env overrides. If the Firestore emulator is already listening on port 8082, `dev:e2e` reuses it instead of starting a second emulator. No need to start the dev stack manually before running E2E tests.
 
 ## 4-Wave Swarm Structure
 

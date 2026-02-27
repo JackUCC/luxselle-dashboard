@@ -20,7 +20,7 @@ This document provides an overview of the project's directory structure and the 
 - **Key Files**:
   - `vite.config.ts`: Frontend dev/build config (proxies `/api`, aliases `@shared`).
   - `vitest.config.ts`: Unit test config for backend logic.
-  - `playwright.config.ts`: E2E test config.
+  - `playwright.config.cjs`: E2E test config.
 - **Note**: `tsconfig.json`, `tailwind.config.js`, and `postcss.config.js` remain at the root for tool compatibility.
 
 ### `firebase/`

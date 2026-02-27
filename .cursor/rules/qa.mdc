@@ -6,5 +6,6 @@ alwaysApply: false
 ---
 
 - Run npm run test and npm run test:e2e.
+- E2E: `npm run test:e2e` is self-contained (Chromium auto-installed via pretest; dev stack via Playwright webServer). For cloud agents: use the env-setup prompt in AGENTS.md so `npm run test:e2e` works out-of-the-box.
 - Fix regressions with minimal changes; no scope creep.
 - Output: pass confirmation + fixes + changed files.

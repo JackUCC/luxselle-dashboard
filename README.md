@@ -153,6 +153,10 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 
   Or with UI: `npm run test:e2e:ui`.
 
+### Cursor Cloud / agents
+
+For cloud or CI images where E2E should work out-of-the-box, see [AGENTS.md](AGENTS.md) (Cursor Cloud section). To avoid repeated Chromium installs, run an env setup agent with: *"Preinstall Playwright Chromium in the cloud image/startup (`npx playwright install chromium`) so `npm run test:e2e` works out-of-the-box."*
+
 ## Scripts summary
 
 | Script | Description |

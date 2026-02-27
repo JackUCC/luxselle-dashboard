@@ -11,7 +11,7 @@ You are the QA subagent.
 
 ## Commands
 - **Unit tests:** `npm run test` (vitest --run)
-- **E2e tests:** `npm run test:e2e` (playwright test)
+- **E2e tests:** `npm run test:e2e` (Playwright; Chromium auto-installed via pretest, dev stack auto-started via webServer)
 
 Run both when verifying a full pass; run the failing suite when fixing a regression.
 

@@ -474,15 +474,11 @@ npm run test --workspace=@luxselle/server
 
 **E2E tests (Playwright):**
 ```bash
-# Install Playwright browsers once
-npx playwright install
-
-# Run the evaluator workflow smoke tests
 npm run test:e2e
 ```
 
 **Notes:**
-- Playwright starts `npm run dev` automatically (emulators + backend + frontend).
+- `pretest:e2e` installs Chromium if missing; Playwright's webServer runs `npm run dev:e2e` (backend + frontend with emulator-safe env). If the Firestore emulator is already on port 8082, it is reused.
 - Tests clear Firestore emulator data between runs via the emulator API.
 - Ensure ports 5173 (frontend) and 3001 (backend) are free before running.
 
