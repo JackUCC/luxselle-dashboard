@@ -144,6 +144,7 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | `src/lib/firebase.ts` | Firebase client init (config from env); used for auth/storage in frontend if needed. | Firebase JS SDK |
 | `src/lib/placeholder.ts` | `PLACEHOLDER_IMAGE`, `PLACEHOLDER_IMAGE_SMALL`; fallback URLs for broken product/supplier images (used in `img` onError). | — |
 | `src/lib/queryClient.ts` | TanStack Query client (default options). | @tanstack/react-query |
+| `src/lib/landedCost.ts` | Shared landed-cost constants and `computeLandedCost(bidEur)` for dashboard and sidecar widgets. | — |
 | `src/lib/LayoutModeContext.tsx` | Layout mode (overview / sidecar) and `useLayoutMode()`. | React context |
 | `src/lib/ServerStatusContext.tsx` | Server/config status (AI provider, Firebase mode) for banner. | — |
 
@@ -166,6 +167,8 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | `src/components/sidecar/widgets/SidecarFxWidget.tsx` | Sidecar FX rate widget. | — |
 | `src/components/sidecar/widgets/SidecarLandedCostWidget.tsx` | Sidecar landed-cost widget. | — |
 | `src/components/sidecar/widgets/SidecarSerialCheckWidget.tsx` | Sidecar serial-check widget. | — |
+
+**Sidecar mode and tools:** Use sidecar when working in a narrow panel alongside supplier sites (e.g. live buying). **Quick** — paste item description for single price check, landed estimate, and inventory match. **Tools** — expand only the calculator you need: Landed Cost (bid → landed with fees/VAT), Serial Check (serial/date code → year and pricing context), FX (€/¥ with live rates), Bid Calculator (target margin → max buy). **Batch** — paste multiple descriptions and process in one run.
 
 ### Pages (one folder per route)
 

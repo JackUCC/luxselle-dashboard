@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeftToLine, Boxes, LayoutGrid, Search } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import QuickCheck from './QuickCheck'
 import BatchProcessor from './BatchProcessor'
 import SidecarWidgets from './SidecarWidgets'
@@ -51,6 +51,7 @@ function renderTabPanel(tab: SidecarTab) {
 
 export default function SidecarView({ initialTab = 'quick' }: { initialTab?: SidecarTab }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState<SidecarTab>(() => resolveInitialTab(initialTab))
 
   const activeConfig = useMemo(
@@ -67,17 +68,20 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   }, [activeTab])
 
   const handleExitSidecar = () => {
-    navigate('/')
+    const params = new URLSearchParams(location.search)
+    params.delete('mode')
+    const search = params.toString()
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : '' })
   }
 
   return (
-    <section className="min-w-0 max-w-full overflow-hidden space-y-2">
-      <header className="sticky top-0 z-20">
-        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs">
+    <section className="min-w-[280px] max-w-full overflow-hidden space-y-2">
+      <header className="sticky top-0 z-20 min-w-0">
+        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h1 className="truncate text-[13px] font-semibold text-lux-800">Sidecar</h1>
-              <p className="mt-0.5 text-[11px] text-lux-400">
+              <p className="mt-0.5 text-[11px] text-lux-400 break-words">
                 Compact assistant for live buying sessions.
               </p>
             </div>
@@ -85,15 +89,15 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
               type="button"
               onClick={handleExitSidecar}
               className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-[11px] font-medium text-lux-600 transition-colors hover:bg-lux-50"
-              title="Exit sidecar and return to dashboard overview"
-              aria-label="Exit sidecar and return to dashboard overview"
+              title="Exit sidecar and return to overview"
+              aria-label="Exit sidecar and return to overview"
             >
               <ArrowLeftToLine className="h-3 w-3" />
               Exit
             </button>
           </div>
 
-          <div className="mt-2 grid grid-cols-3 gap-1" aria-label="Sidecar assistant modes">
+          <div className="mt-2 grid grid-cols-3 gap-1 min-w-0" aria-label="Sidecar assistant modes">
             {TABS.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -103,22 +107,22 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
                   aria-label={`${tab.label} mode`}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                  className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors min-w-0 truncate ${
                     isActive
                       ? 'bg-lux-800 text-white'
                       : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
                   }`}
                 >
-                  <span className="inline-flex items-center justify-center gap-1">
-                    <Icon className="h-3 w-3" />
-                    {tab.label}
+                  <span className="inline-flex items-center justify-center gap-1 min-w-0">
+                    <Icon className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{tab.label}</span>
                   </span>
                 </button>
               )
             })}
           </div>
 
-          <p className="mt-1.5 rounded-md bg-lux-50 px-2 py-1 text-[11px] text-lux-500">
+          <p className="mt-1.5 rounded-md bg-lux-50 px-2 py-1 text-[11px] text-lux-500 break-words">
             {activeConfig.helper}
           </p>
         </div>

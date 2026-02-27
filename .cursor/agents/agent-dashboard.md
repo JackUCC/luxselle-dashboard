@@ -14,7 +14,7 @@ You are the Dashboard Agent for the Luxselle Supplier Engine.
 - **Purpose:** Overview mode: KPIs, recent activity, command bar, profit summary. Sidecar mode: QuickCheck (compact price check, landed cost, inventory awareness).
 
 ## Current APIs
-- `GET /api/dashboard/kpis` — Total inventory, active sourcing, low stock
+- `GET /api/dashboard/kpis` — Total inventory, active sourcing
 - `GET /api/dashboard/profit-summary` — Cost, revenue, profit, margin
 - `GET /api/dashboard/activity?limit=5` — Recent activity
 - `GET /api/dashboard/status` — AI provider, Firebase mode

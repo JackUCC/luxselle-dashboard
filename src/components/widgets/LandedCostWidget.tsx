@@ -1,9 +1,6 @@
 import { useState, useMemo } from 'react'
 import SectionLabel from '../design-system/SectionLabel'
-
-const AUCTION_PCT = 7
-const CUSTOMS_PCT = 3
-const VAT_PCT = 23
+import { AUCTION_PCT, computeLandedCost } from '../../lib/landedCost'
 
 function formatEur(value: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
@@ -17,10 +14,7 @@ export default function LandedCostWidget() {
     return Number.isFinite(n) && n >= 0 ? n : 0
   }, [bidInput])
 
-  const landed = useMemo(() => {
-    if (bid <= 0) return 0
-    return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
-  }, [bid])
+  const landed = useMemo(() => computeLandedCost(bid), [bid])
 
   return (
     <div

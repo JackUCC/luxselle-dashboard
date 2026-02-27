@@ -18,25 +18,25 @@ const WIDGETS: WidgetCardConfig[] = [
   {
     id: 'landed-cost',
     title: 'Landed cost + bid support',
-    description: 'Quickly estimate landed pricing while scanning listings.',
+    description: 'Enter bid € to see landed cost including fees, customs, and VAT.',
     icon: Calculator,
   },
   {
     id: 'serial-check',
     title: 'Serial checker',
-    description: 'Paste serial/date code and get the likely year.',
+    description: 'Paste serial or date code for likely year and pricing context.',
     icon: Search,
   },
   {
     id: 'fx-conversion',
     title: 'Conversion rate',
-    description: 'Flip EUR/JPY with fresh rates while you evaluate.',
+    description: 'Convert between € and ¥ with live rates while you evaluate.',
     icon: DollarSign,
   },
   {
     id: 'bid-calculator',
     title: 'Bid price calculator',
-    description: 'Use target margin mode to calculate a safe max buy price.',
+    description: 'Target margin mode to calculate a safe max buy price.',
     icon: Calculator,
   },
 ]
@@ -103,12 +103,15 @@ export default function SidecarWidgets() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0">
       <div className="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-2">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Widget workspace</h2>
-        <p className="mt-0.5 text-[11px] text-gray-500">
-          Sidecar-native widgets designed for narrow vertical sessions. Expand only what you need.
-        </p>
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Tools — Expand only what you need</h2>
+        <ul className="mt-1.5 space-y-1 text-[11px] text-gray-600 list-disc list-inside">
+          <li><strong>Landed Cost:</strong> Enter bid € to see landed cost (fees, customs, VAT).</li>
+          <li><strong>Serial Check:</strong> Paste serial/date code for likely year and pricing context.</li>
+          <li><strong>FX:</strong> Convert between € and ¥ with live rates.</li>
+          <li><strong>Bid Calculator:</strong> Target margin mode for safe max buy price.</li>
+        </ul>
       </div>
 
       <div className="space-y-4">
@@ -116,6 +119,7 @@ export default function SidecarWidgets() {
           const widgetId = widget.id
           const Icon = widget.icon
           const isCollapsed = collapsed[widgetId]
+          const panelId = `sidecar-widget-${widgetId}`
 
           return (
             <section
@@ -135,6 +139,8 @@ export default function SidecarWidgets() {
                 <button
                   type="button"
                   onClick={() => toggleCollapsed(widgetId)}
+                  aria-expanded={!isCollapsed}
+                  aria-controls={panelId}
                   className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-600 hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-1 transition-colors"
                 >
                   {isCollapsed ? (
@@ -151,9 +157,11 @@ export default function SidecarWidgets() {
                 </button>
               </div>
               <div
+                id={panelId}
+                role="region"
                 className={`grid transition-[grid-template-rows] duration-200 ease-out ${isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}
               >
-                <div className="min-h-0 overflow-hidden">
+                <div className="min-h-0 overflow-x-auto overflow-y-hidden">
                   <div className="border-t border-gray-100 p-2">
                     {renderWidget(widgetId)}
                   </div>

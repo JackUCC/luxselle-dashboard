@@ -1,10 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Calculator } from 'lucide-react'
 import { formatCurrency } from '../../../lib/formatters'
-
-const AUCTION_PCT = 7
-const CUSTOMS_PCT = 3
-const VAT_PCT = 23
+import { AUCTION_PCT, computeLandedCost } from '../../../lib/landedCost'
 
 export default function SidecarLandedCostWidget() {
   const [bidInput, setBidInput] = useState('')
@@ -14,10 +11,7 @@ export default function SidecarLandedCostWidget() {
     return Number.isFinite(n) && n >= 0 ? n : 0
   }, [bidInput])
 
-  const landed = useMemo(() => {
-    if (bid <= 0) return 0
-    return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
-  }, [bid])
+  const landed = useMemo(() => computeLandedCost(bid), [bid])
   const hasBid = bid > 0
 
   return (
