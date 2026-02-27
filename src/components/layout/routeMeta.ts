@@ -3,7 +3,6 @@ import {
   CircleDollarSign,
   Globe,
   House,
-  ListChecks,
   Receipt,
   ScanLine,
   Tags,
@@ -11,7 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-export type AppNavSection = 'check' | 'manage' | 'finance' | 'tools'
+export type AppNavSection = 'check' | 'manage'
 
 export interface RouteMeta {
   path: string
@@ -24,13 +23,12 @@ export interface RouteMeta {
 export const appRoutes: RouteMeta[] = [
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: House, section: 'check' },
   { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: CircleDollarSign, section: 'check' },
+  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'check' },
   { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: ScanLine, section: 'check' },
+  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'check' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Box, section: 'manage' },
   { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Globe, section: 'manage' },
-  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: ListChecks, section: 'manage' },
-  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'finance' },
-  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'tools' },
-  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'tools' },
+  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'manage' },
 ]
 
 const formatLabel = (value: string) =>
@@ -70,17 +68,6 @@ export const deepStateRules: DeepStateRule[] = [
       const status = params.get('status')
       if (!status || status === 'all') return []
       return [formatLabel(status)]
-    },
-  },
-  {
-    route: '/jobs',
-    keys: ['status', 'job'],
-    toCrumbLabel: (params) => {
-      const labels: string[] = []
-      const status = params.get('status')
-      if (status && status !== 'all') labels.push(formatLabel(status))
-      if (params.get('job')) labels.push('Job')
-      return labels
     },
   },
 ]

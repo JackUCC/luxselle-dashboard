@@ -25,7 +25,6 @@ const DashboardView = lazy(() => import('./pages/Dashboard/DashboardView'))
 const InventoryView = lazy(() => import('./pages/Inventory/InventoryView'))
 const EvaluatorView = lazy(() => import('./pages/BuyBox/EvaluatorView'))
 const SourcingView = lazy(() => import('./pages/Sourcing/SourcingView'))
-const JobsView = lazy(() => import('./pages/Jobs/JobsView'))
 const InvoicesView = lazy(() => import('./pages/Invoices/InvoicesView'))
 const MarketResearchView = lazy(() => import('./pages/MarketResearch/MarketResearchView'))
 const SerialCheckView = lazy(() => import('./pages/SerialCheck/SerialCheckView'))
@@ -60,7 +59,6 @@ const AppContent = () => {
                 <Route path="/retail-price" element={<RetailPriceView />} />
                 <Route path="/market-research" element={<MarketResearchView />} />
                 <Route path="/sourcing" element={<SourcingView />} />
-                <Route path="/jobs" element={<JobsView />} />
                 <Route path="/invoices" element={<InvoicesView />} />
                 <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
               </Routes>
@@ -131,7 +129,6 @@ const AppContent = () => {
               <Route path="/retail-price" element={<RetailPriceView />} />
               <Route path="/market-research" element={<MarketResearchView />} />
               <Route path="/sourcing" element={<SourcingView />} />
-              <Route path="/jobs" element={<JobsView />} />
               <Route path="/invoices" element={<InvoicesView />} />
 
               {/* Legacy redirect */}
