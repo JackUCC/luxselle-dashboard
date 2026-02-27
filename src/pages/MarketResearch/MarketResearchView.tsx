@@ -29,6 +29,7 @@ import {
 import { apiGet, apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { useServerStatus } from '../../lib/ServerStatusContext'
+import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader } from '../../components/design-system'
 
 // ─── Brand database ────────────────────────────────────────────
@@ -280,7 +281,7 @@ export default function MarketResearchView() {
     const { status } = useServerStatus()
 
     return (
-        <section className="mx-auto max-w-6xl space-y-8">
+        <PageLayout variant="content">
             <PageHeader
                 title="Market Research"
                 purpose="Irish & EU market — Designer Exchange, Luxury Exchange, Siopella, Vestiaire."
@@ -757,6 +758,6 @@ export default function MarketResearchView() {
                     )}
                 </div>
             </div>
-        </section>
+        </PageLayout>
     )
 }

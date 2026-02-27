@@ -12,6 +12,7 @@ import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 
 interface PriceCheckComp {
@@ -166,7 +167,7 @@ export default function EvaluatorView() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl space-y-8">
+    <PageLayout variant="content">
       <PageHeader
         title="Price Check"
         purpose="Research market price (Irish + Vestiaire), then see max buy and max bid."
@@ -458,6 +459,6 @@ export default function EvaluatorView() {
           </div>
         </div>
       )}
-    </section>
+    </PageLayout>
   )
 }

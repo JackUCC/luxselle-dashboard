@@ -8,6 +8,7 @@ import { Search, Calendar, Info, Loader2 } from 'lucide-react'
 import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
+import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
@@ -97,7 +98,7 @@ export default function SerialCheckView() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <PageLayout variant="narrow">
       <PageHeader
         title="Serial Check"
         purpose="Paste serial, select brand, and add item details to get a tighter decode plus age-adjusted price guidance."
@@ -258,6 +259,6 @@ export default function SerialCheckView() {
         This tool is a guide only. Date codes do not confirm authenticity; use a professional
         authenticator when in doubt.
       </p>
-    </div>
+    </PageLayout>
   )
 }

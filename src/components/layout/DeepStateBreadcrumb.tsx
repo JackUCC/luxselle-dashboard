@@ -10,17 +10,25 @@ export default function DeepStateBreadcrumb() {
   const route = getRouteMeta(location.pathname)
   const rule = getDeepStateRule(location.pathname)
 
-  if (!route || !rule) return null
+  if (!route) return null
 
-  const hasDeepState = rule.keys.some((key) => {
+  const hasDeepState = rule?.keys.some((key) => {
     const value = searchParams.get(key)
     return value != null && value.trim() !== ''
   })
+  const labels = rule ? rule.toCrumbLabel(searchParams).filter(Boolean) : []
 
-  if (!hasDeepState) return null
-
-  const labels = rule.toCrumbLabel(searchParams).filter(Boolean)
-  if (!labels.length) return null
+  if (!hasDeepState || !labels.length) {
+    return (
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-4 flex items-center gap-1 overflow-x-auto no-scrollbar text-[11px] font-medium text-lux-400"
+        data-testid="deep-state-breadcrumb"
+      >
+        <span className="text-lux-800">{route.label}</span>
+      </nav>
+    )
+  }
 
   return (
     <nav

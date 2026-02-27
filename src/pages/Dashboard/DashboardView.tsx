@@ -12,6 +12,7 @@ import type { KPIs } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import PageLayout from '../../components/layout/PageLayout'
 import { Button, PageHeader } from '../../components/design-system'
 import SectionLabel from '../../components/design-system/SectionLabel'
 import MarketIntelligenceWidget from '../../components/widgets/MarketIntelligenceWidget'
@@ -112,7 +113,7 @@ export default function DashboardView() {
   const margin = potentialValue - inventoryValue
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <PageLayout variant="content">
       <PageHeader
         title="Overview"
         purpose="Daily metrics and quick tools."
@@ -206,6 +207,6 @@ export default function DashboardView() {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   )
 }

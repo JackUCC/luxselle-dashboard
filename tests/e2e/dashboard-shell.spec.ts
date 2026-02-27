@@ -59,9 +59,10 @@ test('ultra-wide side rail is visible and routes correctly', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 })
 
-test('deep-state breadcrumb is hidden on base route and shown on deep state', async ({ page }) => {
+test('breadcrumb shows page name on base route and full trail on deep state', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('deep-state-breadcrumb')).toHaveCount(0)
+  await expect(page.getByTestId('deep-state-breadcrumb')).toBeVisible()
+  await expect(page.getByTestId('deep-state-breadcrumb')).toContainText('Overview')
 
   await page.goto('/inventory?lowStock=1')
   await expect(page.getByTestId('deep-state-breadcrumb')).toBeVisible()

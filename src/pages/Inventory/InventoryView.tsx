@@ -72,7 +72,9 @@ function getStatusBadgeVariant(
 }
 
 import ConfirmationModal from "../../components/common/ConfirmationModal";
+import PageLayout from "../../components/layout/PageLayout";
 import { Badge, Button, Card, PageHeader, SectionLabel } from "../../components/design-system";
+import { useLayoutMode } from "../../lib/LayoutModeContext";
 
 function InventoryRowActions({
   product,
@@ -149,6 +151,7 @@ function hasMissingInfo(product: ProductWithId): boolean {
 }
 
 export default function InventoryView() {
+  const { isSidecar } = useLayoutMode();
   const [products, setProducts] = useState<ProductWithId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
@@ -399,7 +402,8 @@ export default function InventoryView() {
   });
 
   return (
-    <section className="space-y-8">
+    <PageLayout variant="default">
+      <section className={isSidecar ? "min-w-0 max-w-full overflow-auto space-y-8" : "space-y-8"}>
       <PageHeader
         title="Inventory"
         purpose="Manage stock levels and product details."
@@ -618,9 +622,9 @@ export default function InventoryView() {
       ) : viewMode === "table" ? (
         <div
           ref={shouldVirtualize ? tableContainerRef : null}
-          className="lux-card overflow-hidden animate-bento-enter"
+          className={`lux-card animate-bento-enter ${isSidecar ? "overflow-x-auto overflow-y-auto" : shouldVirtualize ? "overflow-auto" : "overflow-hidden"}`}
           style={{
-            ...(shouldVirtualize ? { maxHeight: "600px", overflow: "auto" } : {}),
+            ...(isSidecar ? { maxHeight: "min(70vh, 500px)" } : shouldVirtualize ? { maxHeight: "600px" } : {}),
             '--stagger': 2,
           } as React.CSSProperties}
         >
@@ -931,6 +935,7 @@ export default function InventoryView() {
         confirmLabel="Delete"
         variant="danger"
       />
-    </section>
+      </section>
+    </PageLayout>
   );
 }

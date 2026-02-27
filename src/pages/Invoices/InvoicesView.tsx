@@ -8,7 +8,9 @@ import toast from 'react-hot-toast'
 import { Download, FileText, Loader2, Plus, Upload, X } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
 import { apiGet, apiPost, apiPostFormData } from '../../lib/api'
+import PageLayout from '../../components/layout/PageLayout'
 import { Button, Input, ListRow, Modal, PageHeader, SectionLabel } from '../../components/design-system'
+import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 type InvoiceWithId = Invoice & { id: string }
 
@@ -23,6 +25,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10)
 type AddMode = 'none' | 'in-person' | 'upload'
 
 export default function InvoicesView() {
+  const { isSidecar } = useLayoutMode()
   const [invoices, setInvoices] = useState<InvoiceWithId[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -188,7 +191,8 @@ export default function InvoicesView() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageLayout variant="default">
+      <div className={isSidecar ? 'min-w-0 max-w-full overflow-auto space-y-8' : 'space-y-8'}>
       <PageHeader
         title="Invoices"
         purpose="Create invoices from sales and store them for accounting."
@@ -242,7 +246,7 @@ export default function InvoicesView() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className={`grid gap-6 ${isSidecar ? 'grid-cols-1' : 'lg:grid-cols-2'}`}>
           <div className="lux-card p-4 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
             <SectionLabel className="mb-4 px-2">All invoices</SectionLabel>
             <ul className="space-y-0">
@@ -563,6 +567,7 @@ export default function InvoicesView() {
           </form>
         </div>
       </Modal>
-    </div>
+      </div>
+    </PageLayout>
   )
 }

@@ -1,15 +1,20 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { ArrowLeftToLine, Menu } from 'lucide-react'
 
 import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 import Drawer from '../design-system/Drawer'
 
-const SIDECAR_SUFFIX = '?mode=sidecar'
-
 export default function SidecarNav() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const location = useLocation()
+
+  const toWithSidecar = (path: string) => {
+    const params = new URLSearchParams(location.pathname === path ? location.search : '')
+    params.set('mode', 'sidecar')
+    return `${path}?${params.toString()}`
+  }
 
   return (
     <>
@@ -31,6 +36,7 @@ export default function SidecarNav() {
         </div>
         <Link
           to="/"
+          replace
           className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-lux-200 px-2 py-1.5 text-ui-label font-medium text-lux-600 transition-colors hover:bg-lux-50 focus:outline-none focus:ring-2 focus:ring-lux-gold"
           title="Exit sidecar and return to overview"
           aria-label="Exit sidecar and return to overview"
@@ -59,7 +65,7 @@ export default function SidecarNav() {
                   .map((route) => (
                       <NavLink
                         key={route.path}
-                        to={`${route.path}${SIDECAR_SUFFIX}`}
+                        to={toWithSidecar(route.path)}
                         end={route.path === '/'}
                         onClick={() => setDrawerOpen(false)}
                         className={({ isActive }) =>

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import type { SystemJob } from '@shared/schemas'
 import { apiGet, apiPost } from '../../lib/api'
+import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 
 type SystemJobWithId = SystemJob & { id: string }
@@ -173,7 +174,8 @@ export default function JobsView() {
       : jobs.filter((job) => normalizedStatus(job.status) === statusFilter)
 
   return (
-    <section className="space-y-8">
+    <PageLayout variant="default">
+      <section className="space-y-8">
       <PageHeader
         title="System Jobs"
         purpose="Monitor imports, background tasks, and system operations."
@@ -364,7 +366,8 @@ export default function JobsView() {
           onRetry={handleRetry}
         />
       )}
-    </section>
+      </section>
+    </PageLayout>
   )
 }
 

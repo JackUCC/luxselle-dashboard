@@ -8,7 +8,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AlertCircle, Menu } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -19,7 +19,7 @@ import SidecarNav from './components/navigation/SidecarNav'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
 import { LayoutModeProvider, useLayoutMode } from './lib/LayoutModeContext'
-import { appRoutes } from './components/layout/routeMeta'
+import { getRouteMeta } from './components/layout/routeMeta'
 
 const DashboardView = lazy(() => import('./pages/Dashboard/DashboardView'))
 const InventoryView = lazy(() => import('./pages/Inventory/InventoryView'))
@@ -35,6 +35,8 @@ const AppContent = () => {
   const { isConnected, refetchStatus } = useServerStatus()
   const { isSidecar } = useLayoutMode()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const location = useLocation()
+  const routeMeta = getRouteMeta(location.pathname)
 
   if (isSidecar) {
     return (
@@ -91,7 +93,7 @@ const AppContent = () => {
         <WideScreenSideRail />
 
         <div className="min-w-0 flex-1">
-          <div className="sticky top-0 z-50 flex h-12 items-center border-b border-lux-200 bg-white/80 backdrop-blur-sm px-4 xl:hidden">
+          <div className="sticky top-0 z-50 flex h-12 items-center justify-between gap-2 border-b border-lux-200 bg-white/80 backdrop-blur-sm px-4 xl:hidden">
             <button
               type="button"
               className="rounded-md p-1.5 text-lux-500 transition-colors hover:bg-lux-50 hover:text-lux-800"
@@ -101,6 +103,12 @@ const AppContent = () => {
             >
               <Menu className="h-4 w-4" />
             </button>
+            {routeMeta ? (
+              <span className="min-w-0 truncate text-[13px] font-medium text-lux-800" data-testid="mobile-page-title">
+                {routeMeta.label}
+              </span>
+            ) : null}
+            {!routeMeta ? <span className="w-9" /> : null}
           </div>
 
           <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />

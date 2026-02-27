@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { Plus, Pencil, X, Loader2, Users, Trash2 } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
+import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
@@ -218,7 +219,8 @@ export default function SourcingView() {
       : requests.filter((req) => req.status === statusFilter)
 
   return (
-    <section className="space-y-8">
+    <PageLayout variant="default">
+      <section className="space-y-8">
       <PageHeader
         title="Sourcing"
         purpose="Customer requests pipeline."
@@ -620,6 +622,7 @@ export default function SourcingView() {
           </div>
         )}
       </div>
-    </section>
+      </section>
+    </PageLayout>
   )
 }
