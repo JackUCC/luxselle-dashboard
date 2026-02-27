@@ -11,6 +11,17 @@ interface LayoutModeContextValue {
 const LayoutModeCtx = createContext<LayoutModeContextValue>({ mode: 'overview', isSidecar: false })
 
 /**
+ * Returns the path to use when exiting sidecar (strips `mode=sidecar` from search params).
+ * Use for Exit button and links so the app returns to overview layout.
+ */
+export function getExitSidecarPath(pathname: string, search: string): string {
+  const params = new URLSearchParams(search)
+  params.delete('mode')
+  const q = params.toString()
+  return q ? `${pathname}?${q}` : pathname
+}
+
+/**
  * Determines layout mode from URL search params.
  * Use `?mode=sidecar` to force sidecar layout (compact panel mode).
  * Without the param, defaults to overview (full dashboard).

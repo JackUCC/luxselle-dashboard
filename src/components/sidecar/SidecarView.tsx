@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeftToLine, Boxes, LayoutGrid, Search } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { getExitSidecarPath } from '../../lib/LayoutModeContext'
 import QuickCheck from './QuickCheck'
 import BatchProcessor from './BatchProcessor'
 import SidecarWidgets from './SidecarWidgets'
@@ -68,16 +69,13 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   }, [activeTab])
 
   const handleExitSidecar = () => {
-    const params = new URLSearchParams(location.search)
-    params.delete('mode')
-    const search = params.toString()
-    navigate({ pathname: location.pathname, search: search ? `?${search}` : '' })
+    navigate(getExitSidecarPath('/', location.search), { replace: true })
   }
 
   return (
-    <section className="min-w-[280px] max-w-full overflow-hidden space-y-2">
-      <header className="sticky top-0 z-20 min-w-0">
-        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs min-w-0">
+    <section className="min-w-0 max-w-full space-y-2">
+      <header className="sticky top-0 z-20">
+        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-[13px] font-semibold text-lux-800">Sidecar</h1>
@@ -128,7 +126,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
         </div>
       </header>
 
-      <div className="min-w-0 max-w-full overflow-hidden">
+      <div className="min-w-0 max-w-full">
         {renderTabPanel(activeTab)}
       </div>
     </section>

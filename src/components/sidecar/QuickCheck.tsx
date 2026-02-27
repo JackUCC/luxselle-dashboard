@@ -2,8 +2,8 @@ import { useMemo, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { Search, Loader2, Package, Calculator, Upload, ImageIcon, X } from 'lucide-react'
 import { apiGet, apiPost, apiPostFormData, ApiError } from '../../lib/api'
-import { formatCurrency } from '../../lib/formatters'
-import { AUCTION_PCT, CUSTOMS_PCT, VAT_PCT, computeLandedCost } from '../../lib/landedCost'
+import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DEFAULT_VAT_PCT } from '../../lib/landedCost'
+import { formatCurrency, parseNumericInput } from '../../lib/formatters'
 
 interface VisualSearchResult {
   productId?: string
@@ -50,12 +50,8 @@ export default function QuickCheck() {
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const bid = useMemo(() => {
-    const n = parseFloat(bidInput.replace(/,/g, ''))
-    return Number.isFinite(n) && n >= 0 ? n : 0
-  }, [bidInput])
-
-  const landed = useMemo(() => computeLandedCost(bid), [bid])
+  const bid = useMemo(() => parseNumericInput(bidInput), [bidInput])
+  const landed = useMemo(() => calculateSimpleLandedCost(bid), [bid])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -268,7 +264,7 @@ export default function QuickCheck() {
               />
               <span className="whitespace-nowrap text-sm font-bold text-gray-900">{formatCurrency(landed)}</span>
             </div>
-            <p className="mt-1 text-[10px] text-gray-500">Includes +{AUCTION_PCT}% fee +{CUSTOMS_PCT}% customs +{VAT_PCT}% VAT</p>
+            <p className="mt-1 text-[10px] text-gray-500">Includes +{DEFAULT_AUCTION_PCT}% fee +{DEFAULT_CUSTOMS_PCT}% customs +{DEFAULT_VAT_PCT}% VAT</p>
           </div>
 
           {result.comps.length > 0 && (

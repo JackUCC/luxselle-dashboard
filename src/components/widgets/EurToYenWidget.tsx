@@ -1,37 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { ArrowUpDown } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { fetchEurToJpy, type FxResult } from '../../lib/fxRate'
 import SectionLabel from '../design-system/SectionLabel'
+import { useFxRate } from '../../hooks/useFxRate'
+import { formatEur, formatJpy } from '../../lib/formatters'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
 
-function formatJpy(value: number): string {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value)
-}
-
-function formatEur(value: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
-}
-
 export default function EurToYenWidget() {
-  const [fx, setFx] = useState<FxResult | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: fx, isLoading: loading } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('1000')
-
-  const loadRate = useCallback(async () => {
-    setLoading(true)
-    try {
-      setFx(await fetchEurToJpy())
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load rate')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { loadRate() }, [loadRate])
 
   const amount = (() => {
     const n = parseFloat(amountInput.replace(/,/g, ''))

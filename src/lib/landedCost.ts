@@ -1,22 +1,19 @@
-/**
- * Shared landed-cost constants and calculations.
- * Simple helper for dashboard/sidecar widgets; full calculator for CalculatorWidget and SidecarBidWidget.
- */
-export const AUCTION_PCT = 7
-export const CUSTOMS_PCT = 3
-export const VAT_PCT = 23
+/** Default percentages for simple landed cost (auction fee, customs, VAT). */
+export const DEFAULT_AUCTION_PCT = 7
+export const DEFAULT_CUSTOMS_PCT = 3
+export const DEFAULT_VAT_PCT = 23
 
 /**
- * Compute estimated landed cost from bid price (EUR).
- * Applies auction fee, customs, and VAT. Used by LandedCostWidget, SidecarLandedCostWidget, QuickCheck.
+ * Simple landed cost from a bid price (EUR) using default fee/customs/VAT.
+ * Used by dashboard and sidecar quick calculators.
  */
-export function computeLandedCost(bidEur: number): number {
+export function calculateSimpleLandedCost(bidEur: number): number {
   if (bidEur <= 0) return 0
   return (
     bidEur *
-    (1 + AUCTION_PCT / 100) *
-    (1 + CUSTOMS_PCT / 100) *
-    (1 + VAT_PCT / 100)
+    (1 + DEFAULT_AUCTION_PCT / 100) *
+    (1 + DEFAULT_CUSTOMS_PCT / 100) *
+    (1 + DEFAULT_VAT_PCT / 100)
   )
 }
 
