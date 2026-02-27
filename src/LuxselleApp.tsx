@@ -119,7 +119,7 @@ const AppContent = () => {
         }}
       />
 
-      <main className="mx-auto max-w-8xl px-5 py-5 pt-5 sm:px-6 sm:py-6 xl:pt-20">
+      <main className="mx-auto max-w-8xl px-5 py-5 sm:px-6 sm:py-6 xl:pl-24">
         <DeepStateBreadcrumb />
         <ErrorBoundary>
           <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
