@@ -33,7 +33,7 @@ npx get-shit-done-cc@latest --claude --local
 
    ```bash
    git clone <repo-url>
-   cd luxselle-dashboard
+   cd [REDACTED]
    npm install
    ```
 
@@ -119,7 +119,7 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
 - **Backend (Railway)**: Set Firebase service account credentials
 - **Firebase**: Enable Firestore + Storage, deploy rules, configure CORS
 
-**Production URLs** (for reference when setting `VITE_API_BASE` in Vercel): Railway backend = `https://luxselleserver-production.up.railway.app`; Vercel frontend = your project URL (e.g. `https://luxselle-dashboard.vercel.app`).
+**Production URLs** (for reference when setting `VITE_API_BASE` in Vercel): Railway backend = `[REDACTED]`; Vercel frontend = your project URL (e.g. `https://[REDACTED].vercel.app`).
 
 **Production not working?** The app shows "Backend not configured" when the frontend cannot reach the API (see [Production troubleshooting](docs/deploy/PRODUCTION_TROUBLESHOOTING.md)). Most often: set `VITE_API_BASE` in Vercel to your Railway URL (no trailing slash), then redeploy. Env vars are build-time only.
 
@@ -143,30 +143,27 @@ Deploy frontend to Vercel, backend to Railway, using Firebase for database/stora
   npm run test
   ```
 
-- **E2E tests** (Playwright): Start the app first, then run tests.
+- **E2E tests** (Playwright):
 
   ```bash
-  npm run dev
-  ```
-
-  In another terminal (after the app is up):
-
-  ```bash
-  npx playwright install   # once, if browsers are missing
   npm run test:e2e
   ```
 
-  Or with UI: `npm run test:e2e:ui`. Playwright can also start the server automatically (see `config/playwright.config.ts`); ensure emulators and backend are up if you rely on that.
+  `test:e2e` now auto-installs Chromium if missing and uses `dev:e2e` under Playwright `webServer` to start backend/frontend with emulator-safe env overrides. If Firestore emulator is already listening on `:8082`, it is reused instead of starting a second emulator process.
+
+  Or with UI: `npm run test:e2e:ui`.
 
 ## Scripts summary
 
 | Script | Description |
 |--------|-------------|
 | `npm run dev` | Emulators + server + frontend |
+| `npm run dev:e2e` | Cloud-safe E2E dev stack (reuses emulator on `:8082` if already running) |
 | `npm run dev:client` | Vite frontend only |
 | `npm run emulators` | Firebase Firestore + Storage emulators |
 | `npm run seed` | Seed Firestore (run after dev is up) |
 | `npm run test` | Unit tests (Vitest) |
+| `npm run e2e:install-browser` | Install Playwright Chromium browser |
 | `npm run test:e2e` | E2E tests (Playwright) |
 | `npm run build` | Production frontend build |
 

@@ -133,9 +133,17 @@ After emulators and backend are running: `npm run seed`. This populates ~90 prod
 ### Standard commands (see README.md for full list)
 
 - **Lint/typecheck**: `npm run typecheck`
-- **Unit tests**: `npm run test` (Vitest, 13 test files, 81 tests)
-- **E2E tests**: `npx playwright install && npm run test:e2e` (requires dev stack running)
+- **Unit tests**: `npm run test` (Vitest, 24 test files, 121 tests)
+- **E2E tests**: `npm run test:e2e` (auto-installs Chromium; Playwright webServer uses `npm run dev:e2e`)
 - **Build**: `npm run build`
+
+### Cloud image optimization prompt
+
+To reduce repeated setup across fresh cloud agents, run an env setup agent with:
+
+```text
+Preinstall Playwright Chromium in the cloud image/startup (`npx playwright install chromium`) so `npm run test:e2e` works out-of-the-box.
+```
 
 ### Server .env symlink
 
