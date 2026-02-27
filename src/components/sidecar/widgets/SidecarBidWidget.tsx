@@ -1,30 +1,43 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpDown } from 'lucide-react'
 import { calculateMaxBuyPrice } from '../../../lib/landedCost'
-import { formatCurrency } from '../../../lib/formatters'
+import { formatCurrency, formatJpy, parseNumericInput } from '../../../lib/formatters'
+import { fetchEurToJpy } from '../../../lib/fxRate'
 
-const RATE_EUR_TO_JPY = 160
-
-function parseNumber(value: string): number {
-  const n = parseFloat(value.replace(/,/g, ''))
-  return Number.isFinite(n) && n >= 0 ? n : 0
-}
+const FALLBACK_EUR_TO_JPY = 160
 
 export default function SidecarBidWidget() {
   const [sellPriceInput, setSellPriceInput] = useState('')
   const [targetMarginInput, setTargetMarginInput] = useState('30')
   const [shippingInput, setShippingInput] = useState('0')
+  const [rateEurToJpy, setRateEurToJpy] = useState<number>(FALLBACK_EUR_TO_JPY)
+  const mountedRef = useRef(true)
 
-  const sellPriceEur = parseNumber(sellPriceInput)
-  const targetMarginPct = parseNumber(targetMarginInput)
-  const shippingJpy = parseNumber(shippingInput)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchEurToJpy()
+      .then((res) => {
+        if (mountedRef.current && res.rate > 0) setRateEurToJpy(res.rate)
+      })
+      .catch(() => {})
+  }, [])
+
+  const sellPriceEur = parseNumericInput(sellPriceInput)
+  const targetMarginPct = parseNumericInput(targetMarginInput)
+  const shippingJpy = parseNumericInput(shippingInput)
 
   const maxBuyJpy = useMemo(() => {
     return calculateMaxBuyPrice({
       targetSellPriceEur: sellPriceEur,
       desiredMarginPct: targetMarginPct,
       currency: 'JPY',
-      rates: { JPY: RATE_EUR_TO_JPY },
+      rates: { JPY: rateEurToJpy },
       shipping: shippingJpy,
       insurance: 0,
       customsPct: 3,
@@ -33,9 +46,9 @@ export default function SidecarBidWidget() {
       paymentFeePct: 0,
       fixedFee: 0,
     })
-  }, [sellPriceEur, targetMarginPct, shippingJpy])
+  }, [sellPriceEur, targetMarginPct, shippingJpy, rateEurToJpy])
 
-  const maxBuyEur = maxBuyJpy / RATE_EUR_TO_JPY
+  const maxBuyEur = maxBuyJpy / rateEurToJpy
   const hasSellPrice = sellPriceEur > 0
   const marginOutOfRange = targetMarginPct >= 100
 
@@ -82,7 +95,7 @@ export default function SidecarBidWidget() {
       ) : (
         <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
           <p className="text-[10px] text-gray-500">Suggested max buy (JPY)</p>
-          <p className="text-sm font-semibold text-gray-900">¥{Math.max(0, maxBuyJpy).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
+          <p className="text-sm font-semibold text-gray-900">{formatJpy(Math.max(0, maxBuyJpy))}</p>
           <p className="text-[10px] text-gray-500">~ {formatCurrency(Math.max(0, maxBuyEur))}</p>
         </div>
       )}

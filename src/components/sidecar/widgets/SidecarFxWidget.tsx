@@ -1,37 +1,44 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { AlertTriangle, ArrowRightLeft, Loader2, RefreshCw } from 'lucide-react'
 import { fetchEurToJpy, type FxResult } from '../../../lib/fxRate'
+import { formatEur, formatJpy, parseNumericInput } from '../../../lib/formatters'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
 
-function formatJpy(value: number): string {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value)
-}
-
-function formatEur(value: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
-}
-
 export default function SidecarFxWidget() {
+  const mountedRef = useRef(true)
   const [fx, setFx] = useState<FxResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('')
 
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   const loadRate = async () => {
     setIsLoading(true)
     setErrorMessage(null)
     try {
       const next = await fetchEurToJpy()
-      setFx(next)
+      if (mountedRef.current) {
+        setFx(next)
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load FX rate'
-      setErrorMessage(message)
-      toast.error(message)
+      if (mountedRef.current) {
+        setErrorMessage(message)
+        toast.error(message)
+      }
     } finally {
-      setIsLoading(false)
+      if (mountedRef.current) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -39,10 +46,7 @@ export default function SidecarFxWidget() {
     loadRate()
   }, [])
 
-  const amount = useMemo(() => {
-    const n = parseFloat(amountInput.replace(/,/g, ''))
-    return Number.isFinite(n) && n >= 0 ? n : 0
-  }, [amountInput])
+  const amount = useMemo(() => parseNumericInput(amountInput), [amountInput])
 
   const eurToJpyRate = fx?.rate ?? 0
   const jpyToEurRate = eurToJpyRate > 0 ? 1 / eurToJpyRate : 0

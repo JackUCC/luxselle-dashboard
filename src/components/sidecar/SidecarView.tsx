@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeftToLine, Boxes, LayoutGrid, Search } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { getExitSidecarPath } from '../../lib/LayoutModeContext'
 import QuickCheck from './QuickCheck'
 import BatchProcessor from './BatchProcessor'
 import SidecarWidgets from './SidecarWidgets'
@@ -51,6 +52,7 @@ function renderTabPanel(tab: SidecarTab) {
 
 export default function SidecarView({ initialTab = 'quick' }: { initialTab?: SidecarTab }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState<SidecarTab>(() => resolveInitialTab(initialTab))
 
   const activeConfig = useMemo(
@@ -67,7 +69,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   }, [activeTab])
 
   const handleExitSidecar = () => {
-    navigate('/')
+    navigate(getExitSidecarPath('/', location.search), { replace: true })
   }
 
   return (

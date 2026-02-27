@@ -6,10 +6,9 @@ import request from 'supertest'
 import express, { type Request, type Response, type NextFunction } from 'express'
 import { dashboardRouter } from './dashboard'
 
-const { mockProductList, mockSourcingList, mockGetSettings } = vi.hoisted(() => ({
+const { mockProductList, mockSourcingList } = vi.hoisted(() => ({
   mockProductList: vi.fn(),
   mockSourcingList: vi.fn(),
-  mockGetSettings: vi.fn(),
 }))
 
 vi.mock('../repos/ProductRepo', () => ({ ProductRepo: class { list = mockProductList } }))
@@ -17,7 +16,7 @@ vi.mock('../repos/SourcingRequestRepo', () => ({ SourcingRequestRepo: class { li
 vi.mock('../repos/ActivityEventRepo', () => ({ ActivityEventRepo: class {} }))
 vi.mock('../repos/SystemJobRepo', () => ({ SystemJobRepo: class {} }))
 vi.mock('../repos/TransactionRepo', () => ({ TransactionRepo: class {} }))
-vi.mock('../repos/SettingsRepo', () => ({ SettingsRepo: class { getSettings = mockGetSettings } }))
+vi.mock('../repos/SettingsRepo', () => ({ SettingsRepo: class {} }))
 
 interface TestError {
   status?: number
@@ -41,7 +40,6 @@ describe('GET /api/dashboard/kpis', () => {
     vi.clearAllMocks()
     mockProductList.mockResolvedValue([])
     mockSourcingList.mockResolvedValue([])
-    mockGetSettings.mockResolvedValue({ lowStockThreshold: 2 })
   })
 
   it('returns 200 with KPI data shape', async () => {
@@ -51,6 +49,5 @@ describe('GET /api/dashboard/kpis', () => {
     expect(res.body.data.totalInventoryValue).toBeDefined()
     expect(res.body.data.totalInventoryPotentialValue).toBeDefined()
     expect(res.body.data.activeSourcingPipeline).toBeDefined()
-    expect(res.body.data.lowStockAlerts).toBeDefined()
   })
 })

@@ -1,3 +1,4 @@
+export { default as AnimatedNumber } from './AnimatedNumber'
 export { default as Badge } from './Badge'
 export { default as BentoGrid } from './BentoGrid'
 export { default as Button } from './Button'

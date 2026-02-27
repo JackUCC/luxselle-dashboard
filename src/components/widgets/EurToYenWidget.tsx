@@ -2,17 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { ArrowUpDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { fetchEurToJpy, type FxResult } from '../../lib/fxRate'
+import { formatEur, formatJpy, parseNumericInput } from '../../lib/formatters'
 import SectionLabel from '../design-system/SectionLabel'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
-
-function formatJpy(value: number): string {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value)
-}
-
-function formatEur(value: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
-}
 
 export default function EurToYenWidget() {
   const [fx, setFx] = useState<FxResult | null>(null)
@@ -33,10 +26,7 @@ export default function EurToYenWidget() {
 
   useEffect(() => { loadRate() }, [loadRate])
 
-  const amount = (() => {
-    const n = parseFloat(amountInput.replace(/,/g, ''))
-    return Number.isFinite(n) && n >= 0 ? n : 0
-  })()
+  const amount = parseNumericInput(amountInput)
   const eurToJpyRate = fx?.rate ?? 0
   const jpyToEurRate = eurToJpyRate > 0 ? 1 / eurToJpyRate : 0
   const result = direction === 'eur-to-jpy'

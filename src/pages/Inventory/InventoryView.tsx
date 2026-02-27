@@ -57,17 +57,14 @@ const getStatusLabel = (status: string) => {
   }
 };
 
-/** Badge variant by status: success (in_stock), warning (reserved / low stock), danger (sold), count (other). */
+/** Badge variant by status: success (in_stock), warning (reserved), danger (sold), count (other). */
 function getStatusBadgeVariant(
   status: string,
-  quantity: number,
-  lowStockThreshold: number
+  _quantity: number
 ): "status-success" | "status-warning" | "status-danger" | "count" {
   if (status === "sold") return "status-danger";
   if (status === "reserved") return "status-warning";
-  if (status === "in_stock") {
-    return quantity < lowStockThreshold ? "status-warning" : "status-success";
-  }
+  if (status === "in_stock") return "status-success";
   return "count";
 }
 
@@ -167,7 +164,6 @@ export default function InventoryView() {
   const query = (searchParams.get("q") ?? "").trim();
   const brandFilter = (searchParams.get("brand") ?? "").trim();
   const statusFilter = (searchParams.get("status") ?? "").trim();
-  const lowStockFilter = searchParams.get("lowStock") === "1";
   const missingInfoFilter = searchParams.get("missingInfo") === "1";
   const selectedProductId = searchParams.get("product");
 
@@ -186,7 +182,7 @@ export default function InventoryView() {
 
   const clearAllFilters = useCallback(() => {
     const nextParams = new URLSearchParams(searchParams);
-    ["q", "brand", "status", "lowStock", "missingInfo"].forEach((key) =>
+    ["q", "brand", "status", "missingInfo"].forEach((key) =>
       nextParams.delete(key),
     );
     setSearchParams(nextParams);
@@ -219,8 +215,6 @@ export default function InventoryView() {
     [closeProductDrawer],
   );
 
-  const LOW_STOCK_THRESHOLD = 2; // matches settings.lowStockThreshold default
-
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const brand = product.brand.toLowerCase();
@@ -234,11 +228,6 @@ export default function InventoryView() {
       if (brandFilter && !brand.includes(brandFilter.toLowerCase()))
         return false;
       if (statusFilter && product.status !== statusFilter) return false;
-      // Low stock filter: in_stock and quantity below threshold (from Dashboard link)
-      if (lowStockFilter) {
-        if (product.status !== "in_stock") return false;
-        if (product.quantity >= LOW_STOCK_THRESHOLD) return false;
-      }
       // Missing info filter: only show products with missing cost/sell/category
       if (missingInfoFilter && !hasMissingInfo(product)) return false;
       return true;
@@ -248,7 +237,6 @@ export default function InventoryView() {
     query,
     brandFilter,
     statusFilter,
-    lowStockFilter,
     missingInfoFilter,
   ]);
 
@@ -382,16 +370,8 @@ export default function InventoryView() {
     Number(Boolean(query)) +
     Number(Boolean(brandFilter)) +
     Number(Boolean(statusFilter)) +
-    Number(lowStockFilter) +
     Number(missingInfoFilter);
 
-  const lowStockCount = useMemo(
-    () =>
-      products.filter(
-        (p) => p.status === "in_stock" && p.quantity < LOW_STOCK_THRESHOLD
-      ).length,
-    [products]
-  );
   const missingInfoCount = useMemo(
     () => products.filter(hasMissingInfo).length,
     [products]
@@ -561,28 +541,6 @@ export default function InventoryView() {
         </div>
       </Card>
 
-      {/* Low stock banner */}
-      {lowStockFilter && (
-        <Card accent className="px-5 py-4 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-lux-700">
-              Showing low stock items (quantity &lt; {LOW_STOCK_THRESHOLD})
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                const newParams = new URLSearchParams(searchParams);
-                newParams.delete("lowStock");
-                setSearchParams(newParams);
-              }}
-              className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors"
-            >
-              Clear filter
-            </button>
-          </div>
-        </Card>
-      )}
-
       {/* Missing info banner */}
       {missingInfoFilter && (
         <Card accent className="px-5 py-4 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
@@ -612,22 +570,6 @@ export default function InventoryView() {
           <span className="font-medium">
             {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
           </span>
-          {lowStockCount > 0 && (
-            <a
-              href="/inventory?lowStock=1"
-              onClick={(e) => {
-                e.preventDefault();
-                setSearchParams((prev) => {
-                  const next = new URLSearchParams(prev);
-                  next.set("lowStock", "1");
-                  return next;
-                });
-              }}
-              className="font-medium text-amber-600 hover:text-amber-700 hover:underline"
-            >
-              {lowStockCount} low stock
-            </a>
-          )}
           {missingInfoCount > 0 && (
             <a
               href="/inventory?missingInfo=1"
@@ -661,17 +603,17 @@ export default function InventoryView() {
           <EmptyState
             icon={Package}
             title={
-              query || brandFilter || statusFilter || lowStockFilter || missingInfoFilter
+              query || brandFilter || statusFilter || missingInfoFilter
                 ? "No matching products"
                 : "No products yet"
             }
             description={
-              query || brandFilter || statusFilter || lowStockFilter || missingInfoFilter
+              query || brandFilter || statusFilter || missingInfoFilter
                 ? "Try a different search or clear your filters."
                 : "Add from Evaluator or create a product manually."
             }
             action={
-              !query && !brandFilter && !statusFilter && !lowStockFilter && !missingInfoFilter ? (
+              !query && !brandFilter && !statusFilter && !missingInfoFilter ? (
                 <Button variant="primary" onClick={() => setShowAddDrawer(true)} className="inline-flex items-center gap-2">
                   <Plus className="h-5 w-5" />
                   Add Product
@@ -790,8 +732,7 @@ export default function InventoryView() {
                           <Badge
                             variant={getStatusBadgeVariant(
                               product.status,
-                              product.quantity,
-                              LOW_STOCK_THRESHOLD
+                              product.quantity
                             )}
                           >
                             {getStatusLabel(product.status)}
@@ -869,8 +810,7 @@ export default function InventoryView() {
                         <Badge
                           variant={getStatusBadgeVariant(
                             product.status,
-                            product.quantity,
-                            LOW_STOCK_THRESHOLD
+                            product.quantity
                           )}
                         >
                           {getStatusLabel(product.status)}
@@ -919,8 +859,7 @@ export default function InventoryView() {
                     <Badge
                       variant={getStatusBadgeVariant(
                         product.status,
-                        product.quantity,
-                        LOW_STOCK_THRESHOLD
+                        product.quantity
                       )}
                     >
                       {getStatusLabel(product.status)}

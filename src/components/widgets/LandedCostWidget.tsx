@@ -1,26 +1,13 @@
 import { useState, useMemo } from 'react'
+import { calculateSimpleLandedCost } from '../../lib/landedCost'
+import { formatEur, parseNumericInput } from '../../lib/formatters'
 import SectionLabel from '../design-system/SectionLabel'
-
-const AUCTION_PCT = 7
-const CUSTOMS_PCT = 3
-const VAT_PCT = 23
-
-function formatEur(value: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
-}
 
 export default function LandedCostWidget() {
   const [bidInput, setBidInput] = useState('')
 
-  const bid = useMemo(() => {
-    const n = parseFloat(bidInput.replace(/,/g, ''))
-    return Number.isFinite(n) && n >= 0 ? n : 0
-  }, [bidInput])
-
-  const landed = useMemo(() => {
-    if (bid <= 0) return 0
-    return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
-  }, [bid])
+  const bid = useMemo(() => parseNumericInput(bidInput), [bidInput])
+  const landed = useMemo(() => calculateSimpleLandedCost(bid), [bid])
 
   return (
     <div
