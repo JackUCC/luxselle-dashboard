@@ -1,0 +1,5 @@
+export const DEFAULT_AUCTION_FEE_PCT = 7
+export const DEFAULT_CUSTOMS_PCT = 3
+export const DEFAULT_IMPORT_VAT_PCT = 23
+export const DEFAULT_PLATFORM_FEE_PCT = 0
+export const DEFAULT_PAYMENT_FEE_PCT = 0

@@ -73,7 +73,6 @@ KPIs:
 - Total Inventory Value: €${kpis.totalInventoryValue}
 - Pending Buy List Value: €${kpis.pendingBuyListValue}
 - Active Sourcing Pipeline: €${kpis.activeSourcingPipeline}
-- Low Stock Items: ${kpis.lowStockAlerts}
 - Total Revenue (Recent): €${kpis.revenue || 0}
 - Margin: ${kpis.margin || 0}%
 

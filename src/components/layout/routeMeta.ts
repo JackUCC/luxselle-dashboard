@@ -51,10 +51,9 @@ export interface DeepStateRule {
 export const deepStateRules: DeepStateRule[] = [
   {
     route: '/inventory',
-    keys: ['q', 'brand', 'status', 'lowStock', 'product'],
+    keys: ['q', 'brand', 'status', 'product'],
     toCrumbLabel: (params) => {
       const labels: string[] = []
-      if (params.get('lowStock') === '1') labels.push('Low Stock')
       if (params.get('product')) labels.push('Product')
       const status = params.get('status')
       if (status) labels.push(formatLabel(status))

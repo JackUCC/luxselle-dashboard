@@ -32,7 +32,6 @@ export const SettingsSchema = BaseDocSchema.extend({
 
   baseCurrency: CurrencySchema.default('EUR'),
   targetMarginPct: z.coerce.number(),
-  lowStockThreshold: z.coerce.number(),
   fxUsdToEur: z.coerce.number(),
   /** VAT rate as percentage (e.g. 20 for 20%); used by VAT calculator and invoices. */
   vatRatePct: z.coerce.number().min(0).max(100).optional().default(20),

@@ -3,7 +3,7 @@
  * In Sidecar mode, shows QuickCheck (compact price + inventory check) instead.
  * @see docs/CODE_REFERENCE.md
  */
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ArrowRightToLine, RefreshCw, TrendingUp } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -20,7 +20,6 @@ import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
-import LowStockKpiWidget from '../../components/widgets/LowStockKpiWidget'
 import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
@@ -70,7 +69,7 @@ export default function DashboardView() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadData = async (isRefresh = false) => {
+  const loadData = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
     try {
       const [kpisRes, profitRes] = await Promise.all([
@@ -87,11 +86,11 @@ export default function DashboardView() {
     } finally {
       if (!isRefresh) setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (!isSidecar) loadData()
-  }, [isSidecar])
+  }, [isSidecar, loadData])
 
   if (isSidecar) {
     return <SidecarView />
@@ -170,10 +169,9 @@ export default function DashboardView() {
             <LandedCostWidget />
           </BentoGrid>
 
-          {/* Row 2: Currency Converter + Low Stock + Inventory Cost + Potential Value */}
-          <BentoGrid columns={4}>
+          {/* Row 2: Currency Converter + Inventory Cost + Potential Value */}
+          <BentoGrid columns={3}>
             <EurToYenWidget />
-            <LowStockKpiWidget kpis={kpis} stagger={4} />
             <StatCard
               label="Inventory Cost"
               value={<AnimatedNumber value={inventoryValue} prefix="€" />}

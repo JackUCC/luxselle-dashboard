@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import SectionLabel from '../design-system/SectionLabel'
-
-const AUCTION_PCT = 7
-const CUSTOMS_PCT = 3
-const VAT_PCT = 23
+import {
+  DEFAULT_AUCTION_FEE_PCT,
+  DEFAULT_CUSTOMS_PCT,
+  DEFAULT_IMPORT_VAT_PCT
+} from '../../lib/constants'
 
 function formatEur(value: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
@@ -19,7 +20,7 @@ export default function LandedCostWidget() {
 
   const landed = useMemo(() => {
     if (bid <= 0) return 0
-    return bid * (1 + AUCTION_PCT / 100) * (1 + CUSTOMS_PCT / 100) * (1 + VAT_PCT / 100)
+    return bid * (1 + DEFAULT_AUCTION_FEE_PCT / 100) * (1 + DEFAULT_CUSTOMS_PCT / 100) * (1 + DEFAULT_IMPORT_VAT_PCT / 100)
   }, [bid])
 
   return (
