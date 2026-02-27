@@ -116,8 +116,16 @@ Rules:
 
         const text = response.choices[0]?.message?.content ?? ''
         const parsed = JSON.parse(text) as { averageSellingPriceEur?: number; comps?: PriceCheckComp[] }
-        averageSellingPriceEur = validatePriceEur(parsed.averageSellingPriceEur ?? 0)
         comps = filterValidComps(Array.isArray(parsed.comps) ? parsed.comps : [])
+
+        if (comps.length > 0) {
+          averageSellingPriceEur = Math.round(
+            comps.reduce((sum, c) => sum + c.price, 0) / comps.length,
+          )
+        } else {
+          averageSellingPriceEur = validatePriceEur(parsed.averageSellingPriceEur ?? 0)
+        }
+
         dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
       } catch (err) {
         logger.error('price_check_openai_error', err)
