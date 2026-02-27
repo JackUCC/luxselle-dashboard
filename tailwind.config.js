@@ -35,8 +35,8 @@ module.exports = {
       },
       colors: {
         lux: {
-          50: '#FAF9F7',
-          100: '#F3F1EE',
+          50: '#F5F5F7',
+          100: '#EDEDF0',
           200: '#E8E6E3',
           300: '#D5D3CF',
           400: '#A09E9A',

@@ -24,7 +24,7 @@
   /* Colors — warm bento palette */
   --lux-canvas: #FFFFFF;
   --lux-surface: #FFFFFF;
-  --lux-surface-hover: #F8F7F5;
+  --lux-surface-hover: #F5F5F7;
   --lux-border: #E8E6E3;
   --lux-border-hover: #D5D3CF;
   --lux-text: #1A1A2E;
@@ -97,14 +97,24 @@ h3, h4, h5, h6 {
   background: var(--lux-surface);
   border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.lux-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 .lux-card-accent {
   background: var(--lux-accent-warm);
   border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.lux-card-accent:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 .lux-card.evaluator-form-card {
@@ -127,7 +137,7 @@ h3, h4, h5, h6 {
   font-size: 14px;
   line-height: 1.5;
   color: var(--lux-text);
-  background: #F9F9F9;
+  background: #F5F5F7;
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
