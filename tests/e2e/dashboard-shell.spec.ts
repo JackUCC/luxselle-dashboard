@@ -83,7 +83,6 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
           totalInventoryValue: 120000,
           totalInventoryPotentialValue: 165000,
           activeSourcingPipeline: 15000,
-          lowStockAlerts: 2,
         },
       }),
     })

@@ -1,3 +1,22 @@
+/** Default percentages for simple landed cost (auction fee, customs, VAT). */
+export const DEFAULT_AUCTION_PCT = 7
+export const DEFAULT_CUSTOMS_PCT = 3
+export const DEFAULT_VAT_PCT = 23
+
+/**
+ * Simple landed cost from a bid price (EUR) using default fee/customs/VAT.
+ * Used by dashboard and sidecar quick calculators.
+ */
+export function calculateSimpleLandedCost(bidEur: number): number {
+    if (bidEur <= 0) return 0
+    return (
+        bidEur *
+        (1 + DEFAULT_AUCTION_PCT / 100) *
+        (1 + DEFAULT_CUSTOMS_PCT / 100) *
+        (1 + DEFAULT_VAT_PCT / 100)
+    )
+}
+
 export interface LandedCostInput {
     basePrice: number
     currency: 'EUR' | 'USD' | 'GBP' | 'JPY'

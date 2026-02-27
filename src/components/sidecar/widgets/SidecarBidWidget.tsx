@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import { ArrowUpDown, Loader2 } from 'lucide-react'
 import { calculateMaxBuyPrice } from '../../../lib/landedCost'
-import { formatCurrency } from '../../../lib/formatters'
+import { formatCurrency, formatJpy } from '../../../lib/formatters'
 import { useFxRate } from '../../../hooks/useFxRate'
 import {
   DEFAULT_AUCTION_FEE_PCT,
   DEFAULT_CUSTOMS_PCT,
   DEFAULT_IMPORT_VAT_PCT,
-  DEFAULT_PLATFORM_FEE_PCT,
   DEFAULT_PAYMENT_FEE_PCT
 } from '../../../lib/constants'
 
@@ -26,7 +25,7 @@ export default function SidecarBidWidget() {
   const targetMarginPct = parseNumber(targetMarginInput)
   const shippingJpy = parseNumber(shippingInput)
 
-  const rate = fx?.rate ?? 160 // Fallback to 160 if not loaded
+  const rate = fx?.rate ?? 160
 
   const maxBuyJpy = useMemo(() => {
     return calculateMaxBuyPrice({
@@ -38,7 +37,7 @@ export default function SidecarBidWidget() {
       insurance: 0,
       customsPct: DEFAULT_CUSTOMS_PCT,
       importVatPct: DEFAULT_IMPORT_VAT_PCT,
-      platformFeePct: DEFAULT_AUCTION_FEE_PCT, // Using auction fee as platform fee here? Or is this different? The original used 7.
+      platformFeePct: DEFAULT_AUCTION_FEE_PCT,
       paymentFeePct: DEFAULT_PAYMENT_FEE_PCT,
       fixedFee: 0,
     })
@@ -94,7 +93,7 @@ export default function SidecarBidWidget() {
       ) : (
         <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
           <p className="text-[10px] text-gray-500">Suggested max buy (JPY)</p>
-          <p className="text-sm font-semibold text-gray-900">¥{Math.max(0, maxBuyJpy).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
+          <p className="text-sm font-semibold text-gray-900">{formatJpy(Math.max(0, maxBuyJpy))}</p>
           <p className="text-[10px] text-gray-500">~ {formatCurrency(Math.max(0, maxBuyEur))}</p>
         </div>
       )}

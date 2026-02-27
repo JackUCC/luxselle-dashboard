@@ -2,16 +2,9 @@ import { useState } from 'react'
 import { ArrowUpDown } from 'lucide-react'
 import SectionLabel from '../design-system/SectionLabel'
 import { useFxRate } from '../../hooks/useFxRate'
+import { formatEur, formatJpy } from '../../lib/formatters'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
-
-function formatJpy(value: number): string {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value)
-}
-
-function formatEur(value: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
-}
 
 export default function EurToYenWidget() {
   const { data: fx, isLoading: loading } = useFxRate()

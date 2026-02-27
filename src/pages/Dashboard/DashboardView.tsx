@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { ArrowRightToLine, RefreshCw, TrendingUp } from 'lucide-react'
+import { ArrowRightToLine, RefreshCw } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
@@ -13,7 +13,7 @@ import DashboardSkeleton from './DashboardSkeleton'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import PageLayout from '../../components/layout/PageLayout'
-import { BentoGrid, Button, PageHeader, StatCard } from '../../components/design-system'
+import { AnimatedNumber, BentoGrid, Button, PageHeader, StatCard } from '../../components/design-system'
 import MarketIntelligenceWidget from '../../components/widgets/MarketIntelligenceWidget'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import EurToYenWidget from '../../components/widgets/EurToYenWidget'
@@ -21,43 +21,6 @@ import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
 import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
-
-function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
-  const [display, setDisplay] = useState('—')
-  const ref = useRef<HTMLSpanElement>(null)
-
-  useEffect(() => {
-    if (value === null || value === undefined) return
-    const numVal = typeof value === 'string' ? parseFloat(value) : value
-    if (!Number.isFinite(numVal)) { setDisplay(String(value)); return }
-
-    const duration = 800
-    const start = performance.now()
-    let raf: number
-
-    const animate = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      const current = numVal * eased
-
-      if (numVal >= 1000) {
-        setDisplay(`${prefix}${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}${suffix}`)
-      } else if (numVal >= 1) {
-        setDisplay(`${prefix}${current.toFixed(1)}${suffix}`)
-      } else {
-        setDisplay(`${prefix}${current.toFixed(2)}${suffix}`)
-      }
-
-      if (progress < 1) raf = requestAnimationFrame(animate)
-    }
-
-    raf = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(raf)
-  }, [value, prefix, suffix])
-
-  return <span ref={ref} className="tabular-nums">{display}</span>
-}
 
 export default function DashboardView() {
   const navigate = useNavigate()
@@ -175,14 +138,7 @@ export default function DashboardView() {
             <StatCard
               label="Inventory Cost"
               value={<AnimatedNumber value={inventoryValue} prefix="€" />}
-              secondary={
-                <div className="flex items-center gap-1.5 text-[13px] text-emerald-600 font-medium">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  <span>+2.4%</span>
-                  <span className="text-lux-400 font-normal">vs last month</span>
-                </div>
-              }
-              stagger={5}
+              stagger={4}
             />
             <StatCard
               label="Potential Value"
@@ -193,7 +149,7 @@ export default function DashboardView() {
                 </span>
               }
               accent
-              stagger={6}
+              stagger={5}
             />
           </BentoGrid>
 
