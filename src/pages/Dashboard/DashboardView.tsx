@@ -84,7 +84,6 @@ export default function DashboardView() {
     <PageLayout variant="content">
       <PageHeader
         title="Overview"
-        purpose="Daily metrics and quick tools."
         actions={
           <>
             <Button
@@ -125,7 +124,7 @@ export default function DashboardView() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {/* Row 1: Market Intelligence (2-col) + Landed Cost */}
           <BentoGrid columns={3}>
             <MarketIntelligenceWidget />

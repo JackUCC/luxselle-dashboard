@@ -34,11 +34,11 @@ test('mobile nav drawer opens and routes correctly', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 })
 
-test('navigation drawer is used below xl and side rail is hidden', async ({ page }) => {
+test('navigation drawer is used below xl and dock is hidden', async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 900 })
   await page.goto('/')
 
-  await expect(page.getByTestId('wide-screen-side-rail')).toBeHidden()
+  await expect(page.getByTestId('dock-bar')).toBeHidden()
   await expect(page.getByTestId('mobile-nav-toggle')).toBeVisible()
   await page.getByTestId('mobile-nav-toggle').click()
   await expect(page.getByTestId('mobile-nav-drawer')).toBeVisible()
@@ -47,24 +47,23 @@ test('navigation drawer is used below xl and side rail is hidden', async ({ page
   await expect(page).toHaveURL('/inventory')
 })
 
-test('ultra-wide side rail is visible and routes correctly', async ({ page }) => {
+test('dock bar is visible and routes correctly on wide screens', async ({ page }) => {
   await page.setViewportSize({ width: 1720, height: 1000 })
   await page.goto('/')
 
-  const sideRail = page.getByTestId('wide-screen-side-rail')
-  await expect(sideRail).toBeVisible()
+  const dock = page.getByTestId('dock-bar')
+  await expect(dock).toBeVisible()
 
-  await sideRail.getByRole('link', { name: 'Price Check' }).click()
+  await dock.getByRole('link', { name: 'Price Check' }).click()
   await expect(page).toHaveURL('/buy-box')
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 })
 
-test('breadcrumb shows page name on base route and full trail on deep state', async ({ page }) => {
+test('breadcrumb is hidden on base route and visible on deep state', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByTestId('deep-state-breadcrumb')).toBeVisible()
-  await expect(page.getByTestId('deep-state-breadcrumb')).toContainText('Overview')
+  await expect(page.getByTestId('deep-state-breadcrumb')).toHaveCount(0)
 
-  await page.goto('/inventory?missingInfo=1')
+  await page.goto('/inventory?status=in-stock')
   await expect(page.getByTestId('deep-state-breadcrumb')).toBeVisible()
   await expect(page.getByTestId('deep-state-breadcrumb')).toContainText('Inventory')
 })

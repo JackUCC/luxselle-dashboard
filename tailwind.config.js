@@ -63,7 +63,7 @@ module.exports = {
         },
       },
       borderRadius: {
-        'lux-card': '16px',
+        'lux-card': '20px',
         'lux-input': '10px',
         'lux-modal': '16px',
       },
