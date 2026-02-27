@@ -310,61 +310,56 @@ export default function MarketResearchView() {
                 </div>
             )}
 
-            <div className="grid gap-8 lg:grid-cols-5">
-                {/* ─── Left: Input + Previous + Key bags + Trending + Competitor ─── */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Previous searches */}
+            {/* ─── Quick-select chips ─── */}
+            {(previousSearches.length > 0 || KEY_TRENDING_BAGS.length > 0) && (
+                <div className="flex flex-wrap items-center gap-2">
                     {previousSearches.length > 0 && (
-                        <div className="lux-card p-4">
-                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
-                                <History className="h-3.5 w-3.5" />
-                                Previous searches
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {previousSearches.map((p, i) => (
-                                    <button
-                                        key={`${p.brand}-${p.model}-${i}`}
-                                        type="button"
-                                        onClick={() => quickResearch(p.brand, p.model)}
-                                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                                    >
-                                        {p.brand} {p.model}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Key trending bags (editable list) */}
-                    <div className="lux-card p-4">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
-                            <Zap className="h-3.5 w-3.5 text-amber-500" />
-                            Key trending bags
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {KEY_TRENDING_BAGS.map(({ brand, model }) => (
+                        <>
+                            <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-lux-400">
+                                <History className="h-3 w-3" /> Recent
+                            </span>
+                            {previousSearches.map((p, i) => (
                                 <button
-                                    key={`${brand}-${model}`}
+                                    key={`prev-${p.brand}-${p.model}-${i}`}
                                     type="button"
-                                    onClick={() => quickResearch(brand, model)}
-                                    className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-amber-100 transition-colors"
+                                    onClick={() => quickResearch(p.brand, p.model)}
+                                    className="rounded-full border border-lux-200 bg-white px-3 py-1 text-[12px] font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors"
                                 >
-                                    {brand} {model}
+                                    {p.brand} {p.model}
                                 </button>
                             ))}
-                        </div>
-                    </div>
+                            <div className="mx-1 h-4 w-px bg-lux-200" />
+                        </>
+                    )}
+                    <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-amber-500">
+                        <Zap className="h-3 w-3" /> Trending
+                    </span>
+                    {KEY_TRENDING_BAGS.map(({ brand, model }) => (
+                        <button
+                            key={`trend-${brand}-${model}`}
+                            type="button"
+                            onClick={() => quickResearch(brand, model)}
+                            className="rounded-full border border-amber-200 bg-amber-50/60 px-3 py-1 text-[12px] font-medium text-lux-800 hover:bg-amber-100 transition-colors"
+                        >
+                            {brand} {model}
+                        </button>
+                    ))}
+                </div>
+            )}
 
+            {/* ─── Main 2-column: Form + Results ─── */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-6">
                     {/* Research Form */}
                     <div className="lux-card p-6">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide mb-5">
+                        <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em] mb-5">
                             <Search className="h-4 w-4" />
                             Research Query
                         </div>
 
                         <form onSubmit={handleAnalyse} className="space-y-4">
                             <div>
-                                <label htmlFor="mr-brand" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">Brand *</label>
+                                <label htmlFor="mr-brand" className="block text-[12px] font-medium text-lux-600 mb-1.5">Brand *</label>
                                 <select id="mr-brand" name="brand" value={formData.brand} onChange={handleChange} required className="lux-input">
                                     <option value="">Select Brand</option>
                                     {Object.keys(BRAND_MODELS).sort().map(b => <option key={b} value={b}>{b}</option>)}
@@ -372,7 +367,7 @@ export default function MarketResearchView() {
                             </div>
 
                             <div>
-                                <label htmlFor="mr-model" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">Model *</label>
+                                <label htmlFor="mr-model" className="block text-[12px] font-medium text-lux-600 mb-1.5">Model *</label>
                                 {availableModels.length > 0 ? (
                                     <select id="mr-model" name="model" value={formData.model} onChange={handleChange} required className="lux-input" disabled={!formData.brand}>
                                         <option value="">Select Model</option>
@@ -385,7 +380,7 @@ export default function MarketResearchView() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label htmlFor="mr-category" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">Category *</label>
+                                    <label htmlFor="mr-category" className="block text-[12px] font-medium text-lux-600 mb-1.5">Category *</label>
                                     <select id="mr-category" name="category" value={formData.category} onChange={handleChange} required className="lux-input">
                                         <option value="Handbag">Handbag</option>
                                         <option value="Wallet">Wallet</option>
@@ -397,7 +392,7 @@ export default function MarketResearchView() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="mr-condition" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">Condition *</label>
+                                    <label htmlFor="mr-condition" className="block text-[12px] font-medium text-lux-600 mb-1.5">Condition *</label>
                                     <select id="mr-condition" name="condition" value={formData.condition} onChange={handleChange} required className="lux-input">
                                         <option value="new">New / Pristine</option>
                                         <option value="excellent">Excellent (A)</option>
@@ -409,18 +404,18 @@ export default function MarketResearchView() {
                             </div>
 
                             <div>
-                                <label htmlFor="mr-askPrice" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">Current Ask Price (EUR)</label>
+                                <label htmlFor="mr-askPrice" className="block text-[12px] font-medium text-lux-600 mb-1.5">Current Ask Price (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
-                                    <input id="mr-askPrice" type="number" name="currentAskPriceEur" value={formData.currentAskPriceEur} onChange={handleChange} placeholder="0" step="0.01" className="lux-input pl-7" />
+                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lux-400 text-[15px] font-medium">€</span>
+                                    <input id="mr-askPrice" type="number" name="currentAskPriceEur" value={formData.currentAskPriceEur} onChange={handleChange} placeholder="0" step="0.01" className="lux-input pl-8" />
                                 </div>
-                                <p className="text-xs text-gray-400 mt-1">Optional — helps calibrate analysis</p>
+                                <p className="text-[11px] text-lux-400 mt-1">Optional — helps calibrate analysis</p>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading || !formData.brand || !formData.model}
-                                className="w-full rounded-lg bg-indigo-600 py-3 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                className="lux-btn-primary w-full py-3 flex items-center justify-center gap-2"
                             >
                                 {isLoading ? (
                                     <><Loader2 className="h-4 w-4 animate-spin" /> Researching...</>
@@ -430,116 +425,10 @@ export default function MarketResearchView() {
                             </button>
                         </form>
                     </div>
-
-                    {/* Trending Section (pre-loaded) */}
-                    <div className="lux-card p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide">
-                                <Zap className="h-4 w-4 text-amber-500" />
-                                Trending Now
-                            </div>
-                            <button
-                                onClick={loadTrending}
-                                disabled={isTrendingLoading}
-                                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
-                            >
-                                {isTrendingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
-                                Refresh
-                            </button>
-                        </div>
-
-                        {trending ? (
-                            <div className="space-y-2">
-                                {trending.items.map((item, i) => {
-                                    const trendCfg = TREND_CONFIG[item.priceTrend as keyof typeof TREND_CONFIG] ?? TREND_CONFIG.stable
-                                    const TrendIcon = trendCfg.icon
-                                    return (
-                                        <button
-                                            key={i}
-                                            onClick={() => quickResearch(item.brand, item.model)}
-                                            className="w-full text-left flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 group"
-                                        >
-                                            <div className="min-w-0">
-                                                <div className="text-sm font-medium text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                                                    {item.brand} {item.model}
-                                                </div>
-                                                <div className="text-xs text-gray-500">{item.category}</div>
-                                            </div>
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                <span className="text-sm font-semibold text-gray-900">{formatCurrency(item.avgPriceEur)}</span>
-                                                <TrendIcon className={`h-4 w-4 ${trendCfg.color}`} />
-                                            </div>
-                                        </button>
-                                    )
-                                })}
-                                <p className="text-[10px] text-gray-400 text-center mt-2 uppercase tracking-wider">
-                                    via {trending.provider} · Irish & EU · {new Date(trending.generatedAt).toLocaleTimeString()}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="text-center py-6 text-gray-400">
-                                {isTrendingLoading ? (
-                                    <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-indigo-500" />
-                                ) : (
-                                    <Zap className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                                )}
-                                <p className="text-sm">{isTrendingLoading ? 'Loading trends…' : 'Click "Refresh" to load trending items'}</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Competitor activity: what Irish/EU competitors are listing */}
-                    <div className="lux-card p-6">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
-                            <Store className="h-4 w-4 text-indigo-500" />
-                            Competitor activity
-                        </div>
-                        <p className="text-xs text-gray-500 mb-3">Recent listings from Designer Exchange, Luxury Exchange, Siopella — market prices from Irish & EU competitors.</p>
-                        {isCompetitorLoading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
-                            </div>
-                        ) : competitorFeed && competitorFeed.items.length > 0 ? (
-                            <div className="space-y-2 max-h-64 overflow-y-auto">
-                                {competitorFeed.items.map((item, i) => (
-                                    <div
-                                        key={i}
-                                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors"
-                                    >
-                                        <div className="min-w-0 flex-1 pr-2">
-                                            <div className="text-xs font-medium text-gray-900 truncate">{item.title}</div>
-                                            <div className="text-[10px] text-gray-500">{item.source}</div>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span className="text-sm font-semibold text-gray-900">{formatCurrency(item.priceEur)}</span>
-                                            {item.sourceUrl && (
-                                                <a
-                                                    href={item.sourceUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="p-1 rounded text-gray-400 hover:text-indigo-600"
-                                                    aria-label="Open listing"
-                                                >
-                                                    <ExternalLink className="h-3.5 w-3.5" />
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                                <p className="text-[10px] text-gray-400 text-center mt-2">
-                                    Updated {new Date(competitorFeed.generatedAt).toLocaleTimeString()}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="text-center py-6 text-gray-400 text-sm">
-                                No competitor feed available. Check API connection.
-                            </div>
-                        )}
-                    </div>
                 </div>
 
-                {/* ─── Right: Results ────────────────────────────── */}
-                <div className="lg:col-span-3">
+                {/* ─── Results panel ─── */}
+                <div>
                     {!result ? (
                         <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-gray-400">
                             <BarChart3 className="h-14 w-14 mb-4 opacity-20" />
@@ -754,6 +643,115 @@ export default function MarketResearchView() {
                                     Powered by {result.provider} · {result.brand} {result.model}
                                 </p>
                             </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ─── Full-width: Trending + Competitor side by side ─── */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* Trending Now */}
+                <div className="lux-card p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em]">
+                            <Zap className="h-4 w-4 text-amber-500" />
+                            Trending Now
+                        </div>
+                        <button
+                            onClick={loadTrending}
+                            disabled={isTrendingLoading}
+                            className="text-[12px] text-lux-600 hover:text-lux-900 font-medium flex items-center gap-1 transition-colors"
+                        >
+                            {isTrendingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
+                            Refresh
+                        </button>
+                    </div>
+
+                    {trending ? (
+                        <div className="space-y-1">
+                            {trending.items.map((item, i) => {
+                                const trendCfg = TREND_CONFIG[item.priceTrend as keyof typeof TREND_CONFIG] ?? TREND_CONFIG.stable
+                                const TrendIcon = trendCfg.icon
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => quickResearch(item.brand, item.model)}
+                                        className="w-full text-left flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors group"
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="text-[13px] font-medium text-lux-800 truncate group-hover:text-lux-900 transition-colors">
+                                                {item.brand} {item.model}
+                                            </div>
+                                            <div className="text-[11px] text-lux-400">{item.category}</div>
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <span className="text-[13px] font-semibold text-lux-800">{formatCurrency(item.avgPriceEur)}</span>
+                                            <TrendIcon className={`h-4 w-4 ${trendCfg.color}`} />
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                            <p className="text-[10px] text-lux-400 text-center pt-2 uppercase tracking-wider">
+                                via {trending.provider} · Irish & EU · {new Date(trending.generatedAt).toLocaleTimeString()}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-lux-400">
+                            {isTrendingLoading ? (
+                                <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin text-lux-500" />
+                            ) : (
+                                <Zap className="h-6 w-6 mx-auto mb-2 opacity-20" />
+                            )}
+                            <p className="text-[13px]">{isTrendingLoading ? 'Loading trends…' : 'Click Refresh to load trends'}</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Competitor Activity */}
+                <div className="lux-card p-6">
+                    <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em] mb-1">
+                        <Store className="h-4 w-4" />
+                        Competitor Activity
+                    </div>
+                    <p className="text-[11px] text-lux-400 mb-4">Recent listings from Designer Exchange, Luxury Exchange, Siopella.</p>
+                    {isCompetitorLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin text-lux-500" />
+                        </div>
+                    ) : competitorFeed && competitorFeed.items.length > 0 ? (
+                        <div className="space-y-1 max-h-80 overflow-y-auto no-scrollbar">
+                            {competitorFeed.items.map((item, i) => (
+                                <div
+                                    key={i}
+                                    className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
+                                >
+                                    <div className="min-w-0 flex-1 pr-2">
+                                        <div className="text-[13px] font-medium text-lux-800 truncate">{item.title}</div>
+                                        <div className="text-[11px] text-lux-400">{item.source}</div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span className="text-[13px] font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
+                                        {item.sourceUrl && (
+                                            <a
+                                                href={item.sourceUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="p-1 rounded-lg text-lux-400 hover:text-lux-700 transition-colors"
+                                                aria-label="Open listing"
+                                            >
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                            <p className="text-[10px] text-lux-400 text-center pt-2">
+                                Updated {new Date(competitorFeed.generatedAt).toLocaleTimeString()}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-lux-400 text-[13px]">
+                            No competitor feed available.
                         </div>
                     )}
                 </div>
