@@ -73,7 +73,7 @@ function getStatusBadgeVariant(
 
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import PageLayout from "../../components/layout/PageLayout";
-import { Badge, Button, Card, PageHeader, SectionLabel } from "../../components/design-system";
+import { Badge, Button, Card, EmptyState, PageHeader, SectionLabel } from "../../components/design-system";
 import { useLayoutMode } from "../../lib/LayoutModeContext";
 
 function InventoryRowActions({
@@ -385,6 +385,18 @@ export default function InventoryView() {
     Number(lowStockFilter) +
     Number(missingInfoFilter);
 
+  const lowStockCount = useMemo(
+    () =>
+      products.filter(
+        (p) => p.status === "in_stock" && p.quantity < LOW_STOCK_THRESHOLD
+      ).length,
+    [products]
+  );
+  const missingInfoCount = useMemo(
+    () => products.filter(hasMissingInfo).length,
+    [products]
+  );
+
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     updateParam("q", event.target.value);
   };
@@ -594,6 +606,47 @@ export default function InventoryView() {
         </Card>
       )}
 
+      {/* Summary strip */}
+      {!isLoading && !error && products.length > 0 && (
+        <div className="flex flex-wrap items-center gap-4 text-sm text-lux-600 animate-bento-enter" style={{ "--stagger": 1 } as React.CSSProperties}>
+          <span className="font-medium">
+            {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+          </span>
+          {lowStockCount > 0 && (
+            <a
+              href="/inventory?lowStock=1"
+              onClick={(e) => {
+                e.preventDefault();
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("lowStock", "1");
+                  return next;
+                });
+              }}
+              className="font-medium text-amber-600 hover:text-amber-700 hover:underline"
+            >
+              {lowStockCount} low stock
+            </a>
+          )}
+          {missingInfoCount > 0 && (
+            <a
+              href="/inventory?missingInfo=1"
+              onClick={(e) => {
+                e.preventDefault();
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("missingInfo", "1");
+                  return next;
+                });
+              }}
+              className="font-medium text-amber-600 hover:text-amber-700 hover:underline"
+            >
+              {missingInfoCount} missing info
+            </a>
+          )}
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
           <Loader2 className="h-5 w-5 animate-spin" />
@@ -604,20 +657,33 @@ export default function InventoryView() {
           <p className="text-rose-600 font-medium">{error}</p>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <Card className="border-dashed p-12 text-center animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
-          <div className="mx-auto h-12 w-12 bg-lux-100 rounded-full flex items-center justify-center mb-4">
-            <Package className="h-6 w-6 text-lux-400" />
-          </div>
-          <p className="text-lux-800 font-semibold mb-1">No matching products</p>
-          <p className="text-sm text-lux-600">
-            {query ||
-            brandFilter ||
-            statusFilter ||
-            lowStockFilter ||
-            missingInfoFilter
-              ? "Try a different search or clear your filters."
-              : "Add your first product to get started."}
-          </p>
+        <Card className="border-dashed animate-bento-enter" style={{ "--stagger": 2 } as React.CSSProperties}>
+          <EmptyState
+            icon={Package}
+            title={
+              query || brandFilter || statusFilter || lowStockFilter || missingInfoFilter
+                ? "No matching products"
+                : "No products yet"
+            }
+            description={
+              query || brandFilter || statusFilter || lowStockFilter || missingInfoFilter
+                ? "Try a different search or clear your filters."
+                : "Add from Evaluator or create a product manually."
+            }
+            action={
+              !query && !brandFilter && !statusFilter && !lowStockFilter && !missingInfoFilter ? (
+                <Button variant="primary" onClick={() => setShowAddDrawer(true)} className="inline-flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Add Product
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={clearAllFilters} className="inline-flex items-center gap-2">
+                  <X className="h-4 w-4" />
+                  Clear filters
+                </Button>
+              )
+            }
+          />
         </Card>
       ) : viewMode === "table" ? (
         <div

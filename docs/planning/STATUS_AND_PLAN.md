@@ -1,6 +1,6 @@
 # Luxselle Supplier Engine — Current Status
 
-**Last updated**: 2026-02-24  
+**Last updated**: 2026-02-27  
 **Current State**: Supplier Engine scope with dual-mode UX (Overview + Sidecar)
 
 ---
@@ -8,7 +8,7 @@
 ## Executive Summary
 
 - Iterations 1-6 are implemented across core product surfaces.
-- Scope pivot is complete: Supplier Engine replaces legacy tracker framing.
+- Scope pivot is complete: Supplier Engine replaces previous tracker framing.
 - Next milestone is Sidecar hardening and mode-adaptive UX polish.
 - GSD framework is installed for spec-driven planning and execution.
 
@@ -26,8 +26,8 @@
 
 ### Removed from active product surface
 
-1. Legacy procurement queue pages/routes
-2. Legacy supplier-feed pages/routes
+1. Procurement queue pages/routes
+2. Supplier-feed pages/routes
 
 ---
 
@@ -42,7 +42,7 @@
 
 ### Phase 7: In Progress
 
-- Sidecar mode compact UX hardening (Evaluator, Inventory, Invoices).
+- Sidecar compact UX: QuickCheck, SidecarView, and narrow-width behaviour for Evaluator, Inventory, Invoices.
 - Mode-adaptive responsiveness and affordance checks.
 - QA sweeps focused on decision speed and reliability in compact layout.
 
@@ -55,16 +55,21 @@ luxselle-dashboard/
 ├── src/
 │   ├── LuxselleApp.tsx                # Overview/Sidecar routing shell
 │   ├── lib/LayoutModeContext.tsx      # mode=overview|sidecar
+│   ├── components/
+│   │   └── sidecar/                   # SidecarView.tsx, QuickCheck.tsx, BatchProcessor.tsx, SidecarWidgets.tsx, widgets/
 │   └── pages/
 │       ├── BuyBox/
 │       ├── Inventory/
 │       ├── Sourcing/
 │       ├── Jobs/
-│       └── Invoices/
+│       ├── Invoices/
+│       ├── MarketResearch/
+│       ├── RetailPrice/
+│       └── SerialCheck/
 ├── packages/server/src/
-│   ├── routes/                        # dashboard, pricing, products, sourcing, jobs, invoices
+│   ├── routes/                        # dashboard, pricing, products, sourcing, jobs, invoices, etc.
 │   ├── middleware/                    # auth, request-id, error handling
-│   └── services/                      # pricing/import pipelines
+│   └── services/                      # pricing, price-check, import pipelines
 └── .claude/ + .cursor/                # GSD + Cursor agent framework assets
 ```
 
@@ -78,6 +83,7 @@ luxselle-dashboard/
 - `GET|POST|PUT|DELETE /api/sourcing/*` with transition validation
 - `GET|POST /api/jobs/*` for operational visibility and retry
 - `GET|POST /api/invoices/*` for invoice workflows
+- Others: `/api/suppliers/*`, `/api/settings/*`, `/api/market-research/*`, `/api/vat/*`, `/api/ai/*`, `/api/fx/*`, `/api/search/*` (see CODE_REFERENCE for full index)
 
 ---
 

@@ -48,12 +48,15 @@ This document provides an overview of the project's directory structure and the 
 
 - Each folder corresponds to a route and contains the main view and page-specific components.
 - **Routes**:
-  - `Dashboard` (`/`): Overview, KPIs, Command Bar.
+  - `Dashboard` (`/`): Overview, KPIs.
   - `Inventory` (`/inventory`): Product list, details drawer.
-  - `Evaluator` (`/buy-box`): Product analysis and buy box calculator.
-  - `SupplierHub` (`/supplier-hub`): Supplier management and CSV imports.
+  - `Evaluator` (`/buy-box`): Price check, product analysis.
+  - `Serial Check` (`/serial-check`): Serial check.
   - `Sourcing` (`/sourcing`): Sourcing request pipeline.
   - `Jobs` (`/jobs`): System background jobs.
+  - `Invoices` (`/invoices`): Invoices list and detail.
+  - `Market Research` (`/market-research`): Market research.
+  - `Retail Price` (`/retail-price`): Retail price.
 - **Shared Code**: Global components in `src/components/`, API/Config in `src/lib/`.
 
 ### `src/styles/`

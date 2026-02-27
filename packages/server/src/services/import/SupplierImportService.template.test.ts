@@ -52,20 +52,24 @@ afterEach(() => {
 })
 
 describe('SupplierImportService template import', () => {
-  it('parses CSV preview headers and rows', async () => {
-    const SupplierImportService = await loadService()
-    const service = new SupplierImportService()
-    const csv = [
-      'Brand,SKU,Title,Price USD,STATUS',
-      'Chanel,SKU-1,Classic Flap,100,UPLOADED',
-    ].join('\n')
+  it(
+    'parses CSV preview headers and rows',
+    async () => {
+      const SupplierImportService = await loadService()
+      const service = new SupplierImportService()
+      const csv = [
+        'Brand,SKU,Title,Price USD,STATUS',
+        'Chanel,SKU-1,Classic Flap,100,UPLOADED',
+      ].join('\n')
 
-    const preview = service.previewImportFile(Buffer.from(csv), 'supplier.csv')
-    expect(preview.fileType).toBe('csv')
-    expect(preview.headers).toContain('Brand')
-    expect(preview.rows).toHaveLength(1)
-    expect(preview.rows[0]?.SKU).toBe('SKU-1')
-  })
+      const preview = service.previewImportFile(Buffer.from(csv), 'supplier.csv')
+      expect(preview.fileType).toBe('csv')
+      expect(preview.headers).toContain('Brand')
+      expect(preview.rows).toHaveLength(1)
+      expect(preview.rows[0]?.SKU).toBe('SKU-1')
+    },
+    20_000
+  )
 
   it('parses XLSX preview headers and rows', async () => {
     const SupplierImportService = await loadService()

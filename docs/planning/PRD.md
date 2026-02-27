@@ -18,8 +18,8 @@ The product has two adaptive modes:
 
 ## Non-Goals
 
-1. Reintroducing legacy procurement queue pages.
-2. Reintroducing legacy supplier-feed browsing pages.
+1. Reintroducing procurement queue pages.
+2. Reintroducing supplier-feed browsing pages.
 3. Building a browser extension in this phase (web app sidecar mode only).
 
 ## Primary Workflows

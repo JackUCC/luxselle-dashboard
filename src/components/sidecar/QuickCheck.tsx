@@ -146,7 +146,7 @@ export default function QuickCheck() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 max-w-full space-y-2">
       <form onSubmit={handleSearch} className="rounded-xl border border-gray-200 bg-white p-2.5">
         <label htmlFor="sidecar-quick-search" className="text-[11px] font-medium text-gray-700">
           Item description

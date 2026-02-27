@@ -55,9 +55,9 @@ const formatCurrency = (value: number) =>
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'in_stock': return 'bg-emerald-100 text-emerald-700 border-emerald-200'
-    case 'sold': return 'bg-gray-100 text-gray-700 border-gray-200'
+    case 'sold': return 'bg-lux-100 text-lux-700 border-lux-200'
     case 'reserved': return 'bg-amber-100 text-amber-700 border-amber-200'
-    default: return 'bg-gray-100 text-gray-700 border-gray-200'
+    default: return 'bg-lux-100 text-lux-700 border-lux-200'
   }
 }
 
@@ -161,42 +161,41 @@ export default function ProductDetailDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-gray-500/20 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-lux-900/20 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 border-l border-gray-200">
+      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 border-l border-lux-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-lux-200 bg-lux-50/80">
           <div className="flex items-center gap-3">
             {isLoading ? (
-              <div className="h-10 w-10 rounded-lg bg-gray-100 animate-pulse" />
+              <div className="h-10 w-10 rounded-lg bg-lux-100 animate-pulse" />
             ) : product?.imageUrls?.[0] ? (
               <img
                 src={product.imageUrls[0]}
                 alt=""
-                className="h-10 w-10 rounded-lg object-cover border border-gray-200"
+                className="h-10 w-10 rounded-lg object-cover border border-lux-200"
                 onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL }}
               />
             ) : (
-              <div className="h-10 w-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-                <Package className="h-5 w-5 text-gray-400" />
+              <div className="h-10 w-10 rounded-lg bg-lux-100 border border-lux-200 flex items-center justify-center">
+                <Package className="h-5 w-5 text-lux-400" />
               </div>
             )}
             <div>
               {isLoading ? (
                 <>
-                  <div className="h-5 w-32 bg-gray-100 rounded animate-pulse" />
-                  <div className="h-3 w-20 bg-gray-50 rounded animate-pulse mt-1" />
+                  <div className="h-5 w-32 bg-lux-100 rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-lux-50 rounded animate-pulse mt-1" />
                 </>
               ) : (
                 <>
-                  <h2 className="font-semibold text-gray-900">
+                  <h2 className="font-semibold text-lux-900">
                     {product?.brand} {product?.title || product?.model}
                   </h2>
-                  <p className="text-xs text-gray-500 font-mono">
+                  <p className="text-xs text-lux-500 font-mono">
                     {product?.sku || `BA${product?.id.slice(-4)}`}
                   </p>
                 </>
@@ -218,7 +217,7 @@ export default function ProductDetailDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="rounded-lg p-2 text-lux-400 hover:text-lux-600 hover:bg-lux-100 transition-colors"
               aria-label="Close drawer"
             >
               <X className="h-5 w-5" />
@@ -227,14 +226,14 @@ export default function ProductDetailDrawer({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 px-6 bg-white">
+        <div className="flex border-b border-lux-200 px-6 bg-white">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                ? 'border-lux-700 text-lux-800'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
+                ? 'border-lux-gold text-lux-800'
+                : 'border-transparent text-lux-500 hover:text-lux-700 hover:border-lux-200'
                 }`}
             >
               <tab.icon className="h-4 w-4" />
@@ -246,12 +245,12 @@ export default function ProductDetailDrawer({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-12 text-lux-500">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Loading product...</span>
             </div>
           ) : !product ? (
-            <div className="text-center py-12 text-gray-500">Product not found</div>
+            <div className="text-center py-12 text-lux-500">Product not found</div>
           ) : (
             <>
               {activeTab === 'images' && (
@@ -302,11 +301,11 @@ export default function ProductDetailDrawer({
 
         {/* Footer */}
         {hasChanges && !isLoading && (
-          <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex items-center justify-end gap-3">
+          <div className="border-t border-lux-200 px-6 py-4 bg-lux-50/80 flex items-center justify-end gap-3">
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-lux-500 hover:text-lux-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -457,7 +456,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-gray-900">Product Images</h3>
+        <h3 className="font-medium text-lux-900">Product Images</h3>
         <div className="flex items-center gap-2">
           {primaryImageUrl && (
             <button
@@ -499,14 +498,14 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
         onDragLeave={handleDragLeave}
         className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${isDragOver
           ? 'border-lux-600 bg-lux-200/80'
-          : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+          : 'border-lux-300 bg-lux-50 hover:bg-lux-100'
           } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        <Upload className="mx-auto h-6 w-6 text-gray-400 mb-2" />
-        <p className="text-sm text-gray-600">
+        <Upload className="mx-auto h-6 w-6 text-lux-400 mb-2" />
+        <p className="text-sm text-lux-600">
           {isUploading ? 'Uploading...' : 'Drag and drop an image, or click Upload'}
         </p>
-        <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
+        <p className="text-xs text-lux-400 mt-1">PNG, JPG up to 10MB</p>
       </div>
 
       {/* Images Grid */}
@@ -516,7 +515,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
           {images.map((img) => (
             <div
               key={img.id}
-              className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
+              className="relative aspect-square rounded-lg overflow-hidden border border-lux-200 group"
             >
               <img
                 src={img.thumbnailUrl ?? img.url}
@@ -544,7 +543,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
           {images.length === 0 && legacyUrls.map((url, index) => (
             <div
               key={`legacy-${index}`}
-              className="relative aspect-square rounded-lg overflow-hidden border border-gray-200"
+              className="relative aspect-square rounded-lg overflow-hidden border border-lux-200"
             >
               <img
                 src={url}
@@ -559,30 +558,30 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
 
       {!hasImages && !isUploading && (
         <div className="text-center py-4">
-          <ImageIcon className="mx-auto h-8 w-8 text-gray-300 mb-2" />
-          <p className="text-sm text-gray-400">No images yet</p>
+          <ImageIcon className="mx-auto h-8 w-8 text-lux-300 mb-2" />
+          <p className="text-sm text-lux-400">No images yet</p>
         </div>
       )}
 
       {visualResults !== null && (
-        <div className="pt-4 border-t border-gray-200">
-          <h3 className="font-medium text-gray-900 mb-2">Visually similar items</h3>
+        <div className="pt-4 border-t border-lux-200">
+          <h3 className="font-medium text-lux-900 mb-2">Visually similar items</h3>
           {visualResults.length === 0 ? (
-            <p className="text-sm text-gray-500">No similar items in the index.</p>
+            <p className="text-sm text-lux-500">No similar items in the index.</p>
           ) : (
             <div className="grid grid-cols-3 gap-3">
               {visualResults.map((r, i) => (
-                <div key={i} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                <div key={i} className="rounded-lg border border-lux-200 overflow-hidden bg-white">
                   {r.imageUrl ? (
                     <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
                   ) : (
-                    <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
-                      <ImageIcon className="h-6 w-6 text-gray-400" />
+                    <div className="w-full aspect-square bg-lux-100 flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6 text-lux-400" />
                     </div>
                   )}
                   <div className="p-2">
-                    <p className="text-xs text-gray-900 truncate" title={r.title}>{r.title ?? '—'}</p>
-                    <p className="text-xs text-gray-500">{Math.round(r.score * 100)}% match</p>
+                    <p className="text-xs text-lux-900 truncate" title={r.title}>{r.title ?? '—'}</p>
+                    <p className="text-xs text-lux-500">{Math.round(r.score * 100)}% match</p>
                     {r.productId && (
                       <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-indigo-600 hover:underline mt-0.5 inline-block">
                         View in Inventory
@@ -609,7 +608,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+        <label className="block text-sm font-medium text-lux-700 mb-1">SKU</label>
         <input
           type="text"
           value={getCurrentValue('sku') ?? ''}
@@ -620,7 +619,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Brand</label>
           <input
             type="text"
             value={getCurrentValue('brand')}
@@ -629,7 +628,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Model</label>
           <input
             type="text"
             value={getCurrentValue('model')}
@@ -639,7 +638,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label className="block text-sm font-medium text-lux-700 mb-1">Title</label>
         <input
           type="text"
           value={getCurrentValue('title') ?? ''}
@@ -651,7 +650,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Category</label>
           <input
             type="text"
             value={getCurrentValue('category') ?? ''}
@@ -661,7 +660,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Condition</label>
           <input
             type="text"
             value={getCurrentValue('condition') ?? ''}
@@ -673,7 +672,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Colour</label>
+        <label className="block text-sm font-medium text-lux-700 mb-1">Colour</label>
         <input
           type="text"
           value={getCurrentValue('colour') ?? ''}
@@ -685,7 +684,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1">Status</label>
+          <label className="block text-sm font-medium text-lux-400 mb-1">Status</label>
           <div className="relative">
             <select
               value={getCurrentValue('status')}
@@ -696,11 +695,11 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
               <option value="sold">Sold</option>
               <option value="reserved">Reserved</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-500 pointer-events-none" />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1">Quantity</label>
+          <label className="block text-sm font-medium text-lux-400 mb-1">Quantity</label>
           <input
             type="number"
             min="0"
@@ -711,18 +710,18 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
         </div>
       </div>
 
-      <div className="pt-4 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Record Info</h4>
+      <div className="pt-4 border-t border-lux-200">
+        <h4 className="text-sm font-medium text-lux-700 mb-3">Record Info</h4>
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-gray-500">Created</dt>
-            <dd className="font-medium text-gray-900">
+            <dt className="text-lux-500">Created</dt>
+            <dd className="font-medium text-lux-900">
               {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '—'}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Updated</dt>
-            <dd className="font-medium text-gray-900">
+            <dt className="text-lux-500">Updated</dt>
+            <dd className="font-medium text-lux-900">
               {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : '—'}
             </dd>
           </div>
@@ -763,9 +762,9 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Purchase / Cost (EUR)</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -777,9 +776,9 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Sell Price (EUR)</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -793,9 +792,9 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Customs (EUR)</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -807,9 +806,9 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">VAT (EUR)</label>
+          <label className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -825,42 +824,42 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
       {/* VAT (from settings rate) */}
       {sellPrice > 0 && vatInfo && (
         <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
-          <div className="text-sm text-gray-700">
-            VAT (at {vatInfo.ratePct}%): <span className="font-semibold text-gray-900">{formatCurrency(vatInfo.vatEur)}</span>
-            <span className="text-gray-500 ml-1">— sell price treated as gross</span>
+          <div className="text-sm text-lux-700">
+            VAT (at {vatInfo.ratePct}%): <span className="font-semibold text-lux-900">{formatCurrency(vatInfo.vatEur)}</span>
+            <span className="text-lux-500 ml-1">— sell price treated as gross</span>
           </div>
         </div>
       )}
 
       {/* Margin Summary */}
-      <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-4">Margin Analysis</h4>
+      <div className="rounded-lg bg-lux-50 border border-lux-200 p-4">
+        <h4 className="text-sm font-medium text-lux-700 mb-4">Margin Analysis</h4>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{formatCurrency(margin)}</div>
-            <div className="text-xs text-gray-500 mt-1">Profit</div>
+            <div className="text-2xl font-bold text-lux-900">{formatCurrency(margin)}</div>
+            <div className="text-xs text-lux-500 mt-1">Profit</div>
           </div>
-          <div className="text-center border-x border-gray-200">
+          <div className="text-center border-x border-lux-200">
             <div className={`text-2xl font-bold ${marginPct >= 20 ? 'text-green-600' : marginPct >= 10 ? 'text-orange-600' : 'text-red-600'}`}>
               {marginPct.toFixed(1)}%
             </div>
-            <div className="text-xs text-gray-500 mt-1">Margin %</div>
+            <div className="text-xs text-lux-500 mt-1">Margin %</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-lux-900">
               {costPrice > 0 ? ((sellPrice / costPrice - 1) * 100).toFixed(1) : '0.0'}%
             </div>
-            <div className="text-xs text-gray-500 mt-1">Markup %</div>
+            <div className="text-xs text-lux-500 mt-1">Markup %</div>
           </div>
         </div>
       </div>
 
       {/* Price History placeholder */}
-      <div className="pt-4 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Price Comparison</h4>
-        <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center">
-          <DollarSign className="mx-auto h-6 w-6 text-gray-400 mb-2" />
-          <p className="text-sm text-gray-500">
+      <div className="pt-4 border-t border-lux-200">
+        <h4 className="text-sm font-medium text-lux-700 mb-3">Price Comparison</h4>
+        <div className="rounded-lg border border-dashed border-lux-200 p-6 text-center">
+          <DollarSign className="mx-auto h-6 w-6 text-lux-400 mb-2" />
+          <p className="text-sm text-lux-500">
             Price history and market comparison coming soon
           </p>
         </div>
@@ -987,14 +986,14 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
       case 'purchase': return 'bg-lux-200 text-lux-800'
       case 'sale': return 'bg-green-100 text-green-700'
       case 'adjustment': return 'bg-orange-100 text-orange-700'
-      default: return 'bg-gray-100 text-gray-700'
+      default: return 'bg-lux-100 text-lux-700'
     }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-gray-900">Transaction History</h3>
+        <h3 className="font-medium text-lux-900">Transaction History</h3>
         <div className="flex gap-2">
           <button
             onClick={() => handleOpenModal('sale')}
@@ -1022,7 +1021,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
             <button
               type="button"
               onClick={() => setSaleForInvoice(null)}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-lux-600 hover:text-lux-900"
             >
               Dismiss
             </button>
@@ -1038,15 +1037,15 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+        <div className="flex items-center justify-center gap-2 py-8 text-lux-500">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading history...</span>
         </div>
       ) : transactions.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center bg-gray-50">
-          <History className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-          <p className="text-sm text-gray-900 font-medium">No transactions yet</p>
-          <p className="text-xs text-gray-500 mt-1">
+        <div className="rounded-lg border-2 border-dashed border-lux-300 p-8 text-center bg-lux-50">
+          <History className="mx-auto h-8 w-8 text-lux-400 mb-3" />
+          <p className="text-sm text-lux-900 font-medium">No transactions yet</p>
+          <p className="text-xs text-lux-500 mt-1">
             Record a sale or adjustment to track this product's history
           </p>
         </div>
@@ -1055,23 +1054,23 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
           {transactions.map((tx) => (
             <div
               key={tx.id}
-              className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
+              className="flex items-center justify-between rounded-lg border border-lux-200 p-4"
             >
               <div className="flex items-center gap-3">
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeColor(tx.type)}`}>
                   {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
                 </span>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-lux-900">
                     {formatCurrency(tx.amountEur)}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-lux-500">
                     {new Date(tx.occurredAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
               {tx.notes && (
-                <p className="text-sm text-gray-500 truncate max-w-[200px]">{tx.notes}</p>
+                <p className="text-sm text-lux-500 truncate max-w-[200px]">{tx.notes}</p>
               )}
             </div>
           ))}
@@ -1085,20 +1084,20 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-lux-900">
                   {showModal === 'sale' ? 'Record Sale' : 'Record Adjustment'}
                 </h3>
-                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">
+                <button onClick={handleCloseModal} className="text-lux-400 hover:text-lux-600">
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-lux-700 mb-1">
                   Amount (EUR)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
                   <input
                     type="number"
                     min="0"
@@ -1113,7 +1112,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-lux-700 mb-1">
                   Notes (optional)
                 </label>
                 <textarea
@@ -1129,7 +1128,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
                 <button
                   onClick={handleCloseModal}
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1158,21 +1157,21 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Create invoice for this sale</h3>
+                <h3 className="text-lg font-semibold text-lux-900">Create invoice for this sale</h3>
                 <button
                   type="button"
                   onClick={() => setShowInvoiceModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-lux-400 hover:text-lux-600"
                   aria-label="Close invoice modal"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-lux-500">
                 Amount: {formatCurrency(saleForInvoice.amountEur)} (VAT will be calculated from settings)
               </p>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer name (optional)</label>
+                <label className="block text-sm font-medium text-lux-700 mb-1">Customer name (optional)</label>
                 <input
                   type="text"
                   value={invoiceCustomerName}
@@ -1182,7 +1181,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer email (optional)</label>
+                <label className="block text-sm font-medium text-lux-700 mb-1">Customer email (optional)</label>
                 <input
                   type="email"
                   value={invoiceCustomerEmail}
@@ -1195,7 +1194,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
                 <button
                   onClick={() => setShowInvoiceModal(false)}
                   disabled={invoiceSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900"
                 >
                   Cancel
                 </button>
@@ -1224,7 +1223,7 @@ interface NotesTabProps {
 function NotesTab({ getCurrentValue, onFieldChange }: NotesTabProps) {
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-gray-900">Product Notes</h3>
+      <h3 className="font-medium text-lux-900">Product Notes</h3>
       <textarea
         value={getCurrentValue('notes') ?? ''}
         onChange={(e) => onFieldChange('notes', e.target.value)}
@@ -1232,7 +1231,7 @@ function NotesTab({ getCurrentValue, onFieldChange }: NotesTabProps) {
         rows={10}
         className="lux-input resize-none"
       />
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-lux-400">
         Notes are internal only and won't be shown to customers.
       </p>
     </div>

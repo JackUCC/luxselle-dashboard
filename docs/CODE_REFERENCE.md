@@ -134,7 +134,7 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | File | Purpose | References |
 |------|--------|------------|
 | `src/main.tsx` | React root; mounts `LuxselleApp` with StrictMode; imports global styles. | React, Vite |
-| `src/LuxselleApp.tsx` | App shell: React Query + Router, responsive navigation (mobile drawer / desktop tabs / ultra-wide side rail), deep-state breadcrumb mounting, Toaster, ErrorBoundary, and route definitions; includes legacy redirects and backend-config banner check via `GET /api/dashboard/status`. | react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react |
+| `src/LuxselleApp.tsx` | App shell: React Query + Router, responsive navigation (mobile drawer / desktop tabs / ultra-wide side rail), deep-state breadcrumb mounting, Toaster, ErrorBoundary, and route definitions; includes deprecated-route redirects and backend-config banner check via `GET /api/dashboard/status`. | react-router-dom, @tanstack/react-query, react-hot-toast, lucide-react |
 
 ### Lib
 
@@ -144,30 +144,43 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 | `src/lib/firebase.ts` | Firebase client init (config from env); used for auth/storage in frontend if needed. | Firebase JS SDK |
 | `src/lib/placeholder.ts` | `PLACEHOLDER_IMAGE`, `PLACEHOLDER_IMAGE_SMALL`; fallback URLs for broken product/supplier images (used in `img` onError). | — |
 | `src/lib/queryClient.ts` | TanStack Query client (default options). | @tanstack/react-query |
+| `src/lib/LayoutModeContext.tsx` | Layout mode (overview / sidecar) and `useLayoutMode()`. | React context |
+| `src/lib/ServerStatusContext.tsx` | Server/config status (AI provider, Firebase mode) for banner. | — |
 
 ### Components
 
 | File | Purpose | References |
 |------|--------|------------|
 | `src/components/ErrorBoundary.tsx` | Class-component error boundary; catches render errors and shows fallback UI. | React error boundaries |
-| `src/components/layout/routeMeta.ts` | Route metadata + deep-state breadcrumb rules; includes dashboard `insight` URL contract and type guards. | lucide-react |
+| `src/components/layout/routeMeta.ts` | Route metadata + deep-state breadcrumb rules for inventory, buy-box, sourcing, jobs. | lucide-react |
 | `src/components/layout/DeepStateBreadcrumb.tsx` | Query-aware breadcrumb that only renders for configured deep-state route params. | react-router-dom |
 | `src/components/navigation/MobileNavDrawer.tsx` | Mobile navigation drawer with grouped routes and route-change close behavior. | react-router-dom |
 | `src/components/navigation/WideScreenSideRail.tsx` | Persistent side rail navigation for ultra-wide layouts (`2xl+`). | react-router-dom |
+| `src/components/navigation/SidecarNav.tsx` | Compact navigation for Sidecar mode (tabs/links for quick check, widgets, batch). | react-router-dom |
 | `src/components/feedback/Skeleton.tsx` | Shared loading skeleton primitive (`text`, `rect`, `circle`). | Tailwind CSS |
+| `src/components/sidecar/SidecarView.tsx` | Sidecar shell: sticky header, tab panel (quick / widgets / batch), overflow-safe layout. | LayoutModeContext |
+| `src/components/sidecar/QuickCheck.tsx` | Quick price-check form and results in Sidecar; calls price-check API. | apiPost, pricing API |
+| `src/components/sidecar/BatchProcessor.tsx` | Batch price-check flow in Sidecar. | apiPost, pricing API |
+| `src/components/sidecar/SidecarWidgets.tsx` | Renders sidecar widgets (landed cost, serial check, FX, bid). | — |
+| `src/components/sidecar/widgets/SidecarBidWidget.tsx` | Sidecar bid/max-buy widget. | — |
+| `src/components/sidecar/widgets/SidecarFxWidget.tsx` | Sidecar FX rate widget. | — |
+| `src/components/sidecar/widgets/SidecarLandedCostWidget.tsx` | Sidecar landed-cost widget. | — |
+| `src/components/sidecar/widgets/SidecarSerialCheckWidget.tsx` | Sidecar serial-check widget. | — |
 
 ### Pages (one folder per route)
 
 | File | Purpose | References |
 |------|--------|------------|
-| `src/pages/Dashboard/DashboardView.tsx` | Dashboard overview with KPI/action cards, URL-driven insights drawer state (`insight` query param), and skeleton-first loading flow. | apiGet, react-router-dom |
-| `src/pages/Dashboard/CommandBar.tsx` | Dashboard command/search bar. | — |
+| `src/pages/Dashboard/DashboardView.tsx` | Dashboard overview with KPI/action cards and skeleton-first loading flow. | apiGet, react-router-dom |
 | `src/pages/Dashboard/DashboardSkeleton.tsx` | Layout-matched dashboard skeleton while dashboard aggregates are loading. | Skeleton primitive |
-| `src/pages/Dashboard/InsightsDrawer.tsx` | Right-side manual insights drawer with keyboard close/focus containment and quick-link actions from existing dashboard data. | react-router-dom |
 | `src/pages/Inventory/InventoryView.tsx` | Product list and filters. | apiGet, react-query |
 | `src/pages/Inventory/ProductDetailDrawer.tsx` | Product detail side drawer. | apiGet, apiPut, apiPost |
+| `src/pages/Inventory/AddProductDrawer.tsx` | Add product drawer. | apiPost |
+| `src/pages/Inventory/ImportInventoryDrawer.tsx` | Import inventory drawer. | apiPostFormData |
 | `src/pages/BuyBox/EvaluatorView.tsx` | Buy-box / evaluator UI. | apiGet, pricing API |
-| `src/pages/SupplierHub/SupplierHubView.tsx` | Suppliers list and import. | apiGet, apiPostFormData |
+| `src/pages/MarketResearch/MarketResearchView.tsx` | Market research page. | apiGet, market-research API |
+| `src/pages/RetailPrice/RetailPriceView.tsx` | Retail price page. | apiGet, pricing API |
+| `src/pages/SerialCheck/SerialCheckView.tsx` | Serial check page. | apiGet, pricing/price-check API |
 | `src/pages/Sourcing/SourcingView.tsx` | Sourcing requests list and status. | apiGet, apiPut |
 | `src/pages/Jobs/JobsView.tsx` | System jobs list. | apiGet |
 | `src/pages/Invoices/InvoicesView.tsx` | Invoices list and detail; view/print for accounting. | apiGet |

@@ -15,6 +15,9 @@ You are the Quality Lead Agent.
 - `agent-qa-data-pipeline` — Gmail sync/import templates/cron readiness.
 - `agent-docs-improvement` — deployment docs, runbooks, API notes.
 
+## Phase 7 note
+- Phase 7 signoff includes sidecar-focused QA (QuickCheck, SidecarView, compact layout flows).
+
 ## Workflow
 1. Run baseline checks:
    - `npm run test --workspace=@luxselle/server`

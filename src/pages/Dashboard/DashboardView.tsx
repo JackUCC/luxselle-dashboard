@@ -8,19 +8,20 @@ import toast from 'react-hot-toast'
 import { ArrowRightToLine, RefreshCw, TrendingUp } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
-import type { KPIs } from '../../types/dashboard'
+import type { KPIs, ProfitSummary } from '../../types/dashboard'
 import DashboardSkeleton from './DashboardSkeleton'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import PageLayout from '../../components/layout/PageLayout'
-import { Button, PageHeader } from '../../components/design-system'
-import SectionLabel from '../../components/design-system/SectionLabel'
+import { BentoGrid, Button, PageHeader, StatCard } from '../../components/design-system'
 import MarketIntelligenceWidget from '../../components/widgets/MarketIntelligenceWidget'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
+import LowStockKpiWidget from '../../components/widgets/LowStockKpiWidget'
+import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
   const [display, setDisplay] = useState('—')
@@ -64,6 +65,7 @@ export default function DashboardView() {
   const [searchParams] = useSearchParams()
   const { isSidecar } = useLayoutMode()
   const [kpis, setKpis] = useState<KPIs | null>(null)
+  const [profit, setProfit] = useState<ProfitSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,8 +73,12 @@ export default function DashboardView() {
   const loadData = async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
     try {
-      const kpisRes = await apiGet<{ data: KPIs }>('/dashboard/kpis')
+      const [kpisRes, profitRes] = await Promise.all([
+        apiGet<{ data: KPIs }>('/dashboard/kpis'),
+        apiGet<{ data: ProfitSummary }>('/dashboard/profit-summary'),
+      ])
       setKpis(kpisRes.data)
+      setProfit(profitRes.data ?? null)
       setError(null)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load dashboard'
@@ -159,51 +165,50 @@ export default function DashboardView() {
       ) : (
         <div className="space-y-4">
           {/* Row 1: Market Intelligence (2-col) + Landed Cost */}
-          <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <BentoGrid columns={3}>
             <MarketIntelligenceWidget />
             <LandedCostWidget />
-          </div>
+          </BentoGrid>
 
-          {/* Row 2: Currency Converter + Inventory Cost + Potential Value */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Row 2: Currency Converter + Low Stock + Inventory Cost + Potential Value */}
+          <BentoGrid columns={4}>
             <EurToYenWidget />
-
-            <div
-              className="lux-card p-6 animate-bento-enter"
-              style={{ '--stagger': 4 } as React.CSSProperties}
-            >
-              <SectionLabel className="mb-4">Inventory Cost</SectionLabel>
-              <p className="text-[32px] font-semibold font-mono text-lux-800 leading-none">
-                <AnimatedNumber value={inventoryValue} prefix="€" />
-              </p>
-              <div className="mt-3 flex items-center gap-1.5 text-[13px] text-emerald-600 font-medium">
-                <TrendingUp className="h-3.5 w-3.5" />
-                <span>+2.4%</span>
-                <span className="text-lux-400 font-normal">vs last month</span>
-              </div>
-            </div>
-
-            <div
-              className="lux-card-accent p-6 animate-bento-enter"
-              style={{ '--stagger': 5 } as React.CSSProperties}
-            >
-              <SectionLabel className="mb-4">Potential Value</SectionLabel>
-              <p className="text-[32px] font-semibold font-mono text-lux-800 leading-none">
-                <AnimatedNumber value={potentialValue} prefix="€" />
-              </p>
-              <div className="mt-3">
+            <LowStockKpiWidget kpis={kpis} stagger={4} />
+            <StatCard
+              label="Inventory Cost"
+              value={<AnimatedNumber value={inventoryValue} prefix="€" />}
+              secondary={
+                <div className="flex items-center gap-1.5 text-[13px] text-emerald-600 font-medium">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span>+2.4%</span>
+                  <span className="text-lux-400 font-normal">vs last month</span>
+                </div>
+              }
+              stagger={5}
+            />
+            <StatCard
+              label="Potential Value"
+              value={<AnimatedNumber value={potentialValue} prefix="€" />}
+              secondary={
                 <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-[12px] font-medium text-lux-700">
                   €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
                 </span>
-              </div>
-            </div>
-          </div>
+              }
+              accent
+              stagger={6}
+            />
+          </BentoGrid>
 
           {/* Row 3: Serial Check + Sourcing Sites + Active Sourcing */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <BentoGrid columns={3}>
             <SerialCheckWidget />
             <SourcingSitesWidget />
             <ActiveSourcingWidget />
+          </BentoGrid>
+
+          {/* Row 4: AI Insights */}
+          <div className="animate-bento-enter" style={{ '--stagger': 7 } as React.CSSProperties}>
+            <AiInsightsWidget kpis={kpis} profit={profit} />
           </div>
         </div>
       )}

@@ -1,1 +1,8 @@
+export { default as ActiveSourcingWidget } from './ActiveSourcingWidget'
 export { default as CalculatorWidget } from './CalculatorWidget'
+export { default as EurToYenWidget } from './EurToYenWidget'
+export { default as LandedCostWidget } from './LandedCostWidget'
+export { default as LowStockKpiWidget } from './LowStockKpiWidget'
+export { default as MarketIntelligenceWidget } from './MarketIntelligenceWidget'
+export { default as SerialCheckWidget } from './SerialCheckWidget'
+export { default as SourcingSitesWidget } from './SourcingSitesWidget'

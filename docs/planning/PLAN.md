@@ -55,7 +55,7 @@ Acceptance:
 Acceptance:
 
 - [x] Inventory supports operational stock decisions
-- [x] Product detail workflows are complete without legacy queue dependencies
+- [x] Product detail workflows are complete without queue dependencies
 
 ---
 
@@ -91,10 +91,10 @@ Objective: make Supplier Engine side-by-side buying support production-ready.
 
 ### Work Items
 
-- [ ] Sidecar layout hardening for narrow widths (Evaluator, Inventory, Invoices)
+- [ ] Sidecar layout hardening for narrow widths: QuickCheck.tsx, SidecarView.tsx (overflow/min-width), and Evaluator, Inventory, Invoices in compact layout
 - [ ] Mode-adaptive behavior parity checks between Overview and Sidecar
-- [ ] Remove residual legacy naming from planning/docs/rules
-- [ ] Execute GSD planning and delivery loop for Sidecar milestone
+- [x] Remove residual legacy naming from planning/docs/rules
+- [ ] Execute GSD planning and delivery loop for Sidecar milestone (run GSD plan-phase / execute-phase for sidecar UX via Cursor GSD commands)
 - [ ] QA pass for key journeys: evaluator decision -> inventory awareness -> invoicing follow-up
 
 ### Acceptance
