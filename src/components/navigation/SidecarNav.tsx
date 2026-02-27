@@ -7,6 +7,13 @@ import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 import Drawer from '../design-system/Drawer'
 
+function exitSidecarTo(location: { pathname: string; search: string }) {
+  const params = new URLSearchParams(location.search)
+  params.delete('mode')
+  const search = params.toString()
+  return { pathname: location.pathname, search: search ? `?${search}` : '' }
+}
+
 export default function SidecarNav() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
@@ -16,6 +23,8 @@ export default function SidecarNav() {
     params.set('mode', 'sidecar')
     return `${path}?${params.toString()}`
   }
+
+  const exitTo = exitSidecarTo(location)
 
   return (
     <>

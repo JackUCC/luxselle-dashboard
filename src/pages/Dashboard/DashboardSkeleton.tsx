@@ -21,8 +21,8 @@ export default function DashboardSkeleton() {
       </div>
 
       {/* Row 2 */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="lux-card p-6 space-y-4">
             <Skeleton className="h-3 w-28" variant="text" />
             <Skeleton className="h-8 w-36" variant="rect" />
