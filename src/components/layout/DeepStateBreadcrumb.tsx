@@ -19,15 +19,7 @@ export default function DeepStateBreadcrumb() {
   const labels = rule ? rule.toCrumbLabel(searchParams).filter(Boolean) : []
 
   if (!hasDeepState || !labels.length) {
-    return (
-      <nav
-        aria-label="Breadcrumb"
-        className="mb-4 flex items-center gap-1 overflow-x-auto no-scrollbar text-[11px] font-medium text-lux-400"
-        data-testid="deep-state-breadcrumb"
-      >
-        <span className="text-lux-800">{route.label}</span>
-      </nav>
-    )
+    return null
   }
 
   return (

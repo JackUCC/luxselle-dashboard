@@ -73,19 +73,19 @@ test('nav routing works for all main routes', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
 
-  const sideRail = page.getByTestId('wide-screen-side-rail')
-  await expect(sideRail).toBeVisible()
+  const dock = page.getByTestId('dock-bar')
+  await expect(dock).toBeVisible()
 
   // Navigate to Inventory
-  await sideRail.getByRole('link', { name: 'Inventory' }).click()
+  await dock.getByRole('link', { name: 'Inventory' }).click()
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
   // Navigate to Price Check
-  await sideRail.getByRole('link', { name: 'Price Check' }).click()
+  await dock.getByRole('link', { name: 'Price Check' }).click()
   await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
 
   // Navigate to Sourcing
-  await sideRail.getByRole('link', { name: 'Sourcing' }).click()
+  await dock.getByRole('link', { name: 'Sourcing' }).click()
   await expect(page.getByRole('heading', { name: 'Sourcing' })).toBeVisible()
 })
 

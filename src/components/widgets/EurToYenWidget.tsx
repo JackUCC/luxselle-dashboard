@@ -49,7 +49,7 @@ export default function EurToYenWidget() {
       ) : (
         <>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] font-medium text-lux-400">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] font-medium text-lux-400">
               {currencySymbol}
             </span>
             <input
@@ -59,7 +59,7 @@ export default function EurToYenWidget() {
               placeholder="0"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="lux-input h-12 pl-9 text-[22px] font-semibold font-mono text-lux-800"
+              className="lux-input h-12 pl-10 text-[22px] font-semibold font-mono text-lux-800"
             />
           </div>
 

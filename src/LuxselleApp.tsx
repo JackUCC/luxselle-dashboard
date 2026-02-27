@@ -13,8 +13,8 @@ import { AlertCircle, Menu } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
 import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
+import DockBar from './components/navigation/DockBar'
 import MobileNavDrawer from './components/navigation/MobileNavDrawer'
-import WideScreenSideRail from './components/navigation/WideScreenSideRail'
 import SidecarNav from './components/navigation/SidecarNav'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
@@ -40,7 +40,7 @@ const AppContent = () => {
 
   if (isSidecar) {
     return (
-      <div className="min-h-screen bg-lux-50 text-lux-800 font-sans">
+      <div className="min-h-screen bg-white text-lux-800 font-sans">
         <SidecarNav />
         <Toaster
           position="top-center"
@@ -72,7 +72,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-lux-50 text-lux-800 font-sans">
+    <div className="min-h-screen bg-white text-lux-800 font-sans">
       {isConnected === false && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-[13px] font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-2">
@@ -89,61 +89,57 @@ const AppContent = () => {
         </div>
       )}
 
-      <div className="xl:flex">
-        <WideScreenSideRail />
+      <DockBar />
 
-        <div className="min-w-0 flex-1">
-          <div className="sticky top-0 z-50 flex h-12 items-center justify-between gap-2 border-b border-lux-200 bg-white/80 backdrop-blur-sm px-4 xl:hidden">
-            <button
-              type="button"
-              className="rounded-md p-1.5 text-lux-500 transition-colors hover:bg-lux-50 hover:text-lux-800"
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open navigation menu"
-              data-testid="mobile-nav-toggle"
-            >
-              <Menu className="h-4 w-4" />
-            </button>
-            {routeMeta ? (
-              <span className="min-w-0 truncate text-[13px] font-medium text-lux-800" data-testid="mobile-page-title">
-                {routeMeta.label}
-              </span>
-            ) : null}
-            {!routeMeta ? <span className="w-9" /> : null}
-          </div>
-
-          <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-soft !rounded-lg',
-              duration: 4000,
-            }}
-          />
-
-          <main className="mx-auto max-w-8xl px-5 py-5 sm:px-6 sm:py-6">
-            <DeepStateBreadcrumb />
-            <ErrorBoundary>
-              <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
-                <Routes>
-                  <Route path="/" element={<DashboardView />} />
-                  <Route path="/inventory" element={<InventoryView />} />
-                  <Route path="/buy-box" element={<EvaluatorView />} />
-                  <Route path="/serial-check" element={<SerialCheckView />} />
-                  <Route path="/retail-price" element={<RetailPriceView />} />
-                  <Route path="/market-research" element={<MarketResearchView />} />
-                  <Route path="/sourcing" element={<SourcingView />} />
-                  <Route path="/jobs" element={<JobsView />} />
-                  <Route path="/invoices" element={<InvoicesView />} />
-
-                  {/* Legacy redirect */}
-                  <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </main>
-        </div>
+      <div className="sticky top-0 z-50 flex h-12 items-center justify-between gap-2 border-b border-lux-200 bg-white/80 backdrop-blur-sm px-4 xl:hidden">
+        <button
+          type="button"
+          className="rounded-md p-1.5 text-lux-500 transition-colors hover:bg-lux-50 hover:text-lux-800"
+          onClick={() => setMobileNavOpen(true)}
+          aria-label="Open navigation menu"
+          data-testid="mobile-nav-toggle"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+        {routeMeta ? (
+          <span className="min-w-0 truncate text-[13px] font-medium text-lux-800" data-testid="mobile-page-title">
+            {routeMeta.label}
+          </span>
+        ) : null}
+        {!routeMeta ? <span className="w-9" /> : null}
       </div>
+
+      <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-soft !rounded-lg',
+          duration: 4000,
+        }}
+      />
+
+      <main className="mx-auto max-w-8xl px-5 py-5 pt-5 sm:px-6 sm:py-6 xl:pt-20">
+        <DeepStateBreadcrumb />
+        <ErrorBoundary>
+          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
+            <Routes>
+              <Route path="/" element={<DashboardView />} />
+              <Route path="/inventory" element={<InventoryView />} />
+              <Route path="/buy-box" element={<EvaluatorView />} />
+              <Route path="/serial-check" element={<SerialCheckView />} />
+              <Route path="/retail-price" element={<RetailPriceView />} />
+              <Route path="/market-research" element={<MarketResearchView />} />
+              <Route path="/sourcing" element={<SourcingView />} />
+              <Route path="/jobs" element={<JobsView />} />
+              <Route path="/invoices" element={<InvoicesView />} />
+
+              {/* Legacy redirect */}
+              <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </main>
     </div>
   )
 }
