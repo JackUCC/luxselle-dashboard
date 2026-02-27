@@ -28,6 +28,9 @@ The main Agent delegates to subagents when it detects a task that matches an age
 - "Run QA on supplier email ingestion and landed-cost math" → agent-quality-lead
 - "Audit backend endpoint tests for new pricing/supplier routes" → agent-qa-backend-contracts
 - "Document production rollout and missing inputs" → agent-docs-improvement
+- "Run a UX/accessibility audit on the app" → agent-ux-accessibility-auditor
+- "Propose a visual redesign using our design system" → agent-ux-design-intelligence
+- "Help rethink the Evaluator → Inventory flow" → agent-ux-design-partner
 
 ## Agent Index
 
@@ -40,6 +43,14 @@ The main Agent delegates to subagents when it detects a task that matches an age
 | Jobs | `/jobs` | agent-jobs | System jobs, import status, retries |
 | Invoices | `/invoices` | agent-invoices | Invoices list, creation, PDF |
 | Coordinator | — | agent-coordinator | Cross-page flows, unified intelligence |
+
+## UX/UI Agent Index
+
+| Agent | Agent File | When to Use |
+|------|------------|-------------|
+| UX Accessibility Auditor | agent-ux-accessibility-auditor | Heuristic + WCAG audits, before redesigns |
+| Design Intelligence | agent-ux-design-intelligence | Visual/UI upgrades, design system–grounded proposals |
+| UX Design Partner | agent-ux-design-partner | Wireframes, flows, IA, guided design decisions |
 
 ## QA/Docs Agent Index
 
@@ -55,6 +66,7 @@ The main Agent delegates to subagents when it detects a task that matches an age
 
 - Subagents: `.cursor/agents/agent-*.md`, plus generic `qa.md`, `docs.md`, `backend.md`, `frontend.md`
 - Page and quality rules: `.cursor/rules/agent-*.mdc` (auto-load by file scope)
+- UX rules: `.cursor/rules/ux-accessibility.mdc`, `.cursor/rules/ux-design-system.mdc` (auto-load when editing `src/`, Tailwind, or global styles)
 
 ## GSD Framework (Project Management)
 

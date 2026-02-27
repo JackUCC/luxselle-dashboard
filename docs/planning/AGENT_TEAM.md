@@ -63,6 +63,23 @@ Target behavior quality across agents:
 - **Jobs**: `/api/jobs/*` import/retry visibility.
 - **Invoices**: `/api/invoices/*` invoice listing and creation/export flows.
 
+## UX/UI Agent Skills
+
+Specialist agents for UX audits, design intelligence, and guided design partnership (aligned with Nielsen/Norman heuristics, WCAG, and the lux design system):
+
+| Agent | Role | Primary Outputs |
+| ----- | ---- | --------------- |
+| **UX Accessibility Auditor** | Heuristic + WCAG audits on `src/` | Structured report, severity findings, actionable recommendations |
+| **Design Intelligence** | Visual/UI upgrades grounded in lux tokens | Layout and style proposals, Tailwind/CSS snippets using design system |
+| **UX Design Partner** | Wireframes, flows, information architecture | Flow descriptions, IA outlines, handoff notes for implementation |
+
+Cursor rules (auto-load when editing matching paths):
+
+- `ux-accessibility.mdc` — Accessibility checks (contrast, focus, labels, keyboard; toasts over alert).
+- `ux-design-system.mdc` — Design system adherence (lux colors, typography, spacing, existing components).
+
+Claude Code agents (same roles) live in `.claude/agents/`: `ux-accessibility-auditor.md`, `ux-design-intelligence.md`, `ux-design-partner.md`.
+
 ## GSD Management Agents
 
 Use the GSD management layer for scoped planning and execution:

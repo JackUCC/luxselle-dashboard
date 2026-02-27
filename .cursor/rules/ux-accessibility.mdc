@@ -1,0 +1,15 @@
+---
+description: Accessibility checks when editing UI. WCAG-aligned contrast, focus, labels, keyboard. Prefer toasts over alert().
+globs:
+  - src/**
+  - index.html
+alwaysApply: false
+---
+
+## Accessibility (UX Auditor alignment)
+- Ensure sufficient contrast for text (lux palette: use lux-800/lux-900 on lux-50/lux-100 backgrounds; avoid low-contrast combos).
+- Interactive elements must be keyboard operable and have visible focus (focus ring or equivalent).
+- Images and icons that convey meaning need accessible names (alt, aria-label, or aria-labelledby).
+- Forms: associate labels with inputs; surface errors clearly and accessibly (e.g. aria-describedby, live regions if dynamic).
+- Prefer toasts for user feedback; avoid alert()/confirm() in main flows.
+- When adding new UI, consider focus order and skip links for dense layouts (Overview vs Sidecar).

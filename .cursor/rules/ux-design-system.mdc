@@ -1,0 +1,15 @@
+---
+description: Design system adherence when editing UI. Use lux tokens, existing components, and spacing scale from tailwind.config.js and src/styles/index.css.
+globs:
+  - src/**
+  - tailwind.config.js
+  - src/styles/index.css
+alwaysApply: false
+---
+
+## Design system (Design Intelligence alignment)
+- **Colors:** Use lux-* and accent-* from tailwind.config.js; CSS vars in src/styles/index.css (--lux-*, --lux-gold). Do not introduce new hex/rgb for UI except via the design system.
+- **Typography:** font-sans (Inter), font-display (Ibarra Real Nova), font-mono (JetBrains Mono). Use existing fontSize scale (display-hero, page-title, section-head, card-header, body, body-sm, ui-label, data).
+- **Spacing:** Use space-1…space-9 (4px base). Avoid arbitrary spacing values unless justified.
+- **Components:** Prefer design-system components (Button, Card, Input, Badge, Drawer, PageHeader, SectionLabel) and utility classes (lux-card, lux-btn-primary, lux-btn-secondary, lux-input). Use border-radius-lux-*, shadow-soft, shadow-glass, shadow-elevated as defined.
+- **Modes:** Respect Overview vs Sidecar; use useLayoutMode() from src/lib/LayoutModeContext.tsx when layout or density depends on mode.
