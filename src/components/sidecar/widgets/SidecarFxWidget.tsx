@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useMemo, useState } from 'react'
 import { AlertTriangle, ArrowRightLeft, Loader2, RefreshCw } from 'lucide-react'
-import { fetchEurToJpy, type FxResult } from '../../../lib/fxRate'
+import { useFxRate } from '../../../hooks/useFxRate'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
 
@@ -14,30 +13,9 @@ function formatEur(value: number): string {
 }
 
 export default function SidecarFxWidget() {
-  const [fx, setFx] = useState<FxResult | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { data: fx, isLoading, error: errorMessage, refresh: loadRate } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('')
-
-  const loadRate = async () => {
-    setIsLoading(true)
-    setErrorMessage(null)
-    try {
-      const next = await fetchEurToJpy()
-      setFx(next)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load FX rate'
-      setErrorMessage(message)
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadRate()
-  }, [])
 
   const amount = useMemo(() => {
     const n = parseFloat(amountInput.replace(/,/g, ''))
@@ -78,7 +56,7 @@ export default function SidecarFxWidget() {
         <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-[11px] text-amber-800">
           <p className="inline-flex items-start gap-1.5">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            {errorMessage}
+            {errorMessage instanceof Error ? errorMessage.message : 'Failed to load FX rate'}
           </p>
           <button
             type="button"

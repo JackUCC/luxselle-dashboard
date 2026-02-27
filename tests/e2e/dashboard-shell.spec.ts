@@ -64,10 +64,9 @@ test('breadcrumb shows page name on base route and full trail on deep state', as
   await expect(page.getByTestId('deep-state-breadcrumb')).toBeVisible()
   await expect(page.getByTestId('deep-state-breadcrumb')).toContainText('Overview')
 
-  await page.goto('/inventory?lowStock=1')
+  await page.goto('/inventory?missingInfo=1')
   await expect(page.getByTestId('deep-state-breadcrumb')).toBeVisible()
   await expect(page.getByTestId('deep-state-breadcrumb')).toContainText('Inventory')
-  await expect(page.getByTestId('deep-state-breadcrumb')).toContainText('Low Stock')
 })
 
 test('dashboard skeleton appears during delayed load and then resolves', async ({ page }) => {
@@ -103,8 +102,8 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
   await expect(page.getByText('Inventory Cost')).toBeVisible()
 })
 
-test('inventory low-stock filter works via URL', async ({ page }) => {
-  await page.goto('/inventory?lowStock=1')
-  await expect(page).toHaveURL('/inventory?lowStock=1')
-  await expect(page.getByText(/Showing low stock items/)).toBeVisible()
+test('inventory missing-info filter works via URL', async ({ page }) => {
+  await page.goto('/inventory?missingInfo=1')
+  await expect(page).toHaveURL('/inventory?missingInfo=1')
+  await expect(page.getByText(/Showing products with missing information/)).toBeVisible()
 })

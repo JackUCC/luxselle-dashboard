@@ -71,7 +71,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   }
 
   return (
-    <section className="min-w-0 max-w-full overflow-hidden space-y-2">
+    <section className="min-w-0 max-w-full space-y-2">
       <header className="sticky top-0 z-20">
         <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs">
           <div className="flex items-start justify-between gap-2">
@@ -124,7 +124,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
         </div>
       </header>
 
-      <div className="min-w-0 max-w-full overflow-hidden">
+      <div className="min-w-0 max-w-full">
         {renderTabPanel(activeTab)}
       </div>
     </section>

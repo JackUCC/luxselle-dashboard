@@ -41,7 +41,6 @@ describe('GET /api/dashboard/kpis', () => {
     vi.clearAllMocks()
     mockProductList.mockResolvedValue([])
     mockSourcingList.mockResolvedValue([])
-    mockGetSettings.mockResolvedValue({ lowStockThreshold: 2 })
   })
 
   it('returns 200 with KPI data shape', async () => {
@@ -51,6 +50,5 @@ describe('GET /api/dashboard/kpis', () => {
     expect(res.body.data.totalInventoryValue).toBeDefined()
     expect(res.body.data.totalInventoryPotentialValue).toBeDefined()
     expect(res.body.data.activeSourcingPipeline).toBeDefined()
-    expect(res.body.data.lowStockAlerts).toBeDefined()
   })
 })
