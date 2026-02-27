@@ -51,8 +51,9 @@ export function calculateLandedCost(input: LandedCostInput): LandedCostOutput {
         sellPriceEur,
     } = input
 
+    const hasForeignInput = basePrice > 0 || shipping > 0 || insurance > 0 || fixedFee > 0
     const rateToEur = currency === 'EUR' ? 1 : rates ? (1 / rates[currency]) || 0 : 0
-    if (currency !== 'EUR' && rateToEur <= 0) {
+    if (currency !== 'EUR' && rateToEur <= 0 && hasForeignInput) {
         throw new Error(`FX rate unavailable for ${currency}. Provide rates or retry when exchange rates are loaded.`)
     }
 
@@ -152,6 +153,8 @@ export function calculateMaxBuyPrice(input: MaxBuyPriceInput): number {
         paymentFeePct,
         fixedFee,
     } = input
+
+    if (targetSellPriceEur <= 0) return 0
 
     const rateToEur = currency === 'EUR' ? 1 : rates ? (1 / rates[currency]) || 0 : 0
     if (currency !== 'EUR' && rateToEur <= 0) {
