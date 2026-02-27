@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 
 import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
+import { useScrollLock } from '../../lib/useScrollLock'
 
 interface MobileNavDrawerProps {
   open: boolean
@@ -13,6 +14,8 @@ interface MobileNavDrawerProps {
 export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const location = useLocation()
   const lastPathRef = useRef(location.pathname)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   useEffect(() => {
     if (!open) {
@@ -20,27 +23,26 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
       return
     }
     if (location.pathname !== lastPathRef.current) {
-      onClose()
+      onCloseRef.current()
     }
     lastPathRef.current = location.pathname
-  }, [location.pathname, open, onClose])
+  }, [location.pathname, open])
+
+  useScrollLock(open)
 
   useEffect(() => {
     if (!open) return
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
     }
 
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKeyDown)
 
     return () => {
-      document.body.style.overflow = originalOverflow
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 

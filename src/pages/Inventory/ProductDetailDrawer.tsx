@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
+import { useScrollLock } from '../../lib/useScrollLock'
 import {
   X,
   Image as ImageIcon,
@@ -74,6 +75,8 @@ export default function ProductDetailDrawer({
   const [editedFields, setEditedFields] = useState<Partial<Product>>({})
   const [hasChanges, setHasChanges] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  useScrollLock(true)
 
   // Fetch product data
   useEffect(() => {

@@ -5,9 +5,9 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, X, Loader2, Users } from 'lucide-react'
+import { Plus, Pencil, X, Loader2, Users, Trash2 } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
-import { apiGet, apiPost, apiPut } from '../../lib/api'
+import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
@@ -65,6 +65,8 @@ export default function SourcingView() {
     status: 'open' as 'open' | 'sourcing' | 'sourced' | 'fulfilled' | 'lost',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const loadRequests = () => {
     setIsLoading(true)
@@ -161,6 +163,7 @@ export default function SourcingView() {
       notes: request.notes ?? '',
       status: request.status,
     })
+    setShowDeleteConfirm(false)
     setEditingRequest(request)
   }
 
@@ -180,6 +183,7 @@ export default function SourcingView() {
       })
       toast.success('Sourcing request updated')
       setEditingRequest(null)
+      setShowDeleteConfirm(false)
       loadRequests()
     } catch (err: unknown) {
       const message =
@@ -187,6 +191,24 @@ export default function SourcingView() {
       toast.error(message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!editingRequest) return
+    setIsDeleting(true)
+    try {
+      await apiDelete(`/sourcing/${editingRequest.id}`)
+      toast.success('Sourcing request deleted')
+      setEditingRequest(null)
+      setShowDeleteConfirm(false)
+      loadRequests()
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete sourcing request'
+      toast.error(message)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -346,7 +368,7 @@ export default function SourcingView() {
               <h2 className="text-lg font-bold text-gray-900">Edit Sourcing Request</h2>
               <button
                 type="button"
-                onClick={() => setEditingRequest(null)}
+                onClick={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
                 className="text-gray-400 hover:text-gray-600"
                 aria-label="Close"
               >
@@ -354,6 +376,29 @@ export default function SourcingView() {
               </button>
             </div>
 
+            {showDeleteConfirm ? (
+              <div className="space-y-4 py-2">
+                <p className="text-sm text-gray-600">Delete this sourcing request? This cannot be undone.</p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="lux-btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                  >
+                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    {isDeleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            ) : (
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -463,23 +508,34 @@ export default function SourcingView() {
                 />
               </div>
 
-              <div className="pt-4 flex gap-3">
+              <div className="pt-4 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingRequest(null)}
+                    className="lux-btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="lux-btn-primary flex-1"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setEditingRequest(null)}
-                  className="lux-btn-secondary flex-1"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center justify-center gap-2 self-start text-sm text-rose-600 hover:text-rose-700"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="lux-btn-primary flex-1"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  <Trash2 className="h-4 w-4" />
+                  Delete request
                 </button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}

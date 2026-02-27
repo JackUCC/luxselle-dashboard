@@ -1,4 +1,5 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { useScrollLock } from '../../lib/useScrollLock'
 
 export interface ModalProps {
   isOpen: boolean
@@ -17,18 +18,21 @@ export default function Modal({
   titleId,
   size = 'sm',
 }: ModalProps) {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  useScrollLock(isOpen)
+
   useEffect(() => {
     if (!isOpen) return
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', handleEscape)
-    document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = ''
     }
-  }, [isOpen, onClose])
+  }, [isOpen])
 
   if (!isOpen) return null
 

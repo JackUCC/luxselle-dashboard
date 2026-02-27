@@ -5,6 +5,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useScrollLock } from '../../lib/useScrollLock'
 import {
   FileSpreadsheet,
   Loader2,
@@ -376,6 +377,8 @@ interface JobDetailDrawerProps {
 }
 
 function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
+  useScrollLock(true)
+
   const statusConfig = getStatusConfig(job.status)
   const StatusIcon = statusConfig.icon
   const duration = formatDuration(job.startedAt || job.lastRunAt, job.completedAt)

@@ -85,15 +85,18 @@ function InventoryRowActions({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
+
   useEffect(() => {
     const close = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (openRef.current && ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-    if (open) {
-      document.addEventListener("click", close);
-      return () => document.removeEventListener("click", close);
-    }
-  }, [open]);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
   return (
     <div className="relative" ref={ref}>
       <button

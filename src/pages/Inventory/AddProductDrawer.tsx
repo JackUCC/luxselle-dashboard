@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import toast from 'react-hot-toast'
+import { useScrollLock } from '../../lib/useScrollLock'
 import {
     X,
     Loader2,
@@ -39,6 +40,8 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    useScrollLock(true)
 
     const handleFieldChange = (field: keyof Product, value: unknown) => {
         setProduct((prev) => ({ ...prev, [field]: value }))

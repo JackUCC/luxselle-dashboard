@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useScrollLock } from '../../lib/useScrollLock'
 import {
     X,
     Loader2,
@@ -30,6 +31,8 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
     const [result, setResult] = useState<ImportResult | null>(null)
     const [isDragOver, setIsDragOver] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    useScrollLock(true)
 
     const hasMissingInfo = (result?.createdWithWarnings ?? 0) > 0 || (result?.productIdsWithMissingInfo?.length ?? 0) > 0
 
