@@ -8,7 +8,6 @@ import {
   useState,
   useCallback,
   useRef,
-  type ChangeEvent,
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -69,8 +68,9 @@ function getStatusBadgeVariant(
 
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import PageLayout from "../../components/layout/PageLayout";
-import { Badge, Button, Card, EmptyState, PageHeader, SectionLabel } from "../../components/design-system";
+import { Badge, Button, Card, EmptyState, PageHeader, PredictiveInput, SectionLabel } from "../../components/design-system";
 import { useLayoutMode } from "../../lib/LayoutModeContext";
+import { POPULAR_SUGGESTIONS } from "../../lib/searchSuggestions";
 
 function InventoryRowActions({
   product,
@@ -152,7 +152,7 @@ export default function InventoryView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const [showAddDrawer, setShowAddDrawer] = useState(false);
   const [showImportDrawer, setShowImportDrawer] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductWithId | null>(null);
@@ -376,9 +376,15 @@ export default function InventoryView() {
     [products]
   );
 
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    updateParam("q", event.target.value);
-  };
+  const productNames = useMemo(
+    () => products.map(p => `${p.brand} ${p.title || p.model}`),
+    [products],
+  );
+
+  const handleSearchSelect = useCallback(
+    (selected: string) => updateParam("q", selected),
+    [updateParam],
+  );
 
   // Virtualization for large tables (>50 items)
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -447,12 +453,14 @@ export default function InventoryView() {
             <div className="flex items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-lux-400" />
-                <input
+                <PredictiveInput
                   ref={searchInputRef}
-                  type="text"
-                  placeholder="Search by brand, model, SKU..."
                   value={query}
-                  onChange={handleSearchChange}
+                  onChange={(v) => updateParam("q", v)}
+                  onSelect={handleSearchSelect}
+                  inventoryItems={productNames}
+                  popularItems={POPULAR_SUGGESTIONS}
+                  placeholder="Search by brand, model, SKU..."
                   className="lux-input pl-10 w-full"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-[10px] font-semibold text-lux-400">

@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { apiGet } from '../../lib/api'
 import { calculateLandedCost, calculateMaxBuyPrice } from '../../lib/landedCost'
 import type { CostBreakdownItem } from '../../lib/landedCost'
-import { ArrowUpDown, Box, ShoppingBag, Watch } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 
 type Currency = 'EUR' | 'USD' | 'GBP' | 'JPY'
 
@@ -54,10 +54,10 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
     JPY: '¥',
 }
 
-const CATEGORY_PRESETS = [
-    { label: 'Handbags', icon: ShoppingBag, customs: '3', vat: '23' },
-    { label: 'Watches', icon: Watch, customs: '4.5', vat: '23' },
-    { label: 'Accessories', icon: Box, customs: '12', vat: '23' },
+const SCENARIO_PRESETS = [
+    { label: 'Japan Auction', fees: { platformFeeRate: '15', customsRate: '4', importVatRate: '23', paymentFeeRate: '0' } },
+    { label: 'EU Import', fees: { platformFeeRate: '10', customsRate: '0', importVatRate: '23', paymentFeeRate: '0' } },
+    { label: 'US Reseller', fees: { platformFeeRate: '12', customsRate: '6.5', importVatRate: '23', paymentFeeRate: '0' } },
 ]
 
 const FEE_TOOLTIPS: Record<string, string> = {
@@ -124,19 +124,6 @@ function CostWaterfallBar({ breakdown }: { breakdown: CostBreakdownItem[] }) {
     )
 }
 
-function PercentSlider({ value, onChange, max = 50 }: { value: string; onChange: (v: string) => void; max?: number }) {
-    return (
-        <input
-            type="range"
-            min="0"
-            max={max}
-            step="0.5"
-            value={parseFloat(value) || 0}
-            onChange={e => onChange(e.target.value)}
-            className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer accent-gray-700 mt-1"
-        />
-    )
-}
 
 export default function CalculatorWidget() {
     const [state, setState] = useState<CalculatorState>(DEFAULT_STATE)
@@ -145,7 +132,7 @@ export default function CalculatorWidget() {
     const [loadingRates, setLoadingRates] = useState(false)
     const [presetName, setPresetName] = useState('')
     const [showSavePreset, setShowSavePreset] = useState(false)
-    const [feesExpanded, setFeesExpanded] = useState(true)
+    const [feesExpanded, setFeesExpanded] = useState(false)
     const [showMargin, setShowMargin] = useState(false)
     const resultRef = useRef<HTMLDivElement>(null)
 
@@ -367,19 +354,16 @@ export default function CalculatorWidget() {
                 </div>
             )}
 
-            {/* Quick Categories */}
-            <div className="flex gap-2 justify-center pb-2 border-b border-gray-50">
-                {CATEGORY_PRESETS.map(cat => (
+            {/* Quick Presets */}
+            <div className="flex flex-wrap gap-2 pb-2 border-b border-gray-50">
+                {SCENARIO_PRESETS.map(preset => (
                     <button
-                        key={cat.label}
-                        onClick={() => setState(s => ({ ...s, customsRate: cat.customs, importVatRate: cat.vat }))}
-                        className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
-                        title={`Customs: ${cat.customs}%, VAT: ${cat.vat}%`}
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setState(s => ({ ...s, ...preset.fees }))}
+                        className="rounded-full px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all"
                     >
-                        <div className="p-1.5 rounded-full bg-gray-50 text-gray-400 group-hover:bg-white group-hover:text-amber-500 group-hover:shadow-sm transition-all">
-                            <cat.icon className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-[10px] text-gray-500 font-medium">{cat.label}</span>
+                        {preset.label}
                     </button>
                 ))}
             </div>
@@ -520,7 +504,6 @@ export default function CalculatorWidget() {
                                     className="lux-input py-1.5 text-xs"
                                     step="0.5"
                                 />
-                                <PercentSlider value={state.platformFeeRate} onChange={v => setState(s => ({ ...s, platformFeeRate: v }))} max={30} />
                             </div>
 
                             {/* Customs */}
@@ -536,7 +519,6 @@ export default function CalculatorWidget() {
                                     className="lux-input py-1.5 text-xs"
                                     step="0.5"
                                 />
-                                <PercentSlider value={state.customsRate} onChange={v => setState(s => ({ ...s, customsRate: v }))} max={25} />
                             </div>
 
                             {/* Import VAT */}
@@ -552,7 +534,6 @@ export default function CalculatorWidget() {
                                     className="lux-input py-1.5 text-xs"
                                     step="0.5"
                                 />
-                                <PercentSlider value={state.importVatRate} onChange={v => setState(s => ({ ...s, importVatRate: v }))} max={30} />
                             </div>
 
                             {/* Payment Fee */}
@@ -568,7 +549,6 @@ export default function CalculatorWidget() {
                                     className="lux-input py-1.5 text-xs"
                                     step="0.5"
                                 />
-                                <PercentSlider value={state.paymentFeeRate} onChange={v => setState(s => ({ ...s, paymentFeeRate: v }))} max={10} />
                             </div>
                         </div>
 

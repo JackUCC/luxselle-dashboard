@@ -9,7 +9,7 @@ import { Download, FileText, Loader2, Plus, Upload, X } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
 import { apiGet, apiPost, apiPostFormData } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
-import { Button, Input, ListRow, Modal, PageHeader, SectionLabel } from '../../components/design-system'
+import { Button, Input, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 type InvoiceWithId = Invoice & { id: string }
@@ -195,7 +195,6 @@ export default function InvoicesView() {
       <div className={isSidecar ? 'min-w-0 max-w-full overflow-auto space-y-8' : 'space-y-8'}>
       <PageHeader
         title="Invoices"
-        purpose="Create invoices from sales and store them for accounting."
         actions={
           <>
             <Button
@@ -234,7 +233,7 @@ export default function InvoicesView() {
           </Button>
         </div>
       ) : invoices.length === 0 ? (
-        <div className="lux-card p-12 text-center">
+        <div className="lux-card border-dashed p-12 text-center">
           <FileText className="mx-auto mb-4 h-12 w-12 text-lux-500" />
           <p className="font-medium text-lux-600">No invoices yet</p>
           <p className="mt-1 text-body-sm text-lux-500">
@@ -246,31 +245,30 @@ export default function InvoicesView() {
           </Button>
         </div>
       ) : (
-        <div className={`grid gap-6 ${isSidecar ? 'grid-cols-1' : 'lg:grid-cols-2'}`}>
-          <div className="lux-card p-4 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
-            <SectionLabel className="mb-4 px-2">All invoices</SectionLabel>
-            <ul className="space-y-0">
-              {invoices.map((inv) => (
-                <li key={inv.id}>
-                  <ListRow
-                    isSelected={selected?.id === inv.id}
-                    onClick={() => setSelected(inv)}
-                    as="button"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-mono text-body-sm font-medium text-lux-900">{inv.invoiceNumber}</span>
-                        <span className="text-body-sm text-lux-500 shrink-0">{formatDate(inv.issuedAt)}</span>
-                      </div>
-                      <div className="mt-0.5 text-body-sm text-lux-600">
-                        {formatCurrency(inv.totalEur)}
-                        {inv.customerName ? ` · ${inv.customerName}` : ''}
-                      </div>
-                    </div>
-                  </ListRow>
-                </li>
-              ))}
-            </ul>
+        <div className="space-y-6">
+          <div className={`grid gap-5 ${isSidecar ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
+            {invoices.map((inv, index) => (
+              <button
+                key={inv.id}
+                type="button"
+                onClick={() => setSelected(inv)}
+                className={`lux-card p-5 text-left transition-all animate-bento-enter hover:-translate-y-0.5 ${
+                  selected?.id === inv.id ? 'ring-2 ring-lux-900' : ''
+                }`}
+                style={{ '--stagger': index } as React.CSSProperties}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <span className="font-semibold text-lux-900">{inv.invoiceNumber}</span>
+                  <span className="text-body-sm text-lux-500">{formatDate(inv.issuedAt)}</span>
+                </div>
+                <div className="font-mono text-xl font-bold text-lux-900">
+                  {formatCurrency(inv.totalEur)}
+                </div>
+                {inv.customerName && (
+                  <div className="mt-1 text-body-sm text-lux-600">{inv.customerName}</div>
+                )}
+              </button>
+            ))}
           </div>
 
           {selected && (
@@ -346,6 +344,7 @@ export default function InvoicesView() {
             </div>
           )}
         </div>
+
       )}
 
       {/* Create in-person invoice modal */}

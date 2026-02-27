@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Camera } from 'lucide-react'
 import SectionLabel from '../design-system/SectionLabel'
+import PredictiveInput from '../design-system/PredictiveInput'
+import { POPULAR_SUGGESTIONS } from '../../lib/searchSuggestions'
 
 const RECENT_SEARCHES = [
   { label: 'Hermes Birkin 30', image: '/placeholder-birkin.jpg' },
@@ -42,10 +44,11 @@ export default function MarketIntelligenceWidget() {
       <SectionLabel className="mb-4">Market Intelligence</SectionLabel>
 
       <form onSubmit={handleSubmit} className="relative">
-        <input
-          type="text"
+        <PredictiveInput
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={setQuery}
+          onSelect={(selected) => navigate(`/buy-box?q=${encodeURIComponent(selected)}`)}
+          popularItems={POPULAR_SUGGESTIONS}
           placeholder="Search brand, model, SKU, or paste image..."
           className="lux-input h-12 pl-4 pr-24 text-[15px]"
         />
