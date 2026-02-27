@@ -1,13 +1,13 @@
 import {
-  BarChart3,
-  Calculator,
-  FileSpreadsheet,
-  FileText,
-  LayoutGrid,
-  Package,
-  Search,
-  Tag,
-  Users,
+  Box,
+  CircleDollarSign,
+  Globe,
+  House,
+  ListChecks,
+  Receipt,
+  ScanLine,
+  Tags,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -22,19 +22,15 @@ export interface RouteMeta {
 }
 
 export const appRoutes: RouteMeta[] = [
-  // Main — Overview, Price Check, Serial Check
-  { path: '/', label: 'Overview', navLabel: 'Overview', icon: LayoutGrid, section: 'check' },
-  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: Calculator, section: 'check' },
-  { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: Search, section: 'check' },
-  // Manage — Inventory, Sourcing, Jobs
-  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Package, section: 'manage' },
-  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Users, section: 'manage' },
-  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: FileSpreadsheet, section: 'manage' },
-  // Finance
-  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: FileText, section: 'finance' },
-  // Tools — Market Research, Retail Price
-  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: BarChart3, section: 'tools' },
-  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tag, section: 'tools' },
+  { path: '/', label: 'Overview', navLabel: 'Overview', icon: House, section: 'check' },
+  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: CircleDollarSign, section: 'check' },
+  { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: ScanLine, section: 'check' },
+  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Box, section: 'manage' },
+  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Globe, section: 'manage' },
+  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: ListChecks, section: 'manage' },
+  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'finance' },
+  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'tools' },
+  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'tools' },
 ]
 
 const formatLabel = (value: string) =>

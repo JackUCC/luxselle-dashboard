@@ -8,13 +8,13 @@ export default function DockBar() {
 
   return (
     <nav
-      className="fixed top-4 left-1/2 z-50 hidden -translate-x-1/2 xl:flex items-center gap-1 rounded-2xl border border-white/20 bg-white/70 px-3 py-2 shadow-[0_2px_20px_rgba(0,0,0,0.08),0_0_1px_rgba(0,0,0,0.1)] backdrop-blur-xl"
+      className="fixed top-4 left-1/2 z-50 hidden -translate-x-1/2 xl:flex items-center rounded-[22px] border border-white/40 bg-white/60 px-4 py-2.5 shadow-glass-lg backdrop-blur-2xl"
       data-testid="dock-bar"
       aria-label="Main navigation"
     >
       <NavLink
         to="/"
-        className="mr-1 flex items-center"
+        className="mr-2 flex items-center opacity-70 transition-opacity hover:opacity-100"
         title="Luxselle"
       >
         <img
@@ -24,7 +24,7 @@ export default function DockBar() {
         />
       </NavLink>
 
-      <div className="mx-1 h-5 w-px bg-lux-200/80" />
+      <div className="mx-1.5 h-6 w-px bg-lux-300/40" />
 
       {NAV_GROUPS.map((group, groupIndex) => {
         const routes = appRoutes.filter((r) => r.section === group.section)
@@ -33,9 +33,9 @@ export default function DockBar() {
         return (
           <div key={group.section} className="flex items-center">
             {groupIndex > 0 && (
-              <div className="mx-1 h-5 w-px bg-lux-200/80" />
+              <div className="mx-2.5 h-6 w-px bg-lux-300/40" />
             )}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1.5">
               {routes.map((route) => {
                 const isActive = route.path === '/'
                   ? pathname === '/'
@@ -46,24 +46,26 @@ export default function DockBar() {
                     key={route.path}
                     to={route.path}
                     end={route.path === '/'}
-                    title={route.navLabel}
                     aria-label={route.navLabel}
                     className="group relative flex flex-col items-center"
                   >
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+                      className={`flex h-11 w-11 items-center justify-center rounded-[14px] transition-all duration-200 hover:scale-110 ${
                         isActive
-                          ? 'bg-lux-800 text-white shadow-sm'
-                          : 'text-lux-400 hover:bg-lux-100 hover:text-lux-700'
+                          ? 'bg-lux-100 text-lux-900 shadow-sm'
+                          : 'text-lux-400 hover:bg-white/80 hover:text-lux-700'
                       }`}
                     >
-                      <route.icon className="h-[17px] w-[17px]" />
+                      <route.icon className="h-5 w-5" />
                     </span>
                     <span
-                      className={`mt-0.5 h-[3px] w-[3px] rounded-full transition-opacity duration-200 ${
-                        isActive ? 'bg-lux-800 opacity-100' : 'opacity-0'
+                      className={`mt-0.5 h-1 w-1 rounded-full transition-opacity duration-200 ${
+                        isActive ? 'bg-lux-900 opacity-100' : 'opacity-0'
                       }`}
                     />
+                    <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-lux-900 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition-all duration-150 group-hover:-top-10 group-hover:opacity-100">
+                      {route.navLabel}
+                    </span>
                   </NavLink>
                 )
               })}
