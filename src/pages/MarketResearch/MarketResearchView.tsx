@@ -280,6 +280,10 @@ export default function MarketResearchView() {
                     comparables: data.comparables.map(normalizeComparableImage),
                 })
             )
+            setResult({
+                ...data,
+                comparables: data.comparables.map(normalizeComparableImage),
+            })
             // Persist as previous search
             const entry = { brand: formData.brand, model: formData.model }
             setPreviousSearches(prev => {
