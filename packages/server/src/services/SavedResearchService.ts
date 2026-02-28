@@ -18,6 +18,51 @@ export class SavedResearchService {
     this.repo = new SavedResearchRepo()
   }
 
+  private toOptionalString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined
+  }
+
+  private toOptionalNumber(value: unknown): number | undefined {
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined
+  }
+
+  private toComparableDataOrigin(value: unknown): 'web_search' | 'ai_estimate' | undefined {
+    return value === 'web_search' || value === 'ai_estimate' ? value : undefined
+  }
+
+  private normalizeComparablePayload(value: unknown): unknown {
+    if (typeof value !== 'object' || value == null) {
+      return value
+    }
+
+    const comparable = value as Record<string, unknown>
+    return {
+      ...comparable,
+      sourceUrl: this.toOptionalString(comparable.sourceUrl),
+      previewImageUrl: this.toOptionalString(comparable.previewImageUrl),
+      daysListed: this.toOptionalNumber(comparable.daysListed),
+      dataOrigin: this.toComparableDataOrigin(comparable.dataOrigin),
+    }
+  }
+
+  private normalizeResultPayload(value: unknown): unknown {
+    if (typeof value !== 'object' || value == null) {
+      return value
+    }
+
+    const result = value as Record<string, unknown>
+    const comparables = Array.isArray(result.comparables)
+      ? result.comparables.map((comparable) => this.normalizeComparablePayload(comparable))
+      : result.comparables
+
+    return {
+      ...result,
+      comparables,
+      trendingScore: this.toOptionalNumber(result.trendingScore),
+      seasonalNotes: this.toOptionalString(result.seasonalNotes),
+    }
+  }
+
   private normalizeCreateInput(data: unknown): CreateSavedResearchInput {
     if (typeof data !== 'object' || data == null) {
       return CreateSavedResearchSchema.parse(data)
@@ -28,6 +73,7 @@ export class SavedResearchService {
       typeof payload.result === 'object' && payload.result != null
         ? (payload.result as Record<string, unknown>)
         : undefined
+    const normalizedResult = this.normalizeResultPayload(payload.result)
 
     return CreateSavedResearchSchema.parse({
       ...payload,
@@ -35,6 +81,7 @@ export class SavedResearchService {
       model: typeof payload.model === 'string' ? payload.model : rawResult?.model,
       category: typeof payload.category === 'string' ? payload.category : '',
       condition: typeof payload.condition === 'string' ? payload.condition : '',
+      result: normalizedResult,
       starred:
         typeof payload.starred === 'boolean'
           ? payload.starred
