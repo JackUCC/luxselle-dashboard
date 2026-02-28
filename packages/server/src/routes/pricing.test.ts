@@ -55,8 +55,19 @@ describe('POST /api/pricing/price-check', () => {
     mockCheck.mockResolvedValue({
       averageSellingPriceEur: 1200,
       comps: [
-        { title: 'Similar item (Designer Exchange)', price: 1150, source: 'Designer Exchange', sourceUrl: 'https://designerexchange.ie' },
-        { title: 'Similar item (Vestiaire Collective)', price: 1250, source: 'Vestiaire Collective', sourceUrl: 'https://vestiairecollective.com' },
+        {
+          title: 'Similar item (Designer Exchange)',
+          price: 1150,
+          source: 'Designer Exchange',
+          sourceUrl: 'https://designerexchange.ie',
+          previewImageUrl: 'https://designerexchange.ie/image.jpg',
+        },
+        {
+          title: 'Similar item (Vestiaire Collective)',
+          price: 1250,
+          source: 'Vestiaire Collective',
+          sourceUrl: 'https://vestiairecollective.com',
+        },
       ],
       maxBuyEur: 780,
       maxBidEur: 729,
@@ -80,6 +91,12 @@ describe('POST /api/pricing/price-check', () => {
     })
     expect(Array.isArray(res.body.data.comps)).toBe(true)
     expect(res.body.data.comps).toHaveLength(2)
+
+    expect(res.body.data.comps[0]).toMatchObject({
+      title: 'Similar item (Designer Exchange)',
+      previewImageUrl: 'https://designerexchange.ie/image.jpg',
+    })
+    expect(res.body.data.comps[1]).not.toHaveProperty('previewImageUrl')
     expect(typeof res.body.data.researchedAt).toBe('string')
   })
 

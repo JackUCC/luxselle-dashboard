@@ -9,6 +9,7 @@ import { SearchService } from '../search/SearchService'
 import { getFxService } from '../fx/FxService'
 import { validatePriceEur, filterValidComps } from '../../lib/validation'
 import { logger } from '../../middleware/requestId'
+import { ComparableEnrichmentService } from './ComparableEnrichmentService'
 
 export interface PriceCheckComp {
   title: string
@@ -36,6 +37,7 @@ export interface PriceCheckResult {
 
 export class PriceCheckService {
   private readonly searchService = new SearchService()
+  private readonly comparableEnrichmentService = new ComparableEnrichmentService()
 
   async check(input: PriceCheckInput): Promise<PriceCheckResult> {
     const { query, condition = '', notes = '' } = input
@@ -150,6 +152,10 @@ Rules:
       ]
     }
 
+    if (dataSource !== 'mock') {
+      comps = await this.enrichCompsWithPreviewImages(comps)
+    }
+
     const maxBuyEur = Math.round((averageSellingPriceEur / 1.23) * 0.8)
     const maxBidEur = Math.round(maxBuyEur / 1.07)
 
@@ -160,6 +166,43 @@ Rules:
       maxBidEur,
       dataSource,
       researchedAt: new Date().toISOString(),
+    }
+  }
+
+  private async enrichCompsWithPreviewImages(comps: PriceCheckComp[]): Promise<PriceCheckComp[]> {
+    const compsWithSourceUrl = comps.filter((comp) => typeof comp.sourceUrl === 'string' && comp.sourceUrl)
+
+    if (compsWithSourceUrl.length === 0) {
+      return comps
+    }
+
+    try {
+      const enrichedResults = await this.comparableEnrichmentService.enrichComparables(
+        compsWithSourceUrl.map((comp) => ({ sourceUrl: comp.sourceUrl! })),
+      )
+
+      const previewImageBySourceUrl = new Map(
+        enrichedResults
+          .filter((result) => result.previewImageUrl)
+          .map((result) => [result.sourceUrl, result.previewImageUrl] as const),
+      )
+
+      return comps.map((comp) => {
+        if (!comp.sourceUrl) return comp
+
+        const previewImageUrl = previewImageBySourceUrl.get(comp.sourceUrl)
+        if (!previewImageUrl) return comp
+
+        return {
+          ...comp,
+          previewImageUrl,
+        }
+      })
+    } catch (error) {
+      logger.warn('price_check_comparable_enrichment_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return comps
     }
   }
 }
