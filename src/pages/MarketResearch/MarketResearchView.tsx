@@ -147,6 +147,22 @@ const LIQUIDITY_CONFIG = {
     slow_moving: { label: 'Slow Moving', sublabel: '30+ days avg', color: 'text-red-600' },
 }
 
+const FALLBACK_COMPARABLE_TITLE = 'Untitled listing'
+
+const normalizeComparableTitle = (value: unknown): string => {
+    if (typeof value !== 'string') return FALLBACK_COMPARABLE_TITLE
+    const normalized = value.trim()
+    return normalized.length > 0 ? normalized : FALLBACK_COMPARABLE_TITLE
+}
+
+const normalizeMarketResearchResult = (result: MarketResearchResult): MarketResearchResult => ({
+    ...result,
+    comparables: result.comparables.map(comp => ({
+        ...comp,
+        title: normalizeComparableTitle(comp.title),
+    })),
+})
+
 // ═════════════════════════════════════════════════════════════════
 // Component
 // ═════════════════════════════════════════════════════════════════
@@ -239,7 +255,7 @@ export default function MarketResearchView() {
                 ...formData,
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
-            setResult(data)
+            setResult(normalizeMarketResearchResult(data))
             // Persist as previous search
             const entry = { brand: formData.brand, model: formData.model }
             setPreviousSearches(prev => {
