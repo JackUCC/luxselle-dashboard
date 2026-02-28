@@ -786,11 +786,20 @@ export default function MarketResearchView() {
 
                 {/* Competitor Activity */}
                 <div className="lux-card p-6">
-                    <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em] mb-1">
-                        <Store className="h-4 w-4" />
-                        Competitor Activity
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em]">
+                            <Store className="h-4 w-4" />
+                            Competitor Activity
+                        </div>
+                        <button
+                            onClick={loadCompetitorFeed}
+                            disabled={isCompetitorLoading}
+                            className="text-xs text-lux-600 hover:text-lux-900 font-medium flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                        >
+                            {isCompetitorLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
+                            Refresh
+                        </button>
                     </div>
-                    <p className="text-xs text-lux-400 mb-4">Recent listings from Designer Exchange, Luxury Exchange, Siopella.</p>
                     {isCompetitorLoading ? (
                         <div className="space-y-2">
                             {Array.from({ length: 5 }).map((_, i) => (
@@ -808,39 +817,49 @@ export default function MarketResearchView() {
                         </div>
                     ) : competitorFeed && competitorFeed.items.length > 0 ? (
                         <div className="space-y-1 max-h-80 overflow-y-auto no-scrollbar">
-                            {competitorFeed.items.map((item, i) => (
-                                <div
-                                    key={i}
-                                    className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
-                                >
-                                    <div className="min-w-0 flex-1 pr-2">
-                                        <div className="text-xs font-medium text-lux-800 truncate">{item.title}</div>
-                                        <div className="text-xs text-lux-400">{item.source}</div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
-                                        {item.sourceUrl && (
-                                            <a
-                                                href={item.sourceUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1 text-lux-400 transition-colors hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                                aria-label="Open listing"
-                                                title={`Open listing: ${item.title}`}
-                                            >
-                                                <ExternalLink className="h-3.5 w-3.5" />
-                                            </a>
+                            {competitorFeed.items.map((item, i) => {
+                                const badge = SOURCE_BADGE[item.source]
+                                const dateLabel = relativeDate(item.listedAt)
+                                const meta = [item.condition, dateLabel].filter(Boolean).join(' · ')
+                                return (
+                                    <div
+                                        key={i}
+                                        className="flex items-center gap-2 py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
+                                    >
+                                        {badge && (
+                                            <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none ${badge.className}`}>
+                                                {badge.label}
+                                            </span>
                                         )}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-xs font-medium text-lux-800 truncate">{item.title}</div>
+                                            {meta && <div className="text-[10px] text-lux-400 mt-0.5">{meta}</div>}
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
+                                            {item.sourceUrl && (
+                                                <a
+                                                    href={item.sourceUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1 text-lux-400 transition-colors hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                    aria-label="Open listing"
+                                                    title={`Open listing: ${item.title}`}
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                             <p className="text-xs text-lux-400 text-center pt-2">
                                 Updated {new Date(competitorFeed.generatedAt).toLocaleTimeString()}
                             </p>
                         </div>
                     ) : (
                         <div className="text-center py-8 text-lux-400 text-xs">
-                            No competitor feed available.
+                            No competitor listings available.
                         </div>
                     )}
                 </div>
