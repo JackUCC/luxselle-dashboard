@@ -43,11 +43,11 @@ export const SavedResearchSchema = BaseDocSchema.extend({
   userId: z.string(),
   brand: z.string(),
   model: z.string(),
-  category: z.string().optional().default(''),
-  condition: z.string().optional().default(''),
+  category: z.string(),
+  condition: z.string(),
   result: MarketResearchResultSchema,
   starred: z.boolean().default(false),
-  notes: z.string().optional().default(''),
+  notes: z.string().optional(),
   deletedAt: z.string().optional(),
 })
 

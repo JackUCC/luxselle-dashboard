@@ -23,7 +23,7 @@ export default function AuctionLinksWidget() {
       style={{ '--stagger': 4 } as React.CSSProperties}
     >
       <div className="mb-3 flex items-center gap-2">
-        <div className="rounded-lg bg-violet-50 p-1.5 text-violet-500 border border-violet-100">
+        <div className="rounded-lg border border-lux-200 bg-lux-50 p-1.5 text-lux-gold">
           <Gavel className="h-3.5 w-3.5" />
         </div>
         <h3 className="text-xs font-semibold text-lux-800">Auction sites</h3>
@@ -35,7 +35,7 @@ export default function AuctionLinksWidget() {
             href={site.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between gap-2 rounded-lg border border-lux-200 bg-white px-3 py-2.5 text-left transition-colors hover:border-violet-200 hover:bg-violet-50/40 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            className="flex min-h-[44px] items-center justify-between gap-2 rounded-lg border border-lux-200 bg-white px-3 py-2.5 text-left transition-colors hover:border-lux-300 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <div className="min-w-0">
               <span className="block text-xs font-medium text-lux-800">{site.name}</span>

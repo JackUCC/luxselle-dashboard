@@ -852,7 +852,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
             <div className="text-xs text-lux-500 mt-1">Profit</div>
           </div>
           <div className="text-center border-x border-lux-200">
-            <div className={`text-xl sm:text-2xl font-bold ${marginPct >= 20 ? 'text-green-600' : marginPct >= 10 ? 'text-orange-600' : 'text-red-600'}`}>
+            <div className={`text-xl sm:text-2xl font-bold ${marginPct >= 20 ? 'text-emerald-600' : marginPct >= 10 ? 'text-amber-600' : 'text-red-600'}`}>
               {marginPct.toFixed(1)}%
             </div>
             <div className="text-xs text-lux-500 mt-1">Margin %</div>
@@ -991,8 +991,8 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'purchase': return 'bg-lux-200 text-lux-800'
-      case 'sale': return 'bg-green-100 text-green-700'
-      case 'adjustment': return 'bg-orange-100 text-orange-700'
+      case 'sale': return 'bg-emerald-100 text-emerald-700'
+      case 'adjustment': return 'bg-amber-100 text-amber-700'
       default: return 'bg-lux-100 text-lux-700'
     }
   }
@@ -1069,7 +1069,12 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
                 <h3 className="text-lg font-semibold text-lux-900">
                   {showModal === 'sale' ? 'Record Sale + Create Invoice' : 'Record Adjustment'}
                 </h3>
-                <button onClick={handleCloseModal} className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  aria-label="Close transaction dialog"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>

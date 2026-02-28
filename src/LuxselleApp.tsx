@@ -27,6 +27,7 @@ const SidecarFallback = () => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
     transition={{ duration: 0.2 }}
     className="flex items-center justify-center py-12 text-xs text-lux-400"
     aria-hidden
@@ -39,6 +40,7 @@ const OverviewFallback = () => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
     transition={{ duration: 0.2 }}
     className="min-h-[40vh] flex items-center justify-center text-xs text-lux-400"
     aria-hidden
@@ -93,7 +95,7 @@ const AppContent = () => {
             <button
               type="button"
               onClick={() => refetchStatus()}
-              className="rounded-md bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-300"
+              className="rounded-md bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               Retry
             </button>
@@ -106,7 +108,7 @@ const AppContent = () => {
       <div className="sticky top-0 z-50 flex h-12 items-center justify-between gap-2 border-b border-lux-200 bg-white/80 backdrop-blur-sm px-4 xl:hidden">
         <button
           type="button"
-          className="rounded-md p-1.5 text-lux-500 transition-colors hover:bg-lux-50 hover:text-lux-800"
+          className="rounded-md p-1.5 text-lux-500 transition-colors hover:bg-lux-50 hover:text-lux-800 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           onClick={() => setMobileNavOpen(true)}
           aria-label="Open navigation menu"
           data-testid="mobile-nav-toggle"

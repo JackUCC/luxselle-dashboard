@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Star, Trash2, ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { formatCurrency } from '../../lib/formatters'
@@ -9,7 +9,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal'
 interface SavedResearchCardProps {
     item: SavedResearchItem
     index: number
-    onToggleStar: (id: string, isStarred: boolean) => Promise<void>
+    onToggleStar: (id: string, starred: boolean) => Promise<void>
     onDelete: (id: string) => Promise<void>
     onClick: (item: SavedResearchItem) => void
 }
@@ -37,15 +37,27 @@ export default function SavedResearchCard({
     const [isDeleting, setIsDeleting] = useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isStarring, setIsStarring] = useState(false)
+    const [starScale, setStarScale] = useState(1)
+    const hasMountedRef = useRef(false)
 
     const rec = RECOMMENDATION_CONFIG[item.result.recommendation] || RECOMMENDATION_CONFIG.hold
+
+    useEffect(() => {
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true
+            return
+        }
+        setStarScale(1.3)
+        const frame = requestAnimationFrame(() => setStarScale(1))
+        return () => cancelAnimationFrame(frame)
+    }, [item.starred])
 
     const handleStarClick = async (e: React.MouseEvent) => {
         e.stopPropagation()
         if (isStarring) return
         setIsStarring(true)
         try {
-            await onToggleStar(item.id, !item.isStarred)
+            await onToggleStar(item.id, !item.starred)
         } finally {
             setIsStarring(false)
         }
@@ -94,15 +106,17 @@ export default function SavedResearchCard({
                             </div>
                         </div>
                         <div className="flex flex-col gap-2 items-end shrink-0 z-10">
-                            <button
+                            <motion.button
                                 type="button"
                                 onClick={handleStarClick}
                                 disabled={isStarring}
-                                className={`p-1.5 rounded-full transition-transform duration-300 hover:bg-lux-50 active:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${item.isStarred ? 'text-lux-gold' : 'text-lux-400 hover:text-lux-600'}`}
-                                aria-label={item.isStarred ? "Remove star" : "Star item"}
+                                animate={{ scale: starScale }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                                className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-1.5 transition-transform duration-300 hover:bg-lux-50 active:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${item.starred ? 'text-lux-gold' : 'text-lux-400 hover:text-lux-600'}`}
+                                aria-label={item.starred ? "Remove star" : "Star item"}
                             >
-                                <Star className={`h-5 w-5 ${item.isStarred ? 'fill-lux-gold' : ''}`} />
-                            </button>
+                                <Star className={`h-5 w-5 ${item.starred ? 'fill-lux-gold' : ''}`} />
+                            </motion.button>
                         </div>
                     </div>
 
@@ -127,7 +141,7 @@ export default function SavedResearchCard({
                                 <button
                                     type="button"
                                     onClick={handleDeleteClick}
-                                    className="p-2 rounded-lg text-lux-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-lux-400 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                     aria-label="Delete saved research"
                                 >
                                     <Trash2 className="h-4 w-4" />

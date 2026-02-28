@@ -308,15 +308,20 @@ export default function MarketResearchView() {
     }
 
     const handleSave = async () => {
-        if (isSaved) return
+        if (!result || isSaved) return
         setIsSaving(true)
         try {
-            const { data } = await apiPost<{ data: { id: string } }>('/saved-research', {
+            const { data } = await apiPost<{ data: { id: string; starred: boolean } }>('/saved-research', {
+                brand: result.brand,
+                model: result.model,
+                category: formData.category,
+                condition: formData.condition,
                 result,
-                isStarred
+                starred: isStarred,
             })
             setSavedId(data.id)
             setIsSaved(true)
+            setIsStarred(Boolean(data.starred))
             toast.success("Research saved")
         } catch (err) {
             toast.error("Failed to save research")
@@ -328,22 +333,28 @@ export default function MarketResearchView() {
     const handleToggleStar = async () => {
         if (isSaved && savedId) {
             try {
-                await apiPut(`/saved-research/${savedId}`, { isStarred: !isStarred })
-                setIsStarred(!isStarred)
-                toast.success(isStarred ? "Removed from starred" : "Added to starred")
+                const nextStarred = !isStarred
+                await apiPut(`/saved-research/${savedId}`, { starred: nextStarred })
+                setIsStarred(nextStarred)
+                toast.success(nextStarred ? "Added to starred" : "Removed from starred")
             } catch {
                 toast.error("Failed to update star")
             }
         } else {
+            if (!result) return
             setIsSaving(true)
             try {
-                const { data } = await apiPost<{ data: { id: string } }>('/saved-research', {
+                const { data } = await apiPost<{ data: { id: string; starred: boolean } }>('/saved-research', {
+                    brand: result.brand,
+                    model: result.model,
+                    category: formData.category,
+                    condition: formData.condition,
                     result,
-                    isStarred: true
+                    starred: true,
                 })
                 setSavedId(data.id)
                 setIsSaved(true)
-                setIsStarred(true)
+                setIsStarred(Boolean(data.starred))
                 toast.success("Research saved & starred")
             } catch (err) {
                 toast.error("Failed to save research")
@@ -418,7 +429,7 @@ export default function MarketResearchView() {
                                     key={`prev-${p.brand}-${p.model}-${i}`}
                                     type="button"
                                     onClick={() => quickResearch(p.brand, p.model)}
-                                    className="shrink-0 rounded-full border border-lux-200 bg-white px-3 py-2 sm:py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                    className="shrink-0 min-h-[44px] rounded-full border border-lux-200 bg-white px-3 py-2 sm:py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                 >
                                     {p.brand} {p.model}
                                 </button>
@@ -434,7 +445,7 @@ export default function MarketResearchView() {
                             key={`trend-${brand}-${model}`}
                             type="button"
                             onClick={() => quickResearch(brand, model)}
-                            className="shrink-0 rounded-full border border-amber-200 bg-amber-50/60 px-3 py-2 sm:py-1 text-xs font-medium text-lux-800 hover:bg-amber-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                            className="shrink-0 min-h-[44px] rounded-full border border-amber-200 bg-amber-50/60 px-3 py-2 sm:py-1 text-xs font-medium text-lux-800 hover:bg-amber-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             {brand} {model}
                         </button>
@@ -636,7 +647,7 @@ export default function MarketResearchView() {
                                                     key={`${s.brand}-${s.model}`}
                                                     type="button"
                                                     onClick={() => quickResearch(s.brand, s.model)}
-                                                    className="rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-all inline-flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                    className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 transition-all hover:bg-lux-50 hover:border-lux-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                                     style={{ animation: `lux-fade-in 0.3s ease ${i * 100}ms both` }}
                                                 >
                                                     <Sparkles className="h-3 w-3 text-lux-gold" />
@@ -829,7 +840,9 @@ export default function MarketResearchView() {
                                                             href={comp.sourceUrl}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="p-1.5 rounded-lg text-lux-400 hover:text-lux-gold hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm"
+                                                            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1.5 text-lux-400 transition-colors hover:bg-lux-50 hover:text-lux-gold focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                            aria-label={`Open comparable listing: ${comp.title}`}
+                                                            title={`Open listing: ${comp.title}`}
                                                         >
                                                             <ExternalLink className="h-4 w-4" />
                                                         </a>
@@ -880,7 +893,7 @@ export default function MarketResearchView() {
                                     <button
                                         key={i}
                                         onClick={() => quickResearch(item.brand, item.model)}
-                                        className="w-full text-left flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors group focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                        className="group flex min-h-[44px] w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                     >
                                         <div className="min-w-0">
                                             <div className="text-xs font-medium text-lux-800 truncate group-hover:text-lux-900 transition-colors">
@@ -927,8 +940,19 @@ export default function MarketResearchView() {
                     </div>
                     <p className="text-xs text-lux-400 mb-4">Recent listings from Designer Exchange, Luxury Exchange, Siopella.</p>
                     {isCompetitorLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-6 w-6 animate-spin text-lux-500" />
+                        <div className="space-y-2">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="flex items-center justify-between py-2.5 px-3">
+                                    <div className="space-y-1.5 flex-1">
+                                        <Skeleton className="h-3.5 w-40" />
+                                        <Skeleton className="h-2.5 w-24" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-3.5 w-14" />
+                                        <Skeleton className="h-8 w-8 rounded-lg" variant="rect" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : competitorFeed && competitorFeed.items.length > 0 ? (
                         <div className="space-y-1 max-h-80 overflow-y-auto no-scrollbar">
@@ -948,8 +972,9 @@ export default function MarketResearchView() {
                                                 href={item.sourceUrl}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="p-1 rounded-lg text-lux-400 hover:text-lux-700 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1 text-lux-400 transition-colors hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                                 aria-label="Open listing"
+                                                title={`Open listing: ${item.title}`}
                                             >
                                                 <ExternalLink className="h-3.5 w-3.5" />
                                             </a>

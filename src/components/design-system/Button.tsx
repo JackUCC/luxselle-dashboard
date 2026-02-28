@@ -1,4 +1,5 @@
 import React, { type ButtonHTMLAttributes, type ReactNode, useEffect, useState, isValidElement, cloneElement } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, Check } from 'lucide-react'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
@@ -52,10 +53,14 @@ export default function Button({
   let hasAnimatedIcon = false
 
   const processedChildren = React.Children.map(children, (child) => {
-    if (isValidElement(child)) {
-      const childType = child.type as any
-      const name = childType?.displayName || childType?.name || ''
-      
+    if (isValidElement<{ className?: string }>(child)) {
+      const childType = child.type
+      const typedChildType = childType as { displayName?: string; name?: string }
+      const name =
+        typeof childType === 'string'
+          ? childType
+          : ((typedChildType.displayName ?? typedChildType.name) || '')
+
       let animationClass = ''
       if (name.includes('Arrow') || name.includes('Chevron')) {
         animationClass = 'group-hover:translate-x-0.5 transition-transform'
@@ -68,20 +73,20 @@ export default function Button({
       if (animationClass) {
         return cloneElement(child, {
           className: `${child.props.className || ''} ${animationClass}`.trim()
-        } as any)
+        })
       }
     }
     return child
   })
 
-  const loadingClass = isLoading ? 'loading' : ''
+  const loadingClass = isLoading ? 'loading opacity-70 cursor-not-allowed' : ''
   const flashClass = isFlashing ? '!border-lux-success !text-lux-success' : ''
   const iconGroupClass = hasAnimatedIcon ? 'group' : ''
 
   const computedClasses = [
     baseVariant,
     baseSize,
-    'inline-flex items-center justify-center active:scale-[0.97] transition-all',
+    'inline-flex items-center justify-center active:scale-[0.97] transition-[transform,background-color,border-color,color,opacity,box-shadow] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]',
     loadingClass,
     flashClass,
     iconGroupClass,
@@ -95,8 +100,34 @@ export default function Button({
       disabled={disabled || isLoading}
       {...rest}
     >
-      {isLoading && <Loader2 className="animate-spin h-[1em] w-[1em] transition-opacity duration-300" />}
-      {isFlashing && !isLoading && <Check className="h-[1em] w-[1em] text-lux-success" />}
+      <AnimatePresence initial={false}>
+        {isLoading ? (
+          <motion.span
+            key="loading-spinner"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="inline-flex"
+          >
+            <Loader2 className="h-[1em] w-[1em] animate-spin" />
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
+      <AnimatePresence initial={false}>
+        {isFlashing && !isLoading ? (
+          <motion.span
+            key="flash-success"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="inline-flex"
+          >
+            <Check className="h-[1em] w-[1em] text-lux-success" />
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
       {processedChildren}
     </button>
   )

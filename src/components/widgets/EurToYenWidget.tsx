@@ -34,7 +34,7 @@ export default function EurToYenWidget() {
         <button
           type="button"
           onClick={() => setDirection((d) => (d === 'eur-to-jpy' ? 'jpy-to-eur' : 'eur-to-jpy'))}
-          className="rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           aria-label="Swap currency direction"
         >
           <ArrowUpDown className="h-4 w-4" />
@@ -64,9 +64,9 @@ export default function EurToYenWidget() {
           </div>
 
           {fx && amount > 0 && (
-            <div className="mt-4 rounded-xl bg-lux-50 px-4 py-3">
+            <div className="mt-4 rounded-[14px] bg-lux-50 px-4 py-3">
               <div className="flex items-baseline justify-between">
-                <span className="text-[12px] font-semibold uppercase tracking-wider text-lux-400">
+                <span className="text-xs font-semibold uppercase tracking-wider text-lux-400">
                   {resultLabel}
                 </span>
                 <span className="text-lg font-semibold font-mono text-lux-800">

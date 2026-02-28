@@ -19,7 +19,7 @@ export default function BentoGrid({
         : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
 
   return (
-    <div className={`grid gap-5 ${colClass} ${className}`.trim()}>
+    <div className={`grid gap-6 ${colClass} ${className}`.trim()}>
       {children}
     </div>
   )

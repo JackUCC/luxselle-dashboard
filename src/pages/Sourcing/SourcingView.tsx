@@ -28,8 +28,8 @@ const formatCurrency = (value: number) =>
 const getStatusStyles = (status: string) => {
   switch (status) {
     case 'open': return 'bg-lux-200/80 text-lux-800 border-lux-300'
-    case 'sourcing': return 'bg-purple-50 text-purple-700 border-purple-200'
-    case 'sourced': return 'bg-green-50 text-green-700 border-green-200'
+    case 'sourcing': return 'bg-amber-50 text-amber-700 border-amber-200'
+    case 'sourced': return 'bg-emerald-50 text-emerald-700 border-emerald-200'
     case 'fulfilled': return 'bg-lux-50 text-lux-700 border-lux-200'
     case 'lost': return 'bg-red-50 text-red-700 border-red-200'
     default: return 'bg-lux-50 text-lux-600 border-lux-200'
@@ -39,7 +39,7 @@ const getStatusStyles = (status: string) => {
 const getStatusDotColor = (status: string) => {
   switch (status) {
     case 'open': return 'bg-amber-400'
-    case 'sourcing': return 'bg-purple-400'
+    case 'sourcing': return 'bg-amber-500'
     case 'sourced': return 'bg-emerald-400'
     case 'fulfilled': return 'bg-lux-400'
     case 'lost': return 'bg-rose-400'
@@ -231,7 +231,7 @@ export default function SourcingView() {
           <button
             type="button"
             onClick={() => setShowCreateForm(true)}
-            className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            className="lux-btn-primary flex min-h-[44px] items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <Plus className="h-4 w-4" />
             New Request
@@ -245,7 +245,7 @@ export default function SourcingView() {
             key={s}
             type="button"
             onClick={() => setStatusFilter(s)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+            className={`min-h-[44px] rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
               statusFilter === s
                 ? 'bg-lux-900 text-white border-lux-900'
                 : 'bg-white text-lux-600 border-[var(--lux-border)] hover:border-[var(--lux-border-hover)]'
@@ -263,8 +263,10 @@ export default function SourcingView() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-lux-900">New Sourcing Request</h2>
               <button 
+                type="button"
                 onClick={() => setShowCreateForm(false)}
-                className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                aria-label="Close create request form"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -374,7 +376,7 @@ export default function SourcingView() {
               <button
                 type="button"
                 onClick={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
-                className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -599,7 +601,7 @@ export default function SourcingView() {
                   <button
                     type="button"
                     onClick={() => openEditForm(request)}
-                    className="text-lux-400 hover:text-lux-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                    className="ml-2 flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center text-lux-400 opacity-0 transition-opacity hover:text-lux-600 group-hover:opacity-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     aria-label="Edit request"
                   >
                     <Pencil className="h-4 w-4" />

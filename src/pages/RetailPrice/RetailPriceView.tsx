@@ -75,7 +75,7 @@ export default function RetailPriceView() {
             key={item}
             type="button"
             onClick={() => setDescription(item)}
-            className="rounded-full border border-lux-200 bg-white px-3 py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            className="min-h-[44px] rounded-full border border-lux-200 bg-white px-3 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 hover:border-lux-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             {item.length > 40 ? `${item.slice(0, 37)}…` : item}
           </button>
@@ -179,7 +179,7 @@ export default function RetailPriceView() {
                     <p className="text-xs font-semibold text-lux-800">{result.productName}</p>
                   )}
                   {result.retailPriceEur != null && (
-                    <p className="mt-2 text-[36px] font-bold font-mono leading-none text-lux-900">
+                    <p className="mt-2 text-3xl sm:text-4xl font-bold font-mono leading-none text-lux-900">
                       {formatCurrency(result.retailPriceEur)}
                     </p>
                   )}

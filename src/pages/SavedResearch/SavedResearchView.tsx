@@ -15,7 +15,12 @@ import MarketResearchResultPanel from '../MarketResearch/MarketResearchResultPan
 export interface SavedResearchItem {
     id: string
     createdAt: string
-    isStarred: boolean
+    brand: string
+    model: string
+    category: string
+    condition: string
+    starred: boolean
+    notes?: string
     result: MarketResearchResult
 }
 
@@ -60,18 +65,18 @@ export default function SavedResearchView() {
 
     const filteredItems = useMemo(() => {
         return items.filter(item => {
-            if (filter === 'starred' && !item.isStarred) return false
+            if (filter === 'starred' && !item.starred) return false
             if (brandFilter !== 'all' && item.result.brand !== brandFilter) return false
             return true
         })
     }, [items, filter, brandFilter])
 
-    const handleToggleStar = async (id: string, isStarred: boolean) => {
+    const handleToggleStar = async (id: string, starred: boolean) => {
         try {
-            await apiPut(`/saved-research/${id}`, { isStarred })
-            setItems(prev => prev.map(item => item.id === id ? { ...item, isStarred } : item))
+            await apiPut(`/saved-research/${id}`, { starred })
+            setItems(prev => prev.map(item => item.id === id ? { ...item, starred } : item))
             if (selectedItem?.id === id) {
-                setSelectedItem(prev => prev ? { ...prev, isStarred } : prev)
+                setSelectedItem(prev => prev ? { ...prev, starred } : prev)
             }
         } catch (error) {
             toast.error('Failed to update item')
@@ -105,13 +110,13 @@ export default function SavedResearchView() {
                 <div className="flex items-center gap-1 bg-lux-100 p-1 rounded-lg">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'all' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
+                        className={`min-h-[44px] rounded-md px-4 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'all' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
                     >
                         All
                     </button>
                     <button
                         onClick={() => setFilter('starred')}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'starred' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
+                        className={`flex min-h-[44px] items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'starred' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
                     >
                         <Star className={`h-4 w-4 ${filter === 'starred' ? 'fill-lux-gold text-lux-gold' : ''}`} />
                         Starred

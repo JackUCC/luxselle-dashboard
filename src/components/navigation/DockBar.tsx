@@ -24,13 +24,13 @@ export default function DockBar() {
       >
         <NavLink
           to="/"
-          className="mb-2 flex h-[70px] w-[60px] items-center justify-center rounded-[14px] transition-transform duration-200 hover:scale-110 hover:[filter:drop-shadow(0_0_8px_rgb(184_134_11_/_0.4))] focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="group mb-2 flex h-[70px] w-[60px] items-center justify-center rounded-[14px] transition-transform duration-200 hover:scale-110 hover:[filter:drop-shadow(0_0_8px_rgb(184_134_11_/_0.4))] focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:ring-offset-2 focus-visible:outline-none"
           title="Luxselle"
         >
           <img
             src="/luxselle-logo.svg"
             alt="Luxselle"
-            className="h-auto w-[60px] max-w-[60px] object-contain"
+            className="h-auto w-[60px] max-w-[60px] object-contain transition-all duration-200 group-hover:[filter:brightness(0.92)_sepia(0.28)_saturate(1.35)_hue-rotate(4deg)]"
           />
         </NavLink>
       </motion.div>

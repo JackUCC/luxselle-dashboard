@@ -8,6 +8,10 @@ export class SavedResearchRepo extends BaseRepo<SavedResearch> {
     super('saved_research', SavedResearchSchema)
   }
 
+  async findById(id: string, orgId?: string): Promise<WithId<SavedResearch> | null> {
+    return this.getById(id, orgId)
+  }
+
   async findAll(userId: string, filters?: { starred?: boolean }): Promise<WithId<SavedResearch>[]> {
     const collection = this.getCollection()
     // In Firestore, querying optional fields (like deletedAt == null) can be tricky
@@ -33,6 +37,10 @@ export class SavedResearchRepo extends BaseRepo<SavedResearch> {
     })
 
     return docs
+  }
+
+  async update(id: string, data: Partial<SavedResearch>, orgId?: string): Promise<WithId<SavedResearch>> {
+    return this.set(id, data, orgId)
   }
 
   async softDelete(id: string, orgId?: string): Promise<void> {
