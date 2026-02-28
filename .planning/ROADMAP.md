@@ -20,7 +20,7 @@ Core Supplier Engine capabilities are already implemented across phases 1-6. Pha
 - [x] **Phase 4: Inventory and Stock Intelligence** - Inventory operations and low-stock awareness.
 - [x] **Phase 5: Sourcing and Operational Jobs** - Sourcing lifecycle and job reliability controls.
 - [x] **Phase 6: Invoicing and Overview UX** - Invoicing workflows and operational overview polish.
-- [ ] **Phase 7: Sidecar Mode Hardening + Agent Execution** - Compact UX hardening, parity checks, and release QA.
+- [x] **Phase 7: Sidecar Mode Hardening + Agent Execution** - Compact UX hardening, parity checks, and release QA. (completed 2026-02-28)
 
 ## Phase Details
 
@@ -123,7 +123,7 @@ Plans:
   1. Sidecar remains usable at compact widths without blocking key actions.
   2. Mode switches preserve user context and route intent.
   3. Key evaluator -> inventory -> invoicing journey passes QA without P0 regressions.
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 07-01: Compact sidecar layout hardening and mode parity fixes
@@ -142,4 +142,4 @@ Plans:
 | 4. Inventory and Stock Intelligence | 2/2 | Complete | 2026-02-27 |
 | 5. Sourcing and Operational Jobs | 2/2 | Complete | 2026-02-27 |
 | 6. Invoicing and Overview UX | 2/2 | Complete | 2026-02-27 |
-| 7. Sidecar Mode Hardening + Agent Execution | 1/2 | In Progress|  |
+| 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete   | 2026-02-28 |
