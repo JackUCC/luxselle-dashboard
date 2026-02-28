@@ -69,13 +69,13 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   }, [activeTab])
 
   const handleExitSidecar = () => {
-    navigate(getExitSidecarPath('/', location.search), { replace: true })
+    navigate(getExitSidecarPath(location.pathname, location.search), { replace: true })
   }
 
   return (
-    <section className="min-w-0 max-w-full space-y-2">
+    <section className="min-w-0 max-w-full space-y-2 overflow-x-clip">
       <header className="sticky top-0 z-20">
-        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs">
+        <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs overflow-x-clip">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-xs font-semibold text-lux-800">Sidecar</h1>
@@ -95,7 +95,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
             </button>
           </div>
 
-          <div className="mt-2 grid grid-cols-3 gap-1 min-w-0" aria-label="Sidecar assistant modes">
+          <div className="mt-2 flex flex-wrap gap-1 min-w-0" aria-label="Sidecar assistant modes">
             {TABS.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -105,7 +105,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
                   aria-label={`${tab.label} mode`}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-w-0 truncate focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+                  className={`min-w-[82px] flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors truncate focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                     isActive
                       ? 'bg-lux-800 text-white'
                       : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
@@ -126,7 +126,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
         </div>
       </header>
 
-      <div className="min-w-0 max-w-full">
+      <div className="min-w-0 max-w-full overflow-x-clip">
         {renderTabPanel(activeTab)}
       </div>
     </section>

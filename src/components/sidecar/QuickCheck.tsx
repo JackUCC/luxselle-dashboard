@@ -170,12 +170,12 @@ export default function QuickCheck() {
   }
 
   return (
-    <div className="min-w-0 max-w-full space-y-2">
+    <div className="min-w-0 max-w-full space-y-2 overflow-x-clip">
       <form onSubmit={handleSearch} className="rounded-lux-card border border-lux-200 bg-white p-2.5">
         <label htmlFor="sidecar-quick-search" className="text-xs font-medium text-lux-700">
           Item description
         </label>
-        <div className="mt-1 flex gap-2">
+        <div className="mt-1 flex flex-col gap-2 min-[360px]:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-lux-400" />
             <input
@@ -190,7 +190,7 @@ export default function QuickCheck() {
           <button
             type="submit"
             disabled={isResearching}
-            className="shrink-0 rounded-lg bg-lux-900 px-3 py-2 text-sm font-medium text-white hover:bg-lux-800 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            className="w-full shrink-0 rounded-lg bg-lux-900 px-3 py-2 text-sm font-medium text-white hover:bg-lux-800 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none min-[360px]:w-auto"
           >
             {isResearching ? <AiThinkingDots /> : 'Run'}
           </button>
@@ -233,7 +233,7 @@ export default function QuickCheck() {
           {visualResults.length === 0 ? (
             <p className="text-xs text-lux-500">No similar items in index.</p>
           ) : (
-            <div className="grid grid-cols-3 gap-1.5 max-h-32 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto min-[360px]:grid-cols-3">
               {visualResults.slice(0, 9).map((r, i) => (
                 <div key={i} className="rounded border border-lux-100 overflow-hidden">
                   {r.imageUrl ? (
@@ -270,8 +270,8 @@ export default function QuickCheck() {
       )}
 
       {result && (
-        <article className="space-y-2 rounded-lux-card border border-lux-200 bg-white p-2.5">
-          <div className="grid grid-cols-3 gap-1.5 text-xs">
+        <article className="space-y-2 rounded-lux-card border border-lux-200 bg-white p-2.5 overflow-hidden">
+          <div className="grid grid-cols-1 gap-1.5 text-xs min-[360px]:grid-cols-3">
             <div className="rounded-lg bg-lux-50 p-2">
               <p className="text-lux-500">Avg sell</p>
               <p className="font-semibold text-lux-800">{formatCurrency(result.averageSellingPriceEur)}</p>
@@ -291,7 +291,7 @@ export default function QuickCheck() {
               <Calculator className="h-3.5 w-3.5 text-lux-500" />
               <p className="text-xs font-medium text-lux-700">Landed from bid</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-lux-500">Bid €</span>
               <input
                 type="text"
@@ -299,7 +299,7 @@ export default function QuickCheck() {
                 value={bidInput}
                 onChange={(e) => setBidInput(e.target.value)}
                 placeholder="0"
-                className="flex-1 rounded border border-lux-200 bg-white px-2 py-1 text-right text-sm font-mono text-lux-900 focus-visible:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                className="min-w-[92px] flex-1 rounded border border-lux-200 bg-white px-2 py-1 text-right text-sm font-mono text-lux-900 focus-visible:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
               />
               <span className="whitespace-nowrap text-sm font-bold text-lux-900">{formatCurrency(landed)}</span>
             </div>
