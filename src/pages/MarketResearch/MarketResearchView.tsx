@@ -57,6 +57,12 @@ interface MarketComparable {
     daysListed?: number
 }
 
+interface MarketComparablePayload extends Omit<MarketComparable, 'previewImageUrl'> {
+    previewImageUrl?: string
+    thumbnailUrl?: string
+    imageUrl?: string
+}
+
 interface MarketResearchResult {
     provider: string
     brand: string
@@ -76,6 +82,10 @@ interface MarketResearchResult {
     riskFactors: string[]
     comparables: MarketComparable[]
     seasonalNotes?: string
+}
+
+interface MarketResearchResultPayload extends Omit<MarketResearchResult, 'comparables'> {
+    comparables: MarketComparablePayload[]
 }
 
 interface TrendingItem {
@@ -145,6 +155,29 @@ const LIQUIDITY_CONFIG = {
     fast_moving: { label: 'Fast Moving', sublabel: '< 14 days avg', color: 'text-emerald-600' },
     moderate: { label: 'Moderate', sublabel: '14-30 days avg', color: 'text-amber-600' },
     slow_moving: { label: 'Slow Moving', sublabel: '30+ days avg', color: 'text-red-600' },
+}
+
+const normalizeComparableImage = (comparable: MarketComparablePayload): MarketComparable => ({
+    ...comparable,
+    previewImageUrl: comparable.previewImageUrl ?? comparable.thumbnailUrl ?? comparable.imageUrl,
+})
+
+const FALLBACK_COMPARABLE_TITLE = 'Untitled listing'
+
+function normalizeComparableTitle(value: unknown): string {
+    if (typeof value !== 'string') return FALLBACK_COMPARABLE_TITLE
+    const normalized = value.trim()
+    return normalized.length > 0 ? normalized : FALLBACK_COMPARABLE_TITLE
+}
+
+function normalizeMarketResearchResult(result: MarketResearchResult): MarketResearchResult {
+    return {
+        ...result,
+        comparables: result.comparables.map(comp => ({
+            ...comp,
+            title: normalizeComparableTitle(comp.title),
+        })),
+    }
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -236,12 +269,17 @@ export default function MarketResearchView() {
         setIsLoading(true)
         setError(null)
         try {
-            const { data } = await apiPost<{ data: MarketResearchResult }>('/market-research/analyse', {
+            const { data } = await apiPost<{ data: MarketResearchResultPayload }>('/market-research/analyse', {
                 ...formData,
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
             setFailedComparableImages({})
-            setResult(data)
+            setResult(
+                normalizeMarketResearchResult({
+                    ...data,
+                    comparables: data.comparables.map(normalizeComparableImage),
+                })
+            )
             // Persist as previous search
             const entry = { brand: formData.brand, model: formData.model }
             setPreviousSearches(prev => {
@@ -611,7 +649,7 @@ export default function MarketResearchView() {
                                                     {comp.previewImageUrl && !failedComparableImages[comp.previewImageUrl] ? (
                                                         <img
                                                             src={comp.previewImageUrl}
-                                                            alt={comp.title || `${result.brand} ${result.model} comparable`}
+                                                            alt={comp.title !== FALLBACK_COMPARABLE_TITLE ? comp.title : `${result.brand} ${result.model} comparable`}
                                                             className="w-12 h-12 rounded-lg object-cover border border-gray-200 bg-white shrink-0"
                                                             loading="lazy"
                                                             onError={() => {
@@ -624,7 +662,7 @@ export default function MarketResearchView() {
                                                         </div>
                                                     )}
                                                     <div className="min-w-0">
-                                                        <div className="text-sm font-medium text-gray-900 truncate">{comp.title?.trim() || `${result.brand} ${result.model}`}</div>
+                                                        <div className="text-sm font-medium text-gray-900 truncate">{comp.title}</div>
                                                         <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
                                                             <span>{comp.source}</span>
                                                             <span>·</span>
