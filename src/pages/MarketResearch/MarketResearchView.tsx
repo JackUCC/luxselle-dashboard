@@ -57,6 +57,12 @@ interface MarketComparable {
     daysListed?: number
 }
 
+interface MarketComparablePayload extends Omit<MarketComparable, 'previewImageUrl'> {
+    previewImageUrl?: string
+    thumbnailUrl?: string
+    imageUrl?: string
+}
+
 interface MarketResearchResult {
     provider: string
     brand: string
@@ -76,6 +82,10 @@ interface MarketResearchResult {
     riskFactors: string[]
     comparables: MarketComparable[]
     seasonalNotes?: string
+}
+
+interface MarketResearchResultPayload extends Omit<MarketResearchResult, 'comparables'> {
+    comparables: MarketComparablePayload[]
 }
 
 interface TrendingItem {
@@ -146,6 +156,11 @@ const LIQUIDITY_CONFIG = {
     moderate: { label: 'Moderate', sublabel: '14-30 days avg', color: 'text-amber-600' },
     slow_moving: { label: 'Slow Moving', sublabel: '30+ days avg', color: 'text-red-600' },
 }
+
+const normalizeComparableImage = (comparable: MarketComparablePayload): MarketComparable => ({
+    ...comparable,
+    previewImageUrl: comparable.previewImageUrl ?? comparable.thumbnailUrl ?? comparable.imageUrl,
+})
 
 // ═════════════════════════════════════════════════════════════════
 // Component
@@ -235,11 +250,14 @@ export default function MarketResearchView() {
         setIsLoading(true)
         setError(null)
         try {
-            const { data } = await apiPost<{ data: MarketResearchResult }>('/market-research/analyse', {
+            const { data } = await apiPost<{ data: MarketResearchResultPayload }>('/market-research/analyse', {
                 ...formData,
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
-            setResult(data)
+            setResult({
+                ...data,
+                comparables: data.comparables.map(normalizeComparableImage),
+            })
             // Persist as previous search
             const entry = { brand: formData.brand, model: formData.model }
             setPreviousSearches(prev => {
