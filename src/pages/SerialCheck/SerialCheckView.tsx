@@ -18,6 +18,7 @@ interface PriceCheckComp {
   price: number
   source: string
   sourceUrl?: string
+  previewImageUrl?: string
 }
 
 interface PriceCheckResult {
@@ -247,10 +248,49 @@ export default function SerialCheckView() {
           <p className="mt-1 text-xs text-lux-600">
             Adjustment: age {pricingGuidance.adjustment.ageAdjustmentPct}% · confidence penalty -{pricingGuidance.adjustment.confidencePenaltyPct.toFixed(1)}%
           </p>
-          {marketResult && marketResult.comps.length > 0 && (
+          {marketResult && (
             <p className="mt-1 text-xs text-lux-600">
               Based on {marketResult.comps.length} market comparables.
             </p>
+          )}
+        </div>
+      )}
+
+      {pricingGuidance && marketResult && (
+        <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+          <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
+          {marketResult.comps.length > 0 ? (
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {marketResult.comps.map((comp, i) => (
+                <div key={`${comp.title}-${i}`} className="flex items-center justify-between gap-3 text-sm py-2 border-b border-lux-100 last:border-0">
+                  <div className="min-w-0 flex items-center gap-3 pr-2">
+                    {comp.previewImageUrl && (
+                      <img
+                        src={comp.previewImageUrl}
+                        alt=""
+                        className="h-12 w-12 shrink-0 rounded-lg border border-lux-100 object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      {comp.sourceUrl ? (
+                        <a href={comp.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block">
+                          {comp.title}
+                        </a>
+                      ) : (
+                        <span className="text-lux-800 truncate block">{comp.title}</span>
+                      )}
+                      <span className="text-xs text-lux-500">{comp.source}</span>
+                    </div>
+                  </div>
+                  <span className="font-mono text-lux-700 whitespace-nowrap">{formatCurrency(comp.price)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
+              No comparable listings found yet for this serial and description.
+            </div>
           )}
         </div>
       )}
