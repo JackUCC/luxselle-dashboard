@@ -1,6 +1,6 @@
 # Luxselle Supplier Engine — Current Status
 
-**Last updated**: 2026-02-27  
+**Last updated**: 2026-02-28  
 **Current State**: Supplier Engine scope with dual-mode UX (Overview + Sidecar)
 
 ---
@@ -11,6 +11,8 @@
 - Scope pivot is complete: Supplier Engine replaces previous tracker framing.
 - Next milestone is Sidecar hardening and mode-adaptive UX polish.
 - GSD framework is installed for spec-driven planning and execution.
+- GSD planning baseline is now present in `.planning/` (`PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, and Phase 7 context).
+- Phase 7 execution plans are ready (`07-01-PLAN.md`, `07-02-PLAN.md`).
 
 ---
 
@@ -89,7 +91,7 @@ luxselle-dashboard/
 
 ## Next Actions
 
-1. Complete sidecar usability refinements for compact layouts.
-2. Run Quality Lead QA pass with sidecar-focused checks.
-3. Validate release gates (`test`, `build`, `typecheck`, optional `test:e2e`).
-4. Mark Phase 7 complete once sidecar acceptance criteria are met.
+1. Execute Phase 7 plans with `/gsd:execute-phase 7` in small, reviewable increments.
+2. Run `/gsd:verify-work 7` after execution to confirm goal-backward completion.
+3. Run Quality Lead QA pass and validate release gates (`test`, `build`, `typecheck`, optional `test:e2e`).
+4. Mark Phase 7 complete once sidecar acceptance criteria are met and no P0 regressions remain.

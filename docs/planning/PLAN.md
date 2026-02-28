@@ -94,6 +94,8 @@ Objective: make Supplier Engine side-by-side buying support production-ready.
 - [ ] Sidecar layout hardening for narrow widths: QuickCheck.tsx, SidecarView.tsx (overflow/min-width), and Evaluator, Inventory, Invoices in compact layout
 - [ ] Mode-adaptive behavior parity checks between Overview and Sidecar
 - [x] Remove residual legacy naming from planning/docs/rules
+- [x] Create GSD planning baseline files (`.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`) and seed Phase 7 context
+- [x] Create Phase 7 plan files (`07-01-PLAN.md`, `07-02-PLAN.md`) with requirement coverage and execution waves
 - [ ] Execute GSD planning and delivery loop for Sidecar milestone (run GSD plan-phase / execute-phase for sidecar UX via Cursor GSD commands)
 - [ ] QA pass for key journeys: evaluator decision -> inventory awareness -> invoicing follow-up
 
@@ -108,5 +110,7 @@ Objective: make Supplier Engine side-by-side buying support production-ready.
 ## Execution Notes
 
 - Use `npm run gsd:sync` before running GSD command workflows in Cursor.
+- Use `node ./.claude/get-shit-done/bin/gsd-tools.cjs validate health` to validate local planning integrity.
+- Recommended GSD sequence for Phase 7: `/gsd:execute-phase 7` -> `/gsd:verify-work 7`.
 - Use Quality Lead + QA swarm before signoff on Phase 7 completion.
 - Keep changes small and iterative; avoid large refactors.
