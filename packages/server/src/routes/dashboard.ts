@@ -25,15 +25,22 @@ router.get('/kpis', async (_req, res, next) => {
       sourcingRepo.list(),
     ])
 
+    const inStockProducts = products.filter((p) => p.status === 'in_stock')
+
     // Total Inventory Cost (sum cost where status=in_stock)
-    const totalInventoryValue = products
-      .filter((p) => p.status === 'in_stock')
-      .reduce((sum, p) => sum + p.costPriceEur * p.quantity, 0)
+    const totalInventoryValue = inStockProducts.reduce(
+      (sum, p) => sum + p.costPriceEur * p.quantity,
+      0
+    )
 
     // Total Inventory Potential Value (sum sell price where status=in_stock)
-    const totalInventoryPotentialValue = products
-      .filter((p) => p.status === 'in_stock')
-      .reduce((sum, p) => sum + p.sellPriceEur * p.quantity, 0)
+    const totalInventoryPotentialValue = inStockProducts.reduce(
+      (sum, p) => sum + p.sellPriceEur * p.quantity,
+      0
+    )
+
+    // Total number of bags/items in inventory (sum quantity where status=in_stock)
+    const totalInventoryItems = inStockProducts.reduce((sum, p) => sum + p.quantity, 0)
 
     // Active Sourcing Pipeline (sum budgets where status IN [open, sourcing])
     const activeSourcingPipeline = sourcingRequests
@@ -47,6 +54,7 @@ router.get('/kpis', async (_req, res, next) => {
       data: {
         totalInventoryValue,
         totalInventoryPotentialValue,
+        totalInventoryItems,
         activeSourcingPipeline,
       },
     })

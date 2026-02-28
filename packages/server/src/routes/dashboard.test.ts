@@ -48,6 +48,7 @@ describe('GET /api/dashboard/kpis', () => {
     expect(res.body.data).toBeDefined()
     expect(res.body.data.totalInventoryValue).toBeDefined()
     expect(res.body.data.totalInventoryPotentialValue).toBeDefined()
+    expect(res.body.data.totalInventoryItems).toBeDefined()
     expect(res.body.data.activeSourcingPipeline).toBeDefined()
   })
 })

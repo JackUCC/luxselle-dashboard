@@ -82,7 +82,7 @@ export default function DashboardView() {
   return (
     <PageLayout variant="content">
       <PageHeader
-        title="Overview"
+        title="Quick Controls"
         actions={
           <>
             <Button
@@ -136,6 +136,11 @@ export default function DashboardView() {
             <StatCard
               label="Inventory Cost"
               value={<AnimatedNumber value={inventoryValue} prefix="€" />}
+              secondary={
+                <span className="text-sm text-lux-500 font-medium">
+                  {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'} in inventory
+                </span>
+              }
               stagger={4}
             />
             <StatCard

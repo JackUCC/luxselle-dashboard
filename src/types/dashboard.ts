@@ -6,6 +6,7 @@ import type { Product } from '@shared/schemas'
 export interface KPIs {
     totalInventoryValue: number
     totalInventoryPotentialValue: number
+    totalInventoryItems: number
     activeSourcingPipeline: number
 }
 
