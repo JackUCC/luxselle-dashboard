@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "18.x || 20.x || 22.x"
+    "node": "18.x || 20.x || 22.x || 24.x"
   },
   "workspaces": [
     "packages/server",
@@ -42,6 +42,7 @@
     "@tanstack/react-virtual": "^3.13.18",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@vercel/speed-insights": "^1.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",

@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 import { useScrollLock } from '../../lib/useScrollLock'
+import { prefetchRoute } from '../../lib/routePrefetch'
 
 interface MobileNavDrawerProps {
   open: boolean
@@ -15,6 +16,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
   const location = useLocation()
   const lastPathRef = useRef(location.pathname)
   const onCloseRef = useRef(onClose)
+  const handleRouteWarmup = (path: string) => () => prefetchRoute(path)
   onCloseRef.current = onClose
 
   useEffect(() => {
@@ -94,6 +96,9 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                       key={route.path}
                       to={route.path}
                       end={route.path === '/'}
+                      onMouseEnter={handleRouteWarmup(route.path)}
+                      onFocus={handleRouteWarmup(route.path)}
+                      onTouchStart={handleRouteWarmup(route.path)}
                       onClick={onClose}
                       className={({ isActive }: { isActive: boolean }) =>
                         `flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 ${isActive

@@ -3,7 +3,7 @@
  * Create in-person invoices or add invoices by uploading a PDF.
  * Uses design-system: PageHeader, ListRow, Modal, Button, Input.
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Download, FileText, Loader2, Plus, Upload, X, Trash2 } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
@@ -14,19 +14,30 @@ import { useLayoutMode } from '../../lib/LayoutModeContext'
 
 type InvoiceWithId = Invoice & { id: string }
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(value)
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'EUR',
+  minimumFractionDigits: 2,
+})
 
-const formatDate = (dateStr: string) =>
-  new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(dateStr))
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+const formatCurrency = (value: number) => currencyFormatter.format(value)
+const formatDate = (dateStr: string) => dateFormatter.format(new Date(dateStr))
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
+const INITIAL_INVOICE_RENDER_COUNT = 24
 
 type AddMode = 'none' | 'in-person' | 'upload'
 
 export default function InvoicesView() {
   const { isSidecar } = useLayoutMode()
   const [invoices, setInvoices] = useState<InvoiceWithId[]>([])
+  const [visibleInvoiceCount, setVisibleInvoiceCount] = useState(INITIAL_INVOICE_RENDER_COUNT)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<InvoiceWithId | null>(null)
@@ -69,6 +80,40 @@ export default function InvoicesView() {
     setIsLoading(true)
     fetchInvoices()
   }, [fetchInvoices])
+
+  useEffect(() => {
+    if (invoices.length <= INITIAL_INVOICE_RENDER_COUNT) {
+      setVisibleInvoiceCount(invoices.length)
+      return
+    }
+
+    setVisibleInvoiceCount(INITIAL_INVOICE_RENDER_COUNT)
+    const timeoutId = window.setTimeout(() => {
+      setVisibleInvoiceCount(invoices.length)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [invoices.length])
+
+  const invoiceCards = useMemo(
+    () =>
+      invoices.map((invoice) => ({
+        id: invoice.id,
+        invoice,
+        invoiceNumber: invoice.invoiceNumber,
+        issuedAtLabel: formatDate(invoice.issuedAt),
+        totalLabel: formatCurrency(invoice.totalEur),
+        customerName: invoice.customerName ?? '',
+      })),
+    [invoices],
+  )
+
+  const visibleInvoiceCards = useMemo(
+    () => invoiceCards.slice(0, visibleInvoiceCount),
+    [invoiceCards, visibleInvoiceCount],
+  )
 
   const handleExportPdf = async () => {
     if (!selected) return
@@ -260,25 +305,25 @@ export default function InvoicesView() {
       ) : (
         <div className="space-y-6">
           <div className={`grid gap-5 ${isSidecar ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
-            {invoices.map((inv, index) => (
+            {visibleInvoiceCards.map((card, index) => (
               <button
-                key={inv.id}
+                key={card.id}
                 type="button"
-                onClick={() => setSelected(inv)}
+                onClick={() => setSelected(card.invoice)}
                 className={`lux-card p-5 text-left transition-all animate-bento-enter hover:-translate-y-0.5 ${
-                  selected?.id === inv.id ? 'ring-2 ring-lux-900' : ''
+                  selected?.id === card.id ? 'ring-2 ring-lux-900' : ''
                 }`}
                 style={{ '--stagger': index } as React.CSSProperties}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <span className="font-semibold text-lux-900">{inv.invoiceNumber}</span>
-                  <span className="text-body-sm text-lux-500">{formatDate(inv.issuedAt)}</span>
+                  <span className="font-semibold text-lux-900">{card.invoiceNumber}</span>
+                  <span className="text-body-sm text-lux-500">{card.issuedAtLabel}</span>
                 </div>
                 <div className="font-mono text-xl font-bold text-lux-900">
-                  {formatCurrency(inv.totalEur)}
+                  {card.totalLabel}
                 </div>
-                {inv.customerName && (
-                  <div className="mt-1 text-body-sm text-lux-600">{inv.customerName}</div>
+                {card.customerName && (
+                  <div className="mt-1 text-body-sm text-lux-600">{card.customerName}</div>
                 )}
               </button>
             ))}

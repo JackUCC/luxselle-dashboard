@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { ArrowLeftToLine, Menu } from 'lucide-react'
 
 import { getExitSidecarPath } from '../../lib/LayoutModeContext'
+import { prefetchRoute } from '../../lib/routePrefetch'
 import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 import Drawer from '../design-system/Drawer'
@@ -17,6 +18,7 @@ function exitSidecarTo(location: { pathname: string; search: string }) {
 export default function SidecarNav() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
+  const handleRouteWarmup = (path: string) => () => prefetchRoute(path)
 
   const toWithSidecar = (path: string) => {
     const params = new URLSearchParams(location.pathname === path ? location.search : '')
@@ -77,6 +79,9 @@ export default function SidecarNav() {
                         key={route.path}
                         to={toWithSidecar(route.path)}
                         end={route.path === '/'}
+                        onMouseEnter={handleRouteWarmup(route.path)}
+                        onFocus={handleRouteWarmup(route.path)}
+                        onTouchStart={handleRouteWarmup(route.path)}
                         onClick={() => setDrawerOpen(false)}
                         className={({ isActive }) =>
                           `flex items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-colors ${

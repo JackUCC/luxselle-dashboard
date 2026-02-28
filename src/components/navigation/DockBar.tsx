@@ -2,9 +2,11 @@ import { NavLink, useLocation } from 'react-router-dom'
 
 import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
+import { prefetchRoute } from '../../lib/routePrefetch'
 
 export default function DockBar() {
   const { pathname } = useLocation()
+  const handleRouteWarmup = (path: string) => () => prefetchRoute(path)
 
   return (
     <nav
@@ -46,6 +48,9 @@ export default function DockBar() {
                     key={route.path}
                     to={route.path}
                     end={route.path === '/'}
+                    onMouseEnter={handleRouteWarmup(route.path)}
+                    onFocus={handleRouteWarmup(route.path)}
+                    onTouchStart={handleRouteWarmup(route.path)}
                     aria-label={route.navLabel}
                     className="group relative flex items-center"
                   >
