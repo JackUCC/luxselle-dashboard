@@ -23,6 +23,11 @@ test.afterEach(async ({ request }) => {
 })
 
 test('run research shows result or loading then content', async ({ page }) => {
+  const selectOption = async (label: string, option: string | RegExp) => {
+    await page.getByRole('button', { name: label }).click()
+    await page.getByRole('option', { name: option }).first().click()
+  }
+
   await page.route('**/api/market-research/analyse', (route) =>
     route.fulfill({
       status: 200,
@@ -53,10 +58,10 @@ test('run research shows result or loading then content', async ({ page }) => {
 
   await page.goto('/market-research')
 
-  await page.selectOption('select[name="brand"]', 'Chanel')
-  await page.selectOption('select[name="model"]', 'Classic Flap')
-  await page.selectOption('select[name="category"]', 'Handbag')
-  await page.selectOption('select[name="condition"]', 'excellent')
+  await selectOption('Brand', 'Chanel')
+  await selectOption('Model', 'Classic Flap')
+  await selectOption('Category', 'Handbag')
+  await selectOption('Condition', /Excellent/)
 
   await page.getByRole('button', { name: 'Research Market' }).click()
 

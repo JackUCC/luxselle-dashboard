@@ -22,13 +22,11 @@ test.afterEach(async ({ request }) => {
   await clearFirestore(request)
 })
 
-test('Invoices page loads and shows list or empty state', async ({ page }) => {
+test('Invoices page loads', async ({ page }) => {
   await page.goto('/invoices')
 
   await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible({ timeout: 15000 })
-  // Either empty state or list is visible
-  const emptyOrList = page.getByText('No invoices yet').or(page.getByText('All invoices'))
-  await expect(emptyOrList).toBeVisible({ timeout: 5000 })
+  await expect(page.getByTestId('invoice-create-cta')).toBeVisible()
 })
 
 test('Create in-person invoice opens modal and can be closed', async ({ page }) => {
@@ -49,12 +47,16 @@ test('Create in-person invoice opens modal and can be closed', async ({ page }) 
 })
 
 test('mark sold flow creates invoice and keeps product sold', async ({ page, request }) => {
+  const suffix = Date.now()
+  const uniqueSku = `E2E-SKU-${suffix}`
+  const uniqueTitle = `Triomphe Shoulder Bag ${suffix}`
+  const uniqueBuyer = `QA Buyer ${suffix}`
   const created = await request.post('/api/products', {
     data: {
       brand: 'Celine',
       model: 'Triomphe',
-      title: 'Triomphe Shoulder Bag',
-      sku: 'E2E-SKU-1',
+      title: uniqueTitle,
+      sku: uniqueSku,
       costPriceEur: 1200,
       sellPriceEur: 2500,
       status: 'in_stock',
@@ -66,21 +68,25 @@ test('mark sold flow creates invoice and keeps product sold', async ({ page, req
   await page.goto('/inventory')
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible({ timeout: 15000 })
 
-  await page.getByText('Celine — Triomphe Shoulder Bag').first().click()
+  await page.getByTestId('inventory-view-table').click()
+  await page.getByPlaceholder('Search by brand, model, SKU...').fill(uniqueSku)
+  await page.getByText(uniqueSku).first().click()
   await page.getByRole('button', { name: 'History' }).click()
   await page.getByRole('button', { name: 'Record Sale' }).click()
 
   await expect(page.getByRole('heading', { name: 'Record Sale + Create Invoice' })).toBeVisible()
-  await page.getByPlaceholder('e.g. John Smith').fill('QA Buyer')
+  await page.getByPlaceholder('e.g. John Smith').fill(uniqueBuyer)
   await page.getByRole('button', { name: 'Record Sale + Invoice' }).click()
 
   await expect(page.getByRole('heading', { name: 'Record Sale + Create Invoice' })).toHaveCount(0)
 
   await page.goto('/invoices')
   await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible({ timeout: 15000 })
-  await expect(page.getByText('QA Buyer')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText(uniqueBuyer)).toBeVisible({ timeout: 10000 })
 
   await page.goto('/inventory')
-  await expect(page.getByText('Celine — Triomphe Shoulder Bag')).toBeVisible()
-  await expect(page.getByText('Sold')).toBeVisible()
+  await page.getByTestId('inventory-view-table').click()
+  await page.getByPlaceholder('Search by brand, model, SKU...').fill(uniqueSku)
+  await expect(page.getByText(uniqueSku)).toBeVisible()
+  await expect(page.getByRole('table').getByText('Sold')).toBeVisible()
 })

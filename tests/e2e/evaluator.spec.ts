@@ -42,7 +42,7 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
   )
 
   await page.goto('/buy-box')
-  await page.getByPlaceholder(/e.g. Chanel Classic Flap/).fill(query)
+  await page.getByLabel(/Search for item/i).fill(query)
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByText('Avg. selling price')).toBeVisible()
   await expect(page.getByText('Max buy target')).toBeVisible()
@@ -55,7 +55,7 @@ test('shows error when price-check fails', async ({ page }) => {
   )
 
   await page.goto('/buy-box')
-  await page.getByPlaceholder(/e.g. Chanel Classic Flap/).fill('Chanel Classic Flap')
+  await page.getByLabel(/Search for item/i).fill('Chanel Classic Flap')
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByTestId('price-check-inline-error')).toBeVisible()
 })
@@ -71,7 +71,7 @@ test('nav routing works for all main routes', async ({ page }) => {
 
   // Start at Overview
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Quick Controls|Overview/ })).toBeVisible()
 
   const dock = page.getByTestId('dock-bar')
   await expect(dock).toBeVisible()

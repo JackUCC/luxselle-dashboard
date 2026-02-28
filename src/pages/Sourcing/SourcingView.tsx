@@ -267,7 +267,7 @@ export default function SourcingView() {
                 type="button"
                 onClick={() => setShowCreateForm(false)}
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                aria-label="Close create request form"
+                aria-label="Close request form"
               >
                 <X className="h-5 w-5" />
               </button>

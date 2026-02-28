@@ -86,7 +86,7 @@ export default function Button({
   const computedClasses = [
     baseVariant,
     baseSize,
-    'inline-flex items-center justify-center active:scale-[0.97] transition-[transform,background-color,border-color,color,opacity,box-shadow] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]',
+    'inline-flex items-center justify-center active:scale-[0.97] transition-[transform,background-color,border-color,color,opacity,box-shadow] duration-150 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]',
     loadingClass,
     flashClass,
     iconGroupClass,

@@ -87,6 +87,7 @@ test('products with prices appear correctly in table', async ({ page, request })
   expect(verifyJson.data.sellPriceEur).toBe(1850)
 
   await page.goto('/inventory')
+  await page.getByTestId('inventory-view-table').click()
   await expect(page.locator('table')).toBeVisible()
 
   // Verify the table presents priced inventory rows (not all-zero placeholders).

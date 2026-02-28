@@ -31,7 +31,7 @@ test('New Request opens form and submit creates request', async ({ page }) => {
   await page.locator('input[name="customerName"]').fill('E2E Customer')
   await page.locator('textarea[name="queryText"]').fill('Chanel Classic Flap')
   await page.locator('input[name="budget"]').fill('5000')
-  await page.getByRole('button', { name: 'Create Request' }).click()
+  await page.getByRole('button', { name: 'Create Request', exact: true }).click()
 
   await expect(page.getByText('Sourcing request created')).toBeVisible({ timeout: 10000 })
   await expect(page.getByRole('heading', { name: 'New Sourcing Request' })).toHaveCount(0)
