@@ -1,6 +1,8 @@
-import PdfPrinter from 'pdfmake'
 import type { TDocumentDefinitions, Content, TableCell } from 'pdfmake/interfaces'
 import type { Invoice, Settings } from '@shared/schemas'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
 
 const fonts = {
     Helvetica: {
@@ -14,16 +16,18 @@ const fonts = {
 export class InvoicePdfService {
     async generate(invoice: Invoice, settings: Settings | null): Promise<Buffer> {
         const docDefinition = this.buildDocDefinition(invoice, settings)
-        const printer = new PdfPrinter(fonts)
-        const pdfDoc = printer.createPdfKitDocument(docDefinition)
         
-        return new Promise((resolve, reject) => {
-            const chunks: Buffer[] = []
-            pdfDoc.on('data', (chunk) => chunks.push(chunk))
-            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)))
-            pdfDoc.on('error', reject)
-            pdfDoc.end()
-        })
+        try {
+            const pdfMake = require('pdfmake');
+            pdfMake.setFonts(fonts);
+            
+            const generator = pdfMake.createPdf(docDefinition);
+            const buffer = await generator.getBuffer();
+            return buffer;
+        } catch (err) {
+            console.error("PDF generation error:", err);
+            throw err;
+        }
     }
 
     private formatCurrency(amount: number, currency: string = 'EUR'): string {
