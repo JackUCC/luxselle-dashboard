@@ -848,17 +848,17 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
         <h4 className="text-sm font-medium text-lux-700 mb-4">Margin Analysis</h4>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-lux-900">{formatCurrency(margin)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-lux-900">{formatCurrency(margin)}</div>
             <div className="text-xs text-lux-500 mt-1">Profit</div>
           </div>
           <div className="text-center border-x border-lux-200">
-            <div className={`text-2xl font-bold ${marginPct >= 20 ? 'text-green-600' : marginPct >= 10 ? 'text-orange-600' : 'text-red-600'}`}>
+            <div className={`text-xl sm:text-2xl font-bold ${marginPct >= 20 ? 'text-green-600' : marginPct >= 10 ? 'text-orange-600' : 'text-red-600'}`}>
               {marginPct.toFixed(1)}%
             </div>
             <div className="text-xs text-lux-500 mt-1">Margin %</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-lux-900">
+            <div className="text-xl sm:text-2xl font-bold text-lux-900">
               {costPrice > 0 ? ((sellPrice / costPrice - 1) * 100).toFixed(1) : '0.0'}%
             </div>
             <div className="text-xs text-lux-500 mt-1">Markup %</div>

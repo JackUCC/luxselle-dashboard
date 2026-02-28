@@ -74,7 +74,7 @@ export default function ConfidenceGauge({ value, size = 100 }: ConfidenceGaugePr
         />
         <foreignObject x={0} y={0} width={100} height={100} className="rotate-90 origin-center">
           <div className="flex h-full w-full items-center justify-center">
-            <span className="text-2xl font-bold text-lux-900 tabular-nums leading-none">
+            <span className="text-xl sm:text-2xl font-bold text-lux-900 tabular-nums leading-none">
               <AnimatedNumber value={pct} suffix="%" />
             </span>
           </div>

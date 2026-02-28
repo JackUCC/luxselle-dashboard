@@ -487,25 +487,25 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
               <div className="lux-card p-5 space-y-4">
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div className="lux-card-accent rounded-lux-card p-5">
-                    <div className="text-2xl font-bold text-lux-900">
+                    <div className="text-xl sm:text-2xl font-bold text-lux-900">
                       {job.progress.total}
                     </div>
                     <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Total</div>
                   </div>
                   <div className="lux-card-accent rounded-lux-card p-5">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
                       {job.progress.created}
                     </div>
                     <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Created</div>
                   </div>
                   <div className="lux-card-accent rounded-lux-card p-5">
-                    <div className="text-2xl font-bold text-lux-800">
+                    <div className="text-xl sm:text-2xl font-bold text-lux-800">
                       {job.progress.updated}
                     </div>
                     <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Updated</div>
                   </div>
                   <div className="lux-card-accent rounded-lux-card p-5">
-                    <div className="text-2xl font-bold text-red-600">
+                    <div className="text-xl sm:text-2xl font-bold text-red-600">
                       {job.progress.errors?.length || 0}
                     </div>
                     <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Errors</div>

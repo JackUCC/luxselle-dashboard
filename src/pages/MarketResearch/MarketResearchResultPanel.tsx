@@ -62,7 +62,7 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                         <div className="p-5 flex items-center justify-between">
                             <div>
                                 <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Recommendation</div>
-                                <div className={`text-2xl font-display font-bold ${rec.color} flex items-center gap-2`}>
+                                <div className={`text-xl sm:text-2xl font-display font-bold ${rec.color} flex items-center gap-2`}>
                                     <span>{rec.icon}</span> {rec.label}
                                 </div>
                                 <div className="text-sm text-lux-600 mt-1.5 max-w-md">{result.marketSummary}</div>
@@ -127,7 +127,7 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
             </div>
 
             {/* Market Indicators */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Demand */}
                 {(() => {
                     const d = DEMAND_CONFIG[result.demandLevel]
@@ -221,9 +221,9 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                         {result.comparables.map((comp, i) => (
                             <div
                                 key={i}
-                                className="flex items-center justify-between py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
+                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
                             >
-                                <div className="min-w-0 flex items-center gap-3 flex-1 pr-4">
+                                <div className="min-w-0 flex items-center gap-3 w-full sm:flex-1 pr-0 sm:pr-4">
                                     {comp.previewImageUrl && !failedComparableImages[comp.previewImageUrl] ? (
                                         <img
                                             src={comp.previewImageUrl}
@@ -254,7 +254,7 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 shrink-0">
+                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
                                     <span className="text-lg font-bold text-lux-900">{formatCurrency(comp.priceEur)}</span>
                                     {comp.sourceUrl && (
                                         <a

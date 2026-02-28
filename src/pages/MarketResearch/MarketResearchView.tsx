@@ -407,10 +407,10 @@ export default function MarketResearchView() {
 
             {/* ─── Quick-select chips ─── */}
             {(previousSearches.length > 0 || KEY_TRENDING_BAGS.length > 0) && (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-nowrap overflow-x-auto no-scrollbar pb-2 items-center gap-2">
                     {previousSearches.length > 0 && (
                         <>
-                            <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
+                            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
                                 <History className="h-3 w-3" /> Recent
                             </span>
                             {previousSearches.map((p, i) => (
@@ -418,15 +418,15 @@ export default function MarketResearchView() {
                                     key={`prev-${p.brand}-${p.model}-${i}`}
                                     type="button"
                                     onClick={() => quickResearch(p.brand, p.model)}
-                                    className="rounded-full border border-lux-200 bg-white px-3 py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                    className="shrink-0 rounded-full border border-lux-200 bg-white px-3 py-2 sm:py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                 >
                                     {p.brand} {p.model}
                                 </button>
                             ))}
-                            <div className="mx-1 h-4 w-px bg-lux-200" />
+                            <div className="mx-1 h-4 w-px bg-lux-200 shrink-0" />
                         </>
                     )}
-                    <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-amber-500">
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-amber-500">
                         <Zap className="h-3 w-3" /> Trending
                     </span>
                     {KEY_TRENDING_BAGS.map(({ brand, model }) => (
@@ -434,7 +434,7 @@ export default function MarketResearchView() {
                             key={`trend-${brand}-${model}`}
                             type="button"
                             onClick={() => quickResearch(brand, model)}
-                            className="rounded-full border border-amber-200 bg-amber-50/60 px-3 py-1 text-xs font-medium text-lux-800 hover:bg-amber-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                            className="shrink-0 rounded-full border border-amber-200 bg-amber-50/60 px-3 py-2 sm:py-1 text-xs font-medium text-lux-800 hover:bg-amber-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             {brand} {model}
                         </button>
@@ -497,7 +497,7 @@ export default function MarketResearchView() {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label htmlFor="mr-category" className="block text-xs font-medium text-lux-600 mb-1.5">Category *</label>
                                     <LuxSelect
@@ -592,7 +592,7 @@ export default function MarketResearchView() {
                                             type="button"
                                             onClick={handleSave}
                                             disabled={isSaving || isSaved}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                                                 isSaved 
                                                     ? 'bg-lux-100 text-lux-800' 
                                                     : 'bg-white border border-lux-200 text-lux-700 hover:bg-lux-50'
@@ -609,7 +609,7 @@ export default function MarketResearchView() {
                                             type="button"
                                             onClick={handleToggleStar}
                                             disabled={isSaving}
-                                            className={`p-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${
+                                            className={`p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${
                                                 isStarred ? 'text-lux-gold bg-lux-50' : 'text-lux-400 hover:text-lux-600 hover:bg-lux-50'
                                             }`}
                                             title={isStarred ? "Remove star" : "Star this research"}
@@ -695,7 +695,7 @@ export default function MarketResearchView() {
                             </div>
 
                             {/* Market Indicators */}
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {/* Demand */}
                                 {(() => {
                                     const d = DEMAND_CONFIG[result.demandLevel]
@@ -787,11 +787,11 @@ export default function MarketResearchView() {
                                     </div>
                                     <div className="space-y-3">
                                         {result.comparables.map((comp, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex items-center justify-between py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
-                                            >
-                                                <div className="min-w-0 flex items-center gap-3 flex-1 pr-4">
+                            <div
+                                key={i}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
+                            >
+                                <div className="min-w-0 flex items-center gap-3 w-full sm:flex-1 pr-0 sm:pr-4">
                                                     {comp.previewImageUrl && !failedComparableImages[comp.previewImageUrl] ? (
                                                         <img
                                                             src={comp.previewImageUrl}
@@ -820,10 +820,10 @@ export default function MarketResearchView() {
                                                                 </>
                                                             )}
                                                         </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3 shrink-0">
-                                                    <span className="text-lg font-bold text-lux-900">{formatCurrency(comp.priceEur)}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                                    <span className="text-lg font-bold text-lux-900">{formatCurrency(comp.priceEur)}</span>
                                                     {comp.sourceUrl && (
                                                         <a
                                                             href={comp.sourceUrl}

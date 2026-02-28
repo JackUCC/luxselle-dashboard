@@ -205,7 +205,7 @@ export default function EvaluatorView() {
         <button
           type="button"
           onClick={() => setActiveTab('pricecheck')}
-          className={`flex-1 pb-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === 'pricecheck' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
+          className={`flex-1 py-3 min-h-[44px] text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === 'pricecheck' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
         >
           <Search className="mb-1 mr-2 inline-block h-4 w-4" />
           Price Check
@@ -213,7 +213,7 @@ export default function EvaluatorView() {
         <button
           type="button"
           onClick={() => setActiveTab('landed')}
-          className={`flex-1 pb-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === 'landed' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
+          className={`flex-1 py-3 min-h-[44px] text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === 'landed' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
         >
           <Calculator className="mb-1 mr-2 inline-block h-4 w-4" />
           Landed Cost
@@ -253,7 +253,7 @@ export default function EvaluatorView() {
                           type="button"
                           onClick={handleAnalyzeImage}
                           disabled={isAnalyzingImage}
-                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 min-h-[44px] px-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                           {isAnalyzingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                           {isAnalyzingImage ? 'Analyzing…' : 'Analyze with AI'}
@@ -262,13 +262,13 @@ export default function EvaluatorView() {
                           type="button"
                           onClick={handleFindSimilar}
                           disabled={isFindingSimilar}
-                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 min-h-[44px] px-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                           {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
                           {isFindingSimilar ? 'Finding…' : 'Find similar'}
                         </button>
                       </div>
-                      <button type="button" onClick={handleRemoveImage} className="text-white hover:text-red-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
+                      <button type="button" onClick={handleRemoveImage} className="text-white hover:text-red-300 min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
@@ -377,9 +377,9 @@ export default function EvaluatorView() {
                 </p>
                 <div className="lux-card-accent rounded-lux-card p-5 text-center">
                   <SectionLabel as="span" className="mb-1 block">Avg. selling price (second-hand)</SectionLabel>
-                  <div className="text-2xl font-bold text-lux-900">{formatCurrency(result.averageSellingPriceEur)}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-lux-900">{formatCurrency(result.averageSellingPriceEur)}</div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="flex items-center gap-1.5">
                       <SectionLabel as="span">Max buy target</SectionLabel>
@@ -415,8 +415,8 @@ export default function EvaluatorView() {
                     <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {result.comps.map((c, i) => (
-                        <div key={i} className="flex items-start gap-3 justify-between text-sm py-1.5 border-b border-lux-100 last:border-0">
-                          <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                        <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 justify-between text-sm py-2 border-b border-lux-100 last:border-0">
+                          <div className="flex min-w-0 w-full sm:flex-1 items-start gap-2.5">
                             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50">
                               {c.previewImageUrl && !failedCompImages[i] ? (
                                 <>
@@ -454,7 +454,7 @@ export default function EvaluatorView() {
                               <span className="text-xs text-lux-500">{c.source}</span>
                             </div>
                           </div>
-                          <span className="font-mono text-lux-700 whitespace-nowrap">{formatCurrency(c.price)}</span>
+                          <span className="font-mono text-lux-700 whitespace-nowrap self-start sm:self-auto pl-[58px] sm:pl-0">{formatCurrency(c.price)}</span>
                         </div>
                       ))}
                     </div>

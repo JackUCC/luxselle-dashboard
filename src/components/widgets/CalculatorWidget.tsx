@@ -610,7 +610,7 @@ export default function CalculatorWidget() {
                             )}
                         </div>
                         <div className="text-right">
-                            <span className={`text-2xl font-bold font-display tracking-tight ${state.calculatorMode === 'reverse' ? 'text-emerald-400' : 'text-white'}`}>
+                            <span className={`text-xl sm:text-2xl font-bold font-display tracking-tight ${state.calculatorMode === 'reverse' ? 'text-emerald-400' : 'text-white'}`}>
                                 {state.calculatorMode === 'reverse'
                                     ? <>{sym}{effectiveBasePrice.toLocaleString('en', { maximumFractionDigits: state.currency === 'JPY' ? 0 : 2 })}</>
                                     : fmtEur(result.totalLandedEur)

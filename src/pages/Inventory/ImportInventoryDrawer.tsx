@@ -176,14 +176,14 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                                     <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-100 mx-auto mb-2 border border-emerald-200">
                                         <CheckCircle className="h-6 w-6 text-emerald-600" />
                                     </div>
-                                    <div className="text-2xl font-bold text-emerald-700">{result.created}</div>
+                                    <div className="text-xl sm:text-2xl font-bold text-emerald-700">{result.created}</div>
                                     <div className="text-sm font-medium text-emerald-600/80">Imported</div>
                                 </div>
                                 <div className={`rounded-lux-card border p-5 text-center ${result.errors > 0 ? 'border-red-200 bg-red-50' : 'border-lux-200 bg-lux-50'}`}>
                                     <div className={`flex items-center justify-center h-10 w-10 rounded-full mx-auto mb-2 ${result.errors > 0 ? 'bg-red-100 border border-red-200' : 'bg-lux-100 border border-lux-200'}`}>
                                         <AlertCircle className={`h-6 w-6 ${result.errors > 0 ? 'text-red-500' : 'text-lux-400'}`} />
                                     </div>
-                                    <div className={`text-2xl font-bold ${result.errors > 0 ? 'text-red-600' : 'text-lux-500'}`}>{result.errors}</div>
+                                    <div className={`text-xl sm:text-2xl font-bold ${result.errors > 0 ? 'text-red-600' : 'text-lux-500'}`}>{result.errors}</div>
                                     <div className={`text-sm font-medium ${result.errors > 0 ? 'text-red-500/80' : 'text-lux-400'}`}>Errors</div>
                                 </div>
                             </div>
