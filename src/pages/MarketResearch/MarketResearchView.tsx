@@ -25,6 +25,7 @@ import {
     Clock,
     History,
     Store,
+    ImageIcon,
 } from 'lucide-react'
 import { apiGet, apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
@@ -52,6 +53,9 @@ interface MarketComparable {
     priceEur: number
     source: string
     sourceUrl?: string
+    thumbnailUrl?: string
+    imageUrl?: string
+    previewImageUrl?: string
     condition: string
     daysListed?: number
 }
@@ -169,6 +173,7 @@ export default function MarketResearchView() {
     const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
     const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
     const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
+    const [failedComparableImages, setFailedComparableImages] = useState<Record<number, boolean>>({})
 
     const availableModels = useMemo(() => {
         if (!formData.brand) return []
@@ -222,6 +227,10 @@ export default function MarketResearchView() {
             setPreviousSearches([])
         }
     }, [])
+
+    useEffect(() => {
+        setFailedComparableImages({})
+    }, [result?.comparables])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -599,40 +608,62 @@ export default function MarketResearchView() {
                                         Market Comparables ({result.comparables.length})
                                     </div>
                                     <div className="space-y-3">
-                                        {result.comparables.map((comp, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors"
-                                            >
-                                                <div className="min-w-0 flex-1 pr-4">
-                                                    <div className="text-sm font-medium text-gray-900 truncate">{comp.title}</div>
-                                                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                                                        <span>{comp.source}</span>
-                                                        <span>·</span>
-                                                        <span className="capitalize">{comp.condition}</span>
-                                                        {comp.daysListed != null && (
-                                                            <>
+                                        {result.comparables.map((comp, i) => {
+                                            const comparableImageUrl = comp.previewImageUrl ?? comp.thumbnailUrl ?? comp.imageUrl
+                                            const showImage = comparableImageUrl && !failedComparableImages[i]
+
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors gap-3"
+                                                >
+                                                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                                                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-gray-200 bg-white">
+                                                            {showImage ? (
+                                                                <img
+                                                                    src={comparableImageUrl}
+                                                                    alt=""
+                                                                    loading="lazy"
+                                                                    className="h-full w-full object-cover"
+                                                                    onError={() => setFailedComparableImages((prev) => ({ ...prev, [i]: true }))}
+                                                                />
+                                                            ) : (
+                                                                <div className="flex h-full w-full items-center justify-center bg-gray-50">
+                                                                    <ImageIcon className="h-4 w-4 text-gray-300" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 pr-2">
+                                                            <div className="text-sm font-medium text-gray-900 truncate">{comp.title}</div>
+                                                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                                                <span>{comp.source}</span>
                                                                 <span>·</span>
-                                                                <span>{comp.daysListed}d listed</span>
-                                                            </>
+                                                                <span className="capitalize">{comp.condition}</span>
+                                                                {comp.daysListed != null && (
+                                                                    <>
+                                                                        <span>·</span>
+                                                                        <span>{comp.daysListed}d listed</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 shrink-0">
+                                                        <span className="text-base sm:text-lg font-bold text-gray-900">{formatCurrency(comp.priceEur)}</span>
+                                                        {comp.sourceUrl && (
+                                                            <a
+                                                                href={comp.sourceUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                                            >
+                                                                <ExternalLink className="h-4 w-4" />
+                                                            </a>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 shrink-0">
-                                                    <span className="text-lg font-bold text-gray-900">{formatCurrency(comp.priceEur)}</span>
-                                                    {comp.sourceUrl && (
-                                                        <a
-                                                            href={comp.sourceUrl}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                                        >
-                                                            <ExternalLink className="h-4 w-4" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             )}
