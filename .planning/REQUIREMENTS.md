@@ -44,8 +44,8 @@
 
 ### Sidecar Mode Hardening
 
-- [ ] **SIDE-01**: Sidecar layout remains usable at narrow widths across QuickCheck, SidecarView, Evaluator, Inventory, and Invoices.
-- [ ] **SIDE-02**: Mode switch between Overview and Sidecar preserves context and navigation intent.
+- [x] **SIDE-01**: Sidecar layout remains usable at narrow widths across QuickCheck, SidecarView, Evaluator, Inventory, and Invoices.
+- [x] **SIDE-02**: Mode switch between Overview and Sidecar preserves context and navigation intent.
 - [ ] **SIDE-03**: Mode-adaptive behavior parity is validated for shared user actions.
 - [ ] **SIDE-04**: Evaluator -> Inventory -> Invoices journey passes QA with no P0 regressions.
 
@@ -92,8 +92,8 @@
 | FIN-01 | Phase 6 | Complete |
 | FIN-02 | Phase 6 | Complete |
 | FIN-03 | Phase 6 | Complete |
-| SIDE-01 | Phase 7 | Pending |
-| SIDE-02 | Phase 7 | Pending |
+| SIDE-01 | Phase 7 | Complete |
+| SIDE-02 | Phase 7 | Complete |
 | SIDE-03 | Phase 7 | Pending |
 | SIDE-04 | Phase 7 | Pending |
 

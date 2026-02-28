@@ -123,7 +123,7 @@ Plans:
   1. Sidecar remains usable at compact widths without blocking key actions.
   2. Mode switches preserve user context and route intent.
   3. Key evaluator -> inventory -> invoicing journey passes QA without P0 regressions.
-**Plans:** 0/2 plans complete
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 07-01: Compact sidecar layout hardening and mode parity fixes
@@ -142,4 +142,4 @@ Plans:
 | 4. Inventory and Stock Intelligence | 2/2 | Complete | 2026-02-27 |
 | 5. Sourcing and Operational Jobs | 2/2 | Complete | 2026-02-27 |
 | 6. Invoicing and Overview UX | 2/2 | Complete | 2026-02-27 |
-| 7. Sidecar Mode Hardening + Agent Execution | 0/2 | In Progress | - |
+| 7. Sidecar Mode Hardening + Agent Execution | 1/2 | In Progress|  |
