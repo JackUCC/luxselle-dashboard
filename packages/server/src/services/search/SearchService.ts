@@ -18,15 +18,60 @@ export interface SearchResponse {
   annotations: Array<{ url: string; title: string }>
 }
 
-const APPROVED_DOMAINS = [
+interface UrlCacheEntry {
+  hostname: string | null
+  blocked: boolean
+  expiresAt: number
+}
+
+interface DomainMetric {
+  attempts: number
+  failures: number
+}
+
+interface EnrichmentMetrics {
+  extractionAttempts: number
+  extractionSuccesses: number
+  extractionSuccessRate: number
+  perDomainFailureRate: Record<string, number>
+  averageEnrichmentLatencyMs: number
+}
+
+const DEFAULT_MARKETPLACE_ALLOWLIST = [
   'vestiairecollective.com',
   'designerexchange.ie',
   'luxuryexchange.ie',
   'siopaella.com',
 ]
 
+function parseDomainList(value?: string): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+function normalizeDomain(hostname: string): string {
+  return hostname.trim().toLowerCase().replace(/^www\./, '')
+}
+
 export class SearchService {
   private openai: InstanceType<typeof import('openai').default> | null = null
+  private readonly cacheTtlMs = env.SEARCH_ENRICHMENT_CACHE_TTL_MS
+  private readonly sourceUrlCache = new Map<string, UrlCacheEntry>()
+  private readonly allowlist = parseDomainList(env.SEARCH_DOMAIN_ALLOWLIST)
+  private readonly denylist = parseDomainList(env.SEARCH_DOMAIN_DENYLIST)
+  private readonly metrics = {
+    extractionAttempts: 0,
+    extractionSuccesses: 0,
+    enrichmentLatencyMsTotal: 0,
+    enrichmentLatencyCount: 0,
+    byDomain: new Map<string, DomainMetric>(),
+  }
+  private enrichmentWindow = {
+    startedAt: Date.now(),
+    count: 0,
+  }
 
   private async getOpenAI() {
     if (!this.openai) {
@@ -34,6 +79,95 @@ export class SearchService {
       this.openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
     }
     return this.openai
+  }
+
+  getEnrichmentMetrics(): EnrichmentMetrics {
+    const perDomainFailureRate: Record<string, number> = {}
+    for (const [domain, metric] of this.metrics.byDomain.entries()) {
+      if (metric.attempts > 0) {
+        perDomainFailureRate[domain] = metric.failures / metric.attempts
+      }
+    }
+    return {
+      extractionAttempts: this.metrics.extractionAttempts,
+      extractionSuccesses: this.metrics.extractionSuccesses,
+      extractionSuccessRate: this.metrics.extractionAttempts > 0
+        ? this.metrics.extractionSuccesses / this.metrics.extractionAttempts
+        : 0,
+      perDomainFailureRate,
+      averageEnrichmentLatencyMs: this.metrics.enrichmentLatencyCount > 0
+        ? this.metrics.enrichmentLatencyMsTotal / this.metrics.enrichmentLatencyCount
+        : 0,
+    }
+  }
+
+  private getConfiguredAllowlist(): string[] {
+    return this.allowlist.length > 0 ? this.allowlist : DEFAULT_MARKETPLACE_ALLOWLIST
+  }
+
+  private isDomainAllowed(hostname: string): boolean {
+    const normalized = normalizeDomain(hostname)
+    if (this.denylist.some((d) => normalized === d || normalized.endsWith(`.${d}`))) {
+      return false
+    }
+    const allowed = this.getConfiguredAllowlist()
+    return allowed.some((d) => normalized === d || normalized.endsWith(`.${d}`))
+  }
+
+  private resolveUrlMeta(sourceUrl: string): UrlCacheEntry {
+    const now = Date.now()
+    const cached = this.sourceUrlCache.get(sourceUrl)
+    if (cached && cached.expiresAt > now) return cached
+
+    let hostname: string | null = null
+    let blocked = true
+    try {
+      hostname = normalizeDomain(new URL(sourceUrl).hostname)
+      blocked = !this.isDomainAllowed(hostname)
+    } catch {
+      blocked = true
+    }
+
+    const entry: UrlCacheEntry = {
+      hostname,
+      blocked,
+      expiresAt: now + this.cacheTtlMs,
+    }
+    this.sourceUrlCache.set(sourceUrl, entry)
+    return entry
+  }
+
+  private filterAllowedAnnotations(annotations: Array<{ url: string; title: string }>) {
+    return annotations.filter((ann) => {
+      const meta = this.resolveUrlMeta(ann.url)
+      return !meta.blocked
+    })
+  }
+
+  private recordDomainAttempt(domains: string[]): void {
+    for (const domain of domains) {
+      const current = this.metrics.byDomain.get(domain) ?? { attempts: 0, failures: 0 }
+      current.attempts += 1
+      this.metrics.byDomain.set(domain, current)
+    }
+  }
+
+  private recordDomainFailure(domains: string[]): void {
+    for (const domain of domains) {
+      const current = this.metrics.byDomain.get(domain) ?? { attempts: 0, failures: 0 }
+      current.failures += 1
+      this.metrics.byDomain.set(domain, current)
+    }
+  }
+
+  private nextWindowCount(): number {
+    const now = Date.now()
+    const windowMs = 60000
+    if (now - this.enrichmentWindow.startedAt >= windowMs) {
+      this.enrichmentWindow = { startedAt: now, count: 0 }
+    }
+    this.enrichmentWindow.count += 1
+    return this.enrichmentWindow.count
   }
 
   /**
@@ -48,7 +182,7 @@ export class SearchService {
       return { results: [], rawText: '', annotations: [] }
     }
 
-    const domains = opts?.domains ?? APPROVED_DOMAINS
+    const domains = opts?.domains ?? this.getConfiguredAllowlist()
 
     try {
       const openai = await this.getOpenAI()
@@ -93,13 +227,14 @@ export class SearchService {
         }
       }
 
-      const results = annotations.map((ann) => ({
+      const filteredAnnotations = this.filterAllowedAnnotations(annotations)
+      const results = filteredAnnotations.map((ann) => ({
         title: ann.title,
         url: ann.url,
         snippet: '',
       }))
 
-      return { results, rawText, annotations }
+      return { results, rawText, annotations: filteredAnnotations }
     } catch (error) {
       logger.error('search_service_error', error)
       return { results: [], rawText: '', annotations: [] }
@@ -210,9 +345,28 @@ export class SearchService {
       return { extracted: null, searchResponse }
     }
 
+    if (!env.SEARCH_ENRICHMENT_ENABLED) {
+      logger.info('search_enrichment_disabled', { reason: 'env_flag' })
+      return { extracted: null, searchResponse }
+    }
+
+    if (this.nextWindowCount() > env.SEARCH_ENRICHMENT_MAX_COUNT) {
+      logger.info('search_enrichment_capped', {
+        maxPerMinute: env.SEARCH_ENRICHMENT_MAX_COUNT,
+      })
+      return { extracted: null, searchResponse }
+    }
+
     if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
       return { extracted: null, searchResponse }
     }
+
+    const domains = Array.from(new Set(searchResponse.annotations
+      .map((a) => this.resolveUrlMeta(a.url).hostname)
+      .filter((x): x is string => Boolean(x))))
+    const startedAt = Date.now()
+    this.metrics.extractionAttempts += 1
+    this.recordDomainAttempt(domains)
 
     try {
       const openai = await this.getOpenAI()
@@ -239,13 +393,22 @@ export class SearchService {
 
       const text = response.choices[0]?.message?.content ?? ''
       const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) return { extracted: null, searchResponse }
+      if (!jsonMatch) {
+        this.recordDomainFailure(domains)
+        return { extracted: null, searchResponse }
+      }
 
       const parsed = JSON.parse(jsonMatch[0]) as T
+      this.metrics.extractionSuccesses += 1
       return { extracted: parsed, searchResponse }
     } catch (error) {
+      this.recordDomainFailure(domains)
       logger.error('search_extract_error', error)
       return { extracted: null, searchResponse }
+    } finally {
+      const elapsed = Date.now() - startedAt
+      this.metrics.enrichmentLatencyMsTotal += elapsed
+      this.metrics.enrichmentLatencyCount += 1
     }
   }
 }
