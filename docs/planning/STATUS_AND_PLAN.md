@@ -9,10 +9,11 @@
 
 - Iterations 1-6 are implemented across core product surfaces.
 - Scope pivot is complete: Supplier Engine replaces previous tracker framing.
-- Next milestone is Sidecar hardening and mode-adaptive UX polish.
+- Sidecar hardening implementation for Phase 7 is complete across both planned waves.
 - GSD framework is installed for spec-driven planning and execution.
 - GSD planning baseline is now present in `.planning/` (`PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, and Phase 7 context).
-- Phase 7 execution plans are ready (`07-01-PLAN.md`, `07-02-PLAN.md`).
+- Phase 7 execution summaries are complete (`07-01-SUMMARY.md`, `07-02-SUMMARY.md` pending verification/UAT closeout commit).
+- Pre-existing evaluator E2E nav-routing failure was fixed and now passes in targeted regression runs.
 
 ---
 
@@ -42,11 +43,14 @@
 - Frontend pages for dashboard, inventory, buy-box, sourcing, jobs, invoices are active.
 - Error handling, status validation, and baseline QA workflows are in place.
 
-### Phase 7: In Progress
+### Phase 7: Execution Complete, Verification In Progress
 
-- Sidecar compact UX: QuickCheck, SidecarView, and narrow-width behaviour for Evaluator, Inventory, Invoices.
-- Mode-adaptive responsiveness and affordance checks.
-- QA sweeps focused on decision speed and reliability in compact layout.
+- Sidecar compact UX hardened for QuickCheck, SidecarView, Evaluator, Inventory, and Invoices.
+- Mode-switch context retention implemented (exit removes `mode` while preserving route/query intent).
+- Sidecar journey E2E added (`tests/e2e/sidecar-flow.spec.ts`), plus parity checks in evaluator/inventory/invoices suites.
+- Targeted E2E gate pass confirmed:
+  - `npm run test:e2e -- tests/e2e/sidecar-flow.spec.ts`
+  - `npm run test:e2e -- tests/e2e/evaluator.spec.ts tests/e2e/inventory.spec.ts tests/e2e/invoices.spec.ts`
 
 ---
 
@@ -91,7 +95,7 @@ luxselle-dashboard/
 
 ## Next Actions
 
-1. Execute Phase 7 plans with `/gsd:execute-phase 7` in small, reviewable increments.
-2. Run `/gsd:verify-work 7` after execution to confirm goal-backward completion.
-3. Run Quality Lead QA pass and validate release gates (`test`, `build`, `typecheck`, optional `test:e2e`).
-4. Mark Phase 7 complete once sidecar acceptance criteria are met and no P0 regressions remain.
+1. Run Phase 7 goal verification and finalize `07-VERIFICATION.md`.
+2. Run conversational UAT via `/gsd:verify-work 7` and persist outcomes in `07-UAT.md`.
+3. Close Phase 7 in roadmap/state/requirements after verification + UAT completion.
+4. Trigger Quality Lead QA swarm for release signoff packaging.
