@@ -12,8 +12,11 @@ import { DEFAULT_ORG_ID, ProductSchema, ProductStatusSchema, type ProductImage }
 import { ProductRepo } from '../repos/ProductRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
+import { InvoiceRepo } from '../repos/InvoiceRepo'
+import { SettingsRepo } from '../repos/SettingsRepo'
 import { db, storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { vatFromGross } from '../lib/vat'
 import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
 import {
   getMissingRequiredImportFields,
@@ -31,6 +34,8 @@ const router = Router()
 const productRepo = new ProductRepo()
 const transactionRepo = new TransactionRepo()
 const activityRepo = new ActivityEventRepo()
+const invoiceRepo = new InvoiceRepo()
+const settingsRepo = new SettingsRepo()
 
 // Multer config for image uploads (10MB max)
 const upload = multer({
@@ -647,6 +652,14 @@ const TransactionInputSchema = z.object({
   notes: z.string().optional(),
 })
 
+const SellWithInvoiceInputSchema = z.object({
+  amountEur: z.coerce.number(),
+  customerName: z.string().optional(),
+  customerEmail: z.string().email().optional(),
+  notes: z.string().optional(),
+  description: z.string().optional(),
+})
+
 router.post('/:id/transactions', async (req, res, next) => {
   try {
     const { id } = req.params
@@ -698,6 +711,94 @@ router.post('/:id/transactions', async (req, res, next) => {
     })
 
     res.status(201).json({ data: transaction })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/:id/sell-with-invoice', async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const product = await productRepo.getById(id)
+
+    if (!product) {
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Product not found'))
+      return
+    }
+
+    const input = SellWithInvoiceInputSchema.parse(req.body)
+    const now = new Date().toISOString()
+
+    const transaction = await transactionRepo.create({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      type: 'sale',
+      productId: id,
+      amountEur: input.amountEur,
+      occurredAt: now,
+      notes: input.notes ?? '',
+    })
+
+    const updatedProduct = await productRepo.set(id, {
+      status: 'sold',
+      updatedAt: now,
+    })
+
+    const vatPct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
+    const { netEur, vatEur } = vatFromGross(input.amountEur, vatPct)
+    const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
+    const descriptionBase = product.title?.trim() || `${product.brand} ${product.model}`.trim()
+    const lineDescription = input.description?.trim() || (product.sku ? `${descriptionBase} (SKU: ${product.sku})` : descriptionBase)
+    const invoice = await invoiceRepo.create({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      invoiceNumber,
+      customerName: input.customerName?.trim() ?? '',
+      customerEmail: input.customerEmail,
+      lineItems: [{
+        description: lineDescription,
+        quantity: 1,
+        unitPriceEur: netEur,
+        vatPct,
+        amountEur: netEur,
+        sku: product.sku,
+      }],
+      subtotalEur: netEur,
+      vatEur,
+      totalEur: input.amountEur,
+      currency: 'EUR',
+      issuedAt: now,
+      transactionId: transaction.id,
+      productId: id,
+      notes: input.notes ?? '',
+    })
+
+    await activityRepo.create({
+      organisationId: DEFAULT_ORG_ID,
+      createdAt: now,
+      updatedAt: now,
+      actor: 'system',
+      eventType: 'product_sold',
+      entityType: 'product',
+      entityId: id,
+      payload: {
+        brand: product.brand,
+        model: product.model,
+        amountEur: input.amountEur,
+        transactionId: transaction.id,
+        invoiceId: invoice.id,
+      },
+    })
+
+    res.status(201).json({
+      data: {
+        transaction,
+        product: updatedProduct,
+        invoice,
+      },
+    })
   } catch (error) {
     next(error)
   }

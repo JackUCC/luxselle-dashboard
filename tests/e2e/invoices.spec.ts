@@ -47,3 +47,40 @@ test('Create in-person invoice opens modal and can be closed', async ({ page }) 
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
+
+test('mark sold flow creates invoice and keeps product sold', async ({ page, request }) => {
+  const created = await request.post('/api/products', {
+    data: {
+      brand: 'Celine',
+      model: 'Triomphe',
+      title: 'Triomphe Shoulder Bag',
+      sku: 'E2E-SKU-1',
+      costPriceEur: 1200,
+      sellPriceEur: 2500,
+      status: 'in_stock',
+      quantity: 1,
+    },
+  })
+  expect(created.ok()).toBeTruthy()
+
+  await page.goto('/inventory')
+  await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible({ timeout: 15000 })
+
+  await page.getByText('Celine — Triomphe Shoulder Bag').first().click()
+  await page.getByRole('button', { name: 'History' }).click()
+  await page.getByRole('button', { name: 'Record Sale' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Record Sale + Create Invoice' })).toBeVisible()
+  await page.getByPlaceholder('e.g. John Smith').fill('QA Buyer')
+  await page.getByRole('button', { name: 'Record Sale + Invoice' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Record Sale + Create Invoice' })).toHaveCount(0)
+
+  await page.goto('/invoices')
+  await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('QA Buyer')).toBeVisible({ timeout: 10000 })
+
+  await page.goto('/inventory')
+  await expect(page.getByText('Celine — Triomphe Shoulder Bag')).toBeVisible()
+  await expect(page.getByText('Sold')).toBeVisible()
+})
