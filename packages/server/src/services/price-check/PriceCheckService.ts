@@ -5,16 +5,19 @@
  * References: OpenAI, SearchService, FxService, env
  */
 import { env } from '../../config/env'
-import { SearchService } from '../search/SearchService'
+import { SearchService, type QueryContext } from '../search/SearchService'
 import { getFxService } from '../fx/FxService'
 import { filterValidComps } from '../../lib/validation'
 import { logger } from '../../middleware/requestId'
-import { ComparableEnrichmentService } from './ComparableEnrichmentService'
+import { ComparableImageEnrichmentService } from '../search/ComparableImageEnrichmentService'
 
 const IE_COMPETITOR_DOMAINS = ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com']
 const EU_FALLBACK_COMPETITOR_DOMAINS = ['vestiairecollective.com']
 const IE_COMPETITOR_SOURCE_HINTS = ['designer exchange', 'luxury exchange', 'siopaella']
 const EU_FALLBACK_SOURCE_HINTS = ['vestiaire']
+const PRICE_CHECK_SEARCH_DOMAINS = [...IE_COMPETITOR_DOMAINS, ...EU_FALLBACK_COMPETITOR_DOMAINS]
+const PRICE_CHECK_EXTRACTION_MAX_ATTEMPTS = 2
+const PRICE_CHECK_EXTRACTION_RETRY_BACKOFF_MS = 200
 
 export interface PriceCheckComp {
   title: string
@@ -42,12 +45,12 @@ export interface PriceCheckResult {
 
 export class PriceCheckService {
   private readonly searchService = new SearchService()
-  private readonly comparableEnrichmentService = new ComparableEnrichmentService()
+  private readonly comparableImageEnrichmentService = new ComparableImageEnrichmentService()
 
   async check(input: PriceCheckInput): Promise<PriceCheckResult> {
     const { query, condition = '', notes = '' } = input
 
-    let averageSellingPriceEur: number
+    let averageSellingPriceEur = 0
     let comps: PriceCheckComp[] = []
     let dataSource: 'web_search' | 'ai_fallback' | 'mock' = 'mock'
 
@@ -59,10 +62,13 @@ export class PriceCheckService {
         refine ? `${query}. ${refine}` : query,
       )
 
-      // Step 2: Fan-out searches across all naming variants
-      const searchResponse = await this.searchService.searchMarketMultiExpanded(
-        queryContext.searchVariants,
-        { userLocation: { country: 'IE' } },
+      // Step 2: Single-path Irish+EU search to keep latency/call count bounded
+      const searchResponse = await this.searchService.searchMarket(
+        this.buildIrishEuSearchQuery(queryContext, query),
+        {
+          userLocation: { country: 'IE' },
+          domains: PRICE_CHECK_SEARCH_DOMAINS,
+        },
       )
 
       const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
@@ -126,27 +132,59 @@ RULES (follow ALL of these):
 - Prioritize Irish competitor sources first (Designer Exchange, Luxury Exchange, Siopella).
 - Only use broader European fallback sources (including Vestiaire Collective) when Irish comps are limited.`
 
-      try {
-        const OpenAI = (await import('openai')).default
-        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+      const extractionStartedAt = Date.now()
+      let parsedExtraction: { averageSellingPriceEur?: number; comps?: PriceCheckComp[] } | null = null
+      let lastFailureReason = 'unknown'
 
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: 'Extract structured pricing data from web search results. Return ONLY valid JSON.',
-            },
-            { role: 'user', content: extractionPrompt },
-          ],
-          max_tokens: 800,
-          temperature: 0.2,
-          response_format: { type: 'json_object' },
+      for (let attempt = 1; attempt <= PRICE_CHECK_EXTRACTION_MAX_ATTEMPTS; attempt += 1) {
+        const attemptStartedAt = Date.now()
+        try {
+          const OpenAI = (await import('openai')).default
+          const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: 'Extract structured pricing data from web search results. Return ONLY valid JSON.',
+              },
+              { role: 'user', content: extractionPrompt },
+            ],
+            max_tokens: 800,
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+          })
+
+          const text = response.choices[0]?.message?.content ?? ''
+          parsedExtraction = JSON.parse(text) as { averageSellingPriceEur?: number; comps?: PriceCheckComp[] }
+          break
+        } catch (error) {
+          lastFailureReason = error instanceof Error ? error.message : String(error)
+          logger.warn('price_check_extraction_attempt_failed', {
+            attempt,
+            maxAttempts: PRICE_CHECK_EXTRACTION_MAX_ATTEMPTS,
+            elapsedMs: Date.now() - attemptStartedAt,
+            reason: lastFailureReason,
+          })
+
+          if (attempt < PRICE_CHECK_EXTRACTION_MAX_ATTEMPTS) {
+            await this.sleep(PRICE_CHECK_EXTRACTION_RETRY_BACKOFF_MS)
+          }
+        }
+      }
+
+      if (!parsedExtraction) {
+        logger.warn('price_check_extraction_degraded', {
+          attempts: PRICE_CHECK_EXTRACTION_MAX_ATTEMPTS,
+          elapsedMs: Date.now() - extractionStartedAt,
+          reason: lastFailureReason,
         })
-
-        const text = response.choices[0]?.message?.content ?? ''
-        const parsed = JSON.parse(text) as { averageSellingPriceEur?: number; comps?: PriceCheckComp[] }
-        const allComps = filterValidComps(Array.isArray(parsed.comps) ? parsed.comps : [])
+        comps = []
+        averageSellingPriceEur = 0
+        dataSource = 'ai_fallback'
+      } else {
+        const allComps = filterValidComps(Array.isArray(parsedExtraction.comps) ? parsedExtraction.comps : [])
 
         // Require at least 2 valid comps before trusting the data.
         // A single cheap comp (e.g. a Vestiaire accessory at €50-€100) must not
@@ -163,9 +201,6 @@ RULES (follow ALL of these):
         }
 
         dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
-      } catch (err) {
-        logger.error('price_check_openai_error', err)
-        throw err
       }
     } else {
       averageSellingPriceEur = 1200
@@ -270,35 +305,23 @@ RULES (follow ALL of these):
     return candidate === domain || candidate.endsWith(`.${domain}`)
   }
 
-  private async enrichCompsWithPreviewImages(comps: PriceCheckComp[]): Promise<PriceCheckComp[]> {
-    const compsWithSourceUrl = comps.filter((comp) => typeof comp.sourceUrl === 'string' && comp.sourceUrl)
+  private buildIrishEuSearchQuery(queryContext: QueryContext, fallbackQuery: string): string {
+    const primaryVariant = queryContext.searchVariants.find((variant) => variant.trim().length > 0)
+      ?? fallbackQuery
+    return `${primaryVariant} pre-owned resale Ireland EU price`
+  }
 
-    if (compsWithSourceUrl.length === 0) {
+  private async sleep(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  private async enrichCompsWithPreviewImages(comps: PriceCheckComp[]): Promise<PriceCheckComp[]> {
+    if (comps.length === 0) {
       return comps
     }
 
     try {
-      const enrichedResults = await this.comparableEnrichmentService.enrichComparables(
-        compsWithSourceUrl.map((comp) => ({ sourceUrl: comp.sourceUrl! })),
-      )
-
-      const previewImageBySourceUrl = new Map(
-        enrichedResults
-          .filter((result) => result.previewImageUrl)
-          .map((result) => [result.sourceUrl, result.previewImageUrl] as const),
-      )
-
-      return comps.map((comp) => {
-        if (!comp.sourceUrl) return comp
-
-        const previewImageUrl = previewImageBySourceUrl.get(comp.sourceUrl)
-        if (!previewImageUrl) return comp
-
-        return {
-          ...comp,
-          previewImageUrl,
-        }
-      })
+      return await this.comparableImageEnrichmentService.enrichComparables(comps)
     } catch (error) {
       logger.warn('price_check_comparable_enrichment_failed', {
         error: error instanceof Error ? error.message : String(error),

@@ -12,8 +12,9 @@ import {
     ExternalLink,
 } from 'lucide-react'
 import { formatCurrency } from '../../lib/formatters'
+import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import { ConfidenceGauge } from '../../components/design-system'
-import type { MarketResearchResult, MarketComparable } from './types'
+import type { MarketResearchResult } from './types'
 
 export const DEMAND_CONFIG = {
     very_high: { label: 'Very High', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', pct: 95 },
@@ -218,59 +219,62 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                         Market Comparables ({result.comparables.length})
                     </div>
                     <div className="space-y-3">
-                        {result.comparables.map((comp, i) => (
-                            <div
-                                key={i}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
-                            >
-                                <div className="min-w-0 flex items-center gap-3 w-full sm:flex-1 pr-0 sm:pr-4">
-                                    {comp.previewImageUrl && !failedComparableImages[comp.previewImageUrl] ? (
-                                        <img
-                                            src={comp.previewImageUrl}
-                                            alt={comp.title !== FALLBACK_COMPARABLE_TITLE ? comp.title : `${result.brand} ${result.model} comparable`}
-                                            className="w-12 h-12 rounded-lg object-cover border border-lux-200 bg-white shrink-0"
-                                            loading="lazy"
-                                            onError={() => {
-                                                setFailedComparableImages(prev => ({ ...prev, [comp.previewImageUrl!]: true }))
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-lg border border-lux-200 bg-white shrink-0 grid place-items-center text-xs text-lux-400 font-medium">
-                                            No image
-                                        </div>
-                                    )}
-                                    <div className="min-w-0">
-                                        <div className="text-sm font-medium text-lux-900 truncate">{comp.title}</div>
-                                        <div className="flex items-center gap-2 mt-1 text-xs text-lux-500">
-                                            <span>{comp.source}</span>
-                                            <span>·</span>
-                                            <span className="capitalize">{comp.condition}</span>
-                                            {comp.daysListed != null && (
-                                                <>
-                                                    <span>·</span>
-                                                    <span>{comp.daysListed}d listed</span>
-                                                </>
-                                            )}
+                        {result.comparables.map((comp, i) => {
+                            const previewImageUrl = sanitizeImageUrl(comp.previewImageUrl)
+                            return (
+                                <div
+                                    key={i}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
+                                >
+                                    <div className="min-w-0 flex items-center gap-3 w-full sm:flex-1 pr-0 sm:pr-4">
+                                        {previewImageUrl && !failedComparableImages[previewImageUrl] ? (
+                                            <img
+                                                src={previewImageUrl}
+                                                alt={comp.title !== FALLBACK_COMPARABLE_TITLE ? comp.title : `${result.brand} ${result.model} comparable`}
+                                                className="w-12 h-12 rounded-lg object-cover border border-lux-200 bg-white shrink-0"
+                                                loading="lazy"
+                                                onError={() => {
+                                                    setFailedComparableImages(prev => ({ ...prev, [previewImageUrl]: true }))
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-lg border border-lux-200 bg-white shrink-0 grid place-items-center text-xs text-lux-400 font-medium">
+                                                No image
+                                            </div>
+                                        )}
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-medium text-lux-900 truncate">{comp.title}</div>
+                                            <div className="flex items-center gap-2 mt-1 text-xs text-lux-500">
+                                                <span>{comp.source}</span>
+                                                <span>·</span>
+                                                <span className="capitalize">{comp.condition}</span>
+                                                {comp.daysListed != null && (
+                                                    <>
+                                                        <span>·</span>
+                                                        <span>{comp.daysListed}d listed</span>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                                        <span className="text-lg font-bold text-lux-900">{formatCurrency(comp.priceEur)}</span>
+                                        {comp.sourceUrl && (
+                                            <a
+                                                href={comp.sourceUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="p-1.5 rounded-lg text-lux-400 hover:text-lux-gold hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                aria-label={`Open comparable listing: ${comp.title}`}
+                                                title={`Open listing: ${comp.title}`}
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
-                                    <span className="text-lg font-bold text-lux-900">{formatCurrency(comp.priceEur)}</span>
-                                    {comp.sourceUrl && (
-                                        <a
-                                            href={comp.sourceUrl}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="p-1.5 rounded-lg text-lux-400 hover:text-lux-gold hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                            aria-label={`Open comparable listing: ${comp.title}`}
-                                            title={`Open listing: ${comp.title}`}
-                                        >
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </div>
             )}

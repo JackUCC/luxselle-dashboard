@@ -1,48 +1,171 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockEnrichComparables } = vi.hoisted(() => ({
+const {
+  mockExpandQuery,
+  mockSearchMarket,
+  mockEnrichComparables,
+  mockGetRate,
+  mockChatCompletionsCreate,
+} = vi.hoisted(() => ({
+  mockExpandQuery: vi.fn(),
+  mockSearchMarket: vi.fn(),
   mockEnrichComparables: vi.fn(),
+  mockGetRate: vi.fn(),
+  mockChatCompletionsCreate: vi.fn(),
 }))
 
-vi.mock('./ComparableEnrichmentService', () => ({
-  ComparableEnrichmentService: class {
+vi.mock('../search/SearchService', () => ({
+  SearchService: class {
+    expandQuery = mockExpandQuery
+    searchMarket = mockSearchMarket
+  },
+}))
+
+vi.mock('../search/ComparableImageEnrichmentService', () => ({
+  ComparableImageEnrichmentService: class {
     enrichComparables = mockEnrichComparables
+  },
+}))
+
+vi.mock('../fx/FxService', () => ({
+  getFxService: () => ({
+    getRate: mockGetRate,
+  }),
+}))
+
+vi.mock('openai', () => ({
+  default: class OpenAI {
+    chat = { completions: { create: mockChatCompletionsCreate } }
   },
 }))
 
 import { env } from '../../config/env'
 import { PriceCheckService } from './PriceCheckService'
 
+const QUERY_CONTEXT = {
+  canonicalDescription: 'Chanel Classic Flap Medium Black',
+  keyAttributes: {
+    brand: 'Chanel',
+    style: 'Classic Flap',
+    size: 'Medium',
+    material: 'Caviar',
+    colour: 'Black',
+    hardware: 'Gold',
+  },
+  searchVariants: ['Chanel Classic Flap Medium Black'],
+  matchingCriteria: 'Match brand, style, size, colour, and material',
+}
+
+const SEARCH_RESPONSE = {
+  results: [{ title: 'Listing 1', url: 'https://designerexchange.ie/item/1', snippet: '' }],
+  rawText: 'Live search results with real listing prices from Irish and EU marketplaces.',
+  annotations: [{ title: 'Listing 1', url: 'https://designerexchange.ie/item/1' }],
+}
+
 describe('PriceCheckService', () => {
+  const previousProvider = env.AI_PROVIDER
+  const previousKey = env.OPENAI_API_KEY
+
   beforeEach(() => {
     vi.clearAllMocks()
-    mockEnrichComparables.mockResolvedValue([])
+    ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = 'openai'
+    ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = 'test-key'
+
+    mockExpandQuery.mockResolvedValue(QUERY_CONTEXT)
+    mockSearchMarket.mockResolvedValue(SEARCH_RESPONSE)
+    mockEnrichComparables.mockImplementation(async (comparables) => comparables)
+    mockGetRate.mockResolvedValue(1)
+  })
+
+  afterEach(() => {
+    ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = previousProvider
+    ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = previousKey
   })
 
   it('returns mock response shape without requiring comparable image enrichment', async () => {
-    const previousProvider = env.AI_PROVIDER
-    const previousKey = env.OPENAI_API_KEY
-
     ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = 'mock'
     ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = undefined
 
-    try {
-      const service = new PriceCheckService()
-      const result = await service.check({ query: 'Chanel Classic Flap' })
+    const service = new PriceCheckService()
+    const result = await service.check({ query: 'Chanel Classic Flap' })
 
-      expect(result.dataSource).toBe('mock')
-      expect(result.comps).toHaveLength(2)
-      expect(result.comps[0]).toMatchObject({
-        title: expect.any(String),
-        price: expect.any(Number),
-        source: expect.any(String),
-        sourceUrl: expect.any(String),
+    expect(result.dataSource).toBe('mock')
+    expect(result.comps).toHaveLength(2)
+    expect(result.comps[0]).toMatchObject({
+      title: expect.any(String),
+      price: expect.any(Number),
+      source: expect.any(String),
+      sourceUrl: expect.any(String),
+    })
+    expect(mockEnrichComparables).not.toHaveBeenCalled()
+  })
+
+  it('retries extraction once and succeeds on the second attempt', async () => {
+    mockChatCompletionsCreate
+      .mockRejectedValueOnce(new Error('transient upstream error'))
+      .mockResolvedValueOnce({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              averageSellingPriceEur: 0,
+              comps: [
+                {
+                  title: 'Designer Exchange listing',
+                  price: 3200,
+                  source: 'Designer Exchange',
+                  sourceUrl: 'https://designerexchange.ie/item/1',
+                },
+                {
+                  title: 'Vestiaire listing',
+                  price: 3000,
+                  source: 'Vestiaire Collective',
+                  sourceUrl: 'https://vestiairecollective.com/item/2',
+                },
+              ],
+            }),
+          },
+        }],
       })
-      expect(mockEnrichComparables).not.toHaveBeenCalled()
-    } finally {
-      ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = previousProvider
-      ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = previousKey
-    }
+
+    const service = new PriceCheckService()
+    const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
+
+    expect(mockChatCompletionsCreate).toHaveBeenCalledTimes(2)
+    expect(mockSearchMarket).toHaveBeenCalledWith(
+      expect.stringContaining('pre-owned resale Ireland EU price'),
+      expect.objectContaining({
+        userLocation: { country: 'IE' },
+        domains: [
+          'designerexchange.ie',
+          'luxuryexchange.ie',
+          'siopaella.com',
+          'vestiairecollective.com',
+        ],
+      }),
+    )
+    expect(result.dataSource).toBe('web_search')
+    expect(result.averageSellingPriceEur).toBe(3100)
+    expect(result.comps).toHaveLength(2)
+  })
+
+  it('returns degraded ai_fallback result when extraction fails on all attempts', async () => {
+    mockChatCompletionsCreate
+      .mockRejectedValueOnce(new Error('openai timeout'))
+      .mockRejectedValueOnce(new Error('openai 500'))
+
+    const service = new PriceCheckService()
+    const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
+
+    expect(mockChatCompletionsCreate).toHaveBeenCalledTimes(2)
+    expect(result).toMatchObject({
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      dataSource: 'ai_fallback',
+    })
+    expect(typeof result.researchedAt).toBe('string')
+    expect(mockEnrichComparables).not.toHaveBeenCalled()
   })
 
   it('orders comparables with Irish competitors before EU fallback', async () => {

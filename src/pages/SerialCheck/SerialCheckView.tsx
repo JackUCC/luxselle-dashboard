@@ -13,6 +13,7 @@ import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
+import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 
 interface PriceCheckComp {
@@ -312,31 +313,34 @@ export default function SerialCheckView() {
           <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
           {marketResult.comps.length > 0 ? (
             <div className="space-y-2 max-h-72 overflow-y-auto">
-              {marketResult.comps.map((comp, i) => (
-                <div key={`${comp.title}-${i}`} className="flex items-center justify-between gap-3 text-sm py-2 border-b border-lux-100 last:border-0">
-                  <div className="min-w-0 flex items-center gap-3 pr-2">
-                    {comp.previewImageUrl && (
-                      <img
-                        src={comp.previewImageUrl}
-                        alt=""
-                        className="h-12 w-12 shrink-0 rounded-lg border border-lux-100 object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                    <div className="min-w-0">
-                      {comp.sourceUrl ? (
-                        <a href={comp.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
-                          {comp.title}
-                        </a>
-                      ) : (
-                        <span className="text-lux-800 truncate block">{comp.title}</span>
+              {marketResult.comps.map((comp, i) => {
+                const previewImageUrl = sanitizeImageUrl(comp.previewImageUrl)
+                return (
+                  <div key={`${comp.title}-${i}`} className="flex items-center justify-between gap-3 text-sm py-2 border-b border-lux-100 last:border-0">
+                    <div className="min-w-0 flex items-center gap-3 pr-2">
+                      {previewImageUrl && (
+                        <img
+                          src={previewImageUrl}
+                          alt=""
+                          className="h-12 w-12 shrink-0 rounded-lg border border-lux-100 object-cover"
+                          loading="lazy"
+                        />
                       )}
-                      <span className="text-xs text-lux-500">{comp.source}</span>
+                      <div className="min-w-0">
+                        {comp.sourceUrl ? (
+                          <a href={comp.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
+                            {comp.title}
+                          </a>
+                        ) : (
+                          <span className="text-lux-800 truncate block">{comp.title}</span>
+                        )}
+                        <span className="text-xs text-lux-500">{comp.source}</span>
+                      </div>
                     </div>
+                    <span className="font-mono text-lux-700 whitespace-nowrap">{formatCurrency(comp.price)}</span>
                   </div>
-                  <span className="font-mono text-lux-700 whitespace-nowrap">{formatCurrency(comp.price)}</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800">

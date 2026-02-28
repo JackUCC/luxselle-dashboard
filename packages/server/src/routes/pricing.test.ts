@@ -100,6 +100,33 @@ describe('POST /api/pricing/price-check', () => {
     expect(typeof res.body.data.researchedAt).toBe('string')
   })
 
+  it('returns 200 with unchanged response shape for degraded ai_fallback results', async () => {
+    const researchedAt = new Date().toISOString()
+    mockCheck.mockResolvedValue({
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      dataSource: 'ai_fallback' as const,
+      researchedAt,
+    })
+
+    const res = await request(app)
+      .post('/api/pricing/price-check')
+      .set('Content-Type', 'application/json')
+      .send({ query: 'Chanel Classic Flap' })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      dataSource: 'ai_fallback',
+      researchedAt,
+    })
+  })
+
   it('returns 400 when query is missing', async () => {
     const res = await request(app)
       .post('/api/pricing/price-check')

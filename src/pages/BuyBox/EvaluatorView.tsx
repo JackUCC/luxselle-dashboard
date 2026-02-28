@@ -15,6 +15,7 @@ import SidecarView from '../../components/sidecar/SidecarView'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
+import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
@@ -451,49 +452,52 @@ export default function EvaluatorView() {
                   <div>
                     <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {result.comps.map((c, i) => (
-                        <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 justify-between text-sm py-2 border-b border-lux-100 last:border-0">
-                          <div className="flex min-w-0 w-full sm:flex-1 items-start gap-2.5">
-                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50">
-                              {c.previewImageUrl && !failedCompImages[i] ? (
-                                <>
-                                  {!loadedCompImages[i] && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-lux-50">
-                                      <ImageIcon className="h-4 w-4 text-lux-300" />
-                                    </div>
-                                  )}
-                                  <img
-                                    src={c.previewImageUrl}
-                                    alt=""
-                                    loading="lazy"
-                                    className={`h-full w-full object-cover ${loadedCompImages[i] ? 'opacity-100' : 'opacity-0'}`}
-                                    onLoad={() => setLoadedCompImages((prev) => ({ ...prev, [i]: true }))}
-                                    onError={() => {
-                                      setFailedCompImages((prev) => ({ ...prev, [i]: true }))
-                                      setLoadedCompImages((prev) => ({ ...prev, [i]: false }))
-                                    }}
-                                  />
-                                </>
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center">
-                                  <ImageIcon className="h-4 w-4 text-lux-300" />
-                                </div>
-                              )}
+                      {result.comps.map((c, i) => {
+                        const previewImageUrl = sanitizeImageUrl(c.previewImageUrl)
+                        return (
+                          <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 justify-between text-sm py-2 border-b border-lux-100 last:border-0">
+                            <div className="flex min-w-0 w-full sm:flex-1 items-start gap-2.5">
+                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50">
+                                {previewImageUrl && !failedCompImages[i] ? (
+                                  <>
+                                    {!loadedCompImages[i] && (
+                                      <div className="absolute inset-0 flex items-center justify-center bg-lux-50">
+                                        <ImageIcon className="h-4 w-4 text-lux-300" />
+                                      </div>
+                                    )}
+                                    <img
+                                      src={previewImageUrl}
+                                      alt=""
+                                      loading="lazy"
+                                      className={`h-full w-full object-cover ${loadedCompImages[i] ? 'opacity-100' : 'opacity-0'}`}
+                                      onLoad={() => setLoadedCompImages((prev) => ({ ...prev, [i]: true }))}
+                                      onError={() => {
+                                        setFailedCompImages((prev) => ({ ...prev, [i]: true }))
+                                        setLoadedCompImages((prev) => ({ ...prev, [i]: false }))
+                                      }}
+                                    />
+                                  </>
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center">
+                                    <ImageIcon className="h-4 w-4 text-lux-300" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0 pr-1">
+                                {c.sourceUrl ? (
+                                  <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
+                                    {c.title}
+                                  </a>
+                                ) : (
+                                  <span className="text-lux-800 truncate block">{c.title}</span>
+                                )}
+                                <span className="text-xs text-lux-500">{c.source}</span>
+                              </div>
                             </div>
-                            <div className="min-w-0 pr-1">
-                              {c.sourceUrl ? (
-                                <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
-                                  {c.title}
-                                </a>
-                              ) : (
-                                <span className="text-lux-800 truncate block">{c.title}</span>
-                              )}
-                              <span className="text-xs text-lux-500">{c.source}</span>
-                            </div>
+                            <span className="font-mono text-lux-700 whitespace-nowrap self-start sm:self-auto pl-[58px] sm:pl-0">{formatCurrency(c.price)}</span>
                           </div>
-                          <span className="font-mono text-lux-700 whitespace-nowrap self-start sm:self-auto pl-[58px] sm:pl-0">{formatCurrency(c.price)}</span>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 ) : (

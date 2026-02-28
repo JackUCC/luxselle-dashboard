@@ -28,9 +28,19 @@ describe('ComparableImageEnrichmentService', () => {
   })
 
   it('extracts og:image first and normalizes relative URLs', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => makeResponse({
-      body: "<html><meta property='og:image' content='/images/item.jpg'></html>",
-    })))
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (method === 'GET' && url === 'https://example.com/product/123') {
+        return makeResponse({
+          body: "<html><meta property='og:image' content='/images/item.jpg'></html>",
+        })
+      }
+      if (method === 'HEAD' && url === 'https://example.com/images/item.jpg') {
+        return makeResponse({ contentType: 'image/jpeg' })
+      }
+      return makeResponse({ ok: false })
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const comparables = [{ sourceUrl: 'https://example.com/product/123' }]
     const enriched = await service.enrichComparables(comparables)
@@ -38,9 +48,59 @@ describe('ComparableImageEnrichmentService', () => {
     expect(enriched[0].previewImageUrl).toBe('https://example.com/images/item.jpg')
   })
 
-  it('falls back to twitter:image and json-ld Product.image', async () => {
+  it('upgrades http:// image candidates to https:// when validating preview URLs', async () => {
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-      if (!init?.method) {
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (method === 'GET' && url === 'https://example.com/product/123') {
+        return makeResponse({
+          body: "<html><meta property='og:image' content='http://cdn.example.com/item.jpg'></html>",
+        })
+      }
+      if (method === 'HEAD' && url === 'https://cdn.example.com/item.jpg') {
+        return makeResponse({ contentType: 'image/jpeg' })
+      }
+      return makeResponse({ ok: false })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const comparables = [{ sourceUrl: 'https://example.com/product/123' }]
+    const enriched = await service.enrichComparables(comparables)
+
+    expect(enriched[0].previewImageUrl).toBe('https://cdn.example.com/item.jpg')
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://cdn.example.com/item.jpg',
+      expect.objectContaining({ method: 'HEAD' }),
+    )
+  })
+
+  it('drops broken or invalid preview URLs', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (method === 'GET' && url === 'https://example.com/product/123') {
+        return makeResponse({
+          body: "<html><meta property='og:image' content='http://cdn.example.com/broken.jpg'></html>",
+        })
+      }
+      if (method === 'HEAD' && url === 'https://cdn.example.com/broken.jpg') {
+        return makeResponse({ ok: false })
+      }
+      if (method === 'GET' && url === 'https://cdn.example.com/broken.jpg') {
+        return makeResponse({ ok: false })
+      }
+      return makeResponse({ ok: false })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const comparables = [{ sourceUrl: 'https://example.com/product/123' }]
+    const enriched = await service.enrichComparables(comparables)
+
+    expect(enriched[0].previewImageUrl).toBeUndefined()
+  })
+
+  it('falls back to twitter:image and json-ld Product.image extraction', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (method === 'GET' && url === 'https://example.com/product/123') {
         return makeResponse({
           body: `
             <html>
@@ -53,7 +113,16 @@ describe('ComparableImageEnrichmentService', () => {
           `,
         })
       }
-      return makeResponse({ contentType: 'text/plain' })
+      if (method === 'HEAD' && url === 'https://example.com/assets/file.txt') {
+        return makeResponse({ ok: false })
+      }
+      if (method === 'GET' && url === 'https://example.com/assets/file.txt') {
+        return makeResponse({ ok: false })
+      }
+      if (method === 'HEAD' && url === 'https://cdn.example.com/twitter.webp') {
+        return makeResponse({ contentType: 'image/webp' })
+      }
+      return makeResponse({ ok: false })
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -64,13 +133,20 @@ describe('ComparableImageEnrichmentService', () => {
   })
 
   it('swallows per-url failures and continues enriching others', async () => {
-    const fetchMock = vi.fn(async (url: string) => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const method = (init?.method ?? 'GET').toUpperCase()
       if (url.includes('bad.example')) {
         throw new Error('network error')
       }
-      return makeResponse({
-        body: "<html><meta property='og:image' content='https://good.example.com/item.png'></html>",
-      })
+      if (method === 'GET' && url === 'https://ok.example/item') {
+        return makeResponse({
+          body: "<html><meta property='og:image' content='https://good.example.com/item.png'></html>",
+        })
+      }
+      if (method === 'HEAD' && url === 'https://good.example.com/item.png') {
+        return makeResponse({ contentType: 'image/png' })
+      }
+      return makeResponse({ ok: false })
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -85,10 +161,18 @@ describe('ComparableImageEnrichmentService', () => {
   })
 
   it('limits enrichment attempts to configured maxUrls', async () => {
-    const fetchMock = vi.fn(async () =>
-      makeResponse({
-        body: "<html><meta property='og:image' content='https://cdn.example.com/item.jpg'></html>",
-      }))
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (method === 'GET' && url.startsWith('https://example.com/item-')) {
+        return makeResponse({
+          body: "<html><meta property='og:image' content='https://cdn.example.com/item.jpg'></html>",
+        })
+      }
+      if (method === 'HEAD' && url === 'https://cdn.example.com/item.jpg') {
+        return makeResponse({ contentType: 'image/jpeg' })
+      }
+      return makeResponse({ ok: false })
+    })
     vi.stubGlobal('fetch', fetchMock)
 
     const comparables = Array.from({ length: 5 }, (_, idx) => ({
@@ -97,6 +181,7 @@ describe('ComparableImageEnrichmentService', () => {
 
     await service.enrichComparables(comparables, { maxUrls: 3 })
 
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    const pageFetches = fetchMock.mock.calls.filter(([, init]) => !init?.method)
+    expect(pageFetches).toHaveLength(3)
   })
 })

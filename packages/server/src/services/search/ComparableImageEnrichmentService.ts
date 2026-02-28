@@ -12,18 +12,6 @@ interface EnrichmentOptions {
 
 const DEFAULT_MAX_URLS = 4
 const DEFAULT_TIMEOUT_MS = 2500
-const IMAGE_EXTENSIONS = new Set([
-  'jpg',
-  'jpeg',
-  'png',
-  'webp',
-  'gif',
-  'avif',
-  'svg',
-  'bmp',
-  'tif',
-  'tiff',
-])
 
 export class ComparableImageEnrichmentService {
   async enrichComparables<T extends ComparableWithSourceUrl>(
@@ -155,9 +143,10 @@ export class ComparableImageEnrichmentService {
 
   private normalizeImageUrl(candidate: string, pageUrl: URL): string | null {
     try {
-      const normalized = new URL(candidate, pageUrl.origin).toString()
-      if (!this.isHttpUrl(new URL(normalized))) return null
-      return normalized
+      const normalized = new URL(candidate, pageUrl)
+      const secureUrl = this.normalizeSecureImageUrl(normalized)
+      if (!secureUrl) return null
+      return secureUrl.toString()
     } catch {
       return null
     }
@@ -165,21 +154,40 @@ export class ComparableImageEnrichmentService {
 
   private async isSafeImageUrl(url: string, timeoutMs: number): Promise<boolean> {
     const parsed = this.safeParseUrl(url)
-    if (!parsed || !this.isHttpUrl(parsed)) return false
+    if (!parsed) return false
 
-    const pathname = parsed.pathname.toLowerCase()
-    const extension = pathname.includes('.') ? pathname.split('.').pop() : ''
-    if (extension && IMAGE_EXTENSIONS.has(extension)) return true
+    const secureUrl = this.normalizeSecureImageUrl(parsed)
+    if (!secureUrl) return false
 
-    const mime = await this.fetchMimeType(url, timeoutMs)
+    const mime = await this.fetchMimeType(secureUrl.toString(), timeoutMs)
     return typeof mime === 'string' && mime.toLowerCase().startsWith('image/')
   }
 
   private async fetchMimeType(url: string, timeoutMs: number): Promise<string | null> {
+    const headMime = await this.fetchMimeTypeByMethod(url, timeoutMs, 'HEAD')
+    if (headMime?.toLowerCase().startsWith('image/')) {
+      return headMime
+    }
+
+    // Some hosts reject HEAD but still return an image on GET.
+    return this.fetchMimeTypeByMethod(url, timeoutMs, 'GET')
+  }
+
+  private async fetchMimeTypeByMethod(
+    url: string,
+    timeoutMs: number,
+    method: 'HEAD' | 'GET',
+  ): Promise<string | null> {
     try {
       const response = await this.fetchWithTimeout(url, {
-        method: 'HEAD',
+        method,
         redirect: 'follow',
+        headers: method === 'GET'
+          ? {
+            range: 'bytes=0-0',
+            accept: 'image/*',
+          }
+          : undefined,
       }, timeoutMs)
       if (!response.ok) return null
       return response.headers.get('content-type')
@@ -218,6 +226,17 @@ export class ComparableImageEnrichmentService {
 
   private isHttpUrl(url: URL): boolean {
     return url.protocol === 'http:' || url.protocol === 'https:'
+  }
+
+  private normalizeSecureImageUrl(url: URL): URL | null {
+    if (!this.isHttpUrl(url)) return null
+
+    const secureUrl = new URL(url.toString())
+    if (secureUrl.protocol === 'http:') {
+      secureUrl.protocol = 'https:'
+    }
+
+    return secureUrl.protocol === 'https:' ? secureUrl : null
   }
 
   private getDomain(url: string): string {
