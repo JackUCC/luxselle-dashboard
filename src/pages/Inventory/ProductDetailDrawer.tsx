@@ -75,6 +75,7 @@ export default function ProductDetailDrawer({
   const [editedFields, setEditedFields] = useState<Partial<Product>>({})
   const [hasChanges, setHasChanges] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [openSellInvoiceSignal, setOpenSellInvoiceSignal] = useState(0)
 
   useScrollLock(true)
 
@@ -267,6 +268,14 @@ export default function ProductDetailDrawer({
                   product={product}
                   getCurrentValue={getCurrentValue}
                   onFieldChange={handleFieldChange}
+                  onStatusChange={(status) => {
+                    if (status === 'sold') {
+                      setActiveTab('history')
+                      setOpenSellInvoiceSignal((prev) => prev + 1)
+                      return
+                    }
+                    handleFieldChange('status', status)
+                  }}
                 />
               )}
               {activeTab === 'financials' && (
@@ -279,7 +288,9 @@ export default function ProductDetailDrawer({
               {activeTab === 'history' && (
                 <HistoryTab
                   productId={product.id}
+                  product={product}
                   sellPrice={product.sellPriceEur}
+                  openSellInvoiceSignal={openSellInvoiceSignal}
                   onProductUpdated={() => {
                     // Refetch product to get updated status
                     apiGet<{ data: ProductWithId }>(`/products/${product.id}`).then((response) => {
@@ -602,9 +613,10 @@ interface DetailsTabProps {
   product: ProductWithId
   getCurrentValue: <K extends keyof Product>(field: K) => Product[K]
   onFieldChange: (field: keyof Product, value: unknown) => void
+  onStatusChange: (status: Product['status']) => void
 }
 
-function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps) {
+function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }: DetailsTabProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -688,7 +700,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange }: DetailsTabProps
           <div className="relative">
             <select
               value={getCurrentValue('status')}
-              onChange={(e) => onFieldChange('status', e.target.value)}
+              onChange={(e) => onStatusChange(e.target.value as Product['status'])}
               className="lux-input appearance-none pr-10 w-full"
             >
               <option value="in_stock">In Stock</option>
@@ -870,7 +882,9 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
 
 interface HistoryTabProps {
   productId: string
+  product: ProductWithId
   sellPrice: number
+  openSellInvoiceSignal: number
   onProductUpdated?: () => void
 }
 
@@ -882,20 +896,16 @@ interface Transaction {
   notes?: string
 }
 
-type SaleForInvoice = { transactionId: string; amountEur: number; productId: string }
-
-function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps) {
+function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onProductUpdated }: HistoryTabProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState<'sale' | 'adjustment' | null>(null)
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [saleForInvoice, setSaleForInvoice] = useState<SaleForInvoice | null>(null)
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [invoiceCustomerName, setInvoiceCustomerName] = useState('')
   const [invoiceCustomerEmail, setInvoiceCustomerEmail] = useState('')
-  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false)
+  const [invoiceDescription, setInvoiceDescription] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchTransactions = useCallback(() => {
     setIsLoading(true)
@@ -915,11 +925,29 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
     fetchTransactions()
   }, [fetchTransactions])
 
+  const resetSaleModalState = useCallback(() => {
+    setAmount(String(sellPrice))
+    setNotes('')
+    setInvoiceCustomerName('')
+    setInvoiceCustomerEmail('')
+    setInvoiceDescription(product.title?.trim() || `${product.brand} ${product.model}`.trim())
+  }, [product.brand, product.model, product.title, sellPrice])
+
   const handleOpenModal = (type: 'sale' | 'adjustment') => {
     setShowModal(type)
-    setAmount(type === 'sale' ? String(sellPrice) : '')
+    if (type === 'sale') {
+      resetSaleModalState()
+      return
+    }
+    setAmount('')
     setNotes('')
   }
+
+  useEffect(() => {
+    if (openSellInvoiceSignal > 0) {
+      handleOpenModal('sale')
+    }
+  }, [openSellInvoiceSignal])
 
   const handleCloseModal = () => {
     setShowModal(null)
@@ -932,52 +960,31 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
 
     setIsSubmitting(true)
     try {
-      const res = await apiPost<{ data: { id: string; amountEur: number } }>(`/products/${productId}/transactions`, {
-        type: showModal,
-        amountEur: parseFloat(amount),
-        notes: notes || undefined,
-      })
-      toast.success(showModal === 'sale' ? 'Sale recorded' : 'Adjustment recorded')
+      if (showModal === 'sale') {
+        await apiPost(`/products/${productId}/sell-with-invoice`, {
+          amountEur: parseFloat(amount),
+          customerName: invoiceCustomerName || undefined,
+          customerEmail: invoiceCustomerEmail || undefined,
+          notes: notes || undefined,
+          description: invoiceDescription || undefined,
+        })
+        toast.success('Sale and invoice created')
+      } else {
+        await apiPost(`/products/${productId}/transactions`, {
+          type: 'adjustment',
+          amountEur: parseFloat(amount),
+          notes: notes || undefined,
+        })
+        toast.success('Adjustment recorded')
+      }
       handleCloseModal()
       fetchTransactions()
       onProductUpdated?.()
-      if (showModal === 'sale' && res?.data) {
-        setSaleForInvoice({
-          transactionId: res.data.id,
-          amountEur: res.data.amountEur,
-          productId,
-        })
-      }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to create transaction'
+      const message = err instanceof Error ? err.message : 'Failed to save transaction'
       toast.error(message)
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  const handleCreateInvoice = async () => {
-    if (!saleForInvoice) return
-    setInvoiceSubmitting(true)
-    try {
-      await apiPost('/invoices', {
-        fromSale: true,
-        transactionId: saleForInvoice.transactionId,
-        productId: saleForInvoice.productId,
-        amountEur: saleForInvoice.amountEur,
-        customerName: invoiceCustomerName || undefined,
-        customerEmail: invoiceCustomerEmail || undefined,
-        description: 'Sale',
-      })
-      toast.success('Invoice created')
-      setSaleForInvoice(null)
-      setShowInvoiceModal(false)
-      setInvoiceCustomerName('')
-      setInvoiceCustomerEmail('')
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create invoice')
-    } finally {
-      setInvoiceSubmitting(false)
     }
   }
 
@@ -1011,30 +1018,6 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
           </button>
         </div>
       </div>
-
-      {saleForInvoice && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-center justify-between gap-4">
-          <span className="text-sm text-amber-800">
-            Sale recorded ({formatCurrency(saleForInvoice.amountEur)}). Create an invoice for accounting?
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setSaleForInvoice(null)}
-              className="text-sm text-lux-600 hover:text-lux-900"
-            >
-              Dismiss
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowInvoiceModal(true)}
-              className="lux-btn-primary text-sm"
-            >
-              Create invoice
-            </button>
-          </div>
-        </div>
-      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-8 text-lux-500">
@@ -1077,7 +1060,6 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
         </div>
       )}
 
-      {/* Transaction Modal */}
       {showModal && (
         <>
           <div className="fixed inset-0 bg-black/30 z-50" onClick={handleCloseModal} />
@@ -1085,7 +1067,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-lux-900">
-                  {showModal === 'sale' ? 'Record Sale' : 'Record Adjustment'}
+                  {showModal === 'sale' ? 'Record Sale + Create Invoice' : 'Record Adjustment'}
                 </h3>
                 <button onClick={handleCloseModal} className="text-lux-400 hover:text-lux-600">
                   <X className="h-5 w-5" />
@@ -1093,118 +1075,40 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-lux-700 mb-1">
-                  Amount (EUR)
-                </label>
+                <label className="block text-sm font-medium text-lux-700 mb-1">Amount (EUR)</label>
                 <div className="relative">
                   <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="lux-input pl-7"
-                    autoFocus
-                  />
+                  <input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="lux-input pl-7" autoFocus />
                 </div>
               </div>
 
+              {showModal === 'sale' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-lux-700 mb-1">Description</label>
+                    <input type="text" value={invoiceDescription} onChange={(e) => setInvoiceDescription(e.target.value)} placeholder="Invoice line description" className="lux-input w-full" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-lux-700 mb-1">Customer name (optional)</label>
+                    <input type="text" value={invoiceCustomerName} onChange={(e) => setInvoiceCustomerName(e.target.value)} placeholder="e.g. John Smith" className="lux-input w-full" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-lux-700 mb-1">Customer email (optional)</label>
+                    <input type="email" value={invoiceCustomerEmail} onChange={(e) => setInvoiceCustomerEmail(e.target.value)} placeholder="customer@example.com" className="lux-input w-full" />
+                  </div>
+                </>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-lux-700 mb-1">
-                  Notes (optional)
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder={showModal === 'sale' ? 'e.g., Sold via Vestiaire Collective' : 'e.g., Price reduction'}
-                  rows={3}
-                  className="lux-input resize-none"
-                />
+                <label className="block text-sm font-medium text-lux-700 mb-1">Notes (optional)</label>
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={showModal === 'sale' ? 'e.g., Sold via Vestiaire Collective' : 'e.g., Price reduction'} rows={3} className="lux-input resize-none" />
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={handleCloseModal}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !amount}
-                  className="lux-btn-primary flex items-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  {showModal === 'sale' ? 'Record Sale' : 'Record Adjustment'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Create invoice modal (after sale) */}
-      {showInvoiceModal && saleForInvoice && (
-        <>
-          <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setShowInvoiceModal(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-lux-900">Create invoice for this sale</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowInvoiceModal(false)}
-                  className="text-lux-400 hover:text-lux-600"
-                  aria-label="Close invoice modal"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <p className="text-sm text-lux-500">
-                Amount: {formatCurrency(saleForInvoice.amountEur)} (VAT will be calculated from settings)
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-lux-700 mb-1">Customer name (optional)</label>
-                <input
-                  type="text"
-                  value={invoiceCustomerName}
-                  onChange={(e) => setInvoiceCustomerName(e.target.value)}
-                  placeholder="e.g. John Smith"
-                  className="lux-input w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-lux-700 mb-1">Customer email (optional)</label>
-                <input
-                  type="email"
-                  value={invoiceCustomerEmail}
-                  onChange={(e) => setInvoiceCustomerEmail(e.target.value)}
-                  placeholder="customer@example.com"
-                  className="lux-input w-full"
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={() => setShowInvoiceModal(false)}
-                  disabled={invoiceSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateInvoice}
-                  disabled={invoiceSubmitting}
-                  className="lux-btn-primary flex items-center gap-2"
-                >
-                  {invoiceSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Create invoice
+                <button onClick={handleCloseModal} disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors">Cancel</button>
+                <button onClick={handleSubmit} disabled={isSubmitting || !amount} className="lux-btn-primary flex items-center gap-2">
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {showModal === 'sale' ? 'Record Sale + Invoice' : 'Record Adjustment'}
                 </button>
               </div>
             </div>
