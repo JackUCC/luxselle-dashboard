@@ -5,13 +5,15 @@
  * Route views are lazy-loaded to improve INP (Interaction to Next Paint) on nav clicks.
  * @see docs/CODE_REFERENCE.md
  */
-import { lazy, Suspense, useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
+import { motion } from 'framer-motion'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, useLocation } from 'react-router-dom'
 import { AlertCircle, Menu } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
+import AnimatedRoutes from './components/layout/AnimatedRoutes'
 import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
 import DockBar from './components/navigation/DockBar'
 import MobileNavDrawer from './components/navigation/MobileNavDrawer'
@@ -21,14 +23,29 @@ import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext
 import { LayoutModeProvider, useLayoutMode } from './lib/LayoutModeContext'
 import { getRouteMeta } from './components/layout/routeMeta'
 
-const DashboardView = lazy(() => import('./pages/Dashboard/DashboardView'))
-const InventoryView = lazy(() => import('./pages/Inventory/InventoryView'))
-const EvaluatorView = lazy(() => import('./pages/BuyBox/EvaluatorView'))
-const SourcingView = lazy(() => import('./pages/Sourcing/SourcingView'))
-const InvoicesView = lazy(() => import('./pages/Invoices/InvoicesView'))
-const MarketResearchView = lazy(() => import('./pages/MarketResearch/MarketResearchView'))
-const SerialCheckView = lazy(() => import('./pages/SerialCheck/SerialCheckView'))
-const RetailPriceView = lazy(() => import('./pages/RetailPrice/RetailPriceView'))
+const SidecarFallback = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.2 }}
+    className="flex items-center justify-center py-12 text-[13px] text-lux-400"
+    aria-hidden
+  >
+    Loading…
+  </motion.div>
+)
+
+const OverviewFallback = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.2 }}
+    className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400"
+    aria-hidden
+  >
+    Loading…
+  </motion.div>
+)
 
 const AppContent = () => {
   const { isConnected, refetchStatus } = useServerStatus()
@@ -50,18 +67,8 @@ const AppContent = () => {
         />
         <main className="px-3 py-3">
           <ErrorBoundary>
-            <Suspense fallback={<div className="flex items-center justify-center py-12 text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
-              <Routes>
-                <Route path="/" element={<DashboardView />} />
-                <Route path="/inventory" element={<InventoryView />} />
-                <Route path="/buy-box" element={<EvaluatorView />} />
-                <Route path="/serial-check" element={<SerialCheckView />} />
-                <Route path="/retail-price" element={<RetailPriceView />} />
-                <Route path="/market-research" element={<MarketResearchView />} />
-                <Route path="/sourcing" element={<SourcingView />} />
-                <Route path="/invoices" element={<InvoicesView />} />
-                <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-              </Routes>
+            <Suspense fallback={<SidecarFallback />}>
+              <AnimatedRoutes />
             </Suspense>
           </ErrorBoundary>
         </main>
@@ -120,20 +127,8 @@ const AppContent = () => {
       <main className="mx-auto max-w-8xl px-5 py-5 sm:px-6 sm:py-6 xl:pl-24">
         <DeepStateBreadcrumb />
         <ErrorBoundary>
-          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400" aria-hidden>Loading…</div>}>
-            <Routes>
-              <Route path="/" element={<DashboardView />} />
-              <Route path="/inventory" element={<InventoryView />} />
-              <Route path="/buy-box" element={<EvaluatorView />} />
-              <Route path="/serial-check" element={<SerialCheckView />} />
-              <Route path="/retail-price" element={<RetailPriceView />} />
-              <Route path="/market-research" element={<MarketResearchView />} />
-              <Route path="/sourcing" element={<SourcingView />} />
-              <Route path="/invoices" element={<InvoicesView />} />
-
-              {/* Legacy redirect */}
-              <Route path="/evaluator" element={<Navigate to="/buy-box" replace />} />
-            </Routes>
+          <Suspense fallback={<OverviewFallback />}>
+            <AnimatedRoutes />
           </Suspense>
         </ErrorBoundary>
       </main>
