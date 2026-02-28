@@ -18,6 +18,7 @@ interface PriceCheckComp {
   price: number
   source: string
   sourceUrl?: string
+  previewImageUrl?: string
 }
 
 interface PriceCheckResult {

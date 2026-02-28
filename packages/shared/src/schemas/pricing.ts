@@ -16,6 +16,7 @@ export const PricingComparableSchema = z.object({
   price: z.number(),
   source: z.string(),
   sourceUrl: z.string().url().optional(),
+  previewImageUrl: z.string().url().optional(),
   marketCountry: z.string().default('EU'),
   marketScope: ComparableMarketScopeSchema.default('EU_FALLBACK'),
 })

@@ -52,6 +52,7 @@ interface MarketComparable {
     priceEur: number
     source: string
     sourceUrl?: string
+    previewImageUrl?: string
     condition: string
     daysListed?: number
 }

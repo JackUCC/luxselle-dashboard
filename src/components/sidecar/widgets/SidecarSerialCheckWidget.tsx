@@ -16,7 +16,7 @@ interface PriceCheckResult {
   averageSellingPriceEur: number
   maxBuyEur: number
   maxBidEur: number
-  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string }>
+  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string; previewImageUrl?: string }>
 }
 
 export default function SidecarSerialCheckWidget() {

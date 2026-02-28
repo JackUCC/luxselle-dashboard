@@ -15,6 +15,7 @@ export interface PriceCheckComp {
   price: number
   source: string
   sourceUrl?: string
+  previewImageUrl?: string
   dataOrigin?: 'web_search' | 'ai_estimate'
 }
 
