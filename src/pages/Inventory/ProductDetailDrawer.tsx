@@ -764,7 +764,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
         <div>
           <label className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
+            <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -778,7 +778,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
         <div>
           <label className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
+            <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -794,7 +794,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
         <div>
           <label className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
+            <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -808,7 +808,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
         <div>
           <label className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
+            <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
               type="number"
               min="0"
@@ -1097,7 +1097,7 @@ function HistoryTab({ productId, sellPrice, onProductUpdated }: HistoryTabProps)
                   Amount (EUR)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lux-400">€</span>
+                  <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                   <input
                     type="number"
                     min="0"

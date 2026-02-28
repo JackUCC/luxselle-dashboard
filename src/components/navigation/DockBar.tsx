@@ -14,13 +14,13 @@ export default function DockBar() {
     >
       <NavLink
         to="/"
-        className="mb-2 flex items-center opacity-70 transition-opacity hover:opacity-100"
+        className="mb-2 flex h-[70px] w-[60px] items-center justify-center opacity-70 transition-opacity hover:opacity-100"
         title="Luxselle"
       >
         <img
           src="/luxselle-logo.svg"
           alt="Luxselle"
-          className="h-5 w-auto max-w-[28px] object-contain"
+          className="h-auto w-[60px] max-w-[60px] object-contain"
         />
       </NavLink>
 

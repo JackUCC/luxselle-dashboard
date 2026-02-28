@@ -406,7 +406,7 @@ export default function MarketResearchView() {
                             <div>
                                 <label htmlFor="mr-askPrice" className="block text-[12px] font-medium text-lux-600 mb-1.5">Current Ask Price (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lux-400 text-[15px] font-medium">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400 text-[15px] font-medium">€</span>
                                     <input id="mr-askPrice" type="number" name="currentAskPriceEur" value={formData.currentAskPriceEur} onChange={handleChange} placeholder="0" step="0.01" className="lux-input pl-8" />
                                 </div>
                                 <p className="text-[11px] text-lux-400 mt-1">Optional — helps calibrate analysis</p>

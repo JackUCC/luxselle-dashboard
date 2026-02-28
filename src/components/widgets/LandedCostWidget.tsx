@@ -34,7 +34,7 @@ export default function LandedCostWidget() {
         Bid Price
       </label>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[15px] font-medium text-lux-400">
+        <span className="absolute left-px top-1/2 -translate-y-1/2 text-[15px] font-medium text-lux-400">
           €
         </span>
         <input

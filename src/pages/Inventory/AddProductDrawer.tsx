@@ -223,7 +223,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Purchase / Cost (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -237,7 +237,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Sell Price (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -253,7 +253,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Customs (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -267,7 +267,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">VAT (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
                                     <input
                                         type="number"
                                         min="0"

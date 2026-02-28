@@ -671,7 +671,7 @@ export default function CalculatorWidget() {
                             <div>
                                 <label className="block text-[10px] text-gray-500 mb-1">Sell Price (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
                                     <input
                                         type="number"
                                         value={state.sellPrice}

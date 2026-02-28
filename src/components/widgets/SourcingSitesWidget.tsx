@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom'
 import SectionLabel from '../design-system/SectionLabel'
 
 const SOURCING_SITES = [
-  { name: 'Vestiaire Collective', url: 'https://www.vestiairecollective.com' },
-  { name: 'The RealReal', url: 'https://www.therealreal.com' },
   { name: 'AUCNET', url: 'https://member.brand-auc.com/login' },
   { name: 'Star Buyers', url: 'https://www.starbuyers-global-auction.com/home' },
 ]
