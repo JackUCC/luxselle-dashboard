@@ -72,7 +72,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const text = await response.text()
     if (/^\s*<!doctype/i.test(text))
       throw new ApiError(
-        'Backend URL not set. In Vercel: Settings → Environment Variables → add VITE_API_BASE = your Railway URL (e.g. https://your-app.up.railway.app), then redeploy.',
+        'Cannot connect to server. Please check your connection and try again.',
         response.status
       )
     throw new ApiError(text || 'Invalid response', response.status)
@@ -121,7 +121,7 @@ export async function apiPostFormData<T>(path: string, formData: FormData): Prom
     const text = await response.text()
     if (/^\s*<!doctype/i.test(text))
       throw new ApiError(
-        'Backend URL not set. In Vercel: Settings → Environment Variables → add VITE_API_BASE = your Railway URL (e.g. https://your-app.up.railway.app), then redeploy.',
+        'Cannot connect to server. Please check your connection and try again.',
         response.status
       )
     throw new ApiError(text || 'Invalid response', response.status)

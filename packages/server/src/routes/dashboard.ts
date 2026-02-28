@@ -116,9 +116,9 @@ router.get('/profit-summary', async (_req, res, next) => {
     const soldProducts = products.filter((p) => p.status === 'sold')
     const itemsSold = soldProducts.length
 
-    // Calculate from sold products
-    const totalCost = soldProducts.reduce((sum, p) => sum + p.costPriceEur, 0)
-    const totalRevenue = soldProducts.reduce((sum, p) => sum + p.sellPriceEur, 0)
+    // Calculate from sold products (multiply by quantity for multi-unit sales)
+    const totalCost = soldProducts.reduce((sum, p) => sum + p.costPriceEur * p.quantity, 0)
+    const totalRevenue = soldProducts.reduce((sum, p) => sum + p.sellPriceEur * p.quantity, 0)
     
     // Also include actual sale transactions for more accuracy
     const saleTransactions = transactions.filter((t) => t.type === 'sale')

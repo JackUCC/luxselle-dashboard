@@ -292,7 +292,7 @@ router.get('/', async (req, res, next) => {
     }
     const page = list.slice(start, start + limitNum)
     const nextCursor = page.length === limitNum && start + limitNum < list.length ? page[page.length - 1]?.id : null
-    res.json({ data: page, nextCursor })
+    res.json({ data: page, nextCursor, total: list.length })
   } catch (err) {
     next(err)
   }

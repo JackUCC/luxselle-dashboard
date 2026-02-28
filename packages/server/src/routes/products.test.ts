@@ -65,4 +65,28 @@ describe('GET /api/products', () => {
     expect(res.body.data).toHaveLength(1)
     expect(res.body.data[0].brand).toBe('X')
   })
+
+  it('falls back to createdAt sort when unknown sort field is provided', async () => {
+    const products = [
+      { id: 'p1', createdAt: '2024-01-02', updatedAt: '', brand: 'A', model: 'M', costPriceEur: 10, sellPriceEur: 20, status: 'in_stock' },
+      { id: 'p2', createdAt: '2024-01-01', updatedAt: '', brand: 'B', model: 'N', costPriceEur: 30, sellPriceEur: 40, status: 'in_stock' },
+    ]
+    mockList.mockResolvedValue(products)
+    const res = await request(app).get('/api/products?sort=__proto__')
+    expect(res.status).toBe(200)
+    // Should not crash and should fall back to createdAt sorting
+    expect(res.body.data).toHaveLength(2)
+  })
+
+  it('sorts by a valid field like brand', async () => {
+    const products = [
+      { id: 'p1', createdAt: '2024-01-01', updatedAt: '', brand: 'Zara', model: 'M', costPriceEur: 10, sellPriceEur: 20, status: 'in_stock' },
+      { id: 'p2', createdAt: '2024-01-02', updatedAt: '', brand: 'Acne', model: 'N', costPriceEur: 30, sellPriceEur: 40, status: 'in_stock' },
+    ]
+    mockList.mockResolvedValue(products)
+    const res = await request(app).get('/api/products?sort=brand&dir=asc')
+    expect(res.status).toBe(200)
+    expect(res.body.data[0].brand).toBe('Acne')
+    expect(res.body.data[1].brand).toBe('Zara')
+  })
 })

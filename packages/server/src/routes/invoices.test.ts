@@ -49,13 +49,25 @@ describe('GET /api/invoices', () => {
     vi.clearAllMocks()
   })
 
-  it('returns 200 with data and nextCursor', async () => {
+  it('returns 200 with data, nextCursor, and total', async () => {
     mockList.mockResolvedValue([])
     const res = await request(app).get('/api/invoices')
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
     expect(Array.isArray(res.body.data)).toBe(true)
     expect(res.body.nextCursor).toBeDefined()
+    expect(res.body.total).toBe(0)
+  })
+
+  it('returns correct total count', async () => {
+    mockList.mockResolvedValue([
+      { id: 'inv1', issuedAt: '2024-01-01', invoiceNumber: 'INV-001', totalEur: 100 },
+      { id: 'inv2', issuedAt: '2024-01-02', invoiceNumber: 'INV-002', totalEur: 200 },
+    ])
+    const res = await request(app).get('/api/invoices')
+    expect(res.status).toBe(200)
+    expect(res.body.total).toBe(2)
+    expect(res.body.data).toHaveLength(2)
   })
 })
 

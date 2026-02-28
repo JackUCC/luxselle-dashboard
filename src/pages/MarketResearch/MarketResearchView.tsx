@@ -246,7 +246,7 @@ export default function MarketResearchView() {
                 const slice = next.slice(0, PREVIOUS_SEARCHES_MAX)
                 try {
                     localStorage.setItem(PREVIOUS_SEARCHES_KEY, JSON.stringify(slice))
-                } catch { /* ignore */ }
+                } catch (e) { console.warn('Failed to persist search history to localStorage', e) }
                 return slice
             })
         } catch (err) {

@@ -59,8 +59,9 @@ router.get('/', async (req, res, next) => {
       requests = requests.filter(r => r.priority === priority)
     }
     
-    // Sort
-    const sortField = (sort as string) || 'createdAt'
+    // Sort (validate sortField against known fields)
+    const SORTABLE_FIELDS = new Set(['createdAt', 'updatedAt', 'customerName', 'brand', 'budget', 'priority', 'status', 'queryText'])
+    const sortField = SORTABLE_FIELDS.has(sort as string) ? (sort as string) : 'createdAt'
     const sortDir = dir === 'asc' ? 1 : -1
     requests.sort((a, b) => {
       const aVal = (a as Record<string, unknown>)[sortField]
@@ -75,7 +76,8 @@ router.get('/', async (req, res, next) => {
     })
     
     // Cursor pagination
-    const limitNum = limit ? parseInt(String(limit)) : 50
+    const parsedLimit = limit ? parseInt(String(limit), 10) : 50
+    const limitNum = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 100) : 50
     let startIndex = 0
     
     if (cursor && typeof cursor === 'string') {

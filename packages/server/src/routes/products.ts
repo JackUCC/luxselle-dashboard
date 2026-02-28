@@ -360,8 +360,9 @@ router.get('/', async (req, res, next) => {
       )
     }
 
-    // Sort
-    const sortField = (sort as string) || 'createdAt'
+    // Sort (validate sortField against known fields)
+    const SORTABLE_FIELDS = new Set(['createdAt', 'updatedAt', 'brand', 'model', 'costPriceEur', 'sellPriceEur', 'status', 'quantity', 'category', 'condition', 'sku'])
+    const sortField = SORTABLE_FIELDS.has(sort as string) ? (sort as string) : 'createdAt'
     const sortDir = dir === 'asc' ? 1 : -1
     products.sort((a, b) => {
       const aVal = (a as Record<string, unknown>)[sortField]
