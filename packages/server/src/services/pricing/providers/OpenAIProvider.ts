@@ -95,7 +95,8 @@ Rules:
 - Extract comparables from the web search results with REAL titles, prices, and URLs
 - If prices are in GBP, convert to EUR using today's rate: 1 GBP = ${gbpToEur.toFixed(2)} EUR
 - If prices are in USD, convert to EUR using today's rate: 1 USD = ${usdToEur.toFixed(2)} EUR
-- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
+- Prioritize Irish competitor sources first: Designer Exchange, Luxury Exchange, Siopella
+- Use broader European fallback sources (including Vestiaire Collective) only when Irish comps are limited
 - Mark Designer Exchange, Luxury Exchange, and Siopella as marketCountry "IE" and Vestiaire Collective as "EU"`
 
     const response = await this.client.chat.completions.create({

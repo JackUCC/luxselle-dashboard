@@ -57,11 +57,19 @@ interface EnrichmentMetrics {
   averageEnrichmentLatencyMs: number
 }
 
-const DEFAULT_MARKETPLACE_ALLOWLIST = [
-  'vestiairecollective.com',
+const IRISH_MARKETPLACE_DOMAINS = [
   'designerexchange.ie',
   'luxuryexchange.ie',
   'siopaella.com',
+]
+
+const EU_FALLBACK_MARKETPLACE_DOMAINS = [
+  'vestiairecollective.com',
+]
+
+const DEFAULT_MARKETPLACE_ALLOWLIST = [
+  ...IRISH_MARKETPLACE_DOMAINS,
+  ...EU_FALLBACK_MARKETPLACE_DOMAINS,
 ]
 
 function parseDomainList(value?: string): string[] {
@@ -275,13 +283,16 @@ export class SearchService {
     opts?: { domains?: string[]; userLocation?: { country: string } },
   ): Promise<SearchResponse> {
     const trimmed = baseQuery.trim()
-    // Three parallel searches: Vestiaire only, Irish platforms, and a broad EUR search.
+    // Three parallel searches: Irish platforms first, then EU fallback, then a broad EUR search.
     // Domain filtering is done natively via the WebSearchTool filters.allowed_domains.
     const searches = [
-      this.searchMarket(trimmed, { ...opts, domains: ['vestiairecollective.com'] }),
       this.searchMarket(trimmed, {
         ...opts,
-        domains: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+        domains: IRISH_MARKETPLACE_DOMAINS,
+      }),
+      this.searchMarket(trimmed, {
+        ...opts,
+        domains: EU_FALLBACK_MARKETPLACE_DOMAINS,
       }),
       this.searchMarket(`${trimmed} pre-owned luxury for sale price EUR`, {
         ...opts,
@@ -401,7 +412,7 @@ searchVariants rules:
 
   /**
    * Run parallel market searches for multiple query variants and merge results.
-   * Each variant gets a Vestiaire search + Irish platforms search, then a broad EUR search.
+   * Each variant gets an Irish-platforms search + EU fallback search, then a broad EUR search.
    * Variants are capped at 3 to bound total concurrent requests to ~9.
    */
   async searchMarketMultiExpanded(
@@ -410,10 +421,13 @@ searchVariants rules:
   ): Promise<SearchResponse> {
     const variants = searchVariants.slice(0, 3)
     const allSearches = variants.flatMap((variant) => [
-      this.searchMarket(variant, { ...opts, domains: ['vestiairecollective.com'] }),
       this.searchMarket(variant, {
         ...opts,
-        domains: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+        domains: IRISH_MARKETPLACE_DOMAINS,
+      }),
+      this.searchMarket(variant, {
+        ...opts,
+        domains: EU_FALLBACK_MARKETPLACE_DOMAINS,
       }),
     ])
     // Add one broad EUR search for the first (primary) variant

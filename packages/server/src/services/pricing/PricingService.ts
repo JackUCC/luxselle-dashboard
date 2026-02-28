@@ -12,6 +12,16 @@ import { OpenAIProvider } from './providers/OpenAIProvider'
 import type { IPricingProvider, PricingAnalysisInput } from './providers/IPricingProvider'
 import type { PricingComparable, PricingMarketSummary } from '@shared/schemas'
 
+const DEFAULT_IE_SOURCE_ALLOWLIST = [
+  'designerexchange.ie',
+  'luxuryexchange.ie',
+  'siopaella.com',
+]
+
+const EU_FALLBACK_ONLY_DOMAINS = [
+  'vestiairecollective.com',
+]
+
 export interface PricingServiceResult {
   estimatedRetailEur: number
   maxBuyPriceEur: number
@@ -93,9 +103,7 @@ export class PricingService {
       marketCountry,
       marketMode,
     })
-    const allowlist = settings?.pricingIeSourceAllowlist ?? [
-      'designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com', 'vestiairecollective.com',
-    ]
+    const allowlist = settings?.pricingIeSourceAllowlist ?? DEFAULT_IE_SOURCE_ALLOWLIST
     const marketProcessed = this.applyIeFirstMarketPolicy(providerResult.comps, allowlist, marketCountry)
 
     // Calculate max buy price based on target margin
@@ -183,6 +191,7 @@ export class PricingService {
     const allowlist = ieSourceAllowlist
       .map((value) => this.normalizeAllowlistDomain(value))
       .filter(Boolean)
+      .filter((domain) => !this.isEuFallbackOnlyDomain(domain))
     const normalized = rawComps.map((comp) => {
       const sourceUrl = comp.sourceUrl ?? comp.url
       const isIe = this.isIeComparable(comp.source, sourceUrl, comp.marketCountry, allowlist)
@@ -220,14 +229,22 @@ export class PricingService {
     marketCountry: string | undefined,
     allowlist: string[],
   ): boolean {
-    if ((marketCountry ?? '').toUpperCase() === 'IE') return true
-
     const sourceHost = this.extractHostname(source)
     const sourceUrlHost = this.extractHostname(sourceUrl)
+
+    if (this.isEuFallbackOnlyDomain(sourceHost) || this.isEuFallbackOnlyDomain(sourceUrlHost)) {
+      return false
+    }
+
+    if ((marketCountry ?? '').toUpperCase() === 'IE') return true
 
     return allowlist.some((domain) =>
       this.hostnameMatches(sourceHost, domain) || this.hostnameMatches(sourceUrlHost, domain),
     )
+  }
+
+  private isEuFallbackOnlyDomain(hostname: string): boolean {
+    return EU_FALLBACK_ONLY_DOMAINS.some((domain) => this.hostnameMatches(hostname, domain))
   }
 
   private normalizeAllowlistDomain(value: string): string {

@@ -44,4 +44,44 @@ describe('PriceCheckService', () => {
       ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = previousKey
     }
   })
+
+  it('orders comparables with Irish competitors before EU fallback', async () => {
+    const service = new PriceCheckService()
+
+    const ordered = (service as unknown as {
+      orderCompsByMarketPriority: (
+        comps: Array<{ title: string; price: number; source: string; sourceUrl?: string }>,
+      ) => Array<{ source: string }>
+    }).orderCompsByMarketPriority([
+      {
+        title: 'Vestiaire listing',
+        price: 3000,
+        source: 'Vestiaire Collective',
+        sourceUrl: 'https://vestiairecollective.com/item/1',
+      },
+      {
+        title: 'Irish listing by URL',
+        price: 2900,
+        source: 'Unknown Source',
+        sourceUrl: 'https://designerexchange.ie/item/2',
+      },
+      {
+        title: 'Irish listing by source name',
+        price: 2950,
+        source: 'Siopaella',
+      },
+      {
+        title: 'Generic EU listing',
+        price: 3050,
+        source: 'Generic EU Marketplace',
+      },
+    ])
+
+    expect(ordered.map((comp) => comp.source)).toEqual([
+      'Unknown Source',
+      'Siopaella',
+      'Vestiaire Collective',
+      'Generic EU Marketplace',
+    ])
+  })
 })

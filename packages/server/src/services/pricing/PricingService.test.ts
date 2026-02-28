@@ -237,6 +237,47 @@ describe('PricingService', () => {
     expect(result.comps.some((comp) => comp.marketScope === 'EU_FALLBACK')).toBe(true)
   })
 
+  it('classifies Vestiaire as EU fallback under IE-first policy', async () => {
+    const PricingService = await loadPricingService()
+    const { MockPricingProvider } = await import('./providers/MockPricingProvider')
+    vi.spyOn(MockPricingProvider.prototype, 'analyse').mockResolvedValue({
+      estimatedRetailEur: 3000,
+      confidence: 0.82,
+      comps: [
+        {
+          title: 'Designer Exchange Listing',
+          price: 2950,
+          source: 'Designer Exchange',
+          sourceUrl: 'https://designerexchange.ie/item',
+          marketCountry: 'IE',
+        },
+        {
+          title: 'Vestiaire Listing',
+          price: 3020,
+          source: 'Vestiaire Collective',
+          sourceUrl: 'https://vestiairecollective.com/item',
+          marketCountry: 'IE',
+        },
+      ],
+    })
+
+    settingsGetMock.mockResolvedValueOnce(null)
+    listMock.mockResolvedValueOnce([])
+    productListMock.mockResolvedValueOnce([])
+
+    const service = new PricingService()
+    const result = await service.analyse(basePricingInput)
+
+    const vestiaireComp = result.comps.find((comp) =>
+      comp.source.toLowerCase().includes('vestiaire'),
+    )
+
+    expect(vestiaireComp).toBeDefined()
+    expect(vestiaireComp?.marketScope).toBe('EU_FALLBACK')
+    expect(vestiaireComp?.marketCountry).toBe('EU')
+    expect(result.comps[0].marketScope).toBe('IE')
+  })
+
   it('calculates auction landed cost breakdown deterministically', async () => {
     const PricingService = await loadPricingService()
     const service = new PricingService()

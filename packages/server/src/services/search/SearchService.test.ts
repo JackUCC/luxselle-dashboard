@@ -119,4 +119,55 @@ describe('SearchService', () => {
     expect(metrics.extractionSuccesses).toBe(1)
     expect(metrics.extractionSuccessRate).toBe(1)
   })
+
+  it('searches Irish domains before EU fallback in multi-market mode', async () => {
+    const { SearchService } = await import('./SearchService')
+    const service = new SearchService()
+    const searchMarketSpy = vi.spyOn(service, 'searchMarket').mockResolvedValue({
+      results: [],
+      rawText: '',
+      annotations: [],
+    })
+
+    await service.searchMarketMulti('chanel classic flap', {
+      userLocation: { country: 'IE' },
+    })
+
+    expect(searchMarketSpy).toHaveBeenCalledTimes(3)
+    expect(searchMarketSpy.mock.calls[0][1]?.domains).toEqual([
+      'designerexchange.ie',
+      'luxuryexchange.ie',
+      'siopaella.com',
+    ])
+    expect(searchMarketSpy.mock.calls[1][1]?.domains).toEqual([
+      'vestiairecollective.com',
+    ])
+    expect(searchMarketSpy.mock.calls[2][1]?.domains).toEqual([])
+  })
+
+  it('keeps Irish-first ordering for each expanded query variant', async () => {
+    const { SearchService } = await import('./SearchService')
+    const service = new SearchService()
+    const searchMarketSpy = vi.spyOn(service, 'searchMarket').mockResolvedValue({
+      results: [],
+      rawText: '',
+      annotations: [],
+    })
+
+    await service.searchMarketMultiExpanded(
+      ['chanel classic flap black', 'chanel timeless classic black'],
+      { userLocation: { country: 'IE' } },
+    )
+
+    expect(searchMarketSpy).toHaveBeenCalledTimes(5)
+    const domainsByCall = searchMarketSpy.mock.calls.map((call) => call[1]?.domains ?? [])
+
+    expect(domainsByCall).toEqual([
+      ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+      ['vestiairecollective.com'],
+      ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+      ['vestiairecollective.com'],
+      [],
+    ])
+  })
 })

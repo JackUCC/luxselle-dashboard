@@ -89,6 +89,7 @@ export interface CompetitorFeedItem {
     source: 'Designer Exchange' | 'Luxury Exchange' | 'Siopella'
     sourceUrl?: string
     listedAt?: string
+    condition?: string
 }
 
 export interface CompetitorFeedResult {
@@ -272,6 +273,30 @@ Focus on items that:
 - Are realistic for a luxury reseller in Ireland/EU
 - Mix of accessible luxury and high-end pieces`
 
+const COMPETITOR_FEED_PROMPT = `You are a luxury resale data extractor. Extract structured listing data from these web search results from Irish/EU luxury resale platforms.
+
+Domain → source name mapping:
+- designerexchange.ie → "Designer Exchange"
+- luxuryexchange.ie → "Luxury Exchange"
+- siopaella.com → "Siopella"
+
+For each distinct listing found, extract:
+- title: Full product name as listed (brand + model + colour/material if present)
+- priceEur: Price as a number in EUR (convert GBP or USD if needed: £1=€1.17, $1=€0.92)
+- source: One of "Designer Exchange" | "Luxury Exchange" | "Siopella" (infer from URL domain)
+- sourceUrl: Direct URL of the product listing page (not the homepage)
+- condition: Condition string if mentioned (e.g. "Excellent", "Very Good", "Good"), otherwise omit
+- listedAt: ISO date string if identifiable, otherwise omit
+
+Return ONLY a valid JSON object (no markdown):
+{ "items": [...] }
+
+RULES:
+- Only extract listings with a clear price in EUR or a convertible currency
+- Maximum 10 items total
+- Prefer items with direct product page URLs over homepage links
+- Do NOT fabricate listings not present in the search data`
+
 export class MarketResearchService {
     private searchService = new SearchService()
     private comparableImageEnrichmentService = new ComparableImageEnrichmentService()
@@ -292,7 +317,61 @@ export class MarketResearchService {
 
     /** Recent listings from Irish/EU competitors (Designer Exchange, Luxury Exchange, Siopella). */
     async getCompetitorFeed(): Promise<CompetitorFeedResult> {
+        if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+            return this.getCompetitorFeedWithSearch()
+        }
         return this.mockCompetitorFeed()
+    }
+
+    private async getCompetitorFeedWithSearch(): Promise<CompetitorFeedResult> {
+        try {
+            const searchResponse = await this.searchService.searchMarket(
+                'luxury handbag bag pre-owned for sale',
+                {
+                    domains: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+                    userLocation: { country: 'IE' },
+                },
+            )
+
+            if (!searchResponse.rawText && searchResponse.annotations.length === 0) {
+                return this.mockCompetitorFeed()
+            }
+
+            const searchContext = searchResponse.rawText
+                + '\n\nSource URLs:\n'
+                + searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
+
+            const OpenAI = (await import('openai')).default
+            const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+
+            const response = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: COMPETITOR_FEED_PROMPT },
+                    { role: 'user', content: searchContext },
+                ],
+                max_tokens: 1500,
+                temperature: 0.2,
+                response_format: { type: 'json_object' },
+            })
+
+            const text = response.choices[0]?.message?.content ?? ''
+            const parsed = this.parseJSON(text)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const items: CompetitorFeedItem[] = (parsed.items ?? []).map((item: any) => ({
+                title: String(item.title ?? '').trim(),
+                priceEur: Math.round(Number(item.priceEur) || 0),
+                source: item.source as CompetitorFeedItem['source'],
+                sourceUrl: item.sourceUrl ?? undefined,
+                listedAt: item.listedAt ?? undefined,
+                condition: item.condition ?? undefined,
+            })).filter((item: CompetitorFeedItem) => item.title && item.priceEur > 0)
+
+            return { items, generatedAt: new Date().toISOString() }
+        } catch (error) {
+            logger.error('competitor_feed_search_error', error)
+            return this.mockCompetitorFeed()
+        }
     }
 
     /**

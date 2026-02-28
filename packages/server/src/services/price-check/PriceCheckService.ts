@@ -7,9 +7,14 @@
 import { env } from '../../config/env'
 import { SearchService } from '../search/SearchService'
 import { getFxService } from '../fx/FxService'
-import { validatePriceEur, filterValidComps } from '../../lib/validation'
+import { filterValidComps } from '../../lib/validation'
 import { logger } from '../../middleware/requestId'
 import { ComparableEnrichmentService } from './ComparableEnrichmentService'
+
+const IE_COMPETITOR_DOMAINS = ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com']
+const EU_FALLBACK_COMPETITOR_DOMAINS = ['vestiairecollective.com']
+const IE_COMPETITOR_SOURCE_HINTS = ['designer exchange', 'luxury exchange', 'siopaella']
+const EU_FALLBACK_SOURCE_HINTS = ['vestiaire']
 
 export interface PriceCheckComp {
   title: string
@@ -118,7 +123,8 @@ RULES (follow ALL of these):
 - Do NOT invent or fabricate any listing, price, or URL.
 - If prices are in GBP, convert to EUR using today's rate: 1 GBP = ${gbpToEur.toFixed(2)} EUR
 - If prices are in USD, convert to EUR using today's rate: 1 USD = ${usdToEur.toFixed(2)} EUR
-- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella`
+- Prioritize Irish competitor sources first (Designer Exchange, Luxury Exchange, Siopella).
+- Only use broader European fallback sources (including Vestiaire Collective) when Irish comps are limited.`
 
       try {
         const OpenAI = (await import('openai')).default
@@ -147,7 +153,7 @@ RULES (follow ALL of these):
         // corrupt the average for a ~€3,000 handbag. If fewer than 2 comps pass
         // validation, treat this as "no data found" and fall back to 0.
         if (allComps.length >= 2) {
-          comps = allComps
+          comps = this.orderCompsByMarketPriority(allComps)
           averageSellingPriceEur = Math.round(
             comps.reduce((sum, c) => sum + c.price, 0) / comps.length,
           )
@@ -194,6 +200,74 @@ RULES (follow ALL of these):
       dataSource,
       researchedAt: new Date().toISOString(),
     }
+  }
+
+  private orderCompsByMarketPriority(comps: PriceCheckComp[]): PriceCheckComp[] {
+    const ieComps: PriceCheckComp[] = []
+    const euFallbackComps: PriceCheckComp[] = []
+
+    for (const comp of comps) {
+      if (this.classifyComparableMarket(comp) === 'IE') {
+        ieComps.push(comp)
+      } else {
+        euFallbackComps.push(comp)
+      }
+    }
+
+    return [...ieComps, ...euFallbackComps]
+  }
+
+  private classifyComparableMarket(comp: PriceCheckComp): 'IE' | 'EU_FALLBACK' {
+    const sourceHost = this.extractHostname(comp.sourceUrl)
+    const sourceText = comp.source.trim().toLowerCase()
+
+    if (
+      sourceHost &&
+      IE_COMPETITOR_DOMAINS.some((domain) => this.hostnameMatches(sourceHost, domain))
+    ) {
+      return 'IE'
+    }
+
+    if (IE_COMPETITOR_SOURCE_HINTS.some((hint) => sourceText.includes(hint))) {
+      return 'IE'
+    }
+
+    if (
+      sourceHost &&
+      EU_FALLBACK_COMPETITOR_DOMAINS.some((domain) => this.hostnameMatches(sourceHost, domain))
+    ) {
+      return 'EU_FALLBACK'
+    }
+
+    if (EU_FALLBACK_SOURCE_HINTS.some((hint) => sourceText.includes(hint))) {
+      return 'EU_FALLBACK'
+    }
+
+    return 'EU_FALLBACK'
+  }
+
+  private extractHostname(value?: string): string {
+    if (!value) return ''
+    const trimmed = value.trim().toLowerCase()
+    if (!trimmed) return ''
+
+    try {
+      const withProtocol =
+        trimmed.startsWith('http://') || trimmed.startsWith('https://')
+          ? trimmed
+          : `https://${trimmed}`
+      return new URL(withProtocol).hostname.toLowerCase().replace(/^www\./, '')
+    } catch {
+      return trimmed
+        .replace(/^https?:\/\//, '')
+        .split('/')[0]
+        .replace(/^www\./, '')
+    }
+  }
+
+  private hostnameMatches(candidate: string, domain: string): boolean {
+    if (!candidate || !domain) return false
+    return candidate === domain || candidate.endsWith(`.${domain}`)
   }
 
   private async enrichCompsWithPreviewImages(comps: PriceCheckComp[]): Promise<PriceCheckComp[]> {

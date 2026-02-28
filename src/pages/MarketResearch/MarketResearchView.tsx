@@ -69,6 +69,7 @@ interface CompetitorFeedItem {
     source: string
     sourceUrl?: string
     listedAt?: string
+    condition?: string
 }
 
 interface CompetitorFeedResult {
@@ -144,6 +145,21 @@ const CONDITION_OPTIONS = [
 
 import MarketResearchResultPanel, { TREND_CONFIG } from './MarketResearchResultPanel'
 
+// ─── Competitor feed helpers ───────────────────────────────────
+const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
+    'Designer Exchange': { label: 'DE', className: 'bg-blue-100 text-blue-700' },
+    'Luxury Exchange':   { label: 'LE', className: 'bg-amber-100 text-amber-700' },
+    'Siopella':          { label: 'S',  className: 'bg-emerald-100 text-emerald-700' },
+}
+
+function relativeDate(isoDate?: string): string | null {
+    if (!isoDate) return null
+    const days = Math.floor((Date.now() - new Date(isoDate).getTime()) / 86_400_000)
+    if (days <= 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    return `${days}d ago`
+}
+
 // ─── Helpers ───────────────────────────────────────────────────
 const normalizeComparableImage = (comparable: MarketComparablePayload): MarketComparable => ({
     ...comparable,
@@ -212,6 +228,7 @@ export default function MarketResearchView() {
     const [isTrendingLoading, setIsTrendingLoading] = useState(false)
     const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
     const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
+    const [competitorRefreshKey, setCompetitorRefreshKey] = useState(0)
     const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
 
     const [savedId, setSavedId] = useState<string | null>(null)
@@ -267,7 +284,7 @@ export default function MarketResearchView() {
         }
         load()
         return () => { cancelled = true }
-    }, [])
+    }, [competitorRefreshKey])
 
     // Restore previous searches from localStorage
     useEffect(() => {
@@ -407,6 +424,10 @@ export default function MarketResearchView() {
         } finally {
             setIsTrendingLoading(false)
         }
+    }
+
+    const loadCompetitorFeed = () => {
+        setCompetitorRefreshKey((k) => k + 1)
     }
 
     const quickResearch = (brand: string, model: string) => {
