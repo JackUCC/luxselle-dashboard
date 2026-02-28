@@ -27,6 +27,7 @@ export interface MarketComparable {
     priceEur: number
     source: string
     sourceUrl?: string
+    previewImageUrl?: string
     condition: string
     daysListed?: number
     dataOrigin?: 'web_search' | 'ai_estimate'
