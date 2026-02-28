@@ -52,6 +52,8 @@ interface MarketComparable {
     priceEur: number
     source: string
     sourceUrl?: string
+    thumbnailUrl?: string
+    imageUrl?: string
     condition: string
     daysListed?: number
 }
@@ -599,40 +601,65 @@ export default function MarketResearchView() {
                                         Market Comparables ({result.comparables.length})
                                     </div>
                                     <div className="space-y-3">
-                                        {result.comparables.map((comp, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors"
-                                            >
-                                                <div className="min-w-0 flex-1 pr-4">
-                                                    <div className="text-sm font-medium text-gray-900 truncate">{comp.title}</div>
-                                                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                                                        <span>{comp.source}</span>
-                                                        <span>·</span>
-                                                        <span className="capitalize">{comp.condition}</span>
-                                                        {comp.daysListed != null && (
-                                                            <>
+                                        {result.comparables.map((comp, i) => {
+                                            const thumbnailUrl = comp.thumbnailUrl ?? comp.imageUrl
+                                            const hasTitle = comp.title.trim().length > 0
+
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors"
+                                                >
+                                                    <div className="min-w-0 flex flex-1 items-start gap-3 pr-4">
+                                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                                            {thumbnailUrl ? (
+                                                                <img
+                                                                    src={thumbnailUrl}
+                                                                    alt={hasTitle ? `${comp.title} comparable listing thumbnail` : ''}
+                                                                    aria-hidden={hasTitle ? undefined : true}
+                                                                    className="h-full w-full object-cover"
+                                                                    loading="lazy"
+                                                                />
+                                                            ) : (
+                                                                <div
+                                                                    className="flex h-full w-full items-center justify-center text-gray-300"
+                                                                    aria-hidden="true"
+                                                                >
+                                                                    <Store className="h-4 w-4" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="line-clamp-2 text-sm font-medium text-gray-900">{comp.title}</div>
+                                                            <div className="mt-1 flex min-w-0 items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-gray-500">
+                                                                <span>{comp.source}</span>
                                                                 <span>·</span>
-                                                                <span>{comp.daysListed}d listed</span>
-                                                            </>
+                                                                <span className="capitalize">{comp.condition}</span>
+                                                                {comp.daysListed != null && (
+                                                                    <>
+                                                                        <span>·</span>
+                                                                        <span>{comp.daysListed}d listed</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-3">
+                                                        <span className="text-lg font-bold text-gray-900">{formatCurrency(comp.priceEur)}</span>
+                                                        {comp.sourceUrl && (
+                                                            <a
+                                                                href={comp.sourceUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
+                                                            >
+                                                                <ExternalLink className="h-4 w-4" />
+                                                            </a>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 shrink-0">
-                                                    <span className="text-lg font-bold text-gray-900">{formatCurrency(comp.priceEur)}</span>
-                                                    {comp.sourceUrl && (
-                                                        <a
-                                                            href={comp.sourceUrl}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                                        >
-                                                            <ExternalLink className="h-4 w-4" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             )}
