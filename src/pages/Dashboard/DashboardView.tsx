@@ -20,6 +20,7 @@ import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
+import AiMarketPulseWidget from '../../components/widgets/AiMarketPulseWidget'
 
 export default function DashboardView() {
   const navigate = useNavigate()
@@ -160,6 +161,11 @@ export default function DashboardView() {
             <SerialCheckWidget />
             <SourcingSitesWidget />
             <ActiveSourcingWidget />
+          </BentoGrid>
+
+          {/* Row 4: AI Market Pulse */}
+          <BentoGrid columns={3}>
+            <AiMarketPulseWidget />
           </BentoGrid>
         </div>
       )}

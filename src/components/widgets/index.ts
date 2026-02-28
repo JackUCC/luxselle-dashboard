@@ -1,4 +1,5 @@
 export { default as ActiveSourcingWidget } from './ActiveSourcingWidget'
+export { default as AiMarketPulseWidget } from './AiMarketPulseWidget'
 export { default as CalculatorWidget } from './CalculatorWidget'
 export { default as EurToYenWidget } from './EurToYenWidget'
 export { default as LandedCostWidget } from './LandedCostWidget'

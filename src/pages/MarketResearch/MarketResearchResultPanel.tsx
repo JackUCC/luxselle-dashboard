@@ -12,6 +12,7 @@ import {
     ExternalLink,
 } from 'lucide-react'
 import { formatCurrency } from '../../lib/formatters'
+import { ConfidenceGauge } from '../../components/design-system'
 import type { MarketResearchResult, MarketComparable } from './types'
 
 export const DEMAND_CONFIG = {
@@ -67,12 +68,7 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                                 <div className="text-sm text-gray-600 mt-1.5 max-w-md">{result.marketSummary}</div>
                             </div>
                             <div className="flex items-center gap-6 text-right shrink-0">
-                                <div>
-                                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Confidence</div>
-                                    <div className="text-3xl font-bold text-gray-900">
-                                        {(result.confidence * 100).toFixed(0)}%
-                                    </div>
-                                </div>
+                                <ConfidenceGauge value={result.confidence} />
                                 {headerActions && (
                                     <div className="flex items-center">
                                         {headerActions}
