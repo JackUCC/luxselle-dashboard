@@ -362,4 +362,19 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
+// DELETE /api/invoices/:id
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const invoice = await invoiceRepo.getById(req.params.id)
+    if (!invoice) {
+      res.status(404).json(formatApiError(API_ERROR_CODES.NOT_FOUND, 'Invoice not found'))
+      return
+    }
+    await invoiceRepo.remove(req.params.id)
+    res.status(204).send()
+  } catch (err) {
+    next(err)
+  }
+})
+
 export const invoicesRouter = router

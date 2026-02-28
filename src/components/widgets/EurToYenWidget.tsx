@@ -59,7 +59,7 @@ export default function EurToYenWidget() {
               placeholder="0"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="lux-input h-12 pl-10 text-[22px] font-semibold font-mono text-lux-800"
+              className="lux-input h-12 pl-12 text-[22px] font-semibold font-mono text-lux-800"
             />
           </div>
 

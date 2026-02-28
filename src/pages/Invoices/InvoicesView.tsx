@@ -5,9 +5,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Download, FileText, Loader2, Plus, Upload, X } from 'lucide-react'
+import { Download, FileText, Loader2, Plus, Upload, X, Trash2 } from 'lucide-react'
 import type { Invoice } from '@shared/schemas'
-import { apiGet, apiPost, apiPostFormData } from '../../lib/api'
+import { apiGet, apiPost, apiPostFormData, apiDelete } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
 import { Button, Input, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
@@ -89,6 +89,19 @@ export default function InvoicesView() {
       }
     } catch (err) {
       toast.error('Failed to generate PDF', { id: toastId })
+    }
+  }
+
+  const handleDeleteInvoice = async () => {
+    if (!selected) return
+    const toastId = toast.loading('Deleting invoice...')
+    try {
+      await apiDelete(`/invoices/${selected.id}`)
+      setInvoices((prev) => prev.filter((inv) => inv.id !== selected.id))
+      setSelected(null)
+      toast.success('Invoice deleted', { id: toastId })
+    } catch (err) {
+      toast.error('Failed to delete invoice', { id: toastId })
     }
   }
 
@@ -279,6 +292,9 @@ export default function InvoicesView() {
                   <Button variant="secondary" onClick={handleExportPdf} className="inline-flex items-center gap-2" aria-label="Export PDF">
                     <Download className="h-4 w-4" />
                     {selected.pdfUrl ? 'Download PDF' : 'Generate PDF'}
+                  </Button>
+                  <Button variant="secondary" onClick={handleDeleteInvoice} className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200" aria-label="Delete Invoice">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                   <button
                     type="button"

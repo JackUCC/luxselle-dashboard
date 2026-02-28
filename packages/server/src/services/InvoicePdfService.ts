@@ -1,4 +1,4 @@
-import pdfmake from 'pdfmake'
+import PdfPrinter from 'pdfmake'
 import type { TDocumentDefinitions, Content, TableCell } from 'pdfmake/interfaces'
 import type { Invoice, Settings } from '@shared/schemas'
 
@@ -11,13 +11,19 @@ const fonts = {
     },
 }
 
-pdfmake.addFonts(fonts)
-
 export class InvoicePdfService {
     async generate(invoice: Invoice, settings: Settings | null): Promise<Buffer> {
         const docDefinition = this.buildDocDefinition(invoice, settings)
-        const generated = await pdfmake.createPdf(docDefinition).getBuffer()
-        return Buffer.isBuffer(generated) ? generated : Buffer.from(generated)
+        const printer = new PdfPrinter(fonts)
+        const pdfDoc = printer.createPdfKitDocument(docDefinition)
+        
+        return new Promise((resolve, reject) => {
+            const chunks: Buffer[] = []
+            pdfDoc.on('data', (chunk) => chunks.push(chunk))
+            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)))
+            pdfDoc.on('error', reject)
+            pdfDoc.end()
+        })
     }
 
     private formatCurrency(amount: number, currency: string = 'EUR'): string {

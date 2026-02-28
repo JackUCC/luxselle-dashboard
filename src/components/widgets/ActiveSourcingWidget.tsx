@@ -41,7 +41,7 @@ export default function ActiveSourcingWidget() {
 
   return (
     <div
-      className="lux-card-accent p-6 animate-bento-enter"
+      className="lux-card p-6 animate-bento-enter"
       style={{ '--stagger': 8 } as React.CSSProperties}
     >
       <div className="mb-4 flex items-center justify-between">

@@ -8,7 +8,7 @@ export default function DockBar() {
 
   return (
     <nav
-      className="fixed left-4 top-1/2 z-50 hidden -translate-y-1/2 xl:flex flex-col items-center rounded-[22px] border border-white/40 bg-white/60 px-2.5 py-4 shadow-glass-lg backdrop-blur-2xl"
+      className="fixed left-4 top-1/2 z-50 hidden -translate-y-1/2 xl:flex flex-col items-center rounded-[24px] border border-white/60 bg-white/80 px-3 py-6 shadow-glass-lg backdrop-blur-2xl"
       data-testid="dock-bar"
       aria-label="Main navigation"
     >

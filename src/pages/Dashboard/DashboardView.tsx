@@ -20,7 +20,6 @@ import EurToYenWidget from '../../components/widgets/EurToYenWidget'
 import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
-import AiInsightsWidget from '../../components/widgets/AiInsightsWidget'
 
 export default function DashboardView() {
   const navigate = useNavigate()
@@ -147,7 +146,6 @@ export default function DashboardView() {
                   €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
                 </span>
               }
-              accent
               stagger={5}
             />
           </BentoGrid>
@@ -158,11 +156,6 @@ export default function DashboardView() {
             <SourcingSitesWidget />
             <ActiveSourcingWidget />
           </BentoGrid>
-
-          {/* Row 4: AI Insights */}
-          <div className="animate-bento-enter" style={{ '--stagger': 7 } as React.CSSProperties}>
-            <AiInsightsWidget kpis={kpis} profit={profit} />
-          </div>
         </div>
       )}
     </PageLayout>
