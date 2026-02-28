@@ -69,6 +69,22 @@ const FEE_TOOLTIPS: Record<string, string> = {
     fixedFee: 'Fixed transaction fees (e.g. handling, proxy service)',
 }
 
+const FADE_DELAY_CLASSES = [
+    'fade-delay-0',
+    'fade-delay-1',
+    'fade-delay-2',
+    'fade-delay-3',
+    'fade-delay-4',
+    'fade-delay-5',
+    'fade-delay-6',
+    'fade-delay-7',
+    'fade-delay-8',
+    'fade-delay-9',
+    'fade-delay-10',
+    'fade-delay-11',
+    'fade-delay-12',
+]
+
 function Tooltip({ text }: { text: string }) {
     const [show, setShow] = useState(false)
     return (
@@ -81,6 +97,8 @@ function Tooltip({ text }: { text: string }) {
                 onBlur={() => setShow(false)}
                 className="text-lux-400 hover:text-lux-600 transition-colors"
                 tabIndex={-1}
+                aria-label={text}
+                title={text}
             >
                 <Info className="h-3 w-3" />
             </button>
@@ -291,6 +309,7 @@ export default function CalculatorWidget() {
                     {showSavePreset ? (
                         <div className="flex items-center bg-lux-50 rounded-lg p-1 border border-lux-200 animate-fade-in">
                             <input
+                                id="calculator-preset-name"
                                 type="text"
                                 value={presetName}
                                 onChange={e => setPresetName(e.target.value)}
@@ -298,9 +317,10 @@ export default function CalculatorWidget() {
                                 placeholder="Preset Name"
                                 className="text-xs bg-transparent border-none focus:ring-0 px-2 w-24"
                                 autoFocus
+                                aria-label="Preset name"
                             />
-                            <button onClick={handleSavePreset} className="p-1 hover:text-emerald-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"><Save className="h-3 w-3" /></button>
-                            <button onClick={() => setShowSavePreset(false)} className="p-1 hover:text-red-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"><Trash2 className="h-3 w-3" /></button>
+                            <button type="button" onClick={handleSavePreset} className="p-1 hover:text-emerald-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Save preset"><Save className="h-3 w-3" /></button>
+                            <button type="button" onClick={() => setShowSavePreset(false)} className="p-1 hover:text-red-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Cancel preset save"><Trash2 className="h-3 w-3" /></button>
                         </div>
                     ) : (
                         <button
@@ -371,12 +391,14 @@ export default function CalculatorWidget() {
             {/* Main Inputs */}
             {state.calculatorMode === 'forward' ? (
                 <div>
-                    <label className="block text-xs font-medium text-lux-700 mb-1.5">Item Price</label>
+                    <label htmlFor="calculator-item-price" className="block text-xs font-medium text-lux-700 mb-1.5">Item Price</label>
                     <div className="flex rounded-lg shadow-sm">
                         <select
+                            id="calculator-currency"
                             value={state.currency}
                             onChange={e => setState(s => ({ ...s, currency: e.target.value as Currency }))}
                             className="flex-shrink-0 w-20 rounded-l-lg border-lux-200 bg-lux-50 text-lux-600 text-sm font-medium focus:ring-lux-900 focus:border-lux-900"
+                            aria-label="Item price currency"
                         >
                             <option value="EUR">€ EUR</option>
                             <option value="USD">$ USD</option>
@@ -384,6 +406,7 @@ export default function CalculatorWidget() {
                             <option value="JPY">¥ JPY</option>
                         </select>
                         <input
+                            id="calculator-item-price"
                             type="number"
                             value={state.basePrice}
                             onChange={e => setState(s => ({ ...s, basePrice: e.target.value }))}
@@ -408,8 +431,9 @@ export default function CalculatorWidget() {
             ) : (
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-lux-700 mb-1.5">Target Sell Price (€)</label>
+                        <label htmlFor="calculator-target-sell-price" className="block text-xs font-medium text-lux-700 mb-1.5">Target Sell Price (€)</label>
                         <input
+                            id="calculator-target-sell-price"
                             type="number"
                             value={state.targetSellPrice}
                             onChange={e => setState(s => ({ ...s, targetSellPrice: e.target.value }))}
@@ -419,9 +443,10 @@ export default function CalculatorWidget() {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-lux-700 mb-1.5">Target Margin %</label>
+                        <label htmlFor="calculator-target-margin" className="block text-xs font-medium text-lux-700 mb-1.5">Target Margin %</label>
                         <div className="flex rounded-lg shadow-sm">
                             <input
+                                id="calculator-target-margin"
                                 type="number"
                                 value={state.targetMargin}
                                 onChange={e => setState(s => ({ ...s, targetMargin: e.target.value }))}
@@ -438,10 +463,11 @@ export default function CalculatorWidget() {
 
             {/* Shipping */}
             <div>
-                <label className="block text-xs font-medium text-lux-700 mb-1.5">
+                <label htmlFor="calculator-shipping" className="block text-xs font-medium text-lux-700 mb-1.5">
                     Shipping <span className="text-lux-400 font-normal">({sym})</span>
                 </label>
                 <input
+                    id="calculator-shipping"
                     type="number"
                     value={state.shipping}
                     onChange={e => setState(s => ({ ...s, shipping: e.target.value }))}
@@ -453,8 +479,9 @@ export default function CalculatorWidget() {
             {/* Currency Selector (Only in Reverse Mode) needs access to change currency */}
             {state.calculatorMode === 'reverse' && (
                 <div>
-                    <label className="block text-xs font-medium text-lux-700 mb-1.5">Target Currency</label>
+                    <label htmlFor="calculator-target-currency" className="block text-xs font-medium text-lux-700 mb-1.5">Target Currency</label>
                     <select
+                        id="calculator-target-currency"
                         value={state.currency}
                         onChange={e => setState(s => ({ ...s, currency: e.target.value as Currency }))}
                         className="lux-input"
@@ -493,11 +520,12 @@ export default function CalculatorWidget() {
                         <div className="grid grid-cols-2 gap-4">
                             {/* Platform Fee */}
                             <div>
-                                <label className="flex items-center text-xs text-lux-500 mb-1">
+                                <label htmlFor="calculator-platform-fee-rate" className="flex items-center text-xs text-lux-500 mb-1">
                                     Platform Fee %
                                     <Tooltip text={FEE_TOOLTIPS.platformFeeRate} />
                                 </label>
                                 <input
+                                    id="calculator-platform-fee-rate"
                                     type="number"
                                     value={state.platformFeeRate}
                                     onChange={e => setState(s => ({ ...s, platformFeeRate: e.target.value }))}
@@ -508,11 +536,12 @@ export default function CalculatorWidget() {
 
                             {/* Customs */}
                             <div>
-                                <label className="flex items-center text-xs text-lux-500 mb-1">
+                                <label htmlFor="calculator-customs-rate" className="flex items-center text-xs text-lux-500 mb-1">
                                     Customs Duty %
                                     <Tooltip text={FEE_TOOLTIPS.customsRate} />
                                 </label>
                                 <input
+                                    id="calculator-customs-rate"
                                     type="number"
                                     value={state.customsRate}
                                     onChange={e => setState(s => ({ ...s, customsRate: e.target.value }))}
@@ -523,11 +552,12 @@ export default function CalculatorWidget() {
 
                             {/* Import VAT */}
                             <div>
-                                <label className="flex items-center text-xs text-lux-500 mb-1">
+                                <label htmlFor="calculator-import-vat-rate" className="flex items-center text-xs text-lux-500 mb-1">
                                     Import VAT %
                                     <Tooltip text={FEE_TOOLTIPS.importVatRate} />
                                 </label>
                                 <input
+                                    id="calculator-import-vat-rate"
                                     type="number"
                                     value={state.importVatRate}
                                     onChange={e => setState(s => ({ ...s, importVatRate: e.target.value }))}
@@ -538,11 +568,12 @@ export default function CalculatorWidget() {
 
                             {/* Payment Fee */}
                             <div>
-                                <label className="flex items-center text-xs text-lux-500 mb-1">
+                                <label htmlFor="calculator-payment-fee-rate" className="flex items-center text-xs text-lux-500 mb-1">
                                     Payment Fee %
                                     <Tooltip text={FEE_TOOLTIPS.paymentFeeRate} />
                                 </label>
                                 <input
+                                    id="calculator-payment-fee-rate"
                                     type="number"
                                     value={state.paymentFeeRate}
                                     onChange={e => setState(s => ({ ...s, paymentFeeRate: e.target.value }))}
@@ -555,11 +586,12 @@ export default function CalculatorWidget() {
                         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-lux-100">
                             {/* Insurance */}
                             <div>
-                                <label className="flex items-center text-xs text-lux-500 mb-1">
+                                <label htmlFor="calculator-insurance" className="flex items-center text-xs text-lux-500 mb-1">
                                     Insurance / Other ({sym})
                                     <Tooltip text={FEE_TOOLTIPS.insurance} />
                                 </label>
                                 <input
+                                    id="calculator-insurance"
                                     type="number"
                                     value={state.insurance}
                                     onChange={e => setState(s => ({ ...s, insurance: e.target.value }))}
@@ -570,11 +602,12 @@ export default function CalculatorWidget() {
 
                             {/* Fixed Fee */}
                             <div>
-                                <label className="flex items-center text-xs text-lux-500 mb-1">
+                                <label htmlFor="calculator-fixed-fee" className="flex items-center text-xs text-lux-500 mb-1">
                                     Fixed Fee ({sym})
                                     <Tooltip text={FEE_TOOLTIPS.fixedFee} />
                                 </label>
                                 <input
+                                    id="calculator-fixed-fee"
                                     type="number"
                                     value={state.fixedFee}
                                     onChange={e => setState(s => ({ ...s, fixedFee: e.target.value }))}
@@ -630,8 +663,7 @@ export default function CalculatorWidget() {
                             {result.breakdown.map((item, i) => (
                                 <div
                                     key={item.label}
-                                    className="flex justify-between text-xs animate-fade-in"
-                                    style={{ animationDelay: `${i * 40}ms` }}
+                                    className={`flex justify-between text-xs animate-fade-in ${FADE_DELAY_CLASSES[Math.min(i, FADE_DELAY_CLASSES.length - 1)]}`}
                                 >
                                     <span className="text-lux-400 flex items-center gap-1.5">
                                         <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -669,10 +701,11 @@ export default function CalculatorWidget() {
                     {showMargin && (
                         <div className="p-5 space-y-3 animate-fade-in">
                             <div>
-                                <label className="block text-xs text-lux-500 mb-1">Sell Price (EUR)</label>
+                                <label htmlFor="calculator-sell-price" className="block text-xs text-lux-500 mb-1">Sell Price (EUR)</label>
                                 <div className="relative">
                                     <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400 text-sm">€</span>
                                     <input
+                                        id="calculator-sell-price"
                                         type="number"
                                         value={state.sellPrice}
                                         onChange={e => setState(s => ({ ...s, sellPrice: e.target.value }))}

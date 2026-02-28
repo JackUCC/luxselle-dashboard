@@ -1,24 +1,41 @@
-import { useState, useRef, useEffect, useCallback, forwardRef } from 'react'
+import { useState, useRef, useEffect, useCallback, useId, forwardRef } from 'react'
 
 interface PredictiveInputProps {
+  id?: string
   value: string
   onChange: (value: string) => void
   onSelect: (value: string) => void
   inventoryItems?: string[]
   popularItems?: string[]
   placeholder?: string
+  ariaLabel?: string
+  listboxLabel?: string
   className?: string
 }
 
 const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
   function PredictiveInput(
-    { value, onChange, onSelect, inventoryItems = [], popularItems = [], placeholder, className },
+    {
+      id,
+      value,
+      onChange,
+      onSelect,
+      inventoryItems = [],
+      popularItems = [],
+      placeholder,
+      ariaLabel,
+      listboxLabel,
+      className,
+    },
     forwardedRef,
   ) {
     const [isOpen, setIsOpen] = useState(false)
     const [highlightIndex, setHighlightIndex] = useState(-1)
     const containerRef = useRef<HTMLDivElement>(null)
     const internalRef = useRef<HTMLInputElement | null>(null)
+    const generatedId = useId()
+    const inputId = id ?? `predictive-input-${generatedId}`
+    const listboxId = `predictive-listbox-${generatedId}`
 
     const setInputRef = useCallback(
       (node: HTMLInputElement | null) => {
@@ -101,10 +118,15 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
     }
 
     const showDropdown = isOpen && q.length > 0 && allMatches.length > 0
+    const highlightedOptionId =
+      showDropdown && highlightIndex >= 0 && highlightIndex < allMatches.length
+        ? `${listboxId}-option-${highlightIndex}`
+        : undefined
 
     return (
       <div ref={containerRef} className="relative">
         <input
+          id={inputId}
           ref={setInputRef}
           type="text"
           value={value}
@@ -121,13 +143,16 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
           role="combobox"
           aria-expanded={showDropdown}
           aria-autocomplete="list"
-          aria-controls={showDropdown ? 'predictive-dropdown' : undefined}
+          aria-controls={showDropdown ? listboxId : undefined}
+          aria-activedescendant={highlightedOptionId}
+          aria-label={ariaLabel || placeholder || 'Search suggestions'}
         />
 
         {showDropdown && (
           <div
-            id="predictive-dropdown"
+            id={listboxId}
             role="listbox"
+            aria-label={listboxLabel || 'Suggestions'}
             className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lux-card border border-lux-200 bg-white shadow-lg"
           >
             {inventoryMatches.length > 0 && (
@@ -138,9 +163,11 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
                 {inventoryMatches.map((item, i) => (
                   <button
                     key={`inv-${item}`}
+                    id={`${listboxId}-option-${i}`}
                     type="button"
                     role="option"
                     aria-selected={highlightIndex === i}
+                    tabIndex={-1}
                     onClick={() => selectItem(item)}
                     onMouseEnter={() => setHighlightIndex(i)}
                     className={`w-full text-left px-3 py-2 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
@@ -165,9 +192,11 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
                   return (
                     <button
                       key={`pop-${item}`}
+                      id={`${listboxId}-option-${globalIndex}`}
                       type="button"
                       role="option"
                       aria-selected={highlightIndex === globalIndex}
+                      tabIndex={-1}
                       onClick={() => selectItem(item)}
                       onMouseEnter={() => setHighlightIndex(globalIndex)}
                       className={`w-full text-left px-3 py-2 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${

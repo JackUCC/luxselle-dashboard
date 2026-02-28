@@ -2,12 +2,13 @@
  * Serial Number Check: paste serial + select brand to see decoded production year.
  * Helps inform purchasing decisions. Decoding is a guide only; authentication by an expert is recommended.
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { Search, Calendar, Info, Loader2 } from 'lucide-react'
 import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
+import { useResearchSession } from '../../lib/ResearchSessionContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
@@ -28,18 +29,47 @@ interface PriceCheckResult {
   maxBidEur: number
 }
 
+interface SerialCheckQuery {
+  serial: string
+  brand: SerialCheckBrand
+  description: string
+}
+
+interface SerialCheckSessionResult {
+  decodeResult: DecodeResult
+  pricingGuidance: SerialPricingGuidance
+  marketResult: PriceCheckResult
+}
+
 export default function SerialCheckView() {
   const [serial, setSerial] = useState('')
   const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
   const [description, setDescription] = useState('')
-  const [decodeResult, setDecodeResult] = useState<DecodeResult | null>(null)
-  const [pricingGuidance, setPricingGuidance] = useState<SerialPricingGuidance | null>(null)
-  const [marketResult, setMarketResult] = useState<PriceCheckResult | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const {
+    session: serialSession,
+    startLoading: startSerialLoading,
+    setSuccess: setSerialSuccess,
+    setError: setSerialError,
+    clear: clearSerialSession,
+  } = useResearchSession<SerialCheckSessionResult, SerialCheckQuery>('serial-check')
+  const isLoading = serialSession.status === 'loading'
+  const serialError = serialSession.status === 'error' ? (serialSession.error ?? 'Could not run serial analysis') : null
+  const decodeResult = serialSession.status === 'success' ? (serialSession.result?.decodeResult ?? null) : null
+  const pricingGuidance = serialSession.status === 'success' ? (serialSession.result?.pricingGuidance ?? null) : null
+  const marketResult = serialSession.status === 'success' ? (serialSession.result?.marketResult ?? null) : null
+
+  useEffect(() => {
+    const persistedQuery = serialSession.query
+    if (!persistedQuery) return
+    setSerial(persistedQuery.serial)
+    setBrand(persistedQuery.brand)
+    setDescription(persistedQuery.description)
+  }, [serialSession.query])
 
   const handleDecode = useCallback(async () => {
     const normalizedDescription = description.trim()
-    if (!serial.trim()) {
+    const normalizedSerial = serial.trim()
+    if (!normalizedSerial) {
       toast.error('Enter a serial / date code first')
       return
     }
@@ -48,18 +78,20 @@ export default function SerialCheckView() {
       return
     }
 
-    setIsLoading(true)
-    setDecodeResult(null)
-    setPricingGuidance(null)
-    setMarketResult(null)
+    const researchQuery: SerialCheckQuery = {
+      serial: normalizedSerial,
+      brand,
+      description: normalizedDescription,
+    }
+    startSerialLoading(researchQuery)
 
     try {
-      let decoded = decodeSerialToYear(serial, brand)
+      let decoded = decodeSerialToYear(normalizedSerial, brand)
 
       if (decoded.source === 'rule_based' && (decoded.precision === 'unknown' || decoded.confidence < 0.7)) {
         try {
           const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
-            serial,
+            serial: normalizedSerial,
             brand,
             itemDescription: normalizedDescription,
           })
@@ -78,25 +110,26 @@ export default function SerialCheckView() {
         decode: decoded,
       })
 
-      setDecodeResult(decoded)
-      setMarketResult(marketData)
-      setPricingGuidance(guidance)
+      setSerialSuccess(
+        {
+          decodeResult: decoded,
+          marketResult: marketData,
+          pricingGuidance: guidance,
+        },
+        researchQuery
+      )
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Could not run serial analysis'
+      setSerialError(message, researchQuery)
       toast.error(message)
-      setDecodeResult(decodeSerialToYear(serial, brand))
-    } finally {
-      setIsLoading(false)
     }
-  }, [serial, brand, description])
+  }, [serial, brand, description, setSerialError, setSerialSuccess, startSerialLoading])
 
   const handleClear = useCallback(() => {
     setSerial('')
     setDescription('')
-    setDecodeResult(null)
-    setPricingGuidance(null)
-    setMarketResult(null)
-  }, [])
+    clearSerialSession()
+  }, [clearSerialSession])
 
   return (
     <PageLayout variant="narrow">
@@ -105,7 +138,7 @@ export default function SerialCheckView() {
         purpose="Paste serial, select brand, and add item details to get a tighter decode plus age-adjusted price guidance."
       />
 
-      <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+      <div className="lux-card p-6 animate-bento-enter stagger-0">
         <SectionLabel className="mb-4">Lookup details</SectionLabel>
         <div className="space-y-4">
           <div>
@@ -175,8 +208,21 @@ export default function SerialCheckView() {
         </div>
       </div>
 
-      {!decodeResult && !isLoading && (
-        <div className="lux-card border-dashed min-h-[120px] flex flex-col items-center justify-center p-6 text-center animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+      {serialError && !isLoading && (
+        <div className="lux-card border-rose-200 bg-rose-50/60 p-6 text-center">
+          <p className="text-sm text-rose-600 font-medium">{serialError}</p>
+          <button
+            type="button"
+            onClick={clearSerialSession}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {!decodeResult && !isLoading && !serialError && (
+        <div className="lux-card border-dashed min-h-[120px] flex flex-col items-center justify-center p-6 text-center animate-bento-enter stagger-1">
           <Search className="h-10 w-10 mb-3 opacity-30 text-lux-400" />
           <p className="text-sm text-lux-600">Enter a serial and item description, then click <strong>Analyze serial</strong> to see decode and price guidance.</p>
         </div>
@@ -189,8 +235,7 @@ export default function SerialCheckView() {
             decodeResult.success
               ? 'border-emerald-200 bg-emerald-50/60'
               : 'border-amber-200 bg-amber-50/60'
-          }`}
-          style={{ '--stagger': 1 } as React.CSSProperties}
+          } stagger-1`}
         >
           <SectionLabel className="mb-3">Decode result</SectionLabel>
           <div className="flex items-start gap-3">
@@ -228,18 +273,18 @@ export default function SerialCheckView() {
       )}
 
       {pricingGuidance && (
-        <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+        <div className="lux-card p-6 animate-bento-enter stagger-2">
           <SectionLabel className="mb-3">Price guidance</SectionLabel>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter stagger-3">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">Market average</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.marketAverageEur)}</p>
             </div>
-            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
+            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter stagger-4">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">Estimated worth</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.estimatedWorthEur)}</p>
             </div>
-            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
+            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter stagger-5">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">Recommended max pay</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.recommendedMaxPayEur)}</p>
             </div>
@@ -257,7 +302,7 @@ export default function SerialCheckView() {
       )}
 
       {pricingGuidance && marketResult && (
-        <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+        <div className="lux-card p-6 animate-bento-enter stagger-3">
           <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
           {marketResult.comps.length > 0 ? (
             <div className="space-y-2 max-h-72 overflow-y-auto">

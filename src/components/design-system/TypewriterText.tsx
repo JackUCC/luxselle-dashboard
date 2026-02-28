@@ -74,8 +74,7 @@ export default function TypewriterText({
       {text.slice(0, displayedCount)}
       {!done && (
         <span
-          className="inline-block w-[2px] h-[1em] align-text-bottom bg-lux-gold ml-px"
-          style={{ animation: 'lux-pulse 1s step-end infinite' }}
+          className="inline-block w-[2px] h-[1em] align-text-bottom bg-lux-gold ml-px lux-typewriter-cursor"
           aria-hidden="true"
         />
       )}

@@ -37,10 +37,7 @@ export default function MarketIntelligenceWidget() {
   }
 
   return (
-    <div
-      className="lux-card p-6 sm:col-span-2 animate-bento-enter"
-      style={{ '--stagger': 0 } as React.CSSProperties}
-    >
+    <div className="lux-card p-6 sm:col-span-2 animate-bento-enter stagger-0">
       <SectionLabel className="mb-4">Market Intelligence</SectionLabel>
 
       <form onSubmit={handleSubmit} className="relative">
@@ -50,6 +47,8 @@ export default function MarketIntelligenceWidget() {
           onSelect={(selected) => navigate(`/buy-box?q=${encodeURIComponent(selected)}&run=1`)}
           popularItems={POPULAR_SUGGESTIONS}
           placeholder="Search brand, model, SKU, or paste image..."
+          ariaLabel="Search market intelligence"
+          listboxLabel="Market intelligence suggestions"
           className="lux-input h-12 pl-4 pr-24 text-sm"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">

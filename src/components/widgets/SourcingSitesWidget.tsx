@@ -9,10 +9,7 @@ const SOURCING_SITES = [
 
 export default function SourcingSitesWidget() {
   return (
-    <div
-      className="lux-card p-6 animate-bento-enter"
-      style={{ '--stagger': 7 } as React.CSSProperties}
-    >
+    <div className="lux-card p-6 animate-bento-enter stagger-7">
       <div className="mb-4 flex items-center justify-between">
         <SectionLabel>Sourcing Sites</SectionLabel>
         <Link

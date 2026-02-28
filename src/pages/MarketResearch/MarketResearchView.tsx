@@ -31,6 +31,7 @@ import {
 import { apiGet, apiPost, apiPut, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { useServerStatus } from '../../lib/ServerStatusContext'
+import { useResearchSession } from '../../lib/ResearchSessionContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, TypewriterText } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
@@ -84,8 +85,45 @@ interface CompetitorFeedResult {
     generatedAt: string
 }
 
+interface MarketResearchFormData {
+    brand: string
+    model: string
+    category: string
+    condition: string
+    colour: string
+    year: string
+    notes: string
+    currentAskPriceEur: string
+}
+
+const DEFAULT_FORM_DATA: MarketResearchFormData = {
+    brand: '',
+    model: '',
+    category: 'Handbag',
+    condition: 'excellent',
+    colour: '',
+    year: '',
+    notes: '',
+    currentAskPriceEur: '',
+}
+
 const PREVIOUS_SEARCHES_KEY = 'luxselle_market_research_previous'
 const PREVIOUS_SEARCHES_MAX = 6
+const FADE_DELAY_CLASSES = [
+    'fade-delay-0',
+    'fade-delay-1',
+    'fade-delay-2',
+    'fade-delay-3',
+    'fade-delay-4',
+    'fade-delay-5',
+    'fade-delay-6',
+    'fade-delay-7',
+    'fade-delay-8',
+    'fade-delay-9',
+    'fade-delay-10',
+    'fade-delay-11',
+    'fade-delay-12',
+]
 
 /** Editable: key bags to show as quick-select (merge with trending when loaded). */
 const KEY_TRENDING_BAGS: { brand: string; model: string }[] = [
@@ -165,19 +203,19 @@ function generateSuggestions(brand: string, model: string): { brand: string; mod
 // Component
 // ═════════════════════════════════════════════════════════════════
 export default function MarketResearchView() {
-    const [formData, setFormData] = useState({
-        brand: '',
-        model: '',
-        category: 'Handbag',
-        condition: 'excellent',
-        colour: '',
-        year: '',
-        notes: '',
-        currentAskPriceEur: '',
-    })
-    const [isLoading, setIsLoading] = useState(false)
-    const [result, setResult] = useState<MarketResearchResult | null>(null)
-    const [error, setError] = useState<string | null>(null)
+    const [formData, setFormData] = useState<MarketResearchFormData>(DEFAULT_FORM_DATA)
+    const {
+        session: researchSession,
+        startLoading: startResearchLoading,
+        setSuccess: setResearchSuccess,
+        setError: setResearchError,
+        clear: clearResearchSession,
+    } = useResearchSession<MarketResearchResult, MarketResearchFormData>('market-research')
+    const [feedError, setFeedError] = useState<string | null>(null)
+    const isLoading = researchSession.status === 'loading'
+    const result = researchSession.status === 'success' ? (researchSession.result ?? null) : null
+    const researchError = researchSession.status === 'error' ? (researchSession.error ?? 'Analysis failed') : null
+    const error = researchError ?? feedError
 
     const [trending, setTrending] = useState<TrendingResult | null>(null)
     const [isTrendingLoading, setIsTrendingLoading] = useState(false)
@@ -254,6 +292,12 @@ export default function MarketResearchView() {
         }
     }, [])
 
+    useEffect(() => {
+        const persistedQuery = researchSession.query
+        if (!persistedQuery) return
+        setFormData((prev) => ({ ...prev, ...persistedQuery }))
+    }, [researchSession.query])
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         setFormData(prev => {
@@ -271,20 +315,19 @@ export default function MarketResearchView() {
 
     const handleAnalyse = async (e: React.FormEvent) => {
         e.preventDefault()
-        setIsLoading(true)
-        setError(null)
+        setFeedError(null)
+        startResearchLoading(formData)
         try {
             const { data } = await apiPost<{ data: MarketResearchResultPayload }>('/market-research/analyse', {
                 ...formData,
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
             setFailedComparableImages({})
-            setResult(
-                normalizeMarketResearchResult({
-                    ...data,
-                    comparables: data.comparables.map(normalizeComparableImage),
-                })
-            )
+            const normalizedResult = normalizeMarketResearchResult({
+                ...data,
+                comparables: data.comparables.map(normalizeComparableImage),
+            })
+            setResearchSuccess(normalizedResult, formData)
             setSavedId(null)
             setIsSaved(false)
             setIsStarred(false)
@@ -300,10 +343,8 @@ export default function MarketResearchView() {
             })
         } catch (err) {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analysis failed'
-            setError(msg)
+            setResearchError(msg, formData)
             toast.error(msg)
-        } finally {
-            setIsLoading(false)
         }
     }
 
@@ -366,13 +407,13 @@ export default function MarketResearchView() {
 
     const loadTrending = async () => {
         setIsTrendingLoading(true)
-        setError(null)
+        setFeedError(null)
         try {
             const { data } = await apiGet<{ data: TrendingResult }>('/market-research/trending')
             setTrending(data)
         } catch (err) {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to load trends'
-            setError(msg)
+            setFeedError(msg)
             toast.error(msg)
         } finally {
             setIsTrendingLoading(false)
@@ -381,7 +422,14 @@ export default function MarketResearchView() {
 
     const quickResearch = (brand: string, model: string) => {
         setFormData(prev => ({ ...prev, brand, model }))
-        setResult(null)
+        clearResearchSession()
+    }
+
+    const handleDismissError = () => {
+        setFeedError(null)
+        if (researchSession.status === 'error') {
+            clearResearchSession()
+        }
     }
 
     const { status } = useServerStatus()
@@ -408,7 +456,7 @@ export default function MarketResearchView() {
                     <p className="text-sm text-rose-600 font-medium">{error}</p>
                     <button
                         type="button"
-                        onClick={() => setError(null)}
+                        onClick={handleDismissError}
                         className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
                         Retry
@@ -580,10 +628,7 @@ export default function MarketResearchView() {
                     ) : (
                         <div className="space-y-5">
                             {/* AI Executive Summary */}
-                            <div
-                                className="relative lux-card p-5 overflow-hidden border-l-2"
-                                style={{ borderImage: 'linear-gradient(to bottom, #B8860B, transparent) 1' }}
-                            >
+                            <div className="relative lux-card p-5 overflow-hidden border-l-2 lux-market-accent-border">
                                 <div className="flex items-center gap-1.5 text-xs font-semibold text-lux-400 uppercase tracking-wide mb-2">
                                     <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
                                     AI Analysis
@@ -647,8 +692,7 @@ export default function MarketResearchView() {
                                                     key={`${s.brand}-${s.model}`}
                                                     type="button"
                                                     onClick={() => quickResearch(s.brand, s.model)}
-                                                    className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 transition-all hover:bg-lux-50 hover:border-lux-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                                    style={{ animation: `lux-fade-in 0.3s ease ${i * 100}ms both` }}
+                                                    className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 transition-all hover:bg-lux-50 hover:border-lux-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none animate-fade-in ${FADE_DELAY_CLASSES[Math.min(i, FADE_DELAY_CLASSES.length - 1)]}`}
                                                 >
                                                     <Sparkles className="h-3 w-3 text-lux-gold" />
                                                     {s.brand} {s.model}

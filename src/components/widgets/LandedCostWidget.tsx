@@ -24,10 +24,7 @@ export default function LandedCostWidget() {
   }, [bid])
 
   return (
-    <div
-      className="lux-card p-6 animate-bento-enter"
-      style={{ '--stagger': 1 } as React.CSSProperties}
-    >
+    <div className="lux-card p-6 animate-bento-enter stagger-1">
       <SectionLabel className="mb-4">Landed Cost Calculator</SectionLabel>
 
       <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-lux-400">

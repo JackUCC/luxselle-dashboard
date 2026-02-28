@@ -18,10 +18,7 @@ const AUCTION_SITES = [
 
 export default function AuctionLinksWidget() {
   return (
-    <div
-      className="lux-card p-5 animate-bento-enter"
-      style={{ '--stagger': 4 } as React.CSSProperties}
-    >
+    <div className="lux-card p-5 animate-bento-enter stagger-4">
       <div className="mb-3 flex items-center gap-2">
         <div className="rounded-lg border border-lux-200 bg-lux-50 p-1.5 text-lux-gold">
           <Gavel className="h-3.5 w-3.5" />

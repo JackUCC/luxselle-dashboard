@@ -480,13 +480,15 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
               {isFindingSimilar ? 'Finding…' : 'Find similar'}
             </button>
           )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileSelect(e.target.files)}
-          className="hidden"
-        />
+          <input
+            ref={fileInputRef}
+            id="product-images-upload"
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+            aria-label="Upload product image"
+          />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -620,8 +622,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-lux-700 mb-1">SKU</label>
+        <label htmlFor="product-details-sku" className="block text-sm font-medium text-lux-700 mb-1">SKU</label>
         <input
+          id="product-details-sku"
           type="text"
           value={getCurrentValue('sku') ?? ''}
           onChange={(e) => onFieldChange('sku', e.target.value)}
@@ -631,8 +634,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Brand</label>
+          <label htmlFor="product-details-brand" className="block text-sm font-medium text-lux-700 mb-1">Brand</label>
           <input
+            id="product-details-brand"
             type="text"
             value={getCurrentValue('brand')}
             onChange={(e) => onFieldChange('brand', e.target.value)}
@@ -640,8 +644,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Model</label>
+          <label htmlFor="product-details-model" className="block text-sm font-medium text-lux-700 mb-1">Model</label>
           <input
+            id="product-details-model"
             type="text"
             value={getCurrentValue('model')}
             onChange={(e) => onFieldChange('model', e.target.value)}
@@ -650,8 +655,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-lux-700 mb-1">Title</label>
+        <label htmlFor="product-details-title" className="block text-sm font-medium text-lux-700 mb-1">Title</label>
         <input
+          id="product-details-title"
           type="text"
           value={getCurrentValue('title') ?? ''}
           onChange={(e) => onFieldChange('title', e.target.value)}
@@ -662,8 +668,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Category</label>
+          <label htmlFor="product-details-category" className="block text-sm font-medium text-lux-700 mb-1">Category</label>
           <input
+            id="product-details-category"
             type="text"
             value={getCurrentValue('category') ?? ''}
             onChange={(e) => onFieldChange('category', e.target.value)}
@@ -672,8 +679,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Condition</label>
+          <label htmlFor="product-details-condition" className="block text-sm font-medium text-lux-700 mb-1">Condition</label>
           <input
+            id="product-details-condition"
             type="text"
             value={getCurrentValue('condition') ?? ''}
             onChange={(e) => onFieldChange('condition', e.target.value)}
@@ -684,8 +692,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-lux-700 mb-1">Colour</label>
+        <label htmlFor="product-details-colour" className="block text-sm font-medium text-lux-700 mb-1">Colour</label>
         <input
+          id="product-details-colour"
           type="text"
           value={getCurrentValue('colour') ?? ''}
           onChange={(e) => onFieldChange('colour', e.target.value)}
@@ -696,9 +705,10 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-lux-400 mb-1">Status</label>
+          <label htmlFor="product-details-status" className="block text-sm font-medium text-lux-400 mb-1">Status</label>
           <div className="relative">
             <select
+              id="product-details-status"
               value={getCurrentValue('status')}
               onChange={(e) => onStatusChange(e.target.value as Product['status'])}
               className="lux-input appearance-none pr-10 w-full"
@@ -711,8 +721,9 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-lux-400 mb-1">Quantity</label>
+          <label htmlFor="product-details-quantity" className="block text-sm font-medium text-lux-400 mb-1">Quantity</label>
           <input
+            id="product-details-quantity"
             type="number"
             min="0"
             value={getCurrentValue('quantity')}
@@ -774,10 +785,11 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
+          <label htmlFor="product-financials-cost" className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
           <div className="relative">
             <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
+              id="product-financials-cost"
               type="number"
               min="0"
               step="0.01"
@@ -788,10 +800,11 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
+          <label htmlFor="product-financials-sell" className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
           <div className="relative">
             <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
+              id="product-financials-sell"
               type="number"
               min="0"
               step="0.01"
@@ -804,10 +817,11 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
+          <label htmlFor="product-financials-customs" className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
           <div className="relative">
             <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
+              id="product-financials-customs"
               type="number"
               min="0"
               step="0.01"
@@ -818,10 +832,11 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
+          <label htmlFor="product-financials-vat" className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
           <div className="relative">
             <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
             <input
+              id="product-financials-vat"
               type="number"
               min="0"
               step="0.01"
@@ -1080,33 +1095,33 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-lux-700 mb-1">Amount (EUR)</label>
+                <label htmlFor="product-transaction-amount" className="block text-sm font-medium text-lux-700 mb-1">Amount (EUR)</label>
                 <div className="relative">
                   <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
-                  <input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="lux-input pl-7" autoFocus />
+                  <input id="product-transaction-amount" type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="lux-input pl-7" autoFocus />
                 </div>
               </div>
 
               {showModal === 'sale' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-lux-700 mb-1">Description</label>
-                    <input type="text" value={invoiceDescription} onChange={(e) => setInvoiceDescription(e.target.value)} placeholder="Invoice line description" className="lux-input w-full" />
+                    <label htmlFor="product-transaction-description" className="block text-sm font-medium text-lux-700 mb-1">Description</label>
+                    <input id="product-transaction-description" type="text" value={invoiceDescription} onChange={(e) => setInvoiceDescription(e.target.value)} placeholder="Invoice line description" className="lux-input w-full" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-lux-700 mb-1">Customer name (optional)</label>
-                    <input type="text" value={invoiceCustomerName} onChange={(e) => setInvoiceCustomerName(e.target.value)} placeholder="e.g. John Smith" className="lux-input w-full" />
+                    <label htmlFor="product-transaction-customer-name" className="block text-sm font-medium text-lux-700 mb-1">Customer name (optional)</label>
+                    <input id="product-transaction-customer-name" type="text" value={invoiceCustomerName} onChange={(e) => setInvoiceCustomerName(e.target.value)} placeholder="e.g. John Smith" className="lux-input w-full" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-lux-700 mb-1">Customer email (optional)</label>
-                    <input type="email" value={invoiceCustomerEmail} onChange={(e) => setInvoiceCustomerEmail(e.target.value)} placeholder="customer@example.com" className="lux-input w-full" />
+                    <label htmlFor="product-transaction-customer-email" className="block text-sm font-medium text-lux-700 mb-1">Customer email (optional)</label>
+                    <input id="product-transaction-customer-email" type="email" value={invoiceCustomerEmail} onChange={(e) => setInvoiceCustomerEmail(e.target.value)} placeholder="customer@example.com" className="lux-input w-full" />
                   </div>
                 </>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-lux-700 mb-1">Notes (optional)</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={showModal === 'sale' ? 'e.g., Sold via Vestiaire Collective' : 'e.g., Price reduction'} rows={3} className="lux-input resize-none" />
+                <label htmlFor="product-transaction-notes" className="block text-sm font-medium text-lux-700 mb-1">Notes (optional)</label>
+                <textarea id="product-transaction-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={showModal === 'sale' ? 'e.g., Sold via Vestiaire Collective' : 'e.g., Price reduction'} rows={3} className="lux-input resize-none" />
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -1133,7 +1148,9 @@ function NotesTab({ getCurrentValue, onFieldChange }: NotesTabProps) {
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lux-900">Product Notes</h3>
+      <label htmlFor="product-notes" className="sr-only">Product notes</label>
       <textarea
+        id="product-notes"
         value={getCurrentValue('notes') ?? ''}
         onChange={(e) => onFieldChange('notes', e.target.value)}
         placeholder="Add notes about this product (condition details, provenance, special instructions...)"

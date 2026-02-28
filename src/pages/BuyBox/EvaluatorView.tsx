@@ -13,6 +13,7 @@ import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import { useResearchSession } from '../../lib/ResearchSessionContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
@@ -42,6 +43,12 @@ interface VisualSearchResult {
   score: number
 }
 
+interface PriceCheckResearchQuery {
+  query: string
+  condition?: string
+  notes?: string
+}
+
 const CONDITION_OPTIONS = [
   { value: '', label: 'Any' },
   { value: 'new', label: 'New / Pristine' },
@@ -61,9 +68,6 @@ export default function EvaluatorView() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
-  const [isResearching, setIsResearching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<PriceCheckResult | null>(null)
   const [refineOpen, setRefineOpen] = useState(false)
   const [formulaOpen, setFormulaOpen] = useState(false)
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
@@ -72,27 +76,46 @@ export default function EvaluatorView() {
   const [loadedCompImages, setLoadedCompImages] = useState<Record<number, boolean>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoRanQueryRef = useRef<string | null>(null)
+  const {
+    session: researchSession,
+    startLoading: startResearchLoading,
+    setSuccess: setResearchSuccess,
+    setError: setResearchError,
+    clear: clearResearchSession,
+  } = useResearchSession<PriceCheckResult, PriceCheckResearchQuery>('buy-box')
+  const isResearching = researchSession.status === 'loading'
+  const error = researchSession.status === 'error' ? (researchSession.error ?? 'Research failed') : null
+  const result = researchSession.status === 'success' ? (researchSession.result ?? null) : null
 
   const runResearch = useCallback(async (q: string, opts?: { condition?: string; notes?: string }) => {
-    setIsResearching(true)
-    setError(null)
-    setResult(null)
+    const researchQuery: PriceCheckResearchQuery = {
+      query: q,
+      condition: opts?.condition || undefined,
+      notes: opts?.notes || undefined,
+    }
+    startResearchLoading(researchQuery)
     try {
       const { data } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: q,
-        condition: opts?.condition || undefined,
-        notes: opts?.notes || undefined,
+        query: researchQuery.query,
+        condition: researchQuery.condition,
+        notes: researchQuery.notes,
       })
-      setResult(data)
+      setResearchSuccess(data, researchQuery)
       toast.success('Market research complete')
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Research failed'
-      setError(msg)
+      setResearchError(msg, researchQuery)
       toast.error(msg)
-    } finally {
-      setIsResearching(false)
     }
-  }, [])
+  }, [setResearchError, setResearchSuccess, startResearchLoading])
+
+  useEffect(() => {
+    const persistedQuery = researchSession.query
+    if (!persistedQuery) return
+    setQuery(persistedQuery.query)
+    setCondition(persistedQuery.condition ?? '')
+    setNotes(persistedQuery.notes ?? '')
+  }, [researchSession.query])
 
   useEffect(() => {
     const urlQuery = searchParams.get('q')
@@ -144,7 +167,9 @@ export default function EvaluatorView() {
   const handleAnalyzeImage = async () => {
     if (!uploadedImage) return
     setIsAnalyzingImage(true)
-    setError(null)
+    if (researchSession.status === 'error') {
+      clearResearchSession()
+    }
     try {
       const formData = new FormData()
       formData.append('image', uploadedImage)
@@ -221,13 +246,13 @@ export default function EvaluatorView() {
       </div>
 
       {activeTab === 'landed' ? (
-        <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+        <div className="lux-card p-6 animate-bento-enter stagger-0">
           <CalculatorWidget />
         </div>
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Search + Refine */}
-          <div className="lux-card evaluator-form-card flex flex-col p-5 lg:p-6 h-fit animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+          <div className="lux-card evaluator-form-card flex flex-col p-5 lg:p-6 h-fit animate-bento-enter stagger-0">
             <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
               <div>
                 <FloatingInput
@@ -336,7 +361,7 @@ export default function EvaluatorView() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setError(null)}
+                    onClick={clearResearchSession}
                     className="text-xs font-medium text-rose-600 hover:text-rose-700 underline focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     Retry
@@ -349,13 +374,13 @@ export default function EvaluatorView() {
           {/* Results + Landed cost */}
           <div className="space-y-6">
             {!result ? (
-              <div className="lux-card border-dashed border-2 border-lux-200 min-h-[280px] flex flex-col items-center justify-center p-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+              <div className="lux-card border-dashed border-2 border-lux-200 min-h-[280px] flex flex-col items-center justify-center p-6 animate-bento-enter stagger-1">
                 <Search className="h-12 w-12 mb-4 opacity-30 text-lux-400" />
                 <p className="font-medium text-lux-600">Enter an item and run research</p>
                 <p className="text-sm text-lux-500 mt-1">Irish competitors + Vestiaire Collective</p>
               </div>
             ) : (
-              <div className="lux-card p-6 space-y-6 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+              <div className="lux-card p-6 space-y-6 animate-bento-enter stagger-1">
                 <div className="flex items-center justify-between">
                   <SectionLabel>Market Research</SectionLabel>
                   {result.dataSource === 'web_search' ? (
@@ -475,7 +500,7 @@ export default function EvaluatorView() {
 
             {/* Visual search results (when user clicked Find similar) */}
             {visualResults !== null && (
-              <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+              <div className="lux-card p-6 animate-bento-enter stagger-2">
                 <SectionLabel className="mb-2">Visual Matches</SectionLabel>
                 <p className="text-sm text-lux-500 mb-4">From your inventory and supplier catalogs.</p>
                 {visualResults.length === 0 ? (
@@ -505,7 +530,7 @@ export default function EvaluatorView() {
               </div>
             )}
 
-            <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+            <div className="lux-card p-6 animate-bento-enter stagger-3">
               <LandedCostWidget />
             </div>
           </div>

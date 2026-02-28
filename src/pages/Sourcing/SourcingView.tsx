@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { Plus, Pencil, X, Loader2, Users, Trash2 } from 'lucide-react'
 import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
+import { staggerClass } from '../../lib/staggerClass'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import Skeleton from '../../components/feedback/Skeleton'
@@ -275,10 +276,11 @@ export default function SourcingView() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="create-sourcing-customer-name" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Customer Name *
                   </label>
                   <input
+                    id="create-sourcing-customer-name"
                     type="text"
                     name="customerName"
                     value={formData.customerName}
@@ -288,10 +290,11 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="create-sourcing-brand" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Brand
                   </label>
                   <input
+                    id="create-sourcing-brand"
                     type="text"
                     name="brand"
                     value={formData.brand}
@@ -302,10 +305,11 @@ export default function SourcingView() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                <label htmlFor="create-sourcing-query" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                   Query / Description *
                 </label>
                 <textarea
+                  id="create-sourcing-query"
                   name="queryText"
                   value={formData.queryText}
                   onChange={handleChange}
@@ -317,10 +321,11 @@ export default function SourcingView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="create-sourcing-budget" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Budget (EUR) *
                   </label>
                   <input
+                    id="create-sourcing-budget"
                     type="number"
                     name="budget"
                     value={formData.budget}
@@ -330,10 +335,11 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="create-sourcing-priority" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Priority
                   </label>
                   <select
+                    id="create-sourcing-priority"
                     name="priority"
                     value={formData.priority}
                     onChange={handleChange}
@@ -409,10 +415,11 @@ export default function SourcingView() {
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="edit-sourcing-customer-name" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Customer Name *
                   </label>
                   <input
+                    id="edit-sourcing-customer-name"
                     type="text"
                     name="customerName"
                     value={formData.customerName}
@@ -422,10 +429,11 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="edit-sourcing-brand" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Brand
                   </label>
                   <input
+                    id="edit-sourcing-brand"
                     type="text"
                     name="brand"
                     value={formData.brand}
@@ -436,10 +444,11 @@ export default function SourcingView() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                <label htmlFor="edit-sourcing-query" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                   Query / Description *
                 </label>
                 <textarea
+                  id="edit-sourcing-query"
                   name="queryText"
                   value={formData.queryText}
                   onChange={handleChange}
@@ -451,10 +460,11 @@ export default function SourcingView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="edit-sourcing-budget" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Budget (EUR) *
                   </label>
                   <input
+                    id="edit-sourcing-budget"
                     type="number"
                     name="budget"
                     value={formData.budget}
@@ -464,15 +474,15 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="edit-sourcing-status" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Status
                   </label>
                   <select
+                    id="edit-sourcing-status"
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
                     className="lux-input"
-                    aria-label="Status"
                   >
                     <option value="open">Open</option>
                     <option value="sourcing">Sourcing</option>
@@ -485,15 +495,15 @@ export default function SourcingView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  <label htmlFor="edit-sourcing-priority" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Priority
                   </label>
                   <select
+                    id="edit-sourcing-priority"
                     name="priority"
                     value={formData.priority}
                     onChange={handleChange}
                     className="lux-input"
-                    aria-label="Priority"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -503,10 +513,11 @@ export default function SourcingView() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                <label htmlFor="edit-sourcing-notes" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                   Notes
                 </label>
                 <textarea
+                  id="edit-sourcing-notes"
                   name="notes"
                   value={formData.notes}
                   onChange={handleChange}
@@ -586,8 +597,7 @@ export default function SourcingView() {
                   request.priority === 'high' && request.status === 'open'
                     ? 'lux-card-accent'
                     : 'lux-card'
-                } p-6 animate-bento-enter group`}
-                style={{ '--stagger': i } as React.CSSProperties}
+                } p-6 animate-bento-enter group ${staggerClass(i)}`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2 min-w-0">

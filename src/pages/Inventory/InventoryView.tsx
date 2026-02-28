@@ -72,6 +72,7 @@ import PageLayout from "../../components/layout/PageLayout";
 import { Badge, Button, Card, EmptyState, PageHeader, PredictiveInput, SectionLabel } from "../../components/design-system";
 import { useLayoutMode } from "../../lib/LayoutModeContext";
 import { POPULAR_SUGGESTIONS } from "../../lib/searchSuggestions";
+import { staggerClass } from "../../lib/staggerClass";
 
 function InventoryRowActions({
   product,
@@ -447,7 +448,7 @@ export default function InventoryView() {
       />
 
       {/* Search & Filters */}
-      <Card className="p-6 animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+      <Card className="p-6 animate-bento-enter stagger-0">
         <SectionLabel className="mb-4">Search & Filters</SectionLabel>
         <div className="space-y-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -462,6 +463,8 @@ export default function InventoryView() {
                   inventoryItems={productNames}
                   popularItems={POPULAR_SUGGESTIONS}
                   placeholder="Search by brand, model, SKU..."
+                  ariaLabel="Search inventory"
+                  listboxLabel="Inventory search suggestions"
                   className="lux-input pl-10 w-full"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-xs font-semibold text-lux-400">
@@ -551,7 +554,7 @@ export default function InventoryView() {
 
       {/* Missing info banner */}
       {missingInfoFilter && (
-        <Card accent className="px-5 py-4 animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+        <Card accent className="px-5 py-4 animate-bento-enter stagger-1">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-lux-700">
               Showing products with missing information (e.g. cost/sell price or
@@ -574,7 +577,7 @@ export default function InventoryView() {
 
       {/* Summary strip */}
       {!isLoading && !error && products.length > 0 && (
-        <div className="flex flex-wrap items-center gap-4 text-sm text-lux-600 animate-bento-enter" style={{ "--stagger": 1 } as React.CSSProperties}>
+        <div className="flex flex-wrap items-center gap-4 text-sm text-lux-600 animate-bento-enter stagger-1">
           <span className="font-medium">
             {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
           </span>
@@ -621,7 +624,7 @@ export default function InventoryView() {
           <p className="text-rose-600 font-medium">{error}</p>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <Card className="border-dashed animate-bento-enter" style={{ "--stagger": 2 } as React.CSSProperties}>
+        <Card className="border-dashed animate-bento-enter stagger-2">
           <EmptyState
             icon={Package}
             title={
@@ -652,10 +655,9 @@ export default function InventoryView() {
       ) : viewMode === "table" ? (
         <div
           ref={shouldVirtualize ? tableContainerRef : null}
-          className={`lux-card animate-bento-enter ${isSidecar ? "overflow-x-auto overflow-y-auto" : shouldVirtualize ? "overflow-auto" : "overflow-hidden"}`}
+          className={`lux-card animate-bento-enter stagger-2 ${isSidecar ? "overflow-x-auto overflow-y-auto" : shouldVirtualize ? "overflow-auto" : "overflow-hidden"}`}
           style={{
             ...(isSidecar ? { maxHeight: "min(70vh, 500px)" } : shouldVirtualize ? { maxHeight: "600px" } : {}),
-            '--stagger': 2,
           } as React.CSSProperties}
         >
           <table className="min-w-full divide-y divide-lux-200">
@@ -850,8 +852,7 @@ export default function InventoryView() {
               <div
                 key={product.id}
                 onClick={() => openProductDrawer(product.id)}
-                className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
-                style={{ '--stagger': index } as React.CSSProperties}
+                className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter ${staggerClass(index)} focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
               >
                 <div className="aspect-[4/3] bg-lux-50 relative overflow-hidden rounded-t-[15px]">
                   {product.imageUrls?.[0] && (

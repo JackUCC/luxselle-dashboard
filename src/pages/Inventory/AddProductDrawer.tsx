@@ -108,6 +108,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                     <button
                         onClick={onClose}
                         className="rounded-lg p-2 text-lux-400 hover:text-lux-600 hover:bg-lux-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                        aria-label="Close add product drawer"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -135,16 +136,19 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             </div>
                             <input
                                 ref={fileInputRef}
+                                id="add-product-image"
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
                                 onChange={(e) => handleFileSelect(e.target.files)}
+                                aria-label="Upload product image"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-lux-700 mb-1">SKU</label>
+                            <label htmlFor="add-product-sku" className="block text-sm font-medium text-lux-700 mb-1">SKU</label>
                             <input
+                                id="add-product-sku"
                                 type="text"
                                 value={product.sku ?? ''}
                                 onChange={(e) => handleFieldChange('sku', e.target.value)}
@@ -154,8 +158,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Brand <span className="text-red-500">*</span></label>
+                                <label htmlFor="add-product-brand" className="block text-sm font-medium text-lux-700 mb-1">Brand <span className="text-red-500">*</span></label>
                                 <input
+                                    id="add-product-brand"
                                     type="text"
                                     value={product.brand}
                                     onChange={(e) => handleFieldChange('brand', e.target.value)}
@@ -164,8 +169,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Model / Title <span className="text-red-500">*</span></label>
+                                <label htmlFor="add-product-model" className="block text-sm font-medium text-lux-700 mb-1">Model / Title <span className="text-red-500">*</span></label>
                                 <input
+                                    id="add-product-model"
                                     type="text"
                                     value={product.model}
                                     onChange={(e) => handleFieldChange('model', e.target.value)}
@@ -175,8 +181,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-lux-700 mb-1">Full title (optional)</label>
+                            <label htmlFor="add-product-title" className="block text-sm font-medium text-lux-700 mb-1">Full title (optional)</label>
                             <input
+                                id="add-product-title"
                                 type="text"
                                 value={product.title ?? ''}
                                 onChange={(e) => handleFieldChange('title', e.target.value)}
@@ -187,8 +194,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Category</label>
+                                <label htmlFor="add-product-category" className="block text-sm font-medium text-lux-700 mb-1">Category</label>
                                 <input
+                                    id="add-product-category"
                                     type="text"
                                     value={product.category}
                                     onChange={(e) => handleFieldChange('category', e.target.value)}
@@ -197,8 +205,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Condition</label>
+                                <label htmlFor="add-product-condition" className="block text-sm font-medium text-lux-700 mb-1">Condition</label>
                                 <input
+                                    id="add-product-condition"
                                     type="text"
                                     value={product.condition}
                                     onChange={(e) => handleFieldChange('condition', e.target.value)}
@@ -209,8 +218,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-lux-700 mb-1">Colour</label>
+                            <label htmlFor="add-product-colour" className="block text-sm font-medium text-lux-700 mb-1">Colour</label>
                             <input
+                                id="add-product-colour"
                                 type="text"
                                 value={product.colour}
                                 onChange={(e) => handleFieldChange('colour', e.target.value)}
@@ -221,10 +231,11 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
+                                <label htmlFor="add-product-cost-price-eur" className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
                                 <div className="relative">
                                     <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
+                                        id="add-product-cost-price-eur"
                                         type="number"
                                         min="0"
                                         step="0.01"
@@ -235,10 +246,11 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
+                                <label htmlFor="add-product-sell-price-eur" className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
                                 <div className="relative">
                                     <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
+                                        id="add-product-sell-price-eur"
                                         type="number"
                                         min="0"
                                         step="0.01"
@@ -251,10 +263,11 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
+                                <label htmlFor="add-product-customs-eur" className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
                                 <div className="relative">
                                     <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
+                                        id="add-product-customs-eur"
                                         type="number"
                                         min="0"
                                         step="0.01"
@@ -265,10 +278,11 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
+                                <label htmlFor="add-product-vat-eur" className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
                                 <div className="relative">
                                     <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
+                                        id="add-product-vat-eur"
                                         type="number"
                                         min="0"
                                         step="0.01"
@@ -282,8 +296,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Quantity</label>
+                                <label htmlFor="add-product-quantity" className="block text-sm font-medium text-lux-700 mb-1">Quantity</label>
                                 <input
+                                    id="add-product-quantity"
                                     type="number"
                                     min="0"
                                     value={product.quantity}
@@ -292,9 +307,10 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-lux-700 mb-1">Status</label>
+                                <label htmlFor="add-product-status" className="block text-sm font-medium text-lux-700 mb-1">Status</label>
                                 <div className="relative">
                                     <select
+                                        id="add-product-status"
                                         value={product.status}
                                         onChange={(e) => handleFieldChange('status', e.target.value)}
                                         className="lux-input appearance-none pr-10 w-full"
@@ -310,7 +326,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div>
                             <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-lux-700">Notes / Description</label>
+                                <label htmlFor="add-product-notes" className="block text-sm font-medium text-lux-700">Notes / Description</label>
                                 <button
                                     type="button"
                                     onClick={async () => {
@@ -334,6 +350,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 </button>
                             </div>
                             <textarea
+                                id="add-product-notes"
                                 value={product.notes}
                                 onChange={(e) => handleFieldChange('notes', e.target.value)}
                                 className="lux-input h-32 resize-none w-full"

@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import SectionLabel from './SectionLabel'
+import { staggerClass } from '../../lib/staggerClass'
 
 export interface StatCardProps {
   /** Short label (e.g. "Inventory Cost") */
@@ -35,13 +36,12 @@ export default function StatCard({
   const sharedClasses = [
     baseClasses,
     'p-6 animate-bento-enter',
+    staggerClass(stagger),
     interactive && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold focus-visible:ring-offset-2',
     className,
   ]
     .filter(Boolean)
     .join(' ')
-
-  const style: CSSProperties = { '--stagger': stagger } as CSSProperties
 
   const content = (
     <>
@@ -53,7 +53,7 @@ export default function StatCard({
 
   if (href && !onClick) {
     return (
-      <Link to={href} className={sharedClasses} style={style} aria-label={`${label}: view details`}>
+      <Link to={href} className={sharedClasses} aria-label={`${label}: view details`}>
         {content}
       </Link>
     )
@@ -65,16 +65,11 @@ export default function StatCard({
         type="button"
         onClick={onClick}
         className={`${sharedClasses} text-left w-full`}
-        style={style}
       >
         {content}
       </button>
     )
   }
 
-  return (
-    <div className={sharedClasses} style={style}>
-      {content}
-    </div>
-  )
+  return <div className={sharedClasses}>{content}</div>
 }

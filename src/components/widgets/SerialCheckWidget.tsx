@@ -60,10 +60,7 @@ export default function SerialCheckWidget() {
   }, [serial, brand, description])
 
   return (
-    <div
-      className="lux-card p-6 animate-bento-enter"
-      style={{ '--stagger': 6 } as React.CSSProperties}
-    >
+    <div className="lux-card p-6 animate-bento-enter stagger-6">
       <div className="mb-4 flex items-center justify-between">
         <SectionLabel>Serial Check</SectionLabel>
         <Search className="h-4 w-4 text-lux-400" />

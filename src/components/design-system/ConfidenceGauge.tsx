@@ -44,7 +44,7 @@ export default function ConfidenceGauge({ value, size = 100 }: ConfidenceGaugePr
   const color = getColor(pct)
 
   return (
-    <div className="flex flex-col items-center" style={{ width: size }}>
+    <div className="inline-flex flex-col items-center">
       <svg
         width={size}
         height={size}

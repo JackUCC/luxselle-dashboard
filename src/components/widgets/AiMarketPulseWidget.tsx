@@ -62,10 +62,7 @@ export default function AiMarketPulseWidget() {
   }, [])
 
   return (
-    <div
-      className="lux-card p-5 animate-bento-enter"
-      style={{ '--stagger': 9 } as React.CSSProperties}
-    >
+    <div className="lux-card p-5 animate-bento-enter stagger-9">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-amber-500" />

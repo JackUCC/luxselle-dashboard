@@ -40,10 +40,7 @@ export default function ActiveSourcingWidget() {
   }, [])
 
   return (
-    <div
-      className="lux-card p-6 animate-bento-enter"
-      style={{ '--stagger': 8 } as React.CSSProperties}
-    >
+    <div className="lux-card p-6 animate-bento-enter stagger-8">
       <div className="mb-4 flex items-center justify-between">
         <SectionLabel>Active Sourcing</SectionLabel>
         <Radio className="h-4 w-4 text-amber-500 animate-pulse-slow" />

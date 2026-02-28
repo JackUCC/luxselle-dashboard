@@ -25,10 +25,7 @@ export default function EurToYenWidget() {
   const resultLabel = direction === 'eur-to-jpy' ? 'Yen (¥)' : 'Euro (€)'
 
   return (
-    <div
-      className="lux-card p-6 animate-bento-enter"
-      style={{ '--stagger': 3 } as React.CSSProperties}
-    >
+    <div className="lux-card p-6 animate-bento-enter stagger-3">
       <div className="mb-4 flex items-center justify-between">
         <SectionLabel>Currency Converter</SectionLabel>
         <button

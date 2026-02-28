@@ -12,6 +12,7 @@ import PageLayout from '../../components/layout/PageLayout'
 import { Button, Input, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import Skeleton from '../../components/feedback/Skeleton'
+import { staggerClass } from '../../lib/staggerClass'
 
 type InvoiceWithId = Invoice & { id: string }
 
@@ -328,8 +329,7 @@ export default function InvoicesView() {
                 onClick={() => setSelected(card.invoice)}
                 className={`lux-card p-5 text-left transition-all animate-bento-enter hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                   selected?.id === card.id ? 'ring-2 ring-lux-900' : ''
-                }`}
-                style={{ '--stagger': index } as React.CSSProperties}
+                } ${staggerClass(index)}`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <span className="font-semibold text-lux-900">{card.invoiceNumber}</span>
@@ -346,7 +346,7 @@ export default function InvoicesView() {
           </div>
 
           {selected && (
-            <div className="lux-card p-6 animate-bento-enter print:border-2 print:shadow-none print:border-lux-200" style={{ '--stagger': 1 } as React.CSSProperties}>
+            <div className="lux-card p-6 animate-bento-enter stagger-1 print:border-2 print:shadow-none print:border-lux-200">
               <div className="mb-6 flex items-start justify-between no-print">
                 <SectionLabel>Invoice detail</SectionLabel>
                 <div className="flex gap-2">

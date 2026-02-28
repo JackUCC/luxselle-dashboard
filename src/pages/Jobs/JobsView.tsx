@@ -245,7 +245,7 @@ export default function JobsView() {
           </p>
         </div>
       ) : (
-        <div className="lux-card overflow-hidden animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+        <div className="lux-card overflow-hidden animate-bento-enter stagger-0">
           <table className="min-w-full divide-y divide-lux-100">
             <thead className="bg-lux-50/60">
               <tr>
@@ -430,7 +430,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Status Section */}
-          <div className="animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+          <div className="animate-bento-enter stagger-0">
             <SectionLabel as="h3" className="mb-3">Status</SectionLabel>
             <div className="lux-card p-5">
               <div className="flex items-center justify-between mb-4">
@@ -482,7 +482,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
 
           {/* Progress Section */}
           {job.progress && (
-            <div className="animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
+            <div className="animate-bento-enter stagger-1">
               <SectionLabel as="h3" className="mb-3">Progress</SectionLabel>
               <div className="lux-card p-5 space-y-4">
                 <div className="grid grid-cols-4 gap-3 text-center">
@@ -545,7 +545,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
 
           {/* Errors Section */}
           {job.progress?.errors && job.progress.errors.length > 0 && (
-            <div className="animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
+            <div className="animate-bento-enter stagger-2">
               <SectionLabel as="h3" className="mb-3">
                 Errors ({job.progress.errors.length})
               </SectionLabel>
@@ -568,7 +568,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
 
           {/* Error Message */}
           {job.lastError && (
-            <div className="animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+            <div className="animate-bento-enter stagger-3">
               <SectionLabel as="h3" className="mb-3">Error Details</SectionLabel>
               <div className="rounded-lg bg-red-50 border border-red-200 p-4">
                 <p className="text-sm text-red-700">{job.lastError}</p>
@@ -578,7 +578,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
 
           {/* Input Metadata */}
           {job.input && Object.keys(job.input).length > 0 && (
-            <div className="animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
+            <div className="animate-bento-enter stagger-4">
               <SectionLabel as="h3" className="mb-3">Input</SectionLabel>
               <div className="lux-card bg-lux-50 p-5">
                 <pre className="text-xs font-mono text-lux-600 whitespace-pre-wrap">

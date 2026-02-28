@@ -103,6 +103,7 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                     <button
                         onClick={onClose}
                         className="rounded-lg p-2 text-lux-400 hover:text-lux-600 hover:bg-lux-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                        aria-label="Close import inventory drawer"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -143,10 +144,12 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                         >
                             <input
                                 ref={fileInputRef}
+                                id="import-inventory-file"
                                 type="file"
                                 accept=".csv,.xlsx,.xls,.pdf"
                                 className="hidden"
                                 onChange={(e) => handleFileSelect(e.target.files)}
+                                aria-label="Choose inventory import file"
                             />
 
                             {isUploading ? (

@@ -120,6 +120,7 @@ export default function SidecarWidgets() {
           const Icon = widget.icon
           const isCollapsed = collapsed[widgetId]
           const panelId = `sidecar-widget-${widgetId}`
+          const titleId = `${panelId}-title`
 
           return (
             <section
@@ -132,7 +133,7 @@ export default function SidecarWidgets() {
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-lux-100 text-lux-600">
                       <Icon className="h-3.5 w-3.5" />
                     </span>
-                    <p className="truncate text-xs font-semibold text-lux-800">{widget.title}</p>
+                    <p id={titleId} className="truncate text-xs font-semibold text-lux-800">{widget.title}</p>
                   </div>
                   <p className="mt-0.5 text-xs text-lux-500">{widget.description}</p>
                 </div>
@@ -159,6 +160,7 @@ export default function SidecarWidgets() {
               <div
                 id={panelId}
                 role="region"
+                aria-labelledby={titleId}
                 className={`grid transition-[grid-template-rows] duration-200 ease-out ${isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}
               >
                 <div className="min-h-0 overflow-x-auto overflow-y-hidden">
