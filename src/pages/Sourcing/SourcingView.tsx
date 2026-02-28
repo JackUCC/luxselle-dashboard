@@ -10,6 +10,7 @@ import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
+import Skeleton from '../../components/feedback/Skeleton'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
 
@@ -29,9 +30,9 @@ const getStatusStyles = (status: string) => {
     case 'open': return 'bg-lux-200/80 text-lux-800 border-lux-300'
     case 'sourcing': return 'bg-purple-50 text-purple-700 border-purple-200'
     case 'sourced': return 'bg-green-50 text-green-700 border-green-200'
-    case 'fulfilled': return 'bg-gray-50 text-gray-700 border-gray-200'
+    case 'fulfilled': return 'bg-lux-50 text-lux-700 border-lux-200'
     case 'lost': return 'bg-red-50 text-red-700 border-red-200'
-    default: return 'bg-gray-50 text-gray-600 border-gray-200'
+    default: return 'bg-lux-50 text-lux-600 border-lux-200'
   }
 }
 
@@ -40,9 +41,9 @@ const getStatusDotColor = (status: string) => {
     case 'open': return 'bg-amber-400'
     case 'sourcing': return 'bg-purple-400'
     case 'sourced': return 'bg-emerald-400'
-    case 'fulfilled': return 'bg-gray-400'
+    case 'fulfilled': return 'bg-lux-400'
     case 'lost': return 'bg-rose-400'
-    default: return 'bg-gray-300'
+    default: return 'bg-lux-300'
   }
 }
 
@@ -230,7 +231,7 @@ export default function SourcingView() {
           <button
             type="button"
             onClick={() => setShowCreateForm(true)}
-            className="lux-btn-primary flex items-center gap-2"
+            className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <Plus className="h-4 w-4" />
             New Request
@@ -244,7 +245,7 @@ export default function SourcingView() {
             key={s}
             type="button"
             onClick={() => setStatusFilter(s)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors ${
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
               statusFilter === s
                 ? 'bg-lux-900 text-white border-lux-900'
                 : 'bg-white text-lux-600 border-[var(--lux-border)] hover:border-[var(--lux-border-hover)]'
@@ -258,12 +259,12 @@ export default function SourcingView() {
       {/* Create Form Overlay */}
       {showCreateForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-glass-lg animate-fade-in">
+          <div className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-gray-900">New Sourcing Request</h2>
+              <h2 className="text-lg font-bold text-lux-900">New Sourcing Request</h2>
               <button 
                 onClick={() => setShowCreateForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -272,7 +273,7 @@ export default function SourcingView() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Customer Name *
                   </label>
                   <input
@@ -285,7 +286,7 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Brand
                   </label>
                   <input
@@ -299,7 +300,7 @@ export default function SourcingView() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                   Query / Description *
                 </label>
                 <textarea
@@ -314,7 +315,7 @@ export default function SourcingView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Budget (EUR) *
                   </label>
                   <input
@@ -327,7 +328,7 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Priority
                   </label>
                   <select
@@ -347,14 +348,14 @@ export default function SourcingView() {
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="lux-btn-secondary flex-1"
+                  className="lux-btn-secondary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="lux-btn-primary flex-1"
+                  className="lux-btn-primary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Request'}
                 </button>
@@ -367,13 +368,13 @@ export default function SourcingView() {
       {/* Edit Form Overlay */}
       {editingRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-glass-lg animate-fade-in">
+          <div className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-gray-900">Edit Sourcing Request</h2>
+              <h2 className="text-lg font-bold text-lux-900">Edit Sourcing Request</h2>
               <button
                 type="button"
                 onClick={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -382,12 +383,12 @@ export default function SourcingView() {
 
             {showDeleteConfirm ? (
               <div className="space-y-4 py-2">
-                <p className="text-sm text-gray-600">Delete this sourcing request? This cannot be undone.</p>
+                <p className="text-sm text-lux-600">Delete this sourcing request? This cannot be undone.</p>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="lux-btn-secondary flex-1"
+                    className="lux-btn-secondary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     Cancel
                   </button>
@@ -395,7 +396,7 @@ export default function SourcingView() {
                     type="button"
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                     {isDeleting ? 'Deleting…' : 'Delete'}
@@ -406,7 +407,7 @@ export default function SourcingView() {
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Customer Name *
                   </label>
                   <input
@@ -419,7 +420,7 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Brand
                   </label>
                   <input
@@ -433,7 +434,7 @@ export default function SourcingView() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                   Query / Description *
                 </label>
                 <textarea
@@ -448,7 +449,7 @@ export default function SourcingView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Budget (EUR) *
                   </label>
                   <input
@@ -461,7 +462,7 @@ export default function SourcingView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Status
                   </label>
                   <select
@@ -482,7 +483,7 @@ export default function SourcingView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                     Priority
                   </label>
                   <select
@@ -500,7 +501,7 @@ export default function SourcingView() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
                   Notes
                 </label>
                 <textarea
@@ -517,14 +518,14 @@ export default function SourcingView() {
                   <button
                     type="button"
                     onClick={() => setEditingRequest(null)}
-                    className="lux-btn-secondary flex-1"
+                    className="lux-btn-secondary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="lux-btn-primary flex-1"
+                    className="lux-btn-primary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     {isSubmitting ? 'Saving...' : 'Save Changes'}
                   </button>
@@ -532,7 +533,7 @@ export default function SourcingView() {
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex items-center justify-center gap-2 self-start text-sm text-rose-600 hover:text-rose-700"
+                  className="flex items-center justify-center gap-2 self-start text-sm text-rose-600 hover:text-rose-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete request
@@ -549,9 +550,20 @@ export default function SourcingView() {
         <SectionLabel className="mb-4">Pipeline</SectionLabel>
 
         {isLoading ? (
-          <div className="lux-card flex items-center justify-center gap-2 p-12 text-lux-600">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Loading requests…</span>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="lux-card p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-5 w-16 rounded-full" variant="rect" />
+                </div>
+                <Skeleton className="h-3 w-24" />
+                <div className="flex items-center justify-between pt-1">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-14" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="lux-card p-6 text-rose-600 bg-rose-50/50">{error}</div>
@@ -580,14 +592,14 @@ export default function SourcingView() {
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${getStatusDotColor(request.status)}`}
                     />
-                    <span className="font-medium text-gray-900 truncate">
+                    <span className="font-medium text-lux-900 truncate">
                       {request.customerName}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => openEditForm(request)}
-                    className="text-lux-400 hover:text-lux-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2"
+                    className="text-lux-400 hover:text-lux-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     aria-label="Edit request"
                   >
                     <Pencil className="h-4 w-4" />
@@ -610,13 +622,13 @@ export default function SourcingView() {
                     </span>
                   </div>
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold border uppercase tracking-wide shrink-0 ${getStatusStyles(request.status)}`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border uppercase tracking-wide shrink-0 ${getStatusStyles(request.status)}`}
                   >
                     {request.status}
                   </span>
                 </div>
 
-                <div className="text-[11px] text-lux-400 mt-3">
+                <div className="text-xs text-lux-400 mt-3">
                   {new Date(request.createdAt).toLocaleDateString()}
                 </div>
               </div>

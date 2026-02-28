@@ -159,7 +159,7 @@ export default function SerialCheckView() {
               data-testid="decode-btn"
               onClick={handleDecode}
               disabled={isLoading}
-              className="lux-btn-primary flex items-center gap-2"
+              className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               {isLoading ? 'Analyzing…' : 'Analyze serial'}
@@ -167,7 +167,7 @@ export default function SerialCheckView() {
             <button
               type="button"
               onClick={handleClear}
-              className="lux-btn-secondary flex items-center gap-2"
+              className="lux-btn-secondary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               Clear
             </button>
@@ -231,16 +231,16 @@ export default function SerialCheckView() {
         <div className="lux-card p-6 animate-bento-enter" style={{ '--stagger': 2 } as React.CSSProperties}>
           <SectionLabel className="mb-3">Price guidance</SectionLabel>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <div className="lux-card-accent rounded-xl p-3 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">Market average</p>
+            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter" style={{ '--stagger': 3 } as React.CSSProperties}>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">Market average</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.marketAverageEur)}</p>
             </div>
-            <div className="lux-card-accent rounded-xl p-3 animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">Estimated worth</p>
+            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">Estimated worth</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.estimatedWorthEur)}</p>
             </div>
-            <div className="lux-card-accent rounded-xl p-3 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">Recommended max pay</p>
+            <div className="lux-card-accent rounded-lux-card p-5 animate-bento-enter" style={{ '--stagger': 5 } as React.CSSProperties}>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">Recommended max pay</p>
               <p className="mt-1 text-lg font-semibold text-lux-800">{formatCurrency(pricingGuidance.recommendedMaxPayEur)}</p>
             </div>
           </div>
@@ -274,7 +274,7 @@ export default function SerialCheckView() {
                     )}
                     <div className="min-w-0">
                       {comp.sourceUrl ? (
-                        <a href={comp.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block">
+                        <a href={comp.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
                           {comp.title}
                         </a>
                       ) : (
@@ -288,7 +288,7 @@ export default function SerialCheckView() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
+            <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800">
               No comparable listings found yet for this serial and description.
             </div>
           )}

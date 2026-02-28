@@ -79,15 +79,15 @@ function Tooltip({ text }: { text: string }) {
                 onMouseLeave={() => setShow(false)}
                 onFocus={() => setShow(true)}
                 onBlur={() => setShow(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-lux-400 hover:text-lux-600 transition-colors"
                 tabIndex={-1}
             >
                 <Info className="h-3 w-3" />
             </button>
             {show && (
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 rounded-lg bg-gray-900 px-3 py-2 text-[10px] text-white shadow-lg z-50 animate-fade-in pointer-events-none">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 rounded-lg bg-lux-900 px-3 py-2 text-xs text-white shadow-lg z-50 animate-fade-in pointer-events-none">
                     {text}
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-lux-900" />
                 </span>
             )}
         </span>
@@ -98,7 +98,7 @@ function CostWaterfallBar({ breakdown }: { breakdown: CostBreakdownItem[] }) {
     if (breakdown.length === 0) return null
     return (
         <div className="space-y-2">
-            <div className="flex rounded-full overflow-hidden h-3 bg-gray-100 shadow-inner">
+            <div className="flex rounded-full overflow-hidden h-3 bg-lux-100 shadow-inner">
                 {breakdown.map((item, i) => (
                     <div
                         key={item.label}
@@ -114,7 +114,7 @@ function CostWaterfallBar({ breakdown }: { breakdown: CostBreakdownItem[] }) {
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1">
                 {breakdown.map(item => (
-                    <div key={item.label} className="flex items-center gap-1 text-[10px] text-gray-500">
+                    <div key={item.label} className="flex items-center gap-1 text-xs text-lux-500">
                         <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
                         <span>{item.label}</span>
                     </div>
@@ -283,13 +283,13 @@ export default function CalculatorWidget() {
                         <Calculator className="h-5 w-5" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Landed Cost Calculator</h3>
-                        <p className="text-[10px] text-gray-400">Real-time import cost estimator</p>
+                        <h3 className="font-semibold text-lux-900 uppercase tracking-wider text-xs">Landed Cost Calculator</h3>
+                        <p className="text-xs text-lux-400">Real-time import cost estimator</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
                     {showSavePreset ? (
-                        <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200 animate-fade-in">
+                        <div className="flex items-center bg-lux-50 rounded-lg p-1 border border-lux-200 animate-fade-in">
                             <input
                                 type="text"
                                 value={presetName}
@@ -299,13 +299,13 @@ export default function CalculatorWidget() {
                                 className="text-xs bg-transparent border-none focus:ring-0 px-2 w-24"
                                 autoFocus
                             />
-                            <button onClick={handleSavePreset} className="p-1 hover:text-emerald-600 transition-colors"><Save className="h-3 w-3" /></button>
-                            <button onClick={() => setShowSavePreset(false)} className="p-1 hover:text-red-600 transition-colors"><Trash2 className="h-3 w-3" /></button>
+                            <button onClick={handleSavePreset} className="p-1 hover:text-emerald-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"><Save className="h-3 w-3" /></button>
+                            <button onClick={() => setShowSavePreset(false)} className="p-1 hover:text-red-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"><Trash2 className="h-3 w-3" /></button>
                         </div>
                     ) : (
                         <button
                             onClick={() => setShowSavePreset(true)}
-                            className="text-xs flex items-center gap-1 text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-2 py-1 transition-all hover:shadow-sm"
+                            className="text-xs flex items-center gap-1 text-lux-500 hover:text-lux-900 border border-lux-200 rounded-lg px-2 py-1 transition-all hover:shadow-sm focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             <Save className="h-3 w-3" /> Save
                         </button>
@@ -314,12 +314,12 @@ export default function CalculatorWidget() {
             </div>
 
             {/* Mode Toggle */}
-            <div className="flex rounded-lg bg-gray-100 p-1">
+            <div className="flex rounded-lg bg-lux-100 p-1">
                 <button
                     onClick={() => setState(s => ({ ...s, calculatorMode: 'forward' }))}
-                    className={`flex-1 flex items-center justify-center gap-2 rounded-md py-1.5 text-xs font-medium transition-all ${state.calculatorMode === 'forward'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md py-1.5 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${state.calculatorMode === 'forward'
+                        ? 'bg-white text-lux-900 shadow-sm'
+                        : 'text-lux-500 hover:text-lux-900'
                         }`}
                 >
                     <Calculator className="h-3.5 w-3.5" />
@@ -327,9 +327,9 @@ export default function CalculatorWidget() {
                 </button>
                 <button
                     onClick={() => setState(s => ({ ...s, calculatorMode: 'reverse' }))}
-                    className={`flex-1 flex items-center justify-center gap-2 rounded-md py-1.5 text-xs font-medium transition-all ${state.calculatorMode === 'reverse'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md py-1.5 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${state.calculatorMode === 'reverse'
+                        ? 'bg-white text-lux-900 shadow-sm'
+                        : 'text-lux-500 hover:text-lux-900'
                         }`}
                 >
                     <ArrowUpDown className="h-3.5 w-3.5" />
@@ -344,10 +344,10 @@ export default function CalculatorWidget() {
                         <button
                             key={p.id}
                             onClick={() => loadPreset(p.id)}
-                            className="flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all group"
+                            className="flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-full bg-lux-50 border border-lux-100 text-xs font-medium text-lux-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all group focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             {p.name}
-                            <span className="text-[10px] text-gray-400">{p.validForCurrency}</span>
+                            <span className="text-xs text-lux-400">{p.validForCurrency}</span>
                             <span onClick={(e) => deletePreset(p.id, e)} className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"><Trash2 className="h-3 w-3" /></span>
                         </button>
                     ))}
@@ -355,13 +355,13 @@ export default function CalculatorWidget() {
             )}
 
             {/* Quick Presets */}
-            <div className="flex flex-wrap gap-2 pb-2 border-b border-gray-50">
+            <div className="flex flex-wrap gap-2 pb-2 border-b border-lux-50">
                 {SCENARIO_PRESETS.map(preset => (
                     <button
                         key={preset.label}
                         type="button"
                         onClick={() => setState(s => ({ ...s, ...preset.fees }))}
-                        className="rounded-full px-3 py-1.5 text-xs font-medium border border-gray-200 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all"
+                        className="rounded-full px-3 py-1.5 text-xs font-medium border border-lux-200 text-lux-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
                         {preset.label}
                     </button>
@@ -371,12 +371,12 @@ export default function CalculatorWidget() {
             {/* Main Inputs */}
             {state.calculatorMode === 'forward' ? (
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Item Price</label>
+                    <label className="block text-xs font-medium text-lux-700 mb-1.5">Item Price</label>
                     <div className="flex rounded-lg shadow-sm">
                         <select
                             value={state.currency}
                             onChange={e => setState(s => ({ ...s, currency: e.target.value as Currency }))}
-                            className="flex-shrink-0 w-20 rounded-l-lg border-gray-200 bg-gray-50 text-gray-600 text-sm font-medium focus:ring-gray-900 focus:border-gray-900"
+                            className="flex-shrink-0 w-20 rounded-l-lg border-lux-200 bg-lux-50 text-lux-600 text-sm font-medium focus:ring-lux-900 focus:border-lux-900"
                         >
                             <option value="EUR">€ EUR</option>
                             <option value="USD">$ USD</option>
@@ -388,17 +388,17 @@ export default function CalculatorWidget() {
                             value={state.basePrice}
                             onChange={e => setState(s => ({ ...s, basePrice: e.target.value }))}
                             placeholder="Enter item price"
-                            className="flex-1 rounded-none rounded-r-lg border-gray-200 text-sm focus:ring-gray-900 focus:border-gray-900 px-3 py-2.5 border-l-0 border block w-full"
+                            className="flex-1 rounded-none rounded-r-lg border-lux-200 text-sm focus:ring-lux-900 focus:border-lux-900 px-3 py-2.5 border-l-0 border block w-full"
                             autoFocus
                         />
                     </div>
                     {state.currency !== 'EUR' && (
                         <div className="mt-1.5 flex justify-between items-center">
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-xs text-lux-400">
                                 {loadingRates ? 'Loading rates...' : rates ? `1 ${state.currency} ≈ ${rateToEur.toFixed(4)} EUR` : '—'}
                             </span>
                             {hasInput && rates && (
-                                <span className="text-[10px] font-medium text-gray-500">
+                                <span className="text-xs font-medium text-lux-500">
                                     ≈ {fmtEur(result.itemCostEur)}
                                 </span>
                             )}
@@ -408,7 +408,7 @@ export default function CalculatorWidget() {
             ) : (
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1.5">Target Sell Price (€)</label>
+                        <label className="block text-xs font-medium text-lux-700 mb-1.5">Target Sell Price (€)</label>
                         <input
                             type="number"
                             value={state.targetSellPrice}
@@ -419,16 +419,16 @@ export default function CalculatorWidget() {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1.5">Target Margin %</label>
+                        <label className="block text-xs font-medium text-lux-700 mb-1.5">Target Margin %</label>
                         <div className="flex rounded-lg shadow-sm">
                             <input
                                 type="number"
                                 value={state.targetMargin}
                                 onChange={e => setState(s => ({ ...s, targetMargin: e.target.value }))}
                                 placeholder="30"
-                                className="flex-1 rounded-l-lg border-gray-200 py-2.5 border-r-0 lux-input rounded-r-none"
+                                className="flex-1 rounded-l-lg border-lux-200 py-2.5 border-r-0 lux-input rounded-r-none"
                             />
-                            <span className="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-200 bg-gray-50 text-gray-500 text-sm">
+                            <span className="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-lux-200 bg-lux-50 text-lux-500 text-sm">
                                 %
                             </span>
                         </div>
@@ -438,8 +438,8 @@ export default function CalculatorWidget() {
 
             {/* Shipping */}
             <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                    Shipping <span className="text-gray-400 font-normal">({sym})</span>
+                <label className="block text-xs font-medium text-lux-700 mb-1.5">
+                    Shipping <span className="text-lux-400 font-normal">({sym})</span>
                 </label>
                 <input
                     type="number"
@@ -453,7 +453,7 @@ export default function CalculatorWidget() {
             {/* Currency Selector (Only in Reverse Mode) needs access to change currency */}
             {state.calculatorMode === 'reverse' && (
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Target Currency</label>
+                    <label className="block text-xs font-medium text-lux-700 mb-1.5">Target Currency</label>
                     <select
                         value={state.currency}
                         onChange={e => setState(s => ({ ...s, currency: e.target.value as Currency }))}
@@ -468,32 +468,32 @@ export default function CalculatorWidget() {
             )}
 
             {/* Fees & Taxes — Collapsible */}
-            <div className="border border-gray-100 rounded-xl overflow-hidden">
+            <div className="border border-lux-100 rounded-lux-card overflow-hidden">
                 <button
                     type="button"
                     onClick={() => setFeesExpanded(!feesExpanded)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50/80 hover:bg-gray-100/80 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-lux-50/80 hover:bg-lux-100/80 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
-                    <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Fees & Taxes</span>
+                    <span className="text-xs font-semibold text-lux-500 uppercase tracking-wider">Fees & Taxes</span>
                     <div className="flex items-center gap-2">
                         {!feesExpanded && hasInput && (
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-xs text-lux-400">
                                 {fmtEur(result.dutyEur + result.vatEur + result.totalForeignFeesEur)}
                             </span>
                         )}
                         {feesExpanded
-                            ? <ChevronUp className="h-3.5 w-3.5 text-gray-400" />
-                            : <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                            ? <ChevronUp className="h-3.5 w-3.5 text-lux-400" />
+                            : <ChevronDown className="h-3.5 w-3.5 text-lux-400" />
                         }
                     </div>
                 </button>
 
                 {feesExpanded && (
-                    <div className="p-4 space-y-4 animate-fade-in">
+                    <div className="p-5 space-y-4 animate-fade-in">
                         <div className="grid grid-cols-2 gap-4">
                             {/* Platform Fee */}
                             <div>
-                                <label className="flex items-center text-[10px] text-gray-500 mb-1">
+                                <label className="flex items-center text-xs text-lux-500 mb-1">
                                     Platform Fee %
                                     <Tooltip text={FEE_TOOLTIPS.platformFeeRate} />
                                 </label>
@@ -508,7 +508,7 @@ export default function CalculatorWidget() {
 
                             {/* Customs */}
                             <div>
-                                <label className="flex items-center text-[10px] text-gray-500 mb-1">
+                                <label className="flex items-center text-xs text-lux-500 mb-1">
                                     Customs Duty %
                                     <Tooltip text={FEE_TOOLTIPS.customsRate} />
                                 </label>
@@ -523,7 +523,7 @@ export default function CalculatorWidget() {
 
                             {/* Import VAT */}
                             <div>
-                                <label className="flex items-center text-[10px] text-gray-500 mb-1">
+                                <label className="flex items-center text-xs text-lux-500 mb-1">
                                     Import VAT %
                                     <Tooltip text={FEE_TOOLTIPS.importVatRate} />
                                 </label>
@@ -538,7 +538,7 @@ export default function CalculatorWidget() {
 
                             {/* Payment Fee */}
                             <div>
-                                <label className="flex items-center text-[10px] text-gray-500 mb-1">
+                                <label className="flex items-center text-xs text-lux-500 mb-1">
                                     Payment Fee %
                                     <Tooltip text={FEE_TOOLTIPS.paymentFeeRate} />
                                 </label>
@@ -552,10 +552,10 @@ export default function CalculatorWidget() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-lux-100">
                             {/* Insurance */}
                             <div>
-                                <label className="flex items-center text-[10px] text-gray-500 mb-1">
+                                <label className="flex items-center text-xs text-lux-500 mb-1">
                                     Insurance / Other ({sym})
                                     <Tooltip text={FEE_TOOLTIPS.insurance} />
                                 </label>
@@ -570,7 +570,7 @@ export default function CalculatorWidget() {
 
                             {/* Fixed Fee */}
                             <div>
-                                <label className="flex items-center text-[10px] text-gray-500 mb-1">
+                                <label className="flex items-center text-xs text-lux-500 mb-1">
                                     Fixed Fee ({sym})
                                     <Tooltip text={FEE_TOOLTIPS.fixedFee} />
                                 </label>
@@ -588,7 +588,7 @@ export default function CalculatorWidget() {
             </div>
 
             {/* ═══ RESULTS ═══ */}
-            <div ref={resultRef} className={`rounded-xl overflow-hidden transition-all duration-300 ${hasInput ? 'opacity-100' : 'opacity-40'}`}>
+            <div ref={resultRef} className={`rounded-lux-card overflow-hidden transition-all duration-300 ${hasInput ? 'opacity-100' : 'opacity-40'}`}>
                 {/* Waterfall bar */}
                 {hasInput && result.breakdown.length > 0 && (
                     <div className="px-1 pb-3 animate-fade-in">
@@ -597,14 +597,14 @@ export default function CalculatorWidget() {
                 )}
 
                 {/* Total card */}
-                <div className="bg-gray-900 rounded-xl p-5 text-white">
+                <div className="bg-lux-900 rounded-lux-card p-5 text-white">
                     <div className="flex justify-between items-end mb-3">
                         <div>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                            <span className="text-xs text-lux-400 uppercase tracking-wider">
                                 {state.calculatorMode === 'reverse' ? 'Max Buy Price' : 'Total Landed Cost'}
                             </span>
                             {hasInput && state.currency !== 'EUR' && state.calculatorMode === 'forward' && (
-                                <div className="text-[10px] text-gray-500 mt-0.5">
+                                <div className="text-xs text-lux-500 mt-0.5">
                                     ≈ {sym}{(result.totalLandedEur / rateToEur).toLocaleString('en', { maximumFractionDigits: state.currency === 'JPY' ? 0 : 2 })}
                                 </div>
                             )}
@@ -617,7 +617,7 @@ export default function CalculatorWidget() {
                                 }
                             </span>
                             {state.calculatorMode === 'reverse' && (
-                                <div className="text-[10px] text-gray-400 mt-0.5">
+                                <div className="text-xs text-lux-400 mt-0.5">
                                     ≈ {fmtEur(effectiveBasePrice * rateToEur)}
                                 </div>
                             )}
@@ -626,20 +626,20 @@ export default function CalculatorWidget() {
 
                     {/* Line-by-line breakdown */}
                     {hasInput && (
-                        <div className="space-y-1.5 pt-3 border-t border-gray-700/50">
+                        <div className="space-y-1.5 pt-3 border-t border-lux-700/50">
                             {result.breakdown.map((item, i) => (
                                 <div
                                     key={item.label}
-                                    className="flex justify-between text-[11px] animate-fade-in"
+                                    className="flex justify-between text-xs animate-fade-in"
                                     style={{ animationDelay: `${i * 40}ms` }}
                                 >
-                                    <span className="text-gray-400 flex items-center gap-1.5">
+                                    <span className="text-lux-400 flex items-center gap-1.5">
                                         <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
                                         {item.label}
                                     </span>
-                                    <span className="text-gray-300 font-medium tabular-nums">
+                                    <span className="text-lux-300 font-medium tabular-nums">
                                         {fmtEur(item.amountEur)}
-                                        <span className="text-gray-500 ml-1.5 text-[10px]">{item.pct.toFixed(1)}%</span>
+                                        <span className="text-lux-500 ml-1.5 text-xs">{item.pct.toFixed(1)}%</span>
                                     </span>
                                 </div>
                             ))}
@@ -650,28 +650,28 @@ export default function CalculatorWidget() {
 
             {/* ═══ MARGIN CALCULATOR (Only in Forward Mode) ═══ */}
             {state.calculatorMode === 'forward' && (
-                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                <div className="border border-lux-100 rounded-lux-card overflow-hidden">
                     <button
                         type="button"
                         onClick={() => setShowMargin(!showMargin)}
-                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50/80 hover:bg-gray-100/80 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-3 bg-lux-50/80 hover:bg-lux-100/80 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
-                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-lux-500 uppercase tracking-wider flex items-center gap-1.5">
                             <TrendingUp className="h-3.5 w-3.5" />
                             Profit Margin
                         </span>
                         {showMargin
-                            ? <ChevronUp className="h-3.5 w-3.5 text-gray-400" />
-                            : <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                            ? <ChevronUp className="h-3.5 w-3.5 text-lux-400" />
+                            : <ChevronDown className="h-3.5 w-3.5 text-lux-400" />
                         }
                     </button>
 
                     {showMargin && (
-                        <div className="p-4 space-y-3 animate-fade-in">
+                        <div className="p-5 space-y-3 animate-fade-in">
                             <div>
-                                <label className="block text-[10px] text-gray-500 mb-1">Sell Price (EUR)</label>
+                                <label className="block text-xs text-lux-500 mb-1">Sell Price (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400 text-sm">€</span>
                                     <input
                                         type="number"
                                         value={state.sellPrice}
@@ -694,7 +694,7 @@ export default function CalculatorWidget() {
                                             <div className={`text-lg font-bold font-display ${marginColor}`}>
                                                 {result.marginPct.toFixed(1)}%
                                             </div>
-                                            <div className="text-[10px] text-gray-500">
+                                            <div className="text-xs text-lux-500">
                                                 Gross Margin
                                             </div>
                                         </div>
@@ -703,7 +703,7 @@ export default function CalculatorWidget() {
                                         <div className={`text-lg font-bold font-display ${marginColor}`}>
                                             {result.marginEur >= 0 ? '+' : ''}{fmtEur(result.marginEur)}
                                         </div>
-                                        <div className="text-[10px] text-gray-500">
+                                        <div className="text-xs text-lux-500">
                                             Profit per unit
                                         </div>
                                     </div>
@@ -711,7 +711,7 @@ export default function CalculatorWidget() {
                             )}
 
                             {!state.sellPrice && hasInput && (
-                                <p className="text-[10px] text-gray-400 text-center">
+                                <p className="text-xs text-lux-400 text-center">
                                     Enter a sell price to see your margin
                                 </p>
                             )}

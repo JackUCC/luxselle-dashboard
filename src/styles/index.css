@@ -140,7 +140,7 @@ h3, h4, h5, h6 {
   background: #F5F5F7;
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .lux-input::placeholder {
@@ -166,6 +166,129 @@ textarea.lux-input {
   padding: var(--space-3);
 }
 
+.lux-input-error {
+  animation: lux-input-shake 300ms ease-in-out;
+}
+
+.lux-floating-input {
+  position: relative;
+  width: 100%;
+}
+
+.lux-floating-input-field::placeholder {
+  color: transparent;
+}
+
+.lux-floating-label {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  color: var(--lux-text-tertiary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateY(-50%) scale(1);
+  transform-origin: top left;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.lux-floating-input-field:focus + .lux-floating-label,
+.lux-floating-input-field:not(:placeholder-shown) + .lux-floating-label {
+  transform: translateY(-19px) scale(0.7857142857);
+  color: var(--lux-gold);
+}
+
+.lux-floating-adornment {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lux-text-tertiary);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lux-floating-adornment-left {
+  left: var(--space-3);
+}
+
+.lux-floating-adornment-right {
+  right: var(--space-3);
+}
+
+.lux-floating-has-prefix .lux-floating-input-field {
+  padding-left: calc(var(--space-3) + 1rem + var(--space-2));
+}
+
+.lux-floating-has-prefix .lux-floating-label {
+  left: calc(var(--space-3) + 1rem + var(--space-2));
+}
+
+.lux-floating-has-suffix .lux-floating-input-field {
+  padding-right: calc(var(--space-3) + 1rem + var(--space-2));
+}
+
+.lux-select {
+  position: relative;
+  width: 100%;
+}
+
+.lux-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.lux-select-dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--lux-surface);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform-origin: top;
+  animation: lux-select-open 200ms ease forwards;
+}
+
+.lux-select-option {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 10px var(--space-3);
+  text-align: left;
+  color: var(--lux-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.4;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.lux-select-option:disabled {
+  color: var(--lux-text-tertiary);
+  cursor: not-allowed;
+}
+
+.lux-select-option-highlighted:not(:disabled) {
+  background: var(--lux-accent-warm);
+}
+
+.lux-select-option-selected:not(:disabled) {
+  color: var(--lux-gold);
+}
+
+.lux-select-empty {
+  padding: var(--space-3);
+  color: var(--lux-text-tertiary);
+  font-size: 13px;
+}
+
 /* ─── Primary button ─── */
 .lux-btn-primary {
   padding: var(--space-2) var(--space-4);
@@ -176,7 +299,12 @@ textarea.lux-input {
   background: var(--lux-text);
   border: 1px solid transparent;
   border-radius: 10px;
-  transition: background 0.1s ease, transform 0.1s ease;
+  transition: all 0.15s ease;
+}
+
+.lux-btn-primary.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .lux-btn-primary:hover {
@@ -293,6 +421,33 @@ textarea.lux-input {
 /* ─── Animations ─── */
 @keyframes lux-shimmer {
   100% { transform: translateX(100%); }
+}
+
+@keyframes lux-input-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+@keyframes lux-select-open {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 @layer utilities {

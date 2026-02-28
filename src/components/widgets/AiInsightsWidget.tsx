@@ -62,7 +62,7 @@ export default function AiInsightsWidget({ kpis, profit }: AiInsightsWidgetProps
                 <button
                     onClick={generateInsights}
                     disabled={loading}
-                    className="group flex items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100/80 disabled:opacity-50 transition-all"
+                    className="group flex items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100/80 disabled:opacity-50 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                     <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : 'group-hover:rotate-12 transition-transform'}`} />
                     {loading ? 'Analyzing...' : insights ? 'Refresh' : 'Generate'}
@@ -70,7 +70,7 @@ export default function AiInsightsWidget({ kpis, profit }: AiInsightsWidgetProps
             </div>
 
             {!insights && !loading && (
-                <div className="flex flex-col items-center justify-center py-6 text-center text-sm text-lux-500 bg-lux-50/80 rounded-xl border border-dashed border-lux-200">
+                <div className="flex flex-col items-center justify-center py-6 text-center text-sm text-lux-500 bg-lux-50/80 rounded-lux-card border border-dashed border-lux-200">
                     <Lightbulb className="h-8 w-8 text-lux-300 mb-2" />
                     <p>Click Generate to analyze your inventory & sales data.</p>
                 </div>
@@ -92,7 +92,7 @@ export default function AiInsightsWidget({ kpis, profit }: AiInsightsWidgetProps
                             <p className="leading-relaxed">{insight}</p>
                         </div>
                     ))}
-                    <div className="text-[10px] text-lux-400 pt-2 text-right">
+                    <div className="text-xs text-lux-400 pt-2 text-right">
                         Generated {new Date(insights.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                 </div>

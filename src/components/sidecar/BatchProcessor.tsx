@@ -65,8 +65,8 @@ const STATUS_LABEL: Record<QueueItemStatus, string> = {
 }
 
 const STATUS_CLASS: Record<QueueItemStatus, string> = {
-  pending: 'bg-gray-100 text-gray-600',
-  running: 'bg-indigo-100 text-indigo-700',
+  pending: 'bg-lux-100 text-lux-600',
+  running: 'bg-lux-100 text-lux-700',
   done: 'bg-emerald-100 text-emerald-700',
   error: 'bg-rose-100 text-rose-700',
 }
@@ -290,12 +290,12 @@ export default function BatchProcessor() {
 
   return (
     <div className="space-y-2">
-      <section className="rounded-xl border border-gray-200 bg-white p-2.5">
+      <section className="rounded-lux-card border border-lux-200 bg-white p-2.5">
         <div className="flex items-center gap-1.5">
-          <ListChecks className="h-3.5 w-3.5 text-gray-500" />
-          <h2 className="text-xs font-semibold text-gray-800">Batch workflow</h2>
+          <ListChecks className="h-3.5 w-3.5 text-lux-500" />
+          <h2 className="text-xs font-semibold text-lux-800">Batch workflow</h2>
         </div>
-        <p className="mt-1 text-[11px] text-gray-500">
+        <p className="mt-1 text-xs text-lux-500">
           Paste one full description per line, queue them, then run the full batch.
         </p>
 
@@ -304,14 +304,14 @@ export default function BatchProcessor() {
           onChange={(event) => setDraft(event.target.value)}
           rows={4}
           placeholder={'Chanel Classic Flap Medium Black Caviar\nLouis Vuitton Neverfull MM Damier Ebene'}
-          className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="mt-2 w-full rounded-lg border border-lux-200 bg-white px-3 py-2 text-xs text-lux-900 placeholder:text-lux-400 focus:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20"
         />
 
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={handleQueueItems}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-lux-200 bg-white px-2.5 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           >
             <Plus className="h-3.5 w-3.5" />
             Queue items
@@ -320,7 +320,7 @@ export default function BatchProcessor() {
             type="button"
             onClick={handleProcessBatch}
             disabled={isProcessingBatch}
-            className="inline-flex items-center gap-1 rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg bg-lux-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-lux-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           >
             {isProcessingBatch ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             Run batch
@@ -329,41 +329,41 @@ export default function BatchProcessor() {
       </section>
 
       {lastBatchReport && (
-        <section className="rounded-xl border border-gray-200 bg-white p-2.5">
+        <section className="rounded-lux-card border border-lux-200 bg-white p-2.5">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-            <p className="text-xs font-semibold text-gray-800">Last batch report</p>
+            <p className="text-xs font-semibold text-lux-800">Last batch report</p>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-1.5 text-[11px]">
-            <div className="rounded-lg bg-gray-50 p-2">
-              <p className="text-gray-500">Processed</p>
-              <p className="font-semibold text-gray-800">{lastBatchReport.processed}</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
+            <div className="rounded-lg bg-lux-50 p-2">
+              <p className="text-lux-500">Processed</p>
+              <p className="font-semibold text-lux-800">{lastBatchReport.processed}</p>
             </div>
-            <div className="rounded-lg bg-gray-50 p-2">
-              <p className="text-gray-500">Success / Failed</p>
-              <p className="font-semibold text-gray-800">{lastBatchReport.successful} / {lastBatchReport.failed}</p>
+            <div className="rounded-lg bg-lux-50 p-2">
+              <p className="text-lux-500">Success / Failed</p>
+              <p className="font-semibold text-lux-800">{lastBatchReport.successful} / {lastBatchReport.failed}</p>
             </div>
-            <div className="rounded-lg bg-gray-50 p-2">
-              <p className="text-gray-500">Avg max buy</p>
-              <p className="font-semibold text-gray-800">{formatCurrency(lastBatchReport.averageMaxBuy)}</p>
+            <div className="rounded-lg bg-lux-50 p-2">
+              <p className="text-lux-500">Avg max buy</p>
+              <p className="font-semibold text-lux-800">{formatCurrency(lastBatchReport.averageMaxBuy)}</p>
             </div>
-            <div className="rounded-lg bg-gray-50 p-2">
-              <p className="text-gray-500">Avg max bid</p>
-              <p className="font-semibold text-gray-800">{formatCurrency(lastBatchReport.averageMaxBid)}</p>
+            <div className="rounded-lg bg-lux-50 p-2">
+              <p className="text-lux-500">Avg max bid</p>
+              <p className="font-semibold text-lux-800">{formatCurrency(lastBatchReport.averageMaxBid)}</p>
             </div>
           </div>
           {lastBatchReport.bestCandidate && (
-            <p className="mt-1.5 text-[11px] text-gray-600">
-              Best candidate: <span className="font-medium text-gray-800">{lastBatchReport.bestCandidate.query}</span>{' '}
+            <p className="mt-1.5 text-xs text-lux-600">
+              Best candidate: <span className="font-medium text-lux-800">{lastBatchReport.bestCandidate.query}</span>{' '}
               ({formatCurrency(lastBatchReport.bestCandidate.maxBidEur)} max bid)
             </p>
           )}
         </section>
       )}
 
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-2.5 py-2">
-          <div className="flex items-center gap-2 text-[11px] text-gray-600">
+      <section className="rounded-lux-card border border-lux-200 bg-white">
+        <div className="flex items-center justify-between border-b border-lux-100 px-2.5 py-2">
+          <div className="flex items-center gap-2 text-xs text-lux-600">
             <Clock3 className="h-3.5 w-3.5" />
             <span>{items.length} queued</span>
             <span>•</span>
@@ -374,7 +374,7 @@ export default function BatchProcessor() {
           <button
             type="button"
             onClick={handleClearCompleted}
-            className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-xs font-medium text-lux-600 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           >
             <Trash2 className="h-3 w-3" />
             Clear completed
@@ -382,16 +382,16 @@ export default function BatchProcessor() {
         </div>
 
         {items.length === 0 ? (
-          <div className="px-3 py-6 text-center text-xs text-gray-500">
+          <div className="px-3 py-6 text-center text-xs text-lux-500">
             Queue is empty. Paste full descriptions above and click <span className="font-medium">Queue items</span>.
           </div>
         ) : (
           <div className="max-h-[56vh] space-y-2 overflow-y-auto p-2.5">
             {items.map((item) => (
-              <article key={item.id} className="rounded-lg border border-gray-100 bg-gray-50/40 p-2">
+              <article key={item.id} className="rounded-lg border border-lux-100 bg-lux-50/40 p-2">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-medium leading-5 text-gray-800">{item.query}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_CLASS[item.status]}`}>
+                  <p className="text-xs font-medium leading-5 text-lux-800">{item.query}</p>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[item.status]}`}>
                     {STATUS_LABEL[item.status]}
                   </span>
                 </div>
@@ -401,7 +401,7 @@ export default function BatchProcessor() {
                     type="button"
                     onClick={() => handleProcessItem(item.id)}
                     disabled={isProcessingBatch || item.status === 'running'}
-                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-md border border-lux-200 bg-white px-2 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
                   >
                     {item.status === 'running' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                     Run item
@@ -410,7 +410,7 @@ export default function BatchProcessor() {
                     type="button"
                     onClick={() => handleRemoveItem(item.id)}
                     disabled={item.status === 'running'}
-                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-md border border-lux-200 bg-white px-2 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
                   >
                     <Trash2 className="h-3 w-3" />
                     Remove
@@ -418,32 +418,32 @@ export default function BatchProcessor() {
                 </div>
 
                 {item.errorMessage && (
-                  <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-rose-600">
+                  <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-rose-600">
                     <AlertTriangle className="h-3 w-3" />
                     {item.errorMessage}
                   </p>
                 )}
 
                 {item.result && (
-                  <details className="mt-1.5 rounded-md border border-gray-100 bg-white px-2 py-1.5 text-[11px]">
-                    <summary className="cursor-pointer font-medium text-gray-600 hover:text-gray-800">
+                  <details className="mt-1.5 rounded-md border border-lux-100 bg-white px-2 py-1.5 text-xs">
+                    <summary className="cursor-pointer font-medium text-lux-600 hover:text-lux-800">
                       View report
                     </summary>
                     <div className="mt-1.5 grid grid-cols-3 gap-1.5">
-                      <div className="rounded-md bg-gray-50 p-1.5">
-                        <p className="text-gray-500">Avg sell</p>
-                        <p className="font-semibold text-gray-800">{formatCurrency(item.result.averageSellingPriceEur)}</p>
+                      <div className="rounded-md bg-lux-50 p-1.5">
+                        <p className="text-lux-500">Avg sell</p>
+                        <p className="font-semibold text-lux-800">{formatCurrency(item.result.averageSellingPriceEur)}</p>
                       </div>
-                      <div className="rounded-md bg-gray-50 p-1.5">
-                        <p className="text-gray-500">Max buy</p>
-                        <p className="font-semibold text-gray-800">{formatCurrency(item.result.maxBuyEur)}</p>
+                      <div className="rounded-md bg-lux-50 p-1.5">
+                        <p className="text-lux-500">Max buy</p>
+                        <p className="font-semibold text-lux-800">{formatCurrency(item.result.maxBuyEur)}</p>
                       </div>
-                      <div className="rounded-md bg-gray-50 p-1.5">
-                        <p className="text-gray-500">Max bid</p>
-                        <p className="font-semibold text-gray-800">{formatCurrency(item.result.maxBidEur)}</p>
+                      <div className="rounded-md bg-lux-50 p-1.5">
+                        <p className="text-lux-500">Max bid</p>
+                        <p className="font-semibold text-lux-800">{formatCurrency(item.result.maxBidEur)}</p>
                       </div>
                     </div>
-                    <p className="mt-1 text-gray-500">Comps: {item.result.comps.length} • Inventory: {item.inventoryMatches.length}</p>
+                    <p className="mt-1 text-lux-500">Comps: {item.result.comps.length} • Inventory: {item.inventoryMatches.length}</p>
                   </details>
                 )}
               </article>

@@ -11,6 +11,7 @@ import { apiGet, apiPost, apiPostFormData, apiDelete } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
 import { Button, Input, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import Skeleton from '../../components/feedback/Skeleton'
 
 type InvoiceWithId = Invoice & { id: string }
 
@@ -279,9 +280,24 @@ export default function InvoicesView() {
       />
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading invoices...</span>
+        <div className="space-y-3">
+          <div className="flex items-center gap-4 px-3 py-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-14" />
+          </div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-3 py-3 border-b border-lux-100">
+              <Skeleton className="h-3.5 w-20" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-2.5 w-20" />
+              </div>
+              <Skeleton className="h-3.5 w-16" />
+              <Skeleton className="h-5 w-14 rounded-full" variant="rect" />
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="lux-card p-8 text-center">
@@ -310,7 +326,7 @@ export default function InvoicesView() {
                 key={card.id}
                 type="button"
                 onClick={() => setSelected(card.invoice)}
-                className={`lux-card p-5 text-left transition-all animate-bento-enter hover:-translate-y-0.5 ${
+                className={`lux-card p-5 text-left transition-all animate-bento-enter hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                   selected?.id === card.id ? 'ring-2 ring-lux-900' : ''
                 }`}
                 style={{ '--stagger': index } as React.CSSProperties}
@@ -344,7 +360,7 @@ export default function InvoicesView() {
                   <button
                     type="button"
                     onClick={() => setSelected(null)}
-                    className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700"
+                    className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     aria-label="Close"
                   >
                     <X className="h-5 w-5" />
@@ -393,7 +409,7 @@ export default function InvoicesView() {
                     <span>VAT</span>
                     <span>{formatCurrency(selected.vatEur)}</span>
                   </div>
-                  <div className="lux-card-accent mt-3 flex justify-between rounded-xl p-3 text-body font-semibold text-lux-900">
+                  <div className="lux-card-accent mt-3 flex justify-between rounded-lux-card p-5 text-body font-semibold text-lux-900">
                     <span>Total</span>
                     <span>{formatCurrency(selected.totalEur)}</span>
                   </div>
@@ -413,7 +429,7 @@ export default function InvoicesView() {
         <div className="max-h-[90vh] overflow-y-auto p-6">
           <div className="mb-4 flex items-center justify-between border-b border-lux-200 pb-4">
             <h2 id="create-invoice-title" className="text-card-header font-semibold text-lux-800">Create in-person invoice</h2>
-            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700" aria-label="Close">
+            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Close">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -508,7 +524,7 @@ export default function InvoicesView() {
               <button
                 type="submit"
                 disabled={createSubmitting}
-                className="lux-btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50"
+                className="lux-btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 {createSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Create invoice
@@ -523,7 +539,7 @@ export default function InvoicesView() {
         <div className="max-h-[90vh] overflow-y-auto p-6">
           <div className="mb-4 flex items-center justify-between border-b border-lux-200 pb-4">
             <h2 id="upload-invoice-title" className="text-card-header font-semibold text-lux-800">Add invoice (PDF)</h2>
-            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700" aria-label="Close">
+            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Close">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -618,7 +634,7 @@ export default function InvoicesView() {
               <button
                 type="submit"
                 disabled={uploadSubmitting}
-                className="lux-btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50"
+                className="lux-btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 {uploadSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Add invoice

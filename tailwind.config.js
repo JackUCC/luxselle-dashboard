@@ -108,6 +108,18 @@ module.exports = {
           from: { opacity: '0', transform: 'translateX(-100%)' },
           to: { opacity: '1', transform: 'translateX(0)' },
         },
+        'lux-float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        'lux-dot-bounce': {
+          '0%, 80%, 100%': { transform: 'translateY(0)', opacity: '0.4' },
+          '40%': { transform: 'translateY(-6px)', opacity: '1' },
+        },
+        'lux-progress-indeterminate': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(400%)' },
+        },
       },
       animation: {
         'fade-in': 'lux-fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
@@ -117,6 +129,9 @@ module.exports = {
         'scale-in': 'lux-scale-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
         'bento-enter': 'lux-bento-enter 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
         'pulse-slow': 'lux-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'lux-float 3s ease-in-out infinite',
+        'dot-bounce': 'lux-dot-bounce 1.4s ease-in-out infinite',
+        'progress-indeterminate': 'lux-progress-indeterminate 1.5s ease-in-out infinite',
       },
     },
   },

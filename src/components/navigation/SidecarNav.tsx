@@ -34,7 +34,7 @@ export default function SidecarNav() {
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-lg p-1.5 text-lux-600 transition-colors hover:bg-lux-100 hover:text-lux-900 focus:outline-none focus:ring-2 focus:ring-lux-gold"
+            className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-lg p-1.5 text-lux-600 transition-colors hover:bg-lux-100 hover:text-lux-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           aria-label="Open navigation menu"
         >
           <Menu className="h-5 w-5" />
@@ -49,7 +49,7 @@ export default function SidecarNav() {
         <Link
           to={getExitSidecarPath('/', location.search)}
           replace
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-lux-200 px-2 py-1.5 text-ui-label font-medium text-lux-600 transition-colors hover:bg-lux-50 focus:outline-none focus:ring-2 focus:ring-lux-gold"
+          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-lux-200 px-2 py-1.5 text-ui-label font-medium text-lux-600 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           title="Exit sidecar and return to overview"
           aria-label="Exit sidecar and return to overview"
         >
@@ -84,7 +84,7 @@ export default function SidecarNav() {
                         onTouchStart={handleRouteWarmup(route.path)}
                         onClick={() => setDrawerOpen(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-colors ${
+                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                             isActive
                               ? 'bg-lux-200/80 text-lux-900'
                               : 'text-lux-600 hover:bg-lux-100 hover:text-lux-900'

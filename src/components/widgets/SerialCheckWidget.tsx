@@ -106,7 +106,7 @@ export default function SerialCheckWidget() {
             type="button"
             onClick={handleDecode}
             disabled={isLoading}
-            className="lux-btn-primary flex-1 flex items-center justify-center gap-1.5 h-10"
+            className="lux-btn-primary flex-1 flex items-center justify-center gap-1.5 h-10 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <Search className="h-3.5 w-3.5" />
             {isLoading ? 'Analyzing...' : 'Analyze'}
@@ -114,7 +114,7 @@ export default function SerialCheckWidget() {
           <button
             type="button"
             onClick={() => { setSerial(''); setResult(null); setGuidance(null) }}
-            className="text-[13px] font-medium text-lux-500 hover:text-lux-700 transition-colors px-3"
+            className="text-xs font-medium text-lux-500 hover:text-lux-700 transition-colors px-3 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             Clear
           </button>
@@ -123,7 +123,7 @@ export default function SerialCheckWidget() {
 
       {result && (
         <div
-          className={`mt-4 rounded-xl border px-3 py-2.5 text-[13px] ${
+          className={`mt-4 rounded-lux-card border px-3 py-2.5 text-xs ${
             result.success
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
               : 'border-amber-200 bg-amber-50 text-amber-800'
@@ -140,16 +140,16 @@ export default function SerialCheckWidget() {
                 <p className="font-semibold">Year: {result.year}{result.period ? ` · ${result.period}` : ''}</p>
               )}
               {result.productionWindow && (
-                <p className="text-[11px] opacity-90">Window: {result.productionWindow.startYear}-{result.productionWindow.endYear}</p>
+                <p className="text-xs opacity-90">Window: {result.productionWindow.startYear}-{result.productionWindow.endYear}</p>
               )}
-              <p className="text-[11px] opacity-80 mt-0.5">{result.message}</p>
+              <p className="text-xs opacity-80 mt-0.5">{result.message}</p>
             </div>
           </div>
         </div>
       )}
 
       {guidance && (
-        <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50/80 px-3 py-2.5 text-xs text-indigo-900">
+        <div className="mt-3 rounded-lux-card border border-lux-200 bg-lux-50/80 px-3 py-2.5 text-xs text-lux-900">
           <p className="font-semibold">Worth: {formatCurrency(guidance.estimatedWorthEur)}</p>
           <p>Max pay: {formatCurrency(guidance.recommendedMaxPayEur)}</p>
         </div>

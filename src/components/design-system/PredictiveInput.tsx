@@ -128,11 +128,11 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
           <div
             id="predictive-dropdown"
             role="listbox"
-            className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-2xl border border-lux-200 bg-white shadow-lg"
+            className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lux-card border border-lux-200 bg-white shadow-lg"
           >
             {inventoryMatches.length > 0 && (
               <div>
-                <div className="px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-lux-400">
+                <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
                   From your inventory
                 </div>
                 {inventoryMatches.map((item, i) => (
@@ -143,7 +143,7 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
                     aria-selected={highlightIndex === i}
                     onClick={() => selectItem(item)}
                     onMouseEnter={() => setHighlightIndex(i)}
-                    className={`w-full text-left px-3 py-2 text-body-sm transition-colors ${
+                    className={`w-full text-left px-3 py-2 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                       highlightIndex === i
                         ? 'bg-lux-100 text-lux-900'
                         : 'text-lux-700 hover:bg-lux-50'
@@ -157,7 +157,7 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
 
             {popularMatches.length > 0 && (
               <div className={inventoryMatches.length > 0 ? 'border-t border-lux-100' : ''}>
-                <div className="px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-lux-400">
+                <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
                   Popular items
                 </div>
                 {popularMatches.map((item, i) => {
@@ -170,7 +170,7 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
                       aria-selected={highlightIndex === globalIndex}
                       onClick={() => selectItem(item)}
                       onMouseEnter={() => setHighlightIndex(globalIndex)}
-                      className={`w-full text-left px-3 py-2 text-body-sm transition-colors ${
+                      className={`w-full text-left px-3 py-2 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                         highlightIndex === globalIndex
                           ? 'bg-lux-100 text-lux-900'
                           : 'text-lux-700 hover:bg-lux-50'

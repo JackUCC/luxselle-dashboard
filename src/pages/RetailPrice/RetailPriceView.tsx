@@ -67,7 +67,7 @@ export default function RetailPriceView() {
 
       {/* Example chips */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-lux-400">
+        <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
           <Sparkles className="h-3 w-3" /> Examples
         </span>
         {EXAMPLE_ITEMS.map((item) => (
@@ -75,7 +75,7 @@ export default function RetailPriceView() {
             key={item}
             type="button"
             onClick={() => setDescription(item)}
-            className="rounded-full border border-lux-200 bg-white px-3 py-1 text-[12px] font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors"
+            className="rounded-full border border-lux-200 bg-white px-3 py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             {item.length > 40 ? `${item.slice(0, 37)}…` : item}
           </button>
@@ -91,7 +91,7 @@ export default function RetailPriceView() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="retail-description" className="block text-[12px] font-medium text-lux-600 mb-1.5">
+                <label htmlFor="retail-description" className="block text-xs font-medium text-lux-600 mb-1.5">
                   Item description
                 </label>
                 <textarea
@@ -112,7 +112,7 @@ export default function RetailPriceView() {
                   data-testid="retail-lookup-btn"
                   onClick={handleLookup}
                   disabled={loading}
-                  className="lux-btn-primary flex items-center gap-2"
+                  className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -125,13 +125,13 @@ export default function RetailPriceView() {
                   type="button"
                   onClick={handleClear}
                   disabled={loading}
-                  className="lux-btn-secondary flex items-center gap-2"
+                  className="lux-btn-secondary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   Clear
                 </button>
               </div>
 
-              <p className="text-[11px] text-lux-400 pt-1">
+              <p className="text-xs text-lux-400 pt-1">
                 Estimates are indicative. Always check the brand's official site for current retail prices.
               </p>
             </div>
@@ -146,7 +146,7 @@ export default function RetailPriceView() {
               <button
                 type="button"
                 onClick={() => setError(null)}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 Dismiss
               </button>
@@ -176,15 +176,15 @@ export default function RetailPriceView() {
                 </div>
                 <div className="min-w-0 flex-1">
                   {result.productName && (
-                    <p className="text-[13px] font-semibold text-lux-800">{result.productName}</p>
+                    <p className="text-xs font-semibold text-lux-800">{result.productName}</p>
                   )}
                   {result.retailPriceEur != null && (
                     <p className="mt-2 text-[36px] font-bold font-mono leading-none text-lux-900">
                       {formatCurrency(result.retailPriceEur)}
                     </p>
                   )}
-                  <p className="mt-3 text-[13px] text-lux-600 leading-relaxed">{result.note}</p>
-                  <p className="mt-2 text-[11px] text-lux-400">
+                  <p className="mt-3 text-xs text-lux-600 leading-relaxed">{result.note}</p>
+                  <p className="mt-2 text-xs text-lux-400">
                     Official boutique price (new from brand). Verify on the brand's website for your region.
                   </p>
                 </div>
@@ -193,8 +193,8 @@ export default function RetailPriceView() {
           ) : !error ? (
             <div className="lux-card border-dashed border-2 border-lux-200 min-h-[320px] flex flex-col items-center justify-center text-lux-400 p-8">
               <Tags className="h-12 w-12 mb-4 opacity-20" />
-              <p className="text-[15px] font-medium text-lux-500">Ready to look up</p>
-              <p className="text-[13px] opacity-60 mt-1 max-w-xs text-center">
+              <p className="text-sm font-medium text-lux-500">Ready to look up</p>
+              <p className="text-xs opacity-60 mt-1 max-w-xs text-center">
                 Paste an item description or select an example to get the brand's official retail price.
               </p>
             </div>

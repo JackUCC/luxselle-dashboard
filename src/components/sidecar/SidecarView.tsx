@@ -78,15 +78,15 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
         <div className="rounded-lg border border-lux-200 bg-white p-2 shadow-xs">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[13px] font-semibold text-lux-800">Sidecar</h1>
-              <p className="mt-0.5 text-[11px] text-lux-400 break-words">
+              <h1 className="truncate text-xs font-semibold text-lux-800">Sidecar</h1>
+              <p className="mt-0.5 text-xs text-lux-400 break-words">
                 Compact assistant for live buying sessions.
               </p>
             </div>
             <button
               type="button"
               onClick={handleExitSidecar}
-              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-[11px] font-medium text-lux-600 transition-colors hover:bg-lux-50"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-xs font-medium text-lux-600 transition-colors hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               title="Exit sidecar and return to overview"
               aria-label="Exit sidecar and return to overview"
             >
@@ -105,7 +105,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
                   aria-label={`${tab.label} mode`}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors min-w-0 truncate ${
+                  className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors min-w-0 truncate focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                     isActive
                       ? 'bg-lux-800 text-white'
                       : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
@@ -120,7 +120,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
             })}
           </div>
 
-          <p className="mt-1.5 rounded-md bg-lux-50 px-2 py-1 text-[11px] text-lux-500 break-words">
+          <p className="mt-1.5 rounded-md bg-lux-50 px-2 py-1 text-xs text-lux-500 break-words">
             {activeConfig.helper}
           </p>
         </div>
