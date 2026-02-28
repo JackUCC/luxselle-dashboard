@@ -67,6 +67,8 @@ export default function EvaluatorView() {
   const [formulaOpen, setFormulaOpen] = useState(false)
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
+  const [failedCompImages, setFailedCompImages] = useState<Record<number, boolean>>({})
+  const [loadedCompImages, setLoadedCompImages] = useState<Record<number, boolean>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoRanQueryRef = useRef<string | null>(null)
 
@@ -102,6 +104,11 @@ export default function EvaluatorView() {
       runResearch(urlQuery)
     }
   }, [searchParams, setSearchParams, runResearch])
+
+  useEffect(() => {
+    setFailedCompImages({})
+    setLoadedCompImages({})
+  }, [result?.comps])
 
   const confidencePct = result
     ? result.comps.length >= 5
@@ -417,16 +424,44 @@ export default function EvaluatorView() {
                     <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {result.comps.map((c, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-lux-100 last:border-0">
-                          <div className="min-w-0 pr-2">
-                            {c.sourceUrl ? (
-                              <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block">
-                                {c.title}
-                              </a>
-                            ) : (
-                              <span className="text-lux-800 truncate block">{c.title}</span>
-                            )}
-                            <span className="text-xs text-lux-500">{c.source}</span>
+                        <div key={i} className="flex items-start gap-3 justify-between text-sm py-1.5 border-b border-lux-100 last:border-0">
+                          <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50">
+                              {c.previewImageUrl && !failedCompImages[i] ? (
+                                <>
+                                  {!loadedCompImages[i] && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-lux-50">
+                                      <ImageIcon className="h-4 w-4 text-lux-300" />
+                                    </div>
+                                  )}
+                                  <img
+                                    src={c.previewImageUrl}
+                                    alt=""
+                                    loading="lazy"
+                                    className={`h-full w-full object-cover ${loadedCompImages[i] ? 'opacity-100' : 'opacity-0'}`}
+                                    onLoad={() => setLoadedCompImages((prev) => ({ ...prev, [i]: true }))}
+                                    onError={() => {
+                                      setFailedCompImages((prev) => ({ ...prev, [i]: true }))
+                                      setLoadedCompImages((prev) => ({ ...prev, [i]: false }))
+                                    }}
+                                  />
+                                </>
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-lux-300" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 pr-1">
+                              {c.sourceUrl ? (
+                                <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block">
+                                  {c.title}
+                                </a>
+                              ) : (
+                                <span className="text-lux-800 truncate block">{c.title}</span>
+                              )}
+                              <span className="text-xs text-lux-500">{c.source}</span>
+                            </div>
                           </div>
                           <span className="font-mono text-lux-700 whitespace-nowrap">{formatCurrency(c.price)}</span>
                         </div>
