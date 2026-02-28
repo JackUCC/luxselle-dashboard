@@ -98,16 +98,16 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
     return (
         <>
             <div
-                className="fixed inset-0 bg-gray-500/20 backdrop-blur-sm z-40 transition-opacity"
+                className="fixed inset-0 bg-lux-500/20 backdrop-blur-sm z-40 transition-opacity"
                 onClick={onClose}
             />
 
-            <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 border-l border-gray-200">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h2 className="text-lg font-semibold text-gray-900">Add New Product</h2>
+            <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 border-l border-lux-200">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-lux-100 bg-lux-50/50">
+                    <h2 className="text-lg font-semibold text-lux-900">Add New Product</h2>
                     <button
                         onClick={onClose}
-                        className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        className="rounded-lg p-2 text-lux-400 hover:text-lux-600 hover:bg-lux-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -118,13 +118,13 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         {/* Image Upload */}
                         <div className="flex flex-col items-center justify-center">
                             <div
-                                className="relative h-40 w-40 rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group"
+                                className="relative h-40 w-40 rounded-lux-card overflow-hidden border-2 border-dashed border-lux-300 bg-lux-50 hover:bg-lux-100 transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {imagePreview ? (
                                     <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
                                 ) : (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-lux-400">
                                         <Upload className="h-8 w-8 mb-2" />
                                         <span className="text-xs font-medium">Add Image</span>
                                     </div>
@@ -143,7 +143,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                            <label className="block text-sm font-medium text-lux-700 mb-1">SKU</label>
                             <input
                                 type="text"
                                 value={product.sku ?? ''}
@@ -154,7 +154,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Brand <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Brand <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     value={product.brand}
@@ -164,7 +164,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Model / Title <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Model / Title <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     value={product.model}
@@ -175,7 +175,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full title (optional)</label>
+                            <label className="block text-sm font-medium text-lux-700 mb-1">Full title (optional)</label>
                             <input
                                 type="text"
                                 value={product.title ?? ''}
@@ -187,7 +187,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Category</label>
                                 <input
                                     type="text"
                                     value={product.category}
@@ -197,7 +197,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Condition</label>
                                 <input
                                     type="text"
                                     value={product.condition}
@@ -209,7 +209,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Colour</label>
+                            <label className="block text-sm font-medium text-lux-700 mb-1">Colour</label>
                             <input
                                 type="text"
                                 value={product.colour}
@@ -221,9 +221,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Purchase / Cost (EUR)</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -235,9 +235,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Sell Price (EUR)</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Sell Price (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -251,9 +251,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Customs (EUR)</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -265,9 +265,9 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">VAT (EUR)</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">VAT (EUR)</label>
                                 <div className="relative">
-                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-gray-400">€</span>
+                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -282,7 +282,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Quantity</label>
                                 <input
                                     type="number"
                                     min="0"
@@ -292,7 +292,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <label className="block text-sm font-medium text-lux-700 mb-1">Status</label>
                                 <div className="relative">
                                     <select
                                         value={product.status}
@@ -303,14 +303,14 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                         <option value="sold">Sold</option>
                                         <option value="reserved">Reserved</option>
                                     </select>
-                                    <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
                                 </div>
                             </div>
                         </div>
 
                         <div>
                             <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-gray-700">Notes / Description</label>
+                                <label className="block text-sm font-medium text-lux-700">Notes / Description</label>
                                 <button
                                     type="button"
                                     onClick={async () => {
@@ -327,7 +327,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                             toast.error('Failed to generate', { id: toastId })
                                         }
                                     }}
-                                    className="text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-medium"
+                                    className="text-xs flex items-center gap-1 text-lux-gold hover:text-lux-gold font-medium focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                 >
                                     <Sparkles className="h-3 w-3" />
                                     Generate with AI
@@ -343,18 +343,18 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                     </div>
                 </div>
 
-                <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex items-center justify-end gap-3">
+                <div className="border-t border-lux-100 px-6 py-4 bg-lux-50/50 flex items-center justify-end gap-3">
                     <button
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
+                        className="px-4 py-2 text-sm font-medium text-lux-500 hover:text-lux-700 transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="lux-btn-primary flex items-center gap-2"
+                        className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
                         {isSubmitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

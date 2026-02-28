@@ -68,12 +68,12 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
               alt="Luxselle"
               className="h-6 w-auto max-w-[90px] object-contain object-left"
             />
-            <span className="text-[10px] font-medium uppercase tracking-widest text-lux-400">Engine</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-lux-400">Engine</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-50 hover:text-lux-600"
+            className="rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-50 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -84,7 +84,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
           {NAV_GROUPS.map((group) => (
             <section key={group.section} className="space-y-0.5">
               {group.title ? (
-                <h2 className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-lux-400">
+                <h2 className="px-2.5 pb-1 text-xs font-semibold uppercase tracking-widest text-lux-400">
                   {group.title}
                 </h2>
               ) : null}
@@ -101,7 +101,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                       onTouchStart={handleRouteWarmup(route.path)}
                       onClick={onClose}
                       className={({ isActive }: { isActive: boolean }) =>
-                        `flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-colors duration-150 ${isActive
+                        `flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-xs font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isActive
                           ? 'bg-lux-800 text-white'
                           : 'text-lux-500 hover:bg-lux-50 hover:text-lux-800'
                         }`

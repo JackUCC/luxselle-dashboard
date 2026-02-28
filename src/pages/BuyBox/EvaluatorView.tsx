@@ -205,7 +205,7 @@ export default function EvaluatorView() {
         <button
           type="button"
           onClick={() => setActiveTab('pricecheck')}
-          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'pricecheck' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
+          className={`flex-1 pb-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === 'pricecheck' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
         >
           <Search className="mb-1 mr-2 inline-block h-4 w-4" />
           Price Check
@@ -213,7 +213,7 @@ export default function EvaluatorView() {
         <button
           type="button"
           onClick={() => setActiveTab('landed')}
-          className={`flex-1 pb-3 text-sm font-medium transition-colors ${activeTab === 'landed' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
+          className={`flex-1 pb-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === 'landed' ? 'border-b-2 border-lux-900 text-lux-900' : 'text-lux-400 hover:text-lux-600'}`}
         >
           <Calculator className="mb-1 mr-2 inline-block h-4 w-4" />
           Landed Cost
@@ -227,7 +227,7 @@ export default function EvaluatorView() {
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Search + Refine */}
-          <div className="lux-card evaluator-form-card flex flex-col p-4 sm:p-5 lg:p-6 h-fit animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
+          <div className="lux-card evaluator-form-card flex flex-col p-5 lg:p-6 h-fit animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
             <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
               <div>
                 <FloatingInput
@@ -237,15 +237,15 @@ export default function EvaluatorView() {
                   label="Search for item"
                   leadingAdornment={<Search className="h-4 w-4 text-lux-400" />}
                 />
-                <p className="mt-1 text-[11px] text-lux-400">e.g. Chanel Classic Flap Medium Black</p>
+                <p className="mt-1 text-xs text-lux-400">e.g. Chanel Classic Flap Medium Black</p>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mb-1.5">
                   Or drop / upload image
                 </label>
                 {imagePreview ? (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-lux-200">
+                  <div className="relative aspect-video rounded-lux-card overflow-hidden border border-lux-200">
                     <img src={imagePreview} alt="Upload" className="w-full h-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
                       <div className="flex items-center gap-2">
@@ -253,7 +253,7 @@ export default function EvaluatorView() {
                           type="button"
                           onClick={handleAnalyzeImage}
                           disabled={isAnalyzingImage}
-                          className="text-xs text-white hover:text-indigo-200 flex items-center gap-1"
+                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                           {isAnalyzingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                           {isAnalyzingImage ? 'Analyzing…' : 'Analyze with AI'}
@@ -262,19 +262,19 @@ export default function EvaluatorView() {
                           type="button"
                           onClick={handleFindSimilar}
                           disabled={isFindingSimilar}
-                          className="text-xs text-white hover:text-indigo-200 flex items-center gap-1"
+                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                           {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
                           {isFindingSimilar ? 'Finding…' : 'Find similar'}
                         </button>
                       </div>
-                      <button type="button" onClick={handleRemoveImage} className="text-white hover:text-red-300" aria-label="Remove image">
+                      <button type="button" onClick={handleRemoveImage} className="text-white hover:text-red-300 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <label className="block border-2 border-dashed border-lux-200 rounded-xl p-6 text-center cursor-pointer hover:border-lux-300 transition-colors">
+                  <label className="block border-2 border-dashed border-lux-200 rounded-lux-card p-6 text-center cursor-pointer hover:border-lux-300 transition-colors">
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
                     <Upload className="mx-auto h-8 w-8 text-lux-400 mb-2" />
                     <p className="text-sm text-lux-500">Drop image or click to upload</p>
@@ -284,11 +284,11 @@ export default function EvaluatorView() {
               </div>
 
               {/* Refine (collapsible) */}
-              <div className="border border-lux-200 rounded-xl overflow-hidden">
+              <div className="border border-lux-200 rounded-lux-card overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setRefineOpen(!refineOpen)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-lux-600 hover:bg-lux-50"
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm text-lux-600 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   Refine results (condition, notes)
                   {refineOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -312,7 +312,7 @@ export default function EvaluatorView() {
                         onChange={(e) => setNotes(e.target.value)}
                         label="Notes"
                       />
-                      <p className="mt-1 text-[11px] text-lux-400">Size, colour, features…</p>
+                      <p className="mt-1 text-xs text-lux-400">Size, colour, features…</p>
                     </div>
                   </div>
                 )}
@@ -321,7 +321,7 @@ export default function EvaluatorView() {
               <button
                 type="submit"
                 disabled={isResearching}
-                className="lux-btn-primary w-full rounded-[10px] py-3 text-sm flex items-center justify-center gap-2"
+                className="lux-btn-primary w-full rounded-[10px] py-3 text-sm flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 {isResearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {isResearching ? 'Researching…' : 'Research market'}
@@ -337,7 +337,7 @@ export default function EvaluatorView() {
                   <button
                     type="button"
                     onClick={() => setError(null)}
-                    className="text-xs font-medium text-rose-600 hover:text-rose-700 underline"
+                    className="text-xs font-medium text-rose-600 hover:text-rose-700 underline focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     Retry
                   </button>
@@ -375,18 +375,18 @@ export default function EvaluatorView() {
                     <span className="ml-2 text-lux-400">· Researched {formatRelativeDate(result.researchedAt)}</span>
                   )}
                 </p>
-                <div className="lux-card-accent rounded-2xl p-4 text-center">
+                <div className="lux-card-accent rounded-lux-card p-5 text-center">
                   <SectionLabel as="span" className="mb-1 block">Avg. selling price (second-hand)</SectionLabel>
                   <div className="text-2xl font-bold text-lux-900">{formatCurrency(result.averageSellingPriceEur)}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="lux-card-accent rounded-2xl p-4">
+                  <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="flex items-center gap-1.5">
                       <SectionLabel as="span">Max buy target</SectionLabel>
                       <button
                         type="button"
                         onClick={() => setFormulaOpen((o) => !o)}
-                        className="text-lux-400 hover:text-lux-600"
+                        className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         title="Show formula"
                         aria-label="Show formula breakdown"
                       >
@@ -396,14 +396,14 @@ export default function EvaluatorView() {
                     <div className="text-xl font-bold text-lux-900 mt-1">{formatCurrency(result.maxBuyEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
-                  <div className="lux-card-accent rounded-2xl p-4">
+                  <div className="lux-card-accent rounded-lux-card p-5">
                     <SectionLabel as="span" className="mb-1 block">Max bid target</SectionLabel>
                     <div className="text-xl font-bold text-lux-900">{formatCurrency(result.maxBidEur)}</div>
                     <div className="text-xs text-lux-500 mt-1">−7% auction fee</div>
                   </div>
                 </div>
                 {formulaOpen && (
-                  <div className="rounded-xl bg-lux-50 border border-lux-200 p-3 text-xs text-lux-600 font-mono space-y-1">
+                  <div className="rounded-lux-card bg-lux-50 border border-lux-200 p-5 text-xs text-lux-600 font-mono space-y-1">
                     <div>Avg selling price: {formatCurrency(result.averageSellingPriceEur)}</div>
                     <div>− VAT (23%): {formatCurrency(result.averageSellingPriceEur)} / 1.23 = {formatCurrency(result.averageSellingPriceEur / 1.23)}</div>
                     <div>− Margin (20%): ex-VAT × 0.80 = {formatCurrency(result.maxBuyEur)} (Max buy)</div>
@@ -445,7 +445,7 @@ export default function EvaluatorView() {
                             </div>
                             <div className="min-w-0 pr-1">
                               {c.sourceUrl ? (
-                                <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block">
+                                <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
                                   {c.title}
                                 </a>
                               ) : (
@@ -460,7 +460,7 @@ export default function EvaluatorView() {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-800">
+                  <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800">
                     No comparable listings found. Prices shown are AI estimates and may be less reliable.
                   </div>
                 )}
@@ -477,7 +477,7 @@ export default function EvaluatorView() {
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {visualResults.map((r, i) => (
-                      <div key={i} className="rounded-xl border border-lux-200 overflow-hidden bg-white">
+                      <div key={i} className="rounded-lux-card border border-lux-200 overflow-hidden bg-white">
                         {r.imageUrl ? (
                           <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
                         ) : (
@@ -489,7 +489,7 @@ export default function EvaluatorView() {
                           <p className="text-xs text-lux-800 truncate" title={r.title}>{r.title ?? '—'}</p>
                           <p className="text-xs text-lux-500">{Math.round(r.score * 100)}% match</p>
                           {r.productId && (
-                            <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-lux-gold hover:underline mt-0.5 inline-block">View in Inventory</a>
+                            <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-lux-gold hover:underline mt-0.5 inline-block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">View in Inventory</a>
                           )}
                         </div>
                       </div>

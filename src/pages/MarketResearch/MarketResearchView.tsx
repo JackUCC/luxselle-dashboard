@@ -397,7 +397,7 @@ export default function MarketResearchView() {
                     <button
                         type="button"
                         onClick={() => setError(null)}
-                        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     >
                         Retry
                     </button>
@@ -409,7 +409,7 @@ export default function MarketResearchView() {
                 <div className="flex flex-wrap items-center gap-2">
                     {previousSearches.length > 0 && (
                         <>
-                            <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-lux-400">
+                            <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
                                 <History className="h-3 w-3" /> Recent
                             </span>
                             {previousSearches.map((p, i) => (
@@ -417,7 +417,7 @@ export default function MarketResearchView() {
                                     key={`prev-${p.brand}-${p.model}-${i}`}
                                     type="button"
                                     onClick={() => quickResearch(p.brand, p.model)}
-                                    className="rounded-full border border-lux-200 bg-white px-3 py-1 text-[12px] font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors"
+                                    className="rounded-full border border-lux-200 bg-white px-3 py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                 >
                                     {p.brand} {p.model}
                                 </button>
@@ -425,7 +425,7 @@ export default function MarketResearchView() {
                             <div className="mx-1 h-4 w-px bg-lux-200" />
                         </>
                     )}
-                    <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-amber-500">
+                    <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-amber-500">
                         <Zap className="h-3 w-3" /> Trending
                     </span>
                     {KEY_TRENDING_BAGS.map(({ brand, model }) => (
@@ -433,7 +433,7 @@ export default function MarketResearchView() {
                             key={`trend-${brand}-${model}`}
                             type="button"
                             onClick={() => quickResearch(brand, model)}
-                            className="rounded-full border border-amber-200 bg-amber-50/60 px-3 py-1 text-[12px] font-medium text-lux-800 hover:bg-amber-100 transition-colors"
+                            className="rounded-full border border-amber-200 bg-amber-50/60 px-3 py-1 text-xs font-medium text-lux-800 hover:bg-amber-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             {brand} {model}
                         </button>
@@ -453,7 +453,7 @@ export default function MarketResearchView() {
 
                         <form onSubmit={handleAnalyse} className="space-y-4">
                             <div>
-                                <label htmlFor="mr-brand" className="block text-[12px] font-medium text-lux-600 mb-1.5">Brand *</label>
+                                <label htmlFor="mr-brand" className="block text-xs font-medium text-lux-600 mb-1.5">Brand *</label>
                                 <LuxSelect
                                     id="mr-brand"
                                     name="brand"
@@ -469,7 +469,7 @@ export default function MarketResearchView() {
                             <div>
                                 {modelOptions.length > 0 ? (
                                     <>
-                                        <label htmlFor="mr-model" className="block text-[12px] font-medium text-lux-600 mb-1.5">Model *</label>
+                                        <label htmlFor="mr-model" className="block text-xs font-medium text-lux-600 mb-1.5">Model *</label>
                                         <LuxSelect
                                             id="mr-model"
                                             name="model"
@@ -498,7 +498,7 @@ export default function MarketResearchView() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label htmlFor="mr-category" className="block text-[12px] font-medium text-lux-600 mb-1.5">Category *</label>
+                                    <label htmlFor="mr-category" className="block text-xs font-medium text-lux-600 mb-1.5">Category *</label>
                                     <LuxSelect
                                         id="mr-category"
                                         name="category"
@@ -510,7 +510,7 @@ export default function MarketResearchView() {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="mr-condition" className="block text-[12px] font-medium text-lux-600 mb-1.5">Condition *</label>
+                                    <label htmlFor="mr-condition" className="block text-xs font-medium text-lux-600 mb-1.5">Condition *</label>
                                     <LuxSelect
                                         id="mr-condition"
                                         name="condition"
@@ -532,15 +532,15 @@ export default function MarketResearchView() {
                                     onChange={handleChange}
                                     label="Current Ask Price (EUR)"
                                     step="0.01"
-                                    leadingAdornment={<span className="text-[15px] font-medium">€</span>}
+                                    leadingAdornment={<span className="text-sm font-medium">€</span>}
                                 />
-                                <p className="text-[11px] text-lux-400 mt-1">Optional — helps calibrate analysis</p>
+                                <p className="text-xs text-lux-400 mt-1">Optional — helps calibrate analysis</p>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading || !formData.brand || !formData.model}
-                                className="lux-btn-primary w-full py-3 flex items-center justify-center gap-2"
+                                className="lux-btn-primary w-full py-3 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                             >
                                 {isLoading ? (
                                     <><AiThinkingDots /> Researching...</>
@@ -560,7 +560,7 @@ export default function MarketResearchView() {
                 {/* ─── Results panel ─── */}
                 <div>
                     {!result ? (
-                        <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-gray-400">
+                        <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-lux-400">
                             <BarChart3 className="h-14 w-14 mb-4 opacity-20 animate-float" />
                             <p className="text-lg font-medium">Ready to research</p>
                             <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
@@ -591,7 +591,7 @@ export default function MarketResearchView() {
                                             type="button"
                                             onClick={handleSave}
                                             disabled={isSaving || isSaved}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                                                 isSaved 
                                                     ? 'bg-lux-100 text-lux-800' 
                                                     : 'bg-white border border-lux-200 text-lux-700 hover:bg-lux-50'
@@ -608,7 +608,7 @@ export default function MarketResearchView() {
                                             type="button"
                                             onClick={handleToggleStar}
                                             disabled={isSaving}
-                                            className={`p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-lux-gold ${
+                                            className={`p-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${
                                                 isStarred ? 'text-lux-gold bg-lux-50' : 'text-lux-400 hover:text-lux-600 hover:bg-lux-50'
                                             }`}
                                             title={isStarred ? "Remove star" : "Star this research"}
@@ -635,7 +635,7 @@ export default function MarketResearchView() {
                                                     key={`${s.brand}-${s.model}`}
                                                     type="button"
                                                     onClick={() => quickResearch(s.brand, s.model)}
-                                                    className="rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-all inline-flex items-center gap-1.5"
+                                                    className="rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-all inline-flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                                     style={{ animation: `lux-fade-in 0.3s ease ${i * 100}ms both` }}
                                                 >
                                                     <Sparkles className="h-3 w-3 text-lux-gold" />
@@ -663,7 +663,7 @@ export default function MarketResearchView() {
                         <button
                             onClick={loadTrending}
                             disabled={isTrendingLoading}
-                            className="text-[12px] text-lux-600 hover:text-lux-900 font-medium flex items-center gap-1 transition-colors"
+                            className="text-xs text-lux-600 hover:text-lux-900 font-medium flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             {isTrendingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
                             Refresh
@@ -679,22 +679,22 @@ export default function MarketResearchView() {
                                     <button
                                         key={i}
                                         onClick={() => quickResearch(item.brand, item.model)}
-                                        className="w-full text-left flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors group"
+                                        className="w-full text-left flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors group focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                     >
                                         <div className="min-w-0">
-                                            <div className="text-[13px] font-medium text-lux-800 truncate group-hover:text-lux-900 transition-colors">
+                                            <div className="text-xs font-medium text-lux-800 truncate group-hover:text-lux-900 transition-colors">
                                                 {item.brand} {item.model}
                                             </div>
-                                            <div className="text-[11px] text-lux-400">{item.category}</div>
+                                            <div className="text-xs text-lux-400">{item.category}</div>
                                         </div>
                                         <div className="flex items-center gap-3 shrink-0">
-                                            <span className="text-[13px] font-semibold text-lux-800">{formatCurrency(item.avgPriceEur)}</span>
+                                            <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.avgPriceEur)}</span>
                                             <TrendIcon className={`h-4 w-4 ${trendCfg.color}`} />
                                         </div>
                                     </button>
                                 )
                             })}
-                            <p className="text-[10px] text-lux-400 text-center pt-2 uppercase tracking-wider">
+                            <p className="text-xs text-lux-400 text-center pt-2 uppercase tracking-wider">
                                 via {trending.provider} · Irish & EU · {new Date(trending.generatedAt).toLocaleTimeString()}
                             </p>
                         </div>
@@ -713,7 +713,7 @@ export default function MarketResearchView() {
                     ) : (
                         <div className="text-center py-8 text-lux-400">
                             <Zap className="h-6 w-6 mx-auto mb-2 opacity-20" />
-                            <p className="text-[13px]">Click Refresh to load trends</p>
+                            <p className="text-xs">Click Refresh to load trends</p>
                         </div>
                     )}
                 </div>
@@ -724,7 +724,7 @@ export default function MarketResearchView() {
                         <Store className="h-4 w-4" />
                         Competitor Activity
                     </div>
-                    <p className="text-[11px] text-lux-400 mb-4">Recent listings from Designer Exchange, Luxury Exchange, Siopella.</p>
+                    <p className="text-xs text-lux-400 mb-4">Recent listings from Designer Exchange, Luxury Exchange, Siopella.</p>
                     {isCompetitorLoading ? (
                         <div className="flex items-center justify-center py-8">
                             <Loader2 className="h-6 w-6 animate-spin text-lux-500" />
@@ -737,17 +737,17 @@ export default function MarketResearchView() {
                                     className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
                                 >
                                     <div className="min-w-0 flex-1 pr-2">
-                                        <div className="text-[13px] font-medium text-lux-800 truncate">{item.title}</div>
-                                        <div className="text-[11px] text-lux-400">{item.source}</div>
+                                        <div className="text-xs font-medium text-lux-800 truncate">{item.title}</div>
+                                        <div className="text-xs text-lux-400">{item.source}</div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-[13px] font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
+                                        <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
                                         {item.sourceUrl && (
                                             <a
                                                 href={item.sourceUrl}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="p-1 rounded-lg text-lux-400 hover:text-lux-700 transition-colors"
+                                                className="p-1 rounded-lg text-lux-400 hover:text-lux-700 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                                 aria-label="Open listing"
                                             >
                                                 <ExternalLink className="h-3.5 w-3.5" />
@@ -756,12 +756,12 @@ export default function MarketResearchView() {
                                     </div>
                                 </div>
                             ))}
-                            <p className="text-[10px] text-lux-400 text-center pt-2">
+                            <p className="text-xs text-lux-400 text-center pt-2">
                                 Updated {new Date(competitorFeed.generatedAt).toLocaleTimeString()}
                             </p>
                         </div>
                     ) : (
-                        <div className="text-center py-8 text-lux-400 text-[13px]">
+                        <div className="text-center py-8 text-lux-400 text-xs">
                             No competitor feed available.
                         </div>
                     )}

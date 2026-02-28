@@ -104,20 +104,20 @@ function InventoryRowActions({
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="text-lux-400 hover:text-lux-600 p-2 rounded-lg hover:bg-lux-100 transition-all"
+        className="text-lux-400 hover:text-lux-600 p-2 rounded-lg hover:bg-lux-100 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
         aria-label="Row actions"
       >
         <MoreVertical className="h-4 w-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 py-1 bg-white border border-lux-200 rounded-xl shadow-lg z-20 min-w-[120px]">
+        <div className="absolute right-0 top-full mt-1 py-1 bg-white border border-lux-200 rounded-lux-card shadow-lg z-20 min-w-[120px]">
           <button
             type="button"
             onClick={() => {
               setOpen(false);
               onEdit();
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-lux-700 hover:bg-lux-50"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-lux-700 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <Pencil className="h-3.5 w-3.5" />
             Edit
@@ -128,7 +128,7 @@ function InventoryRowActions({
               setOpen(false);
               onDelete();
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Delete
@@ -436,7 +436,7 @@ export default function InventoryView() {
               type="button"
               onClick={() => setShowClearConfirm(true)}
               disabled={products.length === 0 || isClearing}
-              className="inline-flex items-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               title="Delete all inventory items"
             >
               {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
@@ -464,16 +464,16 @@ export default function InventoryView() {
                   placeholder="Search by brand, model, SKU..."
                   className="lux-input pl-10 w-full"
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-[10px] font-semibold text-lux-400">
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-xs font-semibold text-lux-400">
                   /
                 </span>
               </div>
 
               {/* View Toggles */}
-              <div className="flex rounded-xl border border-lux-200 bg-lux-50 p-1">
+              <div className="flex rounded-lux-card border border-lux-200 bg-lux-50 p-1">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`rounded-lg p-2 transition-all ${
+                  className={`rounded-lg p-2 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                     viewMode === "table"
                       ? "bg-white shadow-sm text-lux-900"
                       : "text-lux-400 hover:text-lux-700"
@@ -485,7 +485,7 @@ export default function InventoryView() {
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`rounded-lg p-2 transition-all ${
+                  className={`rounded-lg p-2 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                     viewMode === "grid"
                       ? "bg-white shadow-sm text-lux-900"
                       : "text-lux-400 hover:text-lux-700"
@@ -508,7 +508,7 @@ export default function InventoryView() {
             <div className="relative">
               <select
                 aria-label="Filter by brand"
-                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold transition-all cursor-pointer"
+                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:border-lux-gold transition-all cursor-pointer"
                 value={brandFilter}
                 onChange={(e) => updateParam("brand", e.target.value)}
               >
@@ -524,7 +524,7 @@ export default function InventoryView() {
             <div className="relative">
               <select
                 aria-label="Filter by status"
-                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus:outline-none focus:ring-2 focus:ring-lux-gold/20 focus:border-lux-gold transition-all cursor-pointer"
+                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:border-lux-gold transition-all cursor-pointer"
                 value={statusFilter}
                 onChange={(e) => updateParam("status", e.target.value)}
               >
@@ -539,7 +539,7 @@ export default function InventoryView() {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="ml-auto inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-[11px] font-semibold text-lux-600 hover:bg-lux-50 transition-colors"
+                className="ml-auto inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-semibold text-lux-600 hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 <X className="h-3.5 w-3.5" />
                 Clear all ({activeFilterCount})
@@ -564,7 +564,7 @@ export default function InventoryView() {
                 newParams.delete("missingInfo");
                 setSearchParams(newParams);
               }}
-              className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors"
+              className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               Clear filter
             </button>
@@ -589,7 +589,7 @@ export default function InventoryView() {
                   return next;
                 });
               }}
-              className="font-medium text-amber-600 hover:text-amber-700 hover:underline"
+              className="font-medium text-amber-600 hover:text-amber-700 hover:underline focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm"
             >
               {missingInfoCount} missing info
             </a>
@@ -697,7 +697,7 @@ export default function InventoryView() {
                       <tr
                         key={product.id}
                         onClick={() => openProductDrawer(product.id)}
-                        className={`group hover:bg-lux-200/30 transition-colors cursor-pointer ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
+                        className={`group hover:bg-lux-200/30 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
                         style={{
                           height: `${virtualRow.size}px`,
                         }}
@@ -773,7 +773,7 @@ export default function InventoryView() {
                     <tr
                       key={product.id}
                       onClick={() => openProductDrawer(product.id)}
-                      className={`group hover:bg-lux-200/30 transition-colors cursor-pointer ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
+                      className={`group hover:bg-lux-200/30 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-amber-400 bg-amber-50/30" : ""}`}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -850,7 +850,7 @@ export default function InventoryView() {
               <div
                 key={product.id}
                 onClick={() => openProductDrawer(product.id)}
-                className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
+                className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
                 style={{ '--stagger': index } as React.CSSProperties}
               >
                 <div className="aspect-[4/3] bg-lux-50 relative overflow-hidden rounded-t-[15px]">

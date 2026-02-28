@@ -100,7 +100,7 @@ export default function DashboardView() {
               type="button"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="rounded-lg p-2 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 disabled:opacity-40"
+              className="rounded-lg p-2 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               title="Refresh data"
               aria-label="Refresh dashboard data"
             >
@@ -118,7 +118,7 @@ export default function DashboardView() {
           <button
             type="button"
             onClick={handleRefresh}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             Retry
           </button>
@@ -148,7 +148,7 @@ export default function DashboardView() {
               label="Potential Value"
               value={<AnimatedNumber value={potentialValue} prefix="€" />}
               secondary={
-                <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-[12px] font-medium text-lux-700">
+                <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-xs font-medium text-lux-700">
                   €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
                 </span>
               }

@@ -76,13 +76,13 @@ const getStatusConfig = (status: string) => {
       }
     case 'queued':
       return {
-        color: 'bg-gray-100 text-gray-700 border-gray-200',
+        color: 'bg-lux-100 text-lux-700 border-lux-200',
         icon: Clock,
         label: 'Queued',
       }
     default:
       return {
-        color: 'bg-gray-100 text-gray-600 border-gray-200',
+        color: 'bg-lux-100 text-lux-600 border-lux-200',
         icon: AlertTriangle,
         label: status,
       }
@@ -202,7 +202,7 @@ export default function JobsView() {
           <button
             onClick={loadJobs}
             disabled={isLoading}
-            className="lux-btn-secondary flex items-center gap-2"
+            className="lux-btn-secondary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
@@ -249,19 +249,19 @@ export default function JobsView() {
           <table className="min-w-full divide-y divide-lux-100">
             <thead className="bg-lux-50/60">
               <tr>
-                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
                   Type
                 </th>
-                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
                   Progress
                 </th>
-                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
                   Started
                 </th>
-                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
                   Duration
                 </th>
                 <th className="relative px-6 py-4">
@@ -279,7 +279,7 @@ export default function JobsView() {
                   <tr
                     key={job.id}
                     onClick={() => openJobDetail(job.id)}
-                    className="group transition-colors cursor-pointer hover:bg-lux-50/60"
+                    className="group transition-colors cursor-pointer hover:bg-lux-50/60 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -313,7 +313,7 @@ export default function JobsView() {
                                     ? 'bg-red-500'
                                     : job.status === 'succeeded' || job.status === 'success'
                                     ? 'bg-green-500'
-                                    : 'bg-gray-700'
+                                    : 'bg-lux-700'
                                 }`}
                                 style={{
                                   width: `${job.progress.total > 0 ? (job.progress.processed / job.progress.total) * 100 : 0}%`,
@@ -348,7 +348,7 @@ export default function JobsView() {
                             handleRetry(job.id)
                           }}
                           disabled={retryingId === job.id}
-                          className="flex items-center gap-1.5 text-xs font-medium text-lux-800 hover:text-lux-900 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1.5 text-xs font-medium text-lux-800 hover:text-lux-900 transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                           {retryingId === job.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -421,7 +421,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-lg p-2 text-lux-400 hover:text-lux-700 hover:bg-lux-100 transition-colors"
+            className="rounded-lg p-2 text-lux-400 hover:text-lux-700 hover:bg-lux-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <X className="h-5 w-5" />
           </button>
@@ -432,7 +432,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
           {/* Status Section */}
           <div className="animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
             <SectionLabel as="h3" className="mb-3">Status</SectionLabel>
-            <div className="lux-card p-4">
+            <div className="lux-card p-5">
               <div className="flex items-center justify-between mb-4">
                 <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold border ${statusConfig.color}`}>
                   <StatusIcon className="h-4 w-4" />
@@ -441,7 +441,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
                 {(job.status === 'failed' || job.status === 'fail') && (
                   <button
                     onClick={() => onRetry(job.id)}
-                    className="lux-btn-secondary text-sm flex items-center gap-2"
+                    className="lux-btn-secondary text-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                   >
                     <RefreshCw className="h-4 w-4" />
                     Retry Job
@@ -484,31 +484,31 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
           {job.progress && (
             <div className="animate-bento-enter" style={{ '--stagger': 1 } as React.CSSProperties}>
               <SectionLabel as="h3" className="mb-3">Progress</SectionLabel>
-              <div className="lux-card p-4 space-y-4">
+              <div className="lux-card p-5 space-y-4">
                 <div className="grid grid-cols-4 gap-3 text-center">
-                  <div className="lux-card-accent rounded-xl p-3">
+                  <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="text-2xl font-bold text-lux-900">
                       {job.progress.total}
                     </div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Total</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Total</div>
                   </div>
-                  <div className="lux-card-accent rounded-xl p-3">
+                  <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="text-2xl font-bold text-green-600">
                       {job.progress.created}
                     </div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Created</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Created</div>
                   </div>
-                  <div className="lux-card-accent rounded-xl p-3">
+                  <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="text-2xl font-bold text-lux-800">
                       {job.progress.updated}
                     </div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Updated</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Updated</div>
                   </div>
-                  <div className="lux-card-accent rounded-xl p-3">
+                  <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="text-2xl font-bold text-red-600">
                       {job.progress.errors?.length || 0}
                     </div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Errors</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mt-1">Errors</div>
                   </div>
                 </div>
 
@@ -531,7 +531,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
                           ? 'bg-red-500'
                           : job.status === 'succeeded' || job.status === 'success'
                           ? 'bg-green-500'
-                          : 'bg-gray-700 animate-pulse'
+                          : 'bg-lux-700 animate-pulse'
                       }`}
                       style={{
                         width: `${job.progress.total > 0 ? (job.progress.processed / job.progress.total) * 100 : 0}%`,
@@ -580,7 +580,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
           {job.input && Object.keys(job.input).length > 0 && (
             <div className="animate-bento-enter" style={{ '--stagger': 4 } as React.CSSProperties}>
               <SectionLabel as="h3" className="mb-3">Input</SectionLabel>
-              <div className="lux-card bg-lux-50 p-4">
+              <div className="lux-card bg-lux-50 p-5">
                 <pre className="text-xs font-mono text-lux-600 whitespace-pre-wrap">
                   {JSON.stringify(job.input, null, 2)}
                 </pre>

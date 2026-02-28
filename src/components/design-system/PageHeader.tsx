@@ -11,7 +11,7 @@ export default function PageHeader({ title, purpose, actions }: PageHeaderProps)
     <header className="mb-8">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-sans text-[32px] font-bold tracking-tight text-lux-900">
+          <h1 className="font-sans text-3xl font-bold tracking-tight text-lux-900">
             {title}
           </h1>
           {purpose ? (

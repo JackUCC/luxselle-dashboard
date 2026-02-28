@@ -14,7 +14,7 @@ interface SourcingRequest {
 
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-amber-400',
-  sourcing: 'bg-blue-400',
+  sourcing: 'bg-emerald-400',
   sourced: 'bg-emerald-400',
   fulfilled: 'bg-emerald-600',
   lost: 'bg-red-400',
@@ -56,20 +56,20 @@ export default function ActiveSourcingWidget() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-[13px] text-lux-500">No active requests</p>
+        <p className="text-xs text-lux-500">No active requests</p>
       ) : (
         <div className="space-y-1">
           {items.map((item) => (
             <Link
               key={item.id}
               to={`/sourcing`}
-              className="flex items-center justify-between rounded-xl px-3 py-2.5 transition-colors hover:bg-white/60"
+              className="flex items-center justify-between rounded-lux-card px-3 py-2.5 transition-colors hover:bg-white/60 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               <div className="flex items-center gap-2.5">
                 <span
                   className={`h-2 w-2 rounded-full ${STATUS_COLORS[item.status] ?? 'bg-lux-300'}`}
                 />
-                <span className="text-[14px] font-medium text-lux-700">
+                <span className="text-sm font-medium text-lux-700">
                   {item.itemDescription || item.brand || 'Untitled'}
                 </span>
               </div>

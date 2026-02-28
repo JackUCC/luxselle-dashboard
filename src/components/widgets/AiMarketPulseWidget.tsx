@@ -87,15 +87,15 @@ export default function AiMarketPulseWidget() {
           ))}
         </div>
       ) : error ? (
-        <p className="text-[13px] text-lux-500">Unable to load market insights right now.</p>
+        <p className="text-xs text-lux-500">Unable to load market insights right now.</p>
       ) : items.length === 0 ? (
-        <p className="text-[13px] text-lux-500">No trending data available.</p>
+        <p className="text-xs text-lux-500">No trending data available.</p>
       ) : (
         <div className="space-y-3">
           {items.map((item, i) => (
             <div key={i} className="flex items-start gap-2.5">
               <TrendIcon trend={item.priceTrend} />
-              <p className="text-[13px] leading-snug text-lux-700">
+              <p className="text-xs leading-snug text-lux-700">
                 <span className="font-semibold text-lux-900">{item.brand}</span>{' '}
                 {formatInsight(item)}
               </p>

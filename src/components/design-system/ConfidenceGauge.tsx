@@ -74,13 +74,13 @@ export default function ConfidenceGauge({ value, size = 100 }: ConfidenceGaugePr
         />
         <foreignObject x={0} y={0} width={100} height={100} className="rotate-90 origin-center">
           <div className="flex h-full w-full items-center justify-center">
-            <span className="text-2xl font-bold text-gray-900 tabular-nums leading-none">
+            <span className="text-2xl font-bold text-lux-900 tabular-nums leading-none">
               <AnimatedNumber value={pct} suffix="%" />
             </span>
           </div>
         </foreignObject>
       </svg>
-      <span className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">Confidence</span>
+      <span className="text-xs text-lux-500 uppercase tracking-wide mt-0.5">Confidence</span>
     </div>
   )
 }

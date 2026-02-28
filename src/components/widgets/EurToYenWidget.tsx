@@ -34,7 +34,7 @@ export default function EurToYenWidget() {
         <button
           type="button"
           onClick={() => setDirection((d) => (d === 'eur-to-jpy' ? 'jpy-to-eur' : 'eur-to-jpy'))}
-          className="rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600"
+          className="rounded-md p-1.5 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           aria-label="Swap currency direction"
         >
           <ArrowUpDown className="h-4 w-4" />
@@ -49,7 +49,7 @@ export default function EurToYenWidget() {
       ) : (
         <>
           <div className="relative">
-            <span className="absolute left-px top-1/2 -translate-y-1/2 text-[18px] font-medium text-lux-400">
+            <span className="absolute left-px top-1/2 -translate-y-1/2 text-lg font-medium text-lux-400">
               {currencySymbol}
             </span>
             <input
@@ -59,7 +59,7 @@ export default function EurToYenWidget() {
               placeholder="0"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="lux-input h-12 pl-12 text-[22px] font-semibold font-mono text-lux-800"
+              className="lux-input h-12 pl-12 text-xl font-semibold font-mono text-lux-800"
             />
           </div>
 
@@ -69,7 +69,7 @@ export default function EurToYenWidget() {
                 <span className="text-[12px] font-semibold uppercase tracking-wider text-lux-400">
                   {resultLabel}
                 </span>
-                <span className="text-[18px] font-semibold font-mono text-lux-800">
+                <span className="text-lg font-semibold font-mono text-lux-800">
                   {direction === 'eur-to-jpy' ? formatJpy(result) : formatEur(result)}
                 </span>
               </div>

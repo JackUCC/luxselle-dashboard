@@ -41,21 +41,21 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
-            <h2 className="mb-2 text-lg font-semibold text-gray-900">
+            <h2 className="mb-2 text-lg font-semibold text-lux-900">
               Something went wrong
             </h2>
-            <p className="mb-6 text-sm text-gray-500">
+            <p className="mb-6 text-sm text-lux-500">
               An unexpected error occurred. Please try reloading the page.
             </p>
             <button
               onClick={this.handleReload}
-              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-lux-900 px-4 py-2 text-sm font-medium text-white hover:bg-lux-800 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               <RefreshCw className="h-4 w-4" />
               Reload Page
             </button>
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <pre className="mt-6 rounded-lg bg-gray-100 p-4 text-left text-xs text-red-600 overflow-auto max-h-40">
+              <pre className="mt-6 rounded-lg bg-lux-100 p-4 text-left text-xs text-red-600 overflow-auto max-h-40">
                 {this.state.error.message}
               </pre>
             )}

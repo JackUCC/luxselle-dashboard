@@ -28,7 +28,7 @@ const SidecarFallback = () => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.2 }}
-    className="flex items-center justify-center py-12 text-[13px] text-lux-400"
+    className="flex items-center justify-center py-12 text-xs text-lux-400"
     aria-hidden
   >
     Loading…
@@ -40,7 +40,7 @@ const OverviewFallback = () => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.2 }}
-    className="min-h-[40vh] flex items-center justify-center text-[13px] text-lux-400"
+    className="min-h-[40vh] flex items-center justify-center text-xs text-lux-400"
     aria-hidden
   >
     Loading…
@@ -61,13 +61,13 @@ const AppContent = () => {
         <Toaster
           position="top-right"
           toastOptions={{
-            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-elevated !rounded-2xl animate-slide-left',
+            className: 'text-xs font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-elevated !rounded-lux-modal animate-slide-left',
             success: {
-              className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-emerald-500 !shadow-elevated !rounded-2xl animate-slide-left',
+              className: 'text-xs font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-emerald-500 !shadow-elevated !rounded-lux-modal animate-slide-left',
               duration: 3000,
             },
             error: {
-              className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-red-500 !shadow-elevated !rounded-2xl animate-slide-left',
+              className: 'text-xs font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-red-500 !shadow-elevated !rounded-lux-modal animate-slide-left',
               duration: 5000,
             },
           }}
@@ -86,7 +86,7 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-white text-lux-800 font-sans">
       {isConnected === false && (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-[13px] font-medium text-amber-800">
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-2">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>Backend not configured. Set VITE_API_BASE in Vercel to your Railway URL, then redeploy.</span>
@@ -114,7 +114,7 @@ const AppContent = () => {
           <Menu className="h-4 w-4" />
         </button>
         {routeMeta ? (
-          <span className="min-w-0 truncate text-[13px] font-medium text-lux-800" data-testid="mobile-page-title">
+          <span className="min-w-0 truncate text-xs font-medium text-lux-800" data-testid="mobile-page-title">
             {routeMeta.label}
           </span>
         ) : null}
@@ -126,13 +126,13 @@ const AppContent = () => {
       <Toaster
         position="top-right"
         toastOptions={{
-          className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-elevated !rounded-2xl animate-slide-left',
+          className: 'text-xs font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-elevated !rounded-lux-modal animate-slide-left',
           success: {
-            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-emerald-500 !shadow-elevated !rounded-2xl animate-slide-left',
+            className: 'text-xs font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-emerald-500 !shadow-elevated !rounded-lux-modal animate-slide-left',
             duration: 3000,
           },
           error: {
-            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-red-500 !shadow-elevated !rounded-2xl animate-slide-left',
+            className: 'text-xs font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-red-500 !shadow-elevated !rounded-lux-modal animate-slide-left',
             duration: 5000,
           },
         }}

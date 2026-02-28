@@ -46,7 +46,7 @@ export default function StatCard({
   const content = (
     <>
       <SectionLabel className="mb-4">{label}</SectionLabel>
-      <p className="text-[32px] font-semibold font-mono text-lux-800 leading-none">{value}</p>
+      <p className="text-3xl font-semibold font-mono text-lux-800 leading-none">{value}</p>
       {secondary && <div className="mt-3">{secondary}</div>}
     </>
   )

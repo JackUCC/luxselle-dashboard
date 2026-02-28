@@ -17,7 +17,7 @@ export default function SourcingSitesWidget() {
         <SectionLabel>Sourcing Sites</SectionLabel>
         <Link
           to="/sourcing"
-          className="rounded-md p-1 text-lux-400 transition-colors hover:text-lux-600"
+          className="rounded-md p-1 text-lux-400 transition-colors hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           aria-label="View sourcing page"
         >
           <ChevronRight className="h-4 w-4" />
@@ -31,7 +31,7 @@ export default function SourcingSitesWidget() {
             href={site.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[14px] font-medium text-lux-700 transition-colors hover:bg-lux-50"
+            className="flex items-center justify-between rounded-lux-card px-3 py-2.5 text-sm font-medium text-lux-700 transition-colors hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             {site.name}
             <ChevronRight className="h-3.5 w-3.5 text-lux-300" />

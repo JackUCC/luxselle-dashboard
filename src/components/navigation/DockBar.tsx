@@ -88,7 +88,7 @@ export default function DockBar() {
                             <route.icon className="h-5 w-5" />
                           </span>
                         </span>
-                        <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-lux-900 px-3 py-1.5 text-[12px] font-medium text-white opacity-0 shadow-lg transition-all duration-150 group-hover:ml-3 group-hover:opacity-100">
+                        <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-lux-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-all duration-150 group-hover:ml-3 group-hover:opacity-100">
                           {route.navLabel}
                         </span>
                       </NavLink>

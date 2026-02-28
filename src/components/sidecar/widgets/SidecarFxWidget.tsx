@@ -22,11 +22,11 @@ export default function SidecarFxWidget() {
   const hasRate = eurToJpyRate > 0
 
   return (
-    <div className="rounded-lg border border-gray-100 bg-white p-2.5">
+    <div className="rounded-lg border border-lux-100 bg-white p-2.5">
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <ArrowRightLeft className="h-3.5 w-3.5 text-gray-500" />
-          <p className="text-xs font-semibold text-gray-800">
+          <ArrowRightLeft className="h-3.5 w-3.5 text-lux-500" />
+          <p className="text-xs font-semibold text-lux-800">
             {direction === 'eur-to-jpy' ? 'EUR → JPY' : 'JPY → EUR'}
           </p>
         </div>
@@ -34,7 +34,7 @@ export default function SidecarFxWidget() {
           type="button"
           onClick={() => setDirection((current) => (current === 'eur-to-jpy' ? 'jpy-to-eur' : 'eur-to-jpy'))}
           disabled={!hasRate}
-          className="rounded border border-gray-200 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded border border-lux-200 px-2 py-1 text-xs font-medium text-lux-600 hover:bg-lux-50 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
         >
           Flip
         </button>
@@ -42,11 +42,11 @@ export default function SidecarFxWidget() {
 
       {isLoading && !fx ? (
         <div className="space-y-2">
-          <div className="h-8 animate-pulse rounded bg-gray-100" />
-          <div className="h-10 animate-pulse rounded bg-gray-100" />
+          <div className="h-8 animate-pulse rounded bg-lux-100" />
+          <div className="h-10 animate-pulse rounded bg-lux-100" />
         </div>
       ) : errorMessage && !fx ? (
-        <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-[11px] text-amber-800">
+        <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-xs text-amber-800">
           <p className="inline-flex items-start gap-1.5">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             {errorMessage instanceof Error ? errorMessage.message : 'Failed to load FX rate'}
@@ -54,7 +54,7 @@ export default function SidecarFxWidget() {
           <button
             type="button"
             onClick={loadRate}
-            className="rounded border border-amber-300 bg-white px-2 py-1 text-[11px] font-medium text-amber-800 hover:bg-amber-100"
+            className="rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             Retry
           </button>
@@ -68,13 +68,13 @@ export default function SidecarFxWidget() {
               value={amountInput}
               onChange={(event) => setAmountInput(event.target.value)}
               placeholder={sourceLabel}
-              className="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:border-indigo-300 focus:outline-none"
+              className="min-w-0 flex-1 rounded border border-lux-200 px-2 py-1.5 text-sm font-mono text-lux-900 placeholder:text-lux-400 focus:border-lux-300 focus:outline-none"
             />
             <button
               type="button"
               onClick={loadRate}
               disabled={isLoading}
-              className="inline-flex items-center rounded border border-gray-200 p-1.5 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex items-center rounded border border-lux-200 p-1.5 text-lux-600 hover:bg-lux-50 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               aria-label="Refresh exchange rate"
               title="Refresh exchange rate"
             >
@@ -82,21 +82,21 @@ export default function SidecarFxWidget() {
             </button>
           </div>
 
-          <div className="mt-2 rounded-md bg-gray-50 px-2 py-1.5">
-            <p className="text-[10px] text-gray-500">
+          <div className="mt-2 rounded-md bg-lux-50 px-2 py-1.5">
+            <p className="text-xs text-lux-500">
               {direction === 'eur-to-jpy'
                 ? `1 EUR = ${eurToJpyRate.toFixed(2)} JPY`
                 : `1 JPY = ${jpyToEurRate.toFixed(5)} EUR`}
             </p>
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-lux-900">
               {direction === 'eur-to-jpy' ? formatJpy(converted) : formatEur(converted)}
             </p>
           </div>
           {amount <= 0 && (
-            <p className="mt-1 text-[10px] text-gray-500">Enter an amount to calculate the conversion.</p>
+            <p className="mt-1 text-xs text-lux-500">Enter an amount to calculate the conversion.</p>
           )}
           {errorMessage && fx && (
-            <p className="mt-1 text-[10px] text-amber-700">Using last known rate while refresh failed.</p>
+            <p className="mt-1 text-xs text-amber-700">Using last known rate while refresh failed.</p>
           )}
         </>
       )}

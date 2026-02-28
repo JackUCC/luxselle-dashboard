@@ -77,8 +77,9 @@ export default function SavedResearchCard({
                 style={{ '--stagger': index } as React.CSSProperties}
             >
                 <div 
-                    className="lux-card group relative overflow-hidden transition-all cursor-pointer hover:shadow-md hover:border-lux-300 flex flex-col h-full"
+                    className="lux-card group relative overflow-hidden transition-all cursor-pointer hover:shadow-md hover:border-lux-300 flex flex-col h-full focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     onClick={() => onClick(item)}
+                    tabIndex={0}
                 >
                     {/* Header */}
                     <div className="p-5 flex items-start justify-between">
@@ -87,7 +88,7 @@ export default function SavedResearchCard({
                                 {item.result.brand} {item.result.model}
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[11px] text-lux-400">
+                                <span className="text-xs text-lux-400">
                                     {getRelativeTime(item.createdAt)}
                                 </span>
                             </div>
@@ -97,7 +98,7 @@ export default function SavedResearchCard({
                                 type="button"
                                 onClick={handleStarClick}
                                 disabled={isStarring}
-                                className={`p-1.5 rounded-full transition-transform duration-300 hover:bg-lux-50 active:scale-125 focus:outline-none focus:ring-2 focus:ring-lux-gold ${item.isStarred ? 'text-lux-gold' : 'text-lux-400 hover:text-lux-600'}`}
+                                className={`p-1.5 rounded-full transition-transform duration-300 hover:bg-lux-50 active:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${item.isStarred ? 'text-lux-gold' : 'text-lux-400 hover:text-lux-600'}`}
                                 aria-label={item.isStarred ? "Remove star" : "Star item"}
                             >
                                 <Star className={`h-5 w-5 ${item.isStarred ? 'fill-lux-gold' : ''}`} />
@@ -115,7 +116,7 @@ export default function SavedResearchCard({
                         
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-[10px] text-lux-400 uppercase tracking-widest mb-0.5">Market Value</p>
+                                <p className="text-xs text-lux-400 uppercase tracking-widest mb-0.5">Market Value</p>
                                 <p className="text-xl font-bold text-lux-900">
                                     {formatCurrency(item.result.estimatedMarketValueEur)}
                                 </p>
@@ -126,7 +127,7 @@ export default function SavedResearchCard({
                                 <button
                                     type="button"
                                     onClick={handleDeleteClick}
-                                    className="p-2 rounded-lg text-lux-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                    className="p-2 rounded-lg text-lux-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                                     aria-label="Delete saved research"
                                 >
                                     <Trash2 className="h-4 w-4" />

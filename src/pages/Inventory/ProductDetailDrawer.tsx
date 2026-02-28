@@ -209,7 +209,7 @@ export default function ProductDetailDrawer({
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isDeleting}
-                className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 aria-label="Delete product"
               >
                 {isDeleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
@@ -218,7 +218,7 @@ export default function ProductDetailDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-lux-400 hover:text-lux-600 hover:bg-lux-100 transition-colors"
+              className="rounded-lg p-2 text-lux-400 hover:text-lux-600 hover:bg-lux-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               aria-label="Close drawer"
             >
               <X className="h-5 w-5" />
@@ -232,7 +232,7 @@ export default function ProductDetailDrawer({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === tab.id
                 ? 'border-lux-gold text-lux-800'
                 : 'border-transparent text-lux-500 hover:text-lux-700 hover:border-lux-200'
                 }`}
@@ -316,14 +316,14 @@ export default function ProductDetailDrawer({
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-lux-500 hover:text-lux-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-lux-500 hover:text-lux-700 transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="lux-btn-primary flex items-center gap-2"
+              className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               {isSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -474,7 +474,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
               type="button"
               onClick={handleFindSimilar}
               disabled={isFindingSimilar}
-              className="lux-btn-secondary text-sm flex items-center gap-2"
+              className="lux-btn-secondary text-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               {isFindingSimilar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               {isFindingSimilar ? 'Finding…' : 'Find similar'}
@@ -490,7 +490,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="lux-btn-secondary text-sm flex items-center gap-2"
+            className="lux-btn-secondary text-sm flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             {isUploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -538,7 +538,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
                 <button
                   onClick={() => handleDelete(img.id)}
                   disabled={deletingId === img.id}
-                  className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5 border border-transparent shadow-sm"
+                  className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5 border border-transparent shadow-sm focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   {deletingId === img.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -594,7 +594,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
                     <p className="text-xs text-lux-900 truncate" title={r.title}>{r.title ?? '—'}</p>
                     <p className="text-xs text-lux-500">{Math.round(r.score * 100)}% match</p>
                     {r.productId && (
-                      <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-indigo-600 hover:underline mt-0.5 inline-block">
+                      <a href={`/inventory?highlight=${r.productId}`} className="text-xs text-lux-gold hover:underline mt-0.5 inline-block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
                         View in Inventory
                       </a>
                     )}
@@ -835,7 +835,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
 
       {/* VAT (from settings rate) */}
       {sellPrice > 0 && vatInfo && (
-        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-5">
           <div className="text-sm text-lux-700">
             VAT (at {vatInfo.ratePct}%): <span className="font-semibold text-lux-900">{formatCurrency(vatInfo.vatEur)}</span>
             <span className="text-lux-500 ml-1">— sell price treated as gross</span>
@@ -844,7 +844,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
       )}
 
       {/* Margin Summary */}
-      <div className="rounded-lg bg-lux-50 border border-lux-200 p-4">
+      <div className="rounded-lg bg-lux-50 border border-lux-200 p-5">
         <h4 className="text-sm font-medium text-lux-700 mb-4">Margin Analysis</h4>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
@@ -1004,14 +1004,14 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
         <div className="flex gap-2">
           <button
             onClick={() => handleOpenModal('sale')}
-            className="lux-btn-primary text-sm flex items-center gap-1.5"
+            className="lux-btn-primary text-sm flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <DollarSign className="h-4 w-4" />
             Record Sale
           </button>
           <button
             onClick={() => handleOpenModal('adjustment')}
-            className="lux-btn-secondary text-sm flex items-center gap-1.5"
+            className="lux-btn-secondary text-sm flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <Plus className="h-4 w-4" />
             Adjustment
@@ -1037,7 +1037,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
           {transactions.map((tx) => (
             <div
               key={tx.id}
-              className="flex items-center justify-between rounded-lg border border-lux-200 p-4"
+              className="flex items-center justify-between rounded-lg border border-lux-200 p-5"
             >
               <div className="flex items-center gap-3">
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeColor(tx.type)}`}>
@@ -1064,12 +1064,12 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
         <>
           <div className="fixed inset-0 bg-black/30 z-50" onClick={handleCloseModal} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="bg-white rounded-lux-card shadow-xl w-full max-w-md p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-lux-900">
                   {showModal === 'sale' ? 'Record Sale + Create Invoice' : 'Record Adjustment'}
                 </h3>
-                <button onClick={handleCloseModal} className="text-lux-400 hover:text-lux-600">
+                <button onClick={handleCloseModal} className="text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -1105,8 +1105,8 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
-                <button onClick={handleCloseModal} disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors">Cancel</button>
-                <button onClick={handleSubmit} disabled={isSubmitting || !amount} className="lux-btn-primary flex items-center gap-2">
+                <button onClick={handleCloseModal} disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">Cancel</button>
+                <button onClick={handleSubmit} disabled={isSubmitting || !amount} className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {showModal === 'sale' ? 'Record Sale + Invoice' : 'Record Adjustment'}
                 </button>

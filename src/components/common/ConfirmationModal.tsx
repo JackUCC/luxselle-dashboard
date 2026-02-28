@@ -60,7 +60,7 @@ export default function ConfirmationModal({
           </div>
           <button
             type="button"
-            className="rounded-lg p-1 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus:outline-none focus:ring-2 focus:ring-lux-gold"
+            className="rounded-lg p-1 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
             onClick={onClose}
             aria-label="Close"
           >
@@ -83,7 +83,7 @@ export default function ConfirmationModal({
         </Button>
         <button
           type="button"
-          className={`${styles.confirmClass} inline-flex min-h-[40px] min-w-[24px] items-center justify-center rounded-lux-input px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-lux-gold focus:ring-offset-2 disabled:opacity-50`}
+          className={`${styles.confirmClass} inline-flex min-h-[40px] min-w-[24px] items-center justify-center rounded-lux-input px-4 py-2 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:ring-offset-2 disabled:opacity-50`}
           onClick={onConfirm}
           disabled={isConfirming}
         >

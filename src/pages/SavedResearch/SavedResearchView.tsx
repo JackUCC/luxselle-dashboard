@@ -105,13 +105,13 @@ export default function SavedResearchView() {
                 <div className="flex items-center gap-1 bg-lux-100 p-1 rounded-lg">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${filter === 'all' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
+                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'all' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
                     >
                         All
                     </button>
                     <button
                         onClick={() => setFilter('starred')}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${filter === 'starred' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
+                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'starred' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
                     >
                         <Star className={`h-4 w-4 ${filter === 'starred' ? 'fill-lux-gold text-lux-gold' : ''}`} />
                         Starred

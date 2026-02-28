@@ -50,20 +50,20 @@ export default function MarketIntelligenceWidget() {
           onSelect={(selected) => navigate(`/buy-box?q=${encodeURIComponent(selected)}&run=1`)}
           popularItems={POPULAR_SUGGESTIONS}
           placeholder="Search brand, model, SKU, or paste image..."
-          className="lux-input h-12 pl-4 pr-24 text-[15px]"
+          className="lux-input h-12 pl-4 pr-24 text-sm"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           <button
             type="button"
             onClick={handleImageClick}
-            className="rounded-full p-2 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600"
+            className="rounded-full p-2 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             aria-label="Upload image for visual search"
           >
             <Camera className="h-4.5 w-4.5" />
           </button>
           <button
             type="submit"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-lux-900 text-white transition-transform hover:scale-105 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-lux-900 text-white transition-transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             aria-label="Search"
           >
             <ArrowRight className="h-4 w-4" />
@@ -81,7 +81,7 @@ export default function MarketIntelligenceWidget() {
       </form>
 
       <div className="mt-4 flex items-center gap-3">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-lux-400">
+        <span className="text-xs font-medium uppercase tracking-wider text-lux-400">
           Recent:
         </span>
         {RECENT_SEARCHES.map((item) => (
@@ -89,7 +89,7 @@ export default function MarketIntelligenceWidget() {
             key={item.label}
             type="button"
             onClick={() => handleRecentClick(item.label)}
-            className="flex items-center gap-2 rounded-full border border-lux-200 bg-white px-3 py-1.5 text-[13px] font-medium text-lux-700 transition-colors hover:border-lux-300 hover:bg-lux-50"
+            className="flex items-center gap-2 rounded-full border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:border-lux-300 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <div className="h-5 w-5 overflow-hidden rounded-full bg-lux-100">
               <div className="h-full w-full bg-lux-200" />
