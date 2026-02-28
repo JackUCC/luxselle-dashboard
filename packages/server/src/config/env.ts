@@ -44,6 +44,11 @@ const EnvSchema = z.object({
   SUPPLIER_EMAIL_DEFAULT_QUERY: z.string().default('has:attachment newer_than:30d'),
   SUPPLIER_EMAIL_MAX_ATTACHMENT_MB: z.coerce.number().default(10),
   FRONTEND_ORIGINS: z.string().optional(),
+  SEARCH_ENRICHMENT_ENABLED: booleanFromEnv.default(true),
+  SEARCH_ENRICHMENT_MAX_COUNT: z.coerce.number().int().positive().default(25),
+  SEARCH_ENRICHMENT_CACHE_TTL_MS: z.coerce.number().int().positive().default(300000),
+  SEARCH_DOMAIN_ALLOWLIST: z.string().optional(),
+  SEARCH_DOMAIN_DENYLIST: z.string().optional(),
 })
 
 // Parse and validate on load; throws if required/env shape is invalid
