@@ -125,7 +125,10 @@ export default function EvaluatorView() {
     autoRanQueryRef.current = urlQuery
     const shouldRun = searchParams.get('run') === '1'
     setQuery(urlQuery)
-    setSearchParams({}, { replace: true })
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('q')
+    nextParams.delete('run')
+    setSearchParams(nextParams, { replace: true })
     if (shouldRun) {
       runResearch(urlQuery)
     }
@@ -147,7 +150,11 @@ export default function EvaluatorView() {
     : 0
 
   if (isSidecar) {
-    return <SidecarView initialTab="quick" />
+    return (
+      <div className="min-w-0 max-w-full overflow-x-clip">
+        <SidecarView initialTab="quick" />
+      </div>
+    )
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

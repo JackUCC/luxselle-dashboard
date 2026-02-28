@@ -402,33 +402,36 @@ export default function InventoryView() {
 
   return (
     <PageLayout variant="default">
-      <section className={isSidecar ? "min-w-0 max-w-full overflow-auto space-y-8" : "space-y-8"}>
+      <section className={isSidecar ? "min-w-0 max-w-full overflow-x-clip space-y-6" : "space-y-8"}>
       <PageHeader
         title="Inventory"
         purpose="Manage stock levels and product details."
         actions={
-          <>
+          <div className={isSidecar ? "grid w-full grid-cols-2 gap-2" : "flex flex-wrap items-center gap-2"}>
             <Button
               variant="primary"
+              size={isSidecar ? "sm" : "md"}
               onClick={() => setShowAddDrawer(true)}
-              className="inline-flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2"
             >
-              <Plus className="h-5 w-5" />
-              Add Product
+              <Plus className="h-4 w-4" />
+              {isSidecar ? "Add" : "Add Product"}
             </Button>
             <Button
               variant="secondary"
+              size={isSidecar ? "sm" : "md"}
               onClick={handleExportCSV}
               disabled={filteredProducts.length === 0}
-              className="inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
               Export
             </Button>
             <Button
               variant="secondary"
+              size={isSidecar ? "sm" : "md"}
               onClick={() => setShowImportDrawer(true)}
-              className="inline-flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2"
             >
               <Upload className="h-4 w-4" />
               Import
@@ -437,13 +440,13 @@ export default function InventoryView() {
               type="button"
               onClick={() => setShowClearConfirm(true)}
               disabled={products.length === 0 || isClearing}
-              className="inline-flex items-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              className="inline-flex items-center justify-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               title="Delete all inventory items"
             >
               {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              Clear all
+              {isSidecar ? "Clear" : "Clear all"}
             </button>
-          </>
+          </div>
         }
       />
 
@@ -453,7 +456,7 @@ export default function InventoryView() {
         <div className="space-y-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3 flex-1">
-              <div className="relative flex-1 max-w-md">
+              <div className={`relative flex-1 ${isSidecar ? "max-w-none" : "max-w-md"}`}>
                 <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-lux-400" />
                 <PredictiveInput
                   ref={searchInputRef}
@@ -542,7 +545,7 @@ export default function InventoryView() {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="ml-auto inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-semibold text-lux-600 hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                className={`${isSidecar ? "" : "ml-auto"} inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-semibold text-lux-600 hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none`}
               >
                 <X className="h-3.5 w-3.5" />
                 Clear all ({activeFilterCount})

@@ -252,31 +252,33 @@ export default function InvoicesView() {
 
   return (
     <PageLayout variant="default">
-      <div className={isSidecar ? 'min-w-0 max-w-full overflow-auto space-y-8' : 'space-y-8'}>
+      <div className={isSidecar ? 'min-w-0 max-w-full overflow-x-clip space-y-6' : 'space-y-8'}>
       <PageHeader
         title="Invoices"
         actions={
-          <>
+          <div className={isSidecar ? 'grid w-full grid-cols-2 gap-2' : 'flex flex-wrap items-center gap-2'}>
             <Button
               variant="primary"
+              size={isSidecar ? 'sm' : 'md'}
               onClick={openCreateModal}
               aria-label="Create invoice"
               data-testid="invoice-create-cta"
-              className="inline-flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Create Invoice
+              {isSidecar ? 'Create' : 'Create Invoice'}
             </Button>
             <Button
               variant="secondary"
+              size={isSidecar ? 'sm' : 'md'}
               onClick={openUploadModal}
               aria-label="Add invoice from PDF"
-              className="inline-flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2"
             >
               <Upload className="h-4 w-4" />
               Add PDF
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -349,12 +351,12 @@ export default function InvoicesView() {
             <div className="lux-card p-6 animate-bento-enter stagger-1 print:border-2 print:shadow-none print:border-lux-200">
               <div className="mb-6 flex items-start justify-between no-print">
                 <SectionLabel>Invoice detail</SectionLabel>
-                <div className="flex gap-2">
-                  <Button variant="secondary" onClick={handleExportPdf} className="inline-flex items-center gap-2" aria-label="Export PDF">
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button variant="secondary" size={isSidecar ? 'sm' : 'md'} onClick={handleExportPdf} className="inline-flex items-center gap-2" aria-label="Export PDF">
                     <Download className="h-4 w-4" />
-                    {selected.pdfUrl ? 'Download PDF' : 'Generate PDF'}
+                    {selected.pdfUrl ? (isSidecar ? 'PDF' : 'Download PDF') : (isSidecar ? 'Generate' : 'Generate PDF')}
                   </Button>
-                  <Button variant="secondary" onClick={handleDeleteInvoice} className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200" aria-label="Delete Invoice">
+                  <Button variant="secondary" size={isSidecar ? 'sm' : 'md'} onClick={handleDeleteInvoice} className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200" aria-label="Delete Invoice">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <button
@@ -378,28 +380,30 @@ export default function InvoicesView() {
                     {selected.customerEmail && <div>{selected.customerEmail}</div>}
                   </div>
                 </div>
-                <table className="mt-6 w-full text-body-sm">
-                  <thead>
-                    <tr className="border-b border-lux-200 text-left text-lux-500">
-                      <th className="pb-2 font-semibold">Description</th>
-                      <th className="pb-2 font-semibold text-right">Qty</th>
-                      <th className="pb-2 font-semibold text-right">Unit price</th>
-                      <th className="pb-2 font-semibold text-right">VAT %</th>
-                      <th className="pb-2 font-semibold text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selected.lineItems.map((line, i) => (
-                      <tr key={i} className="border-b border-lux-100">
-                        <td className="py-2">{line.description}</td>
-                        <td className="py-2 text-right">{line.quantity}</td>
-                        <td className="py-2 text-right">{formatCurrency(line.unitPriceEur)}</td>
-                        <td className="py-2 text-right">{line.vatPct}%</td>
-                        <td className="py-2 text-right font-medium">{formatCurrency(line.amountEur)}</td>
+                <div className="mt-6 overflow-x-auto">
+                  <table className="w-full min-w-[520px] text-body-sm">
+                    <thead>
+                      <tr className="border-b border-lux-200 text-left text-lux-500">
+                        <th className="pb-2 font-semibold">Description</th>
+                        <th className="pb-2 font-semibold text-right">Qty</th>
+                        <th className="pb-2 font-semibold text-right">Unit price</th>
+                        <th className="pb-2 font-semibold text-right">VAT %</th>
+                        <th className="pb-2 font-semibold text-right">Amount</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {selected.lineItems.map((line, i) => (
+                        <tr key={i} className="border-b border-lux-100">
+                          <td className="py-2">{line.description}</td>
+                          <td className="py-2 text-right">{line.quantity}</td>
+                          <td className="py-2 text-right">{formatCurrency(line.unitPriceEur)}</td>
+                          <td className="py-2 text-right">{line.vatPct}%</td>
+                          <td className="py-2 text-right font-medium">{formatCurrency(line.amountEur)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <div className="mt-6 space-y-1 border-t border-lux-200 pt-4 text-body-sm">
                   <div className="flex justify-between text-lux-600">
                     <span>Subtotal</span>
