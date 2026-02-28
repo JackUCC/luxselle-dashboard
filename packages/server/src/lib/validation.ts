@@ -5,7 +5,7 @@
 
 const DEFAULT_PRICE_MIN = 0
 const DEFAULT_PRICE_MAX = 500_000
-const COMP_PRICE_MIN = 10
+const COMP_PRICE_MIN = 50
 const COMP_PRICE_MAX = 500_000
 
 /**

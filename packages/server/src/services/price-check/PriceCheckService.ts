@@ -65,7 +65,7 @@ export class PriceCheckService {
       const usdToEur = usdRate || 0.92
 
       const refineClause = refine ? `Condition/notes: ${refine}` : ''
-      const extractionPrompt = `You are a luxury resale pricing expert. Using ONLY the web search results provided below, extract real listing data.
+      const extractionPrompt = `You are a luxury resale pricing expert. Using ONLY the web search results provided below, extract real listing data for the specified item.
 
 Item: "${query}"
 ${refineClause}
@@ -79,25 +79,22 @@ ${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n') || 
 
 Return ONLY a JSON object (no markdown):
 {
-  "averageSellingPriceEur": <number - average of REAL prices found in search results>,
+  "averageSellingPriceEur": <number - average of REAL prices found, or 0 if fewer than 2 found>,
   "comps": [
     { "title": "<actual listing title from search>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<actual URL from search>", "dataOrigin": "web_search" }
   ]
 }
 
-CRITICAL RULES:
+RULES (follow ALL of these):
+- Extract only listings that match the specific item described above. Ignore unrelated products, accessories, dust bags, authentication cards, or shipping charges.
+- Only include listings where the price is clearly for the main item (handbag, watch, etc.), not a listing fee or accessory.
+- If you find fewer than 2 real listings that clearly match this specific item with confirmed prices, return averageSellingPriceEur: 0 and an empty comps array [].
+- If you find 2 or more listings, extract up to 6 comparable listings and set averageSellingPriceEur to the average of their prices.
 - Every comparable listing MUST have a sourceUrl that came from the search results above.
-- If you cannot find at least 2 real listings with prices, return averageSellingPriceEur: 0 and empty comps.
 - Do NOT invent or fabricate any listing, price, or URL.
-- If a field cannot be determined from the search data, use null instead of guessing.
-
-Rules:
-- Extract 3-6 real comparable listings from the search results with their actual prices and URLs
-- averageSellingPriceEur must be calculated from the real prices found
 - If prices are in GBP, convert to EUR using today's rate: 1 GBP = ${gbpToEur.toFixed(2)} EUR
 - If prices are in USD, convert to EUR using today's rate: 1 USD = ${usdToEur.toFixed(2)} EUR
-- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
-- If no real listings were found in the search results, return averageSellingPriceEur: 0 and empty comps`
+- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella`
 
       try {
         const OpenAI = (await import('openai')).default
@@ -119,14 +116,20 @@ Rules:
 
         const text = response.choices[0]?.message?.content ?? ''
         const parsed = JSON.parse(text) as { averageSellingPriceEur?: number; comps?: PriceCheckComp[] }
-        comps = filterValidComps(Array.isArray(parsed.comps) ? parsed.comps : [])
+        const allComps = filterValidComps(Array.isArray(parsed.comps) ? parsed.comps : [])
 
-        if (comps.length > 0) {
+        // Require at least 2 valid comps before trusting the data.
+        // A single cheap comp (e.g. a Vestiaire accessory at €50-€100) must not
+        // corrupt the average for a ~€3,000 handbag. If fewer than 2 comps pass
+        // validation, treat this as "no data found" and fall back to 0.
+        if (allComps.length >= 2) {
+          comps = allComps
           averageSellingPriceEur = Math.round(
             comps.reduce((sum, c) => sum + c.price, 0) / comps.length,
           )
         } else {
-          averageSellingPriceEur = validatePriceEur(parsed.averageSellingPriceEur ?? 0)
+          comps = []
+          averageSellingPriceEur = 0
         }
 
         dataSource = hasSearchData ? 'web_search' : 'ai_fallback'

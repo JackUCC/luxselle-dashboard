@@ -377,7 +377,9 @@ export default function EvaluatorView() {
                 </p>
                 <div className="lux-card-accent rounded-lux-card p-5 text-center">
                   <SectionLabel as="span" className="mb-1 block">Avg. selling price (second-hand)</SectionLabel>
-                  <div className="text-xl sm:text-2xl font-bold text-lux-900">{formatCurrency(result.averageSellingPriceEur)}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-lux-900">
+                    {result.averageSellingPriceEur > 0 ? formatCurrency(result.averageSellingPriceEur) : '—'}
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="lux-card-accent rounded-lux-card p-5">
@@ -393,12 +395,16 @@ export default function EvaluatorView() {
                         <Info className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <div className="text-xl font-bold text-lux-900 mt-1">{formatCurrency(result.maxBuyEur)}</div>
+                    <div className="text-xl font-bold text-lux-900 mt-1">
+                      {result.maxBuyEur > 0 ? formatCurrency(result.maxBuyEur) : '—'}
+                    </div>
                     <div className="text-xs text-lux-500 mt-1">−23% VAT, −20% margin</div>
                   </div>
                   <div className="lux-card-accent rounded-lux-card p-5">
                     <SectionLabel as="span" className="mb-1 block">Max bid target</SectionLabel>
-                    <div className="text-xl font-bold text-lux-900">{formatCurrency(result.maxBidEur)}</div>
+                    <div className="text-xl font-bold text-lux-900">
+                      {result.maxBidEur > 0 ? formatCurrency(result.maxBidEur) : '—'}
+                    </div>
                     <div className="text-xs text-lux-500 mt-1">−7% auction fee</div>
                   </div>
                 </div>
