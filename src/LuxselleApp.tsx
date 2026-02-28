@@ -5,11 +5,11 @@
  * Route views are lazy-loaded to improve INP (Interaction to Next Paint) on nav clicks.
  * @see docs/CODE_REFERENCE.md
  */
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, useLocation } from 'react-router-dom'
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom'
 import { AlertCircle, Menu } from 'lucide-react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -20,7 +20,7 @@ import MobileNavDrawer from './components/navigation/MobileNavDrawer'
 import SidecarNav from './components/navigation/SidecarNav'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
-import { LayoutModeProvider, useLayoutMode } from './lib/LayoutModeContext'
+import { LayoutModeProvider, getSidecarPath, useLayoutMode } from './lib/LayoutModeContext'
 import { ResearchSessionProvider } from './lib/ResearchSessionContext'
 import { getRouteMeta } from './components/layout/routeMeta'
 
@@ -54,8 +54,25 @@ const AppContent = () => {
   const { isConnected, refetchStatus } = useServerStatus()
   const { isSidecar } = useLayoutMode()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const navigate = useNavigate()
   const location = useLocation()
+  const previousLocationRef = useRef(location)
   const routeMeta = getRouteMeta(location.pathname)
+
+  useEffect(() => {
+    const previous = previousLocationRef.current
+    const previousMode = new URLSearchParams(previous.search).get('mode')
+    const currentMode = new URLSearchParams(location.search).get('mode')
+    const changedPath = location.pathname !== previous.pathname
+
+    // Preserve sidecar intent when internal links drop `mode=sidecar` across routes.
+    if (previousMode === 'sidecar' && currentMode !== 'sidecar' && changedPath) {
+      navigate(getSidecarPath(location.pathname, location.search), { replace: true })
+      return
+    }
+
+    previousLocationRef.current = location
+  }, [location, navigate])
 
   if (isSidecar) {
     return (

@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 export type LayoutMode = 'overview' | 'sidecar'
+const MODE_QUERY_KEY = 'mode'
 
 interface LayoutModeContextValue {
   mode: LayoutMode
@@ -10,15 +11,37 @@ interface LayoutModeContextValue {
 
 const LayoutModeCtx = createContext<LayoutModeContextValue>({ mode: 'overview', isSidecar: false })
 
+function resolveCurrentPath(pathname: string): string {
+  if (pathname !== '/') return pathname
+  if (typeof window === 'undefined') return pathname
+  return window.location.pathname || pathname
+}
+
+function withMode(pathname: string, search: string, mode: LayoutMode): string {
+  const params = new URLSearchParams(search)
+  if (mode === 'sidecar') {
+    params.set(MODE_QUERY_KEY, 'sidecar')
+  } else {
+    params.delete(MODE_QUERY_KEY)
+  }
+  const q = params.toString()
+  return q ? `${pathname}?${q}` : pathname
+}
+
 /**
  * Returns the path to use when exiting sidecar (strips `mode=sidecar` from search params).
  * Use for Exit button and links so the app returns to overview layout.
  */
 export function getExitSidecarPath(pathname: string, search: string): string {
-  const params = new URLSearchParams(search)
-  params.delete('mode')
-  const q = params.toString()
-  return q ? `${pathname}?${q}` : pathname
+  const targetPath = resolveCurrentPath(pathname)
+  return withMode(targetPath, search, 'overview')
+}
+
+/**
+ * Returns the sidecar-mode path for internal navigation while preserving query intent.
+ */
+export function getSidecarPath(pathname: string, search: string): string {
+  return withMode(pathname, search, 'sidecar')
 }
 
 /**
@@ -28,7 +51,7 @@ export function getExitSidecarPath(pathname: string, search: string): string {
  */
 export function LayoutModeProvider({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams()
-  const paramMode = searchParams.get('mode')
+  const paramMode = searchParams.get(MODE_QUERY_KEY)
 
   const value = useMemo<LayoutModeContextValue>(() => {
     const mode: LayoutMode = paramMode === 'sidecar' ? 'sidecar' : 'overview'
