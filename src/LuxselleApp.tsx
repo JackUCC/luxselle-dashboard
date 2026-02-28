@@ -59,10 +59,17 @@ const AppContent = () => {
       <div className="min-h-screen bg-white text-lux-800 font-sans">
         <SidecarNav />
         <Toaster
-          position="top-center"
+          position="top-right"
           toastOptions={{
-            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-soft !rounded-lg',
-            duration: 3000,
+            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-elevated !rounded-2xl animate-slide-left',
+            success: {
+              className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-emerald-500 !shadow-elevated !rounded-2xl animate-slide-left',
+              duration: 3000,
+            },
+            error: {
+              className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-red-500 !shadow-elevated !rounded-2xl animate-slide-left',
+              duration: 5000,
+            },
           }}
         />
         <main className="px-3 py-3">
@@ -117,10 +124,17 @@ const AppContent = () => {
       <MobileNavDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       <Toaster
-        position="top-center"
+        position="top-right"
         toastOptions={{
-          className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-soft !rounded-lg',
-          duration: 4000,
+          className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !shadow-elevated !rounded-2xl animate-slide-left',
+          success: {
+            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-emerald-500 !shadow-elevated !rounded-2xl animate-slide-left',
+            duration: 3000,
+          },
+          error: {
+            className: 'text-[13px] font-medium !bg-white !text-lux-800 !border !border-lux-200 !border-l-4 !border-l-red-500 !shadow-elevated !rounded-2xl animate-slide-left',
+            duration: 5000,
+          },
         }}
       />
 

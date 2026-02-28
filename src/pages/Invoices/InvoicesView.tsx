@@ -11,6 +11,7 @@ import { apiGet, apiPost, apiPostFormData, apiDelete } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
 import { Button, Input, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import Skeleton from '../../components/feedback/Skeleton'
 
 type InvoiceWithId = Invoice & { id: string }
 
@@ -279,9 +280,24 @@ export default function InvoicesView() {
       />
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading invoices...</span>
+        <div className="space-y-3">
+          <div className="flex items-center gap-4 px-3 py-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-14" />
+          </div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-3 py-3 border-b border-lux-100">
+              <Skeleton className="h-3.5 w-20" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-2.5 w-20" />
+              </div>
+              <Skeleton className="h-3.5 w-16" />
+              <Skeleton className="h-5 w-14 rounded-full" variant="rect" />
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="lux-card p-8 text-center">

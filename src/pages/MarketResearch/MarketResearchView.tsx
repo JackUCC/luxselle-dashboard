@@ -34,6 +34,8 @@ import { useServerStatus } from '../../lib/ServerStatusContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, TypewriterText } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
+import AiThinkingDots from '../../components/feedback/AiThinkingDots'
+import Skeleton from '../../components/feedback/Skeleton'
 
 // ─── Brand database ────────────────────────────────────────────
 const BRAND_MODELS: Record<string, string[]> = {
@@ -541,11 +543,16 @@ export default function MarketResearchView() {
                                 className="lux-btn-primary w-full py-3 flex items-center justify-center gap-2"
                             >
                                 {isLoading ? (
-                                    <><Loader2 className="h-4 w-4 animate-spin" /> Researching...</>
+                                    <><AiThinkingDots /> Researching...</>
                                 ) : (
                                     <><Sparkles className="h-4 w-4" /> Research Market</>
                                 )}
                             </button>
+                            {isLoading && (
+                                <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100 mt-2">
+                                    <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
+                                </div>
+                            )}
                         </form>
                     </div>
                 </div>
@@ -554,7 +561,7 @@ export default function MarketResearchView() {
                 <div>
                     {!result ? (
                         <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-gray-400">
-                            <BarChart3 className="h-14 w-14 mb-4 opacity-20" />
+                            <BarChart3 className="h-14 w-14 mb-4 opacity-20 animate-float" />
                             <p className="text-lg font-medium">Ready to research</p>
                             <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
                         </div>
@@ -691,14 +698,22 @@ export default function MarketResearchView() {
                                 via {trending.provider} · Irish & EU · {new Date(trending.generatedAt).toLocaleTimeString()}
                             </p>
                         </div>
+                    ) : isTrendingLoading ? (
+                        <div className="space-y-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="flex items-center justify-between py-2.5 px-3">
+                                    <div className="space-y-1.5 flex-1">
+                                        <Skeleton className="h-3.5 w-32" />
+                                        <Skeleton className="h-2.5 w-20" />
+                                    </div>
+                                    <Skeleton className="h-3.5 w-16" />
+                                </div>
+                            ))}
+                        </div>
                     ) : (
                         <div className="text-center py-8 text-lux-400">
-                            {isTrendingLoading ? (
-                                <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin text-lux-500" />
-                            ) : (
-                                <Zap className="h-6 w-6 mx-auto mb-2 opacity-20" />
-                            )}
-                            <p className="text-[13px]">{isTrendingLoading ? 'Loading trends…' : 'Click Refresh to load trends'}</p>
+                            <Zap className="h-6 w-6 mx-auto mb-2 opacity-20" />
+                            <p className="text-[13px]">Click Refresh to load trends</p>
                         </div>
                     )}
                 </div>

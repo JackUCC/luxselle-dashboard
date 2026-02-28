@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useScrollLock } from '../../lib/useScrollLock'
+import Skeleton from '../../components/feedback/Skeleton'
 import {
   FileSpreadsheet,
   Loader2,
@@ -211,9 +212,17 @@ export default function JobsView() {
       />
 
       {isLoading && jobs.length === 0 ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-lux-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading jobs...</span>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="lux-card p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-5 w-16 rounded-full" variant="rect" />
+              </div>
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="lux-card p-8 text-center">

@@ -6,6 +6,7 @@ import { PageHeader, Button } from '../../components/design-system'
 import { LuxSelect } from '../../components/design-system/Input'
 import Drawer from '../../components/design-system/Drawer'
 import { apiGet, apiDelete, apiPut } from '../../lib/api'
+import Skeleton from '../../components/feedback/Skeleton'
 import type { MarketResearchResult } from '../MarketResearch/types'
 import { AnimatePresence } from 'framer-motion'
 import SavedResearchCard from './SavedResearchCard'
@@ -131,8 +132,21 @@ export default function SavedResearchView() {
 
             {/* Content */}
             {isLoading ? (
-                <div className="flex items-center justify-center min-h-[300px]">
-                    <Loader2 className="h-8 w-8 animate-spin text-lux-300" />
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="lux-card p-5 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-4 w-4" variant="circle" />
+                            </div>
+                            <Skeleton className="h-3 w-36" />
+                            <Skeleton className="h-3 w-20" />
+                            <div className="flex items-center gap-2 pt-1">
+                                <Skeleton className="h-5 w-16 rounded-full" variant="rect" />
+                                <Skeleton className="h-5 w-14 rounded-full" variant="rect" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : items.length === 0 ? (
                 <div className="lux-card border-dashed border-2 min-h-[400px] flex flex-col items-center justify-center text-center p-6">

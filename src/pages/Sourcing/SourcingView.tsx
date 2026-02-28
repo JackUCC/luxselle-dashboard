@@ -10,6 +10,7 @@ import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
+import Skeleton from '../../components/feedback/Skeleton'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
 
@@ -549,9 +550,20 @@ export default function SourcingView() {
         <SectionLabel className="mb-4">Pipeline</SectionLabel>
 
         {isLoading ? (
-          <div className="lux-card flex items-center justify-center gap-2 p-12 text-lux-600">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Loading requests…</span>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="lux-card p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-5 w-16 rounded-full" variant="rect" />
+                </div>
+                <Skeleton className="h-3 w-24" />
+                <div className="flex items-center justify-between pt-1">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-14" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="lux-card p-6 text-rose-600 bg-rose-50/50">{error}</div>
