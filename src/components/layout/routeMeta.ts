@@ -1,4 +1,5 @@
 import {
+  Bookmark,
   Box,
   CircleDollarSign,
   Globe,
@@ -26,6 +27,7 @@ export const appRoutes: RouteMeta[] = [
   { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'check' },
   { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: ScanLine, section: 'check' },
   { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'check' },
+  { path: '/saved-research', label: 'Saved Research', navLabel: 'Saved Research', icon: Bookmark, section: 'check' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Box, section: 'manage' },
   { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Globe, section: 'manage' },
   { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'manage' },

@@ -14,6 +14,7 @@ const EvaluatorView = lazy(() => import('../../pages/BuyBox/EvaluatorView'))
 const SourcingView = lazy(() => import('../../pages/Sourcing/SourcingView'))
 const InvoicesView = lazy(() => import('../../pages/Invoices/InvoicesView'))
 const MarketResearchView = lazy(() => import('../../pages/MarketResearch/MarketResearchView'))
+const SavedResearchView = lazy(() => import('../../pages/SavedResearch/SavedResearchView'))
 const SerialCheckView = lazy(() => import('../../pages/SerialCheck/SerialCheckView'))
 const RetailPriceView = lazy(() => import('../../pages/RetailPrice/RetailPriceView'))
 
@@ -24,6 +25,7 @@ const routes = [
   { path: '/serial-check', element: <SerialCheckView /> },
   { path: '/retail-price', element: <RetailPriceView /> },
   { path: '/market-research', element: <MarketResearchView /> },
+  { path: '/saved-research', element: <SavedResearchView /> },
   { path: '/sourcing', element: <SourcingView /> },
   { path: '/invoices', element: <InvoicesView /> },
   { path: '/evaluator', element: <Navigate to="/buy-box" replace /> },
