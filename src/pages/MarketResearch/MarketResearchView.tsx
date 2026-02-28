@@ -170,6 +170,7 @@ export default function MarketResearchView() {
     const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
     const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
     const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
+    const [failedComparableImages, setFailedComparableImages] = useState<Record<string, boolean>>({})
 
     const availableModels = useMemo(() => {
         if (!formData.brand) return []
@@ -239,6 +240,7 @@ export default function MarketResearchView() {
                 ...formData,
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
+            setFailedComparableImages({})
             setResult(data)
             // Persist as previous search
             const entry = { brand: formData.brand, model: formData.model }
@@ -605,18 +607,35 @@ export default function MarketResearchView() {
                                                 key={i}
                                                 className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors"
                                             >
-                                                <div className="min-w-0 flex-1 pr-4">
-                                                    <div className="text-sm font-medium text-gray-900 truncate">{comp.title}</div>
-                                                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                                                        <span>{comp.source}</span>
-                                                        <span>·</span>
-                                                        <span className="capitalize">{comp.condition}</span>
-                                                        {comp.daysListed != null && (
-                                                            <>
-                                                                <span>·</span>
-                                                                <span>{comp.daysListed}d listed</span>
-                                                            </>
-                                                        )}
+                                                <div className="min-w-0 flex items-center gap-3 flex-1 pr-4">
+                                                    {comp.previewImageUrl && !failedComparableImages[comp.previewImageUrl] ? (
+                                                        <img
+                                                            src={comp.previewImageUrl}
+                                                            alt={comp.title || `${result.brand} ${result.model} comparable`}
+                                                            className="w-12 h-12 rounded-lg object-cover border border-gray-200 bg-white shrink-0"
+                                                            loading="lazy"
+                                                            onError={() => {
+                                                                setFailedComparableImages(prev => ({ ...prev, [comp.previewImageUrl!]: true }))
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-lg border border-gray-200 bg-white shrink-0 grid place-items-center text-[10px] text-gray-400 font-medium">
+                                                            No image
+                                                        </div>
+                                                    )}
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm font-medium text-gray-900 truncate">{comp.title?.trim() || `${result.brand} ${result.model}`}</div>
+                                                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                                            <span>{comp.source}</span>
+                                                            <span>·</span>
+                                                            <span className="capitalize">{comp.condition}</span>
+                                                            {comp.daysListed != null && (
+                                                                <>
+                                                                    <span>·</span>
+                                                                    <span>{comp.daysListed}d listed</span>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3 shrink-0">
