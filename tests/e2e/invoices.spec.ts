@@ -46,6 +46,21 @@ test('Create in-person invoice opens modal and can be closed', async ({ page }) 
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
+test('sidecar mode keeps compact invoice create flow and mode param', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 900 })
+  await page.goto('/invoices?mode=sidecar')
+
+  await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible({ timeout: 15000 })
+  await expect(page).toHaveURL(/\/invoices\?.*mode=sidecar/)
+  await expect(page.getByTestId('invoice-create-cta')).toBeVisible()
+
+  await page.getByTestId('invoice-create-cta').click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page).toHaveURL(/\/invoices\?.*mode=sidecar/)
+})
+
 test('mark sold flow creates invoice and keeps product sold', async ({ page, request }) => {
   const suffix = Date.now()
   const uniqueSku = `E2E-SKU-${suffix}`

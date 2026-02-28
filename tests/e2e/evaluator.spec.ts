@@ -71,22 +71,46 @@ test('nav routing works for all main routes', async ({ page }) => {
 
   // Start at Overview
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: /Quick Controls|Overview/ })).toBeVisible()
-
   const dock = page.getByTestId('dock-bar')
   await expect(dock).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('heading', { name: /Quick Controls|Overview/ })).toBeVisible()
 
   // Navigate to Inventory
   await dock.getByRole('link', { name: 'Inventory' }).click()
+  await expect(page).toHaveURL(/\/inventory(\?|$)/)
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
   // Navigate to Price Check
   await dock.getByRole('link', { name: 'Price Check' }).click()
-  await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
+  await expect(page).toHaveURL(/\/buy-box(\?|$)/)
+  await expect(page.getByLabel(/Search for item/i)).toBeVisible()
 
   // Navigate to Sourcing
   await dock.getByRole('link', { name: 'Sourcing' }).click()
+  await expect(page).toHaveURL(/\/sourcing(\?|$)/)
   await expect(page.getByRole('heading', { name: 'Sourcing' })).toBeVisible()
+})
+
+test('sidecar nav keeps mode across routes and exits to active route', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 900 })
+
+  await page.goto('/buy-box?mode=sidecar')
+  await expect(page.getByRole('heading', { name: 'Sidecar' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Open navigation menu' }).click()
+  await page.getByRole('link', { name: 'Inventory' }).click()
+  await expect(page).toHaveURL(/\/inventory\?.*mode=sidecar/)
+
+  await page.getByRole('button', { name: 'Open navigation menu' }).click()
+  await page.getByRole('link', { name: 'Invoices' }).click()
+  await expect(page).toHaveURL(/\/invoices\?.*mode=sidecar/)
+
+  await page.getByRole('link', { name: 'Exit' }).click()
+  await expect(page).toHaveURL(/\/invoices(\?.*)?$/)
+
+  const hasMode = await page.evaluate(() => new URLSearchParams(window.location.search).has('mode'))
+  expect(hasMode).toBeFalsy()
 })
 
 test('legacy route redirects work', async ({ page }) => {

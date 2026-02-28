@@ -32,6 +32,18 @@ test('clear filters resets search and URL', async ({ page }) => {
   await expect(page).toHaveURL(/\/inventory\/?(\?|$)/)
 })
 
+test('sidecar clear filters keeps mode and compact controls', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 900 })
+  await page.goto('/inventory?mode=sidecar&q=Chanel')
+
+  await expect(page.getByRole('button', { name: /^Add$/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Clear all \(1\)/ })).toBeVisible()
+
+  await page.getByRole('button', { name: /Clear all \(1\)/ }).click()
+  await expect(page).toHaveURL(/\/inventory\?.*mode=sidecar/)
+  await expect(page).not.toHaveURL(/q=Chanel/)
+})
+
 test('table and grid view toggle', async ({ page, request }) => {
   await request.post('/api/products', {
     data: {
