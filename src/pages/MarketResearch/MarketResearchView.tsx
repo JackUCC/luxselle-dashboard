@@ -31,6 +31,7 @@ import { formatCurrency } from '../../lib/formatters'
 import { useServerStatus } from '../../lib/ServerStatusContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader } from '../../components/design-system'
+import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 
 // ─── Brand database ────────────────────────────────────────────
 const BRAND_MODELS: Record<string, string[]> = {
@@ -129,6 +130,24 @@ const KEY_TRENDING_BAGS: { brand: string; model: string }[] = [
     { brand: 'Bottega Veneta', model: 'Jodie' },
 ]
 
+const CATEGORY_OPTIONS = [
+    { value: 'Handbag', label: 'Handbag' },
+    { value: 'Wallet', label: 'Wallet' },
+    { value: 'Shoes', label: 'Shoes' },
+    { value: 'Watch', label: 'Watch' },
+    { value: 'Jewelry', label: 'Jewelry' },
+    { value: 'Accessory', label: 'Accessory' },
+    { value: 'Clothing', label: 'Clothing' },
+]
+
+const CONDITION_OPTIONS = [
+    { value: 'new', label: 'New / Pristine' },
+    { value: 'excellent', label: 'Excellent (A)' },
+    { value: 'good', label: 'Good (B)' },
+    { value: 'fair', label: 'Fair (C)' },
+    { value: 'used', label: 'Used' },
+]
+
 // ─── Helpers ───────────────────────────────────────────────────
 const DEMAND_CONFIG = {
     very_high: { label: 'Very High', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', pct: 95 },
@@ -210,6 +229,16 @@ export default function MarketResearchView() {
         return BRAND_MODELS[formData.brand] ?? []
     }, [formData.brand])
 
+    const brandOptions = useMemo(
+        () => Object.keys(BRAND_MODELS).sort().map(brand => ({ value: brand, label: brand })),
+        [],
+    )
+
+    const modelOptions = useMemo(
+        () => availableModels.map(model => ({ value: model, label: model })),
+        [availableModels],
+    )
+
     // Pre-load trending and competitor feed on mount
     useEffect(() => {
         let cancelled = false
@@ -258,10 +287,19 @@ export default function MarketResearchView() {
         }
     }, [])
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
-        if (name === 'brand') setFormData(prev => ({ ...prev, brand: value, model: '' }))
+        setFormData(prev => {
+            if (name === 'brand') return { ...prev, brand: value, model: '' }
+            return { ...prev, [name]: value }
+        })
+    }
+
+    const handleSelectChange = (field: 'brand' | 'model' | 'category' | 'condition', value: string) => {
+        setFormData(prev => {
+            if (field === 'brand') return { ...prev, brand: value, model: '' }
+            return { ...prev, [field]: value }
+        })
     }
 
     const handleAnalyse = async (e: React.FormEvent) => {
@@ -401,55 +439,86 @@ export default function MarketResearchView() {
                         <form onSubmit={handleAnalyse} className="space-y-4">
                             <div>
                                 <label htmlFor="mr-brand" className="block text-[12px] font-medium text-lux-600 mb-1.5">Brand *</label>
-                                <select id="mr-brand" name="brand" value={formData.brand} onChange={handleChange} required className="lux-input">
-                                    <option value="">Select Brand</option>
-                                    {Object.keys(BRAND_MODELS).sort().map(b => <option key={b} value={b}>{b}</option>)}
-                                </select>
+                                <LuxSelect
+                                    id="mr-brand"
+                                    name="brand"
+                                    value={formData.brand}
+                                    onValueChange={(value) => handleSelectChange('brand', value)}
+                                    options={brandOptions}
+                                    placeholder="Select Brand"
+                                    required
+                                    ariaLabel="Brand"
+                                />
                             </div>
 
                             <div>
-                                <label htmlFor="mr-model" className="block text-[12px] font-medium text-lux-600 mb-1.5">Model *</label>
-                                {availableModels.length > 0 ? (
-                                    <select id="mr-model" name="model" value={formData.model} onChange={handleChange} required className="lux-input" disabled={!formData.brand}>
-                                        <option value="">Select Model</option>
-                                        {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
-                                    </select>
+                                {modelOptions.length > 0 ? (
+                                    <>
+                                        <label htmlFor="mr-model" className="block text-[12px] font-medium text-lux-600 mb-1.5">Model *</label>
+                                        <LuxSelect
+                                            id="mr-model"
+                                            name="model"
+                                            value={formData.model}
+                                            onValueChange={(value) => handleSelectChange('model', value)}
+                                            options={modelOptions}
+                                            placeholder="Select Model"
+                                            disabled={!formData.brand}
+                                            required
+                                            ariaLabel="Model"
+                                        />
+                                    </>
                                 ) : (
-                                    <input type="text" id="mr-model" name="model" value={formData.model} onChange={handleChange} required placeholder="e.g. Classic Flap" className="lux-input" disabled={!formData.brand} />
+                                    <FloatingInput
+                                        id="mr-model"
+                                        type="text"
+                                        name="model"
+                                        value={formData.model}
+                                        onChange={handleChange}
+                                        label="Model *"
+                                        required
+                                        disabled={!formData.brand}
+                                    />
                                 )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label htmlFor="mr-category" className="block text-[12px] font-medium text-lux-600 mb-1.5">Category *</label>
-                                    <select id="mr-category" name="category" value={formData.category} onChange={handleChange} required className="lux-input">
-                                        <option value="Handbag">Handbag</option>
-                                        <option value="Wallet">Wallet</option>
-                                        <option value="Shoes">Shoes</option>
-                                        <option value="Watch">Watch</option>
-                                        <option value="Jewelry">Jewelry</option>
-                                        <option value="Accessory">Accessory</option>
-                                        <option value="Clothing">Clothing</option>
-                                    </select>
+                                    <LuxSelect
+                                        id="mr-category"
+                                        name="category"
+                                        value={formData.category}
+                                        onValueChange={(value) => handleSelectChange('category', value)}
+                                        options={CATEGORY_OPTIONS}
+                                        required
+                                        ariaLabel="Category"
+                                    />
                                 </div>
                                 <div>
                                     <label htmlFor="mr-condition" className="block text-[12px] font-medium text-lux-600 mb-1.5">Condition *</label>
-                                    <select id="mr-condition" name="condition" value={formData.condition} onChange={handleChange} required className="lux-input">
-                                        <option value="new">New / Pristine</option>
-                                        <option value="excellent">Excellent (A)</option>
-                                        <option value="good">Good (B)</option>
-                                        <option value="fair">Fair (C)</option>
-                                        <option value="used">Used</option>
-                                    </select>
+                                    <LuxSelect
+                                        id="mr-condition"
+                                        name="condition"
+                                        value={formData.condition}
+                                        onValueChange={(value) => handleSelectChange('condition', value)}
+                                        options={CONDITION_OPTIONS}
+                                        required
+                                        ariaLabel="Condition"
+                                    />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="mr-askPrice" className="block text-[12px] font-medium text-lux-600 mb-1.5">Current Ask Price (EUR)</label>
-                                <div className="relative">
-                                    <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400 text-[15px] font-medium">€</span>
-                                    <input id="mr-askPrice" type="number" name="currentAskPriceEur" value={formData.currentAskPriceEur} onChange={handleChange} placeholder="0" step="0.01" className="lux-input pl-8" />
-                                </div>
+                                <FloatingInput
+                                    id="mr-askPrice"
+                                    type="number"
+                                    name="currentAskPriceEur"
+                                    value={formData.currentAskPriceEur}
+                                    onChange={handleChange}
+                                    label="Current Ask Price (EUR)"
+                                    step="0.01"
+                                    leadingAdornment={<span className="text-[15px] font-medium">€</span>}
+                                />
                                 <p className="text-[11px] text-lux-400 mt-1">Optional — helps calibrate analysis</p>
                             </div>
 

@@ -15,6 +15,7 @@ import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
+import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 
 interface PriceCheckComp {
   title: string
@@ -229,19 +230,14 @@ export default function EvaluatorView() {
           <div className="lux-card evaluator-form-card flex flex-col p-4 sm:p-5 lg:p-6 h-fit animate-bento-enter" style={{ '--stagger': 0 } as React.CSSProperties}>
             <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-lux-400 mb-1.5">
-                  Search for item
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-lux-400" />
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="e.g. Chanel Classic Flap Medium Black"
-                    className="w-full rounded-[10px] border border-lux-200 bg-lux-50 py-2.5 pl-10 pr-3 text-lux-900 placeholder:text-lux-400 focus:border-lux-gold focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
-                  />
-                </div>
+                <FloatingInput
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  label="Search for item"
+                  leadingAdornment={<Search className="h-4 w-4 text-lux-400" />}
+                />
+                <p className="mt-1 text-[11px] text-lux-400">e.g. Chanel Classic Flap Medium Black</p>
               </div>
 
               <div>
@@ -300,28 +296,23 @@ export default function EvaluatorView() {
                 {refineOpen && (
                   <div className="px-3 pb-3 pt-0 space-y-3 border-t border-lux-100">
                     <div>
-                      <label id="refine-condition-label" className="block text-xs text-lux-500 mb-1">Condition</label>
-                      <select
+                      <label htmlFor="refine-condition" className="block text-xs text-lux-500 mb-1">Condition</label>
+                      <LuxSelect
                         id="refine-condition"
-                        aria-labelledby="refine-condition-label"
                         value={condition}
-                        onChange={(e) => setCondition(e.target.value)}
-                        className="w-full rounded-[10px] border border-lux-200 bg-lux-50 px-2 py-1.5 text-sm text-lux-900 focus:border-lux-gold focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
-                      >
-                        {CONDITION_OPTIONS.map((o) => (
-                          <option key={o.value || 'any'} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
+                        onValueChange={setCondition}
+                        options={CONDITION_OPTIONS}
+                        ariaLabel="Condition"
+                      />
                     </div>
                     <div>
-                      <label className="block text-xs text-lux-500 mb-1">Notes</label>
-                      <input
+                      <FloatingInput
                         type="text"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Size, colour, features…"
-                        className="w-full rounded-[10px] border border-lux-200 bg-lux-50 px-2 py-1.5 text-sm text-lux-900 placeholder:text-lux-400 focus:border-lux-gold focus:outline-none focus:ring-2 focus:ring-lux-gold/20"
+                        label="Notes"
                       />
+                      <p className="mt-1 text-[11px] text-lux-400">Size, colour, features…</p>
                     </div>
                   </div>
                 )}

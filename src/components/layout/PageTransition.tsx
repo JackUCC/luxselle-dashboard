@@ -13,17 +13,20 @@ interface PageTransitionProps {
 export default function PageTransition({ children, pathKey }: PageTransitionProps) {
   const shouldReduceMotion = useReducedMotion()
 
-  if (shouldReduceMotion) {
-    return <div key={pathKey}>{children}</div>
-  }
+  const duration = shouldReduceMotion ? 0 : 0.3
+  const exitDuration = shouldReduceMotion ? 0 : 0.15
 
   return (
     <motion.div
       key={pathKey}
-      initial={{ opacity: 0, y: 8 }}
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, transition: { duration: 0.15 } }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      exit={{
+        opacity: shouldReduceMotion ? 1 : 0,
+        y: 0,
+        transition: { duration: exitDuration },
+      }}
+      transition={{ duration, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
