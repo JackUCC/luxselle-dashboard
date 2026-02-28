@@ -7,6 +7,7 @@
  */
 import { env } from '../../config/env'
 import { SearchService } from '../search/SearchService'
+import { ComparableImageEnrichmentService } from '../search/ComparableImageEnrichmentService'
 import { getFxService } from '../fx/FxService'
 import { logger } from '../../middleware/requestId'
 import { validatePriceEur, filterValidComps, clampConfidence } from '../../lib/validation'
@@ -260,6 +261,7 @@ Focus on items that:
 
 export class MarketResearchService {
     private searchService = new SearchService()
+    private comparableImageEnrichmentService = new ComparableImageEnrichmentService()
 
     async analyse(input: MarketResearchInput): Promise<MarketResearchResult> {
         if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
@@ -340,7 +342,9 @@ export class MarketResearchService {
         const text = response.choices[0]?.message?.content ?? ''
         const parsed = this.parseJSON(text)
 
-        return this.formatResult(parsed, input, 'openai+web_search')
+        const result = this.formatResult(parsed, input, 'openai+web_search')
+        result.comparables = await this.comparableImageEnrichmentService.enrichComparables(result.comparables)
+        return result
     }
 
     /** Pure-AI fallback when web search yields no results. */
@@ -359,7 +363,9 @@ export class MarketResearchService {
         const text = response.choices[0]?.message?.content ?? ''
         const parsed = this.parseJSON(text)
 
-        return this.formatResult(parsed, input, 'openai')
+        const result = this.formatResult(parsed, input, 'openai')
+        result.comparables = await this.comparableImageEnrichmentService.enrichComparables(result.comparables)
+        return result
     }
 
     private async trendingWithOpenAI(): Promise<TrendingResult> {
