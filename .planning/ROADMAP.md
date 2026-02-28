@@ -142,4 +142,4 @@ Plans:
 | 4. Inventory and Stock Intelligence | 2/2 | Complete | 2026-02-27 |
 | 5. Sourcing and Operational Jobs | 2/2 | Complete | 2026-02-27 |
 | 6. Invoicing and Overview UX | 2/2 | Complete | 2026-02-27 |
-| 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete   | 2026-02-28 |
+| 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete    | 2026-02-28 |
