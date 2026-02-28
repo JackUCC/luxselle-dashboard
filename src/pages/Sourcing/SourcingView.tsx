@@ -2,7 +2,7 @@
  * Sourcing requests: list, filter, create, update status; uses apiGet, apiPost, apiPut.
  * @see docs/CODE_REFERENCE.md
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Plus, Pencil, X, Loader2, Users, Trash2 } from 'lucide-react'
@@ -213,10 +213,12 @@ export default function SourcingView() {
     }
   }
 
-  const filteredRequests =
+  const filteredRequests = useMemo(() =>
     statusFilter === 'all'
       ? requests
-      : requests.filter((req) => req.status === statusFilter)
+      : requests.filter((req) => req.status === statusFilter),
+    [requests, statusFilter]
+  )
 
   return (
     <PageLayout variant="default">
