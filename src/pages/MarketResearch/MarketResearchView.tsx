@@ -32,7 +32,7 @@ import { apiGet, apiPost, apiPut, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { useServerStatus } from '../../lib/ServerStatusContext'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader } from '../../components/design-system'
+import { PageHeader, TypewriterText } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 
 // ─── Brand database ────────────────────────────────────────────
@@ -135,6 +135,29 @@ function normalizeMarketResearchResult(result: MarketResearchResult): MarketRese
             title: normalizeComparableTitle(comp.title),
         })),
     }
+}
+
+// ─── Brand tiers for cross-brand suggestions ──────────────────
+const BRAND_TIERS: Record<string, string[]> = {
+    ultra:   ['Chanel', 'Hermès'],
+    premium: ['Louis Vuitton', 'Dior', 'Gucci', 'Prada', 'Bottega Veneta', 'Fendi', 'Givenchy', 'Loewe'],
+}
+
+function generateSuggestions(brand: string, model: string): { brand: string; model: string }[] {
+    const suggestions: { brand: string; model: string }[] = []
+
+    const sameModels = (BRAND_MODELS[brand] ?? []).filter(m => m !== model)
+    for (const m of sameModels.slice(0, 2)) {
+        suggestions.push({ brand, model: m })
+    }
+
+    const tier = Object.values(BRAND_TIERS).find(brands => brands.includes(brand))
+    if (tier) {
+        const peer = tier.find(b => b !== brand && BRAND_MODELS[b]?.length)
+        if (peer) suggestions.push({ brand: peer, model: BRAND_MODELS[peer][0] })
+    }
+
+    return suggestions.slice(0, 3)
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -536,41 +559,87 @@ export default function MarketResearchView() {
                             <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
                         </div>
                     ) : (
-                        <MarketResearchResultPanel 
-                            result={result} 
-                            headerActions={
-                                <div className="flex items-center gap-2 border-l border-lux-200/50 pl-6">
-                                    <button
-                                        type="button"
-                                        onClick={handleSave}
-                                        disabled={isSaving || isSaved}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                            isSaved 
-                                                ? 'bg-lux-100 text-lux-800' 
-                                                : 'bg-white border border-lux-200 text-lux-700 hover:bg-lux-50'
-                                        }`}
-                                    >
-                                        {isSaving ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-lux-800' : ''}`} />
-                                        )}
-                                        {isSaved ? 'Saved' : 'Save'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleToggleStar}
-                                        disabled={isSaving}
-                                        className={`p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-lux-gold ${
-                                            isStarred ? 'text-lux-gold bg-lux-50' : 'text-lux-400 hover:text-lux-600 hover:bg-lux-50'
-                                        }`}
-                                        title={isStarred ? "Remove star" : "Star this research"}
-                                    >
-                                        <Star className={`h-5 w-5 ${isStarred ? 'fill-lux-gold' : ''}`} />
-                                    </button>
+                        <div className="space-y-5">
+                            {/* AI Executive Summary */}
+                            <div
+                                className="relative lux-card p-5 overflow-hidden border-l-2"
+                                style={{ borderImage: 'linear-gradient(to bottom, #B8860B, transparent) 1' }}
+                            >
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-lux-400 uppercase tracking-wide mb-2">
+                                    <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
+                                    AI Analysis
                                 </div>
-                            }
-                        />
+                                <TypewriterText
+                                    text={result.marketSummary}
+                                    speed={20}
+                                    className="text-sm text-lux-700"
+                                />
+                            </div>
+
+                            <MarketResearchResultPanel 
+                                result={result} 
+                                headerActions={
+                                    <div className="flex items-center gap-2 border-l border-lux-200/50 pl-6">
+                                        <button
+                                            type="button"
+                                            onClick={handleSave}
+                                            disabled={isSaving || isSaved}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                                isSaved 
+                                                    ? 'bg-lux-100 text-lux-800' 
+                                                    : 'bg-white border border-lux-200 text-lux-700 hover:bg-lux-50'
+                                            }`}
+                                        >
+                                            {isSaving ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-lux-800' : ''}`} />
+                                            )}
+                                            {isSaved ? 'Saved' : 'Save'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleToggleStar}
+                                            disabled={isSaving}
+                                            className={`p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-lux-gold ${
+                                                isStarred ? 'text-lux-gold bg-lux-50' : 'text-lux-400 hover:text-lux-600 hover:bg-lux-50'
+                                            }`}
+                                            title={isStarred ? "Remove star" : "Star this research"}
+                                        >
+                                            <Star className={`h-5 w-5 ${isStarred ? 'fill-lux-gold' : ''}`} />
+                                        </button>
+                                    </div>
+                                }
+                            />
+
+                            {/* Smart Suggestions */}
+                            {(() => {
+                                const suggestions = generateSuggestions(result.brand, result.model)
+                                if (suggestions.length === 0) return null
+                                return (
+                                    <div className="lux-card p-5">
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-lux-400 uppercase tracking-wide mb-3">
+                                            <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
+                                            AI suggests also checking
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {suggestions.map((s, i) => (
+                                                <button
+                                                    key={`${s.brand}-${s.model}`}
+                                                    type="button"
+                                                    onClick={() => quickResearch(s.brand, s.model)}
+                                                    className="rounded-full border border-lux-200 px-3 py-1.5 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-all inline-flex items-center gap-1.5"
+                                                    style={{ animation: `lux-fade-in 0.3s ease ${i * 100}ms both` }}
+                                                >
+                                                    <Sparkles className="h-3 w-3 text-lux-gold" />
+                                                    {s.brand} {s.model}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )
+                            })()}
+                        </div>
                     )}
                 </div>
             </div>
