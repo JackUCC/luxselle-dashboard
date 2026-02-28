@@ -5,6 +5,7 @@ import { apiGet, apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DEFAULT_VAT_PCT } from '../../lib/landedCost'
 import { formatCurrency, parseNumericInput } from '../../lib/formatters'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
+import AiThinkingDots from '../feedback/AiThinkingDots'
 
 interface VisualSearchResult {
   productId?: string
@@ -191,7 +192,7 @@ export default function QuickCheck() {
             disabled={isResearching}
             className="shrink-0 rounded-lg bg-lux-900 px-3 py-2 text-sm font-medium text-white hover:bg-lux-800 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
-            {isResearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Run'}
+            {isResearching ? <AiThinkingDots /> : 'Run'}
           </button>
         </div>
         <p className="mt-1 text-xs text-lux-500">Summary first, with details available below when needed.</p>
@@ -251,9 +252,14 @@ export default function QuickCheck() {
       )}
 
       {isResearching && (
-        <div className="flex items-center gap-2 rounded-lux-card border border-lux-200 bg-white px-3 py-2 text-xs text-lux-600">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Running quick check...
+        <div className="space-y-2 rounded-lux-card border border-lux-200 bg-white px-3 py-2 text-xs text-lux-600">
+          <div className="flex items-center gap-2">
+            <AiThinkingDots />
+            Running quick check...
+          </div>
+          <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100">
+            <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
+          </div>
         </div>
       )}
 
