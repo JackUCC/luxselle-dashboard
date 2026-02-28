@@ -27,6 +27,7 @@ export interface MarketComparable {
     priceEur: number
     source: string
     sourceUrl?: string
+    previewImageUrl?: string
     condition: string
     daysListed?: number
     dataOrigin?: 'web_search' | 'ai_estimate'
@@ -338,8 +339,35 @@ export class MarketResearchService {
 
         const text = response.choices[0]?.message?.content ?? ''
         const parsed = this.parseJSON(text)
+        parsed.comparables = this.enrichComparables(parsed.comparables, searchResponse.annotations)
 
         return this.formatResult(parsed, input, 'openai+web_search')
+    }
+
+    private enrichComparables(
+        comparables: unknown,
+        annotations: Array<{ url: string; title: string }>,
+    ): MarketComparable[] {
+        if (!Array.isArray(comparables)) return []
+
+        return comparables.map((comp) => {
+            const c = comp as Partial<MarketComparable>
+            const normalizedTitle = (c.title ?? '').trim().toLowerCase()
+            const normalizedSource = (c.source ?? '').trim().toLowerCase()
+
+            const annotationMatch = annotations.find((ann) => {
+                const annTitle = (ann.title ?? '').trim().toLowerCase()
+                const hasTitleMatch = normalizedTitle.length > 0 && annTitle.includes(normalizedTitle)
+                const hasSourceMatch = normalizedSource.length > 0 && ann.url.toLowerCase().includes(normalizedSource)
+                return hasTitleMatch || hasSourceMatch
+            })
+
+            return {
+                ...c,
+                sourceUrl: c.sourceUrl ?? annotationMatch?.url,
+                previewImageUrl: c.previewImageUrl,
+            } as MarketComparable
+        })
     }
 
     /** Pure-AI fallback when web search yields no results. */
@@ -399,6 +427,7 @@ export class MarketResearchService {
             priceEur: Math.round(Number(c.priceEur) || 0),
             source: c.source ?? '',
             sourceUrl: c.sourceUrl,
+            previewImageUrl: c.previewImageUrl,
             condition: c.condition ?? '',
             daysListed: c.daysListed,
             dataOrigin: c.dataOrigin ?? 'web_search',

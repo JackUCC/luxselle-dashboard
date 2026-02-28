@@ -86,7 +86,26 @@ describe('POST /api/market-research/analyse', () => {
       marketSummary: 'Strong market for this model.',
       keyInsights: [],
       riskFactors: [],
-      comparables: [],
+      comparables: [
+        {
+          title: 'Chanel Classic Flap Caviar',
+          priceEur: 4700,
+          source: 'Vestiaire Collective',
+          sourceUrl: 'https://vestiairecollective.com/items/123',
+          previewImageUrl: 'https://images.example.com/chanel.jpg',
+          condition: 'excellent',
+          daysListed: 10,
+          dataOrigin: 'web_search',
+        },
+        {
+          title: 'Chanel Classic Flap Lambskin',
+          priceEur: 4300,
+          source: 'Designer Exchange',
+          sourceUrl: 'https://designerexchange.ie/items/456',
+          condition: 'very good',
+          dataOrigin: 'web_search',
+        },
+      ],
       generatedAt,
     })
 
@@ -106,6 +125,8 @@ describe('POST /api/market-research/analyse', () => {
     expect(res.body.data.model).toBe('Classic Flap')
     expect(res.body.data.estimatedMarketValueEur).toBe(4500)
     expect(Array.isArray(res.body.data.comparables)).toBe(true)
+    expect(res.body.data.comparables[0].previewImageUrl).toBe('https://images.example.com/chanel.jpg')
+    expect(res.body.data.comparables[1]).not.toHaveProperty('previewImageUrl')
   })
 
   it('returns 400 when required fields are missing', async () => {
