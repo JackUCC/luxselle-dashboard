@@ -21,6 +21,7 @@ import SidecarNav from './components/navigation/SidecarNav'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
 import { LayoutModeProvider, useLayoutMode } from './lib/LayoutModeContext'
+import { ResearchSessionProvider } from './lib/ResearchSessionContext'
 import { getRouteMeta } from './components/layout/routeMeta'
 
 const SidecarFallback = () => (
@@ -163,7 +164,9 @@ const LuxselleApp = () => {
           }}
         >
           <LayoutModeProvider>
-            <AppContent />
+            <ResearchSessionProvider>
+              <AppContent />
+            </ResearchSessionProvider>
           </LayoutModeProvider>
         </BrowserRouter>
       </ServerStatusProvider>

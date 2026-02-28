@@ -1,9 +1,10 @@
-import { useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { Search, Loader2, Package, Calculator, Upload, ImageIcon, X } from 'lucide-react'
 import { apiGet, apiPost, apiPostFormData, ApiError } from '../../lib/api'
 import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DEFAULT_VAT_PCT } from '../../lib/landedCost'
 import { formatCurrency, parseNumericInput } from '../../lib/formatters'
+import { useResearchSession } from '../../lib/ResearchSessionContext'
 
 interface VisualSearchResult {
   productId?: string
@@ -37,22 +38,51 @@ interface InventoryMatch {
   sellPriceEur: number
 }
 
+interface QuickCheckResearchQuery {
+  query: string
+}
+
+interface QuickCheckSessionResult {
+  priceResult: PriceCheckResult
+  inventoryMatches: InventoryMatch[]
+}
+
 export default function QuickCheck() {
   const [query, setQuery] = useState('')
-  const [isResearching, setIsResearching] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [result, setResult] = useState<PriceCheckResult | null>(null)
-  const [inventoryMatches, setInventoryMatches] = useState<InventoryMatch[]>([])
   const [bidInput, setBidInput] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const {
+    session: quickCheckSession,
+    startLoading: startQuickCheckLoading,
+    setSuccess: setQuickCheckSuccess,
+    setError: setQuickCheckError,
+  } = useResearchSession<QuickCheckSessionResult, QuickCheckResearchQuery>('quickcheck')
+  const isResearching = quickCheckSession.status === 'loading'
+  const hasSearched = quickCheckSession.status !== 'idle'
+  const errorMessage = quickCheckSession.status === 'error' ? (quickCheckSession.error ?? 'Price check failed') : null
+  const result = quickCheckSession.status === 'success' ? (quickCheckSession.result?.priceResult ?? null) : null
+  const inventoryMatches = quickCheckSession.status === 'success'
+    ? (quickCheckSession.result?.inventoryMatches ?? [])
+    : []
 
   const bid = useMemo(() => parseNumericInput(bidInput), [bidInput])
   const landed = useMemo(() => calculateSimpleLandedCost(bid), [bid])
+
+  useEffect(() => {
+    const persistedQuery = quickCheckSession.query
+    if (!persistedQuery) return
+    setQuery(persistedQuery.query)
+  }, [quickCheckSession.query])
+
+  useEffect(() => {
+    if (result?.maxBidEur && result.maxBidEur > 0) {
+      setBidInput(String(Math.round(result.maxBidEur)))
+    }
+  }, [result?.maxBidEur])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,11 +92,8 @@ export default function QuickCheck() {
       return
     }
 
-    setHasSearched(true)
-    setIsResearching(true)
-    setErrorMessage(null)
-    setResult(null)
-    setInventoryMatches([])
+    const researchQuery: QuickCheckResearchQuery = { query: q }
+    startQuickCheckLoading(researchQuery)
 
     try {
       const [priceRes, invRes] = await Promise.allSettled([
@@ -76,25 +103,30 @@ export default function QuickCheck() {
         apiGet<{ data: InventoryMatch[] }>(`/products?q=${encodeURIComponent(q)}&limit=5`),
       ])
 
-      if (priceRes.status === 'fulfilled') {
-        setResult(priceRes.value.data)
-        if (priceRes.value.data.maxBidEur > 0) {
-          setBidInput(String(Math.round(priceRes.value.data.maxBidEur)))
-        }
-      } else {
+      if (priceRes.status !== 'fulfilled') {
         const msg = priceRes.reason instanceof ApiError ? priceRes.reason.message : 'Price check failed'
-        setErrorMessage(msg)
+        setQuickCheckError(msg, researchQuery)
         toast.error(msg)
+        return
       }
 
-      if (invRes.status === 'fulfilled') {
-        const products = invRes.value.data
-        if (Array.isArray(products)) {
-          setInventoryMatches(products.filter((p: InventoryMatch) => p.status === 'in_stock').slice(0, 3))
-        }
-      }
-    } finally {
-      setIsResearching(false)
+      const products = invRes.status === 'fulfilled' ? invRes.value.data : []
+      const inStockMatches = Array.isArray(products)
+        ? products.filter((p: InventoryMatch) => p.status === 'in_stock').slice(0, 3)
+        : []
+
+      setQuickCheckSuccess(
+        {
+          priceResult: priceRes.value.data,
+          inventoryMatches: inStockMatches,
+        },
+        researchQuery
+      )
+      // Price check still succeeds when inventory lookup fails.
+    } catch (error) {
+      const msg = error instanceof ApiError ? error.message : 'Price check failed'
+      setQuickCheckError(msg, researchQuery)
+      toast.error(msg)
     }
   }
 

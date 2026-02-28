@@ -107,11 +107,24 @@ function buildRagExtractionPrompt(
     input: MarketResearchInput,
     searchContext: string,
     fx: { gbpRate: number; usdRate: number },
+    queryContext?: { canonicalDescription: string; searchVariants: string[]; matchingCriteria: string; keyAttributes: { brand: string; style: string; size?: string | null; material?: string | null; colour?: string | null; hardware?: string | null } },
 ): string {
+    const aliases = queryContext?.searchVariants.filter((v) => v !== buildSearchQuery(input)) ?? []
+    const semanticBlock = queryContext?.matchingCriteria
+        ? `\nSEMANTIC MATCHING INTELLIGENCE:
+Canonical description: ${queryContext.canonicalDescription}
+${aliases.length > 0 ? `Also known as: ${aliases.join(' | ')}` : ''}
+Key attributes: Brand: ${queryContext.keyAttributes.brand || input.brand} | Style: ${queryContext.keyAttributes.style}${queryContext.keyAttributes.size ? ` | Size: ${queryContext.keyAttributes.size}` : ''}${queryContext.keyAttributes.colour ? ` | Colour: ${queryContext.keyAttributes.colour}` : ''}${queryContext.keyAttributes.material ? ` | Material: ${queryContext.keyAttributes.material}` : ''}${queryContext.keyAttributes.hardware ? ` | Hardware: ${queryContext.keyAttributes.hardware}` : ''}
+Matching criteria: ${queryContext.matchingCriteria}
+
+When identifying comparable listings: use SEMANTIC matching, not exact title matching. Different resellers use different naming conventions for the same bag. Example: "Timeless Classic" and "Classic Flap" are the same Chanel bag. Focus on brand, style family, size, colour, and material — NOT exact wording.
+`
+        : ''
+
     return `You are a luxury goods market research analyst specializing in the European resale market (Ireland and EU).
 
 You have been provided REAL web search results below. Use ONLY the data from these search results to form your analysis. Do NOT invent listings or prices that are not supported by the search data.
-
+${semanticBlock}
 === WEB SEARCH RESULTS ===
 ${searchContext}
 === END SEARCH RESULTS ===
@@ -283,30 +296,34 @@ export class MarketResearchService {
     }
 
     /**
-     * RAG pipeline: (1) web search for real listings, (2) AI synthesis of structured data.
-     * Falls back to pure-AI if search returns no results.
+     * RAG pipeline: (1) expand query for semantic intelligence, (2) multi-variant web search,
+     * (3) AI synthesis of structured data. Falls back to pure-AI if search returns no results.
      */
     private async analyseWithRAG(input: MarketResearchInput): Promise<MarketResearchResult> {
-        const query = buildSearchQuery(input)
-        const searchQuery = `${query} price second-hand pre-owned for sale EUR`
+        const baseQuery = buildSearchQuery(input)
 
-        const searchResponse = await this.searchService.searchMarketMulti(searchQuery, {
-            userLocation: { country: 'IE' },
-        })
+        // Expand query into semantic variants + matching criteria
+        const queryContext = await this.searchService.expandQuery(baseQuery)
+
+        const searchResponse = await this.searchService.searchMarketMultiExpanded(
+            queryContext.searchVariants,
+            { userLocation: { country: 'IE' } },
+        )
 
         const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
 
         if (hasSearchData) {
-            return this.synthesizeFromSearch(input, searchResponse)
+            return this.synthesizeFromSearch(input, searchResponse, queryContext)
         }
 
-        logger.info('market_research_fallback', { reason: 'no_search_results', query })
+        logger.info('market_research_fallback', { reason: 'no_search_results', query: baseQuery })
         return this.analyseWithOpenAIFallback(input)
     }
 
     private async synthesizeFromSearch(
         input: MarketResearchInput,
         searchResponse: { rawText: string; annotations: Array<{ url: string; title: string }> },
+        queryContext?: { canonicalDescription: string; searchVariants: string[]; matchingCriteria: string; keyAttributes: { brand: string; style: string; size?: string | null; material?: string | null; colour?: string | null; hardware?: string | null } },
     ): Promise<MarketResearchResult> {
         const searchContext = searchResponse.rawText
             + '\n\nSource URLs:\n'
@@ -320,7 +337,7 @@ export class MarketResearchService {
         const prompt = buildRagExtractionPrompt(input, searchContext, {
             gbpRate: gbpRate || 1.17,
             usdRate: usdRate || 0.92,
-        })
+        }, queryContext)
 
         const OpenAI = (await import('openai')).default
         const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })

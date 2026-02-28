@@ -7,9 +7,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import {
-    TrendingUp,
-    TrendingDown,
-    Minus,
     Search,
     BarChart3,
     Sparkles,
@@ -17,12 +14,6 @@ import {
     ExternalLink,
     ChevronRight,
     Zap,
-    AlertTriangle,
-    CheckCircle2,
-    ShieldCheck,
-    ArrowUpRight,
-    ArrowDownRight,
-    Clock,
     History,
     Store,
     Bookmark,
@@ -151,7 +142,7 @@ const CONDITION_OPTIONS = [
     { value: 'used', label: 'Used' },
 ]
 
-import MarketResearchResultPanel, { DEMAND_CONFIG, LIQUIDITY_CONFIG, TREND_CONFIG } from './MarketResearchResultPanel'
+import MarketResearchResultPanel, { TREND_CONFIG } from './MarketResearchResultPanel'
 
 // ─── Helpers ───────────────────────────────────────────────────
 const normalizeComparableImage = (comparable: MarketComparablePayload): MarketComparable => ({
@@ -222,7 +213,6 @@ export default function MarketResearchView() {
     const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
     const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
     const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
-    const [failedComparableImages, setFailedComparableImages] = useState<Record<string, boolean>>({})
 
     const [savedId, setSavedId] = useState<string | null>(null)
     const [isSaved, setIsSaved] = useState(false)
@@ -322,7 +312,6 @@ export default function MarketResearchView() {
                 ...formData,
                 currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
             })
-            setFailedComparableImages({})
             const normalizedResult = normalizeMarketResearchResult({
                 ...data,
                 comparables: data.comparables.map(normalizeComparableImage),
@@ -702,208 +691,6 @@ export default function MarketResearchView() {
                                     </div>
                                 )
                             })()}
-
-                            {/* Price Intelligence */}
-                            <div className="lux-card p-5">
-                                <div className="text-xs font-medium text-lux-400 uppercase tracking-wide mb-4">Price Intelligence</div>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <div className="text-center">
-                                        <div className="text-xs text-lux-500 mb-1">Market Value</div>
-                                        <div className="text-xl font-bold text-lux-900">{formatCurrency(result.estimatedMarketValueEur)}</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xs text-lux-500 mb-1 flex items-center justify-center gap-1">
-                                            <ArrowDownRight className="h-3 w-3 text-green-600" /> Buy At
-                                        </div>
-                                        <div className="text-xl font-bold text-green-700">{formatCurrency(result.suggestedBuyPriceEur)}</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xs text-lux-500 mb-1 flex items-center justify-center gap-1">
-                                            <ArrowUpRight className="h-3 w-3 text-lux-700" /> Sell At
-                                        </div>
-                                        <div className="text-xl font-bold text-lux-800">{formatCurrency(result.suggestedSellPriceEur)}</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xs text-lux-500 mb-1">Price Range</div>
-                                        <div className="text-sm font-semibold text-lux-700">
-                                            {formatCurrency(result.priceRangeLowEur)} – {formatCurrency(result.priceRangeHighEur)}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Price range bar */}
-                                <div className="mt-4 px-2">
-                                    <div className="relative h-2 bg-lux-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="absolute h-full bg-gradient-to-r from-green-400 via-amber-400 to-lux-gold rounded-full"
-                                            style={{
-                                                left: `${((result.priceRangeLowEur / result.priceRangeHighEur) * 80)}%`,
-                                                width: `${Math.max(20, 100 - (result.priceRangeLowEur / result.priceRangeHighEur) * 80)}%`
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between mt-1 text-xs text-lux-400">
-                                        <span>{formatCurrency(result.priceRangeLowEur)}</span>
-                                        <span>{formatCurrency(result.priceRangeHighEur)}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Market Indicators */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                {/* Demand */}
-                                {(() => {
-                                    const d = DEMAND_CONFIG[result.demandLevel]
-                                    return (
-                                        <div className={`lux-card p-5 border ${d.border} ${d.bg}`}>
-                                            <div className="text-xs text-lux-500 uppercase tracking-wide mb-2">Demand</div>
-                                            <div className={`text-lg font-bold ${d.color}`}>{d.label}</div>
-                                            <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
-                                                <div className={`h-full rounded-full transition-all duration-700 ${d.pct >= 75 ? 'bg-emerald-500' : d.pct >= 50 ? 'bg-amber-500' : 'bg-red-500'
-                                                    }`} style={{ width: `${d.pct}%` }} />
-                                            </div>
-                                        </div>
-                                    )
-                                })()}
-
-                                {/* Trend */}
-                                {(() => {
-                                    const t = TREND_CONFIG[result.priceTrend]
-                                    const TrendIcon = t.icon
-                                    return (
-                                        <div className={`lux-card p-5 ${t.bg}`}>
-                                            <div className="text-xs text-lux-500 uppercase tracking-wide mb-2">Price Trend</div>
-                                            <div className={`text-lg font-bold ${t.color} flex items-center gap-2`}>
-                                                <TrendIcon className="h-5 w-5" />
-                                                {t.label}
-                                            </div>
-                                        </div>
-                                    )
-                                })()}
-
-                                {/* Liquidity */}
-                                {(() => {
-                                    const l = LIQUIDITY_CONFIG[result.marketLiquidity]
-                                    return (
-                                        <div className="lux-card p-5">
-                                            <div className="text-xs text-lux-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                                                <Clock className="h-3 w-3" /> Liquidity
-                                            </div>
-                                            <div className={`text-lg font-bold ${l.color}`}>{l.label}</div>
-                                            <div className="text-xs text-lux-400 mt-0.5">{l.sublabel}</div>
-                                        </div>
-                                    )
-                                })()}
-                            </div>
-
-                            {/* Key Insights + Risk */}
-                            <div className="grid sm:grid-cols-2 gap-4">
-                                <div className="lux-card p-5">
-                                    <div className="flex items-center gap-2 text-xs font-medium text-lux-400 uppercase tracking-wide mb-3">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                        Key Insights
-                                    </div>
-                                    <ul className="space-y-2.5">
-                                        {result.keyInsights.map((insight, i) => (
-                                            <li key={i} className="flex items-start gap-2 text-sm text-lux-700">
-                                                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                                                <span>{insight}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <div className="lux-card p-5">
-                                    <div className="flex items-center gap-2 text-xs font-medium text-lux-400 uppercase tracking-wide mb-3">
-                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                                        Risk Factors
-                                    </div>
-                                    <ul className="space-y-2.5">
-                                        {result.riskFactors.map((risk, i) => (
-                                            <li key={i} className="flex items-start gap-2 text-sm text-lux-700">
-                                                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                                                <span>{risk}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    {result.seasonalNotes && (
-                                        <div className="mt-3 pt-3 border-t border-lux-100 text-xs text-lux-500 italic">
-                                            📅 {result.seasonalNotes}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Comparables */}
-                            {result.comparables.length > 0 && (
-                                <div className="lux-card p-5">
-                                    <div className="text-xs font-medium text-lux-400 uppercase tracking-wide mb-4">
-                                        Market Comparables ({result.comparables.length})
-                                    </div>
-                                    <div className="space-y-3">
-                                        {result.comparables.map((comp, i) => (
-                            <div
-                                key={i}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 py-3 px-4 rounded-lux-card bg-lux-50 border border-lux-100 hover:border-lux-200 transition-colors"
-                            >
-                                <div className="min-w-0 flex items-center gap-3 w-full sm:flex-1 pr-0 sm:pr-4">
-                                                    {comp.previewImageUrl && !failedComparableImages[comp.previewImageUrl] ? (
-                                                        <img
-                                                            src={comp.previewImageUrl}
-                                                            alt={comp.title !== FALLBACK_COMPARABLE_TITLE ? comp.title : `${result.brand} ${result.model} comparable`}
-                                                            className="w-12 h-12 rounded-lg object-cover border border-lux-200 bg-white shrink-0"
-                                                            loading="lazy"
-                                                            onError={() => {
-                                                                setFailedComparableImages(prev => ({ ...prev, [comp.previewImageUrl!]: true }))
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-12 h-12 rounded-lg border border-lux-200 bg-white shrink-0 grid place-items-center text-xs text-lux-400 font-medium">
-                                                            No image
-                                                        </div>
-                                                    )}
-                                                    <div className="min-w-0">
-                                                        <div className="text-sm font-medium text-lux-900 truncate">{comp.title}</div>
-                                                        <div className="flex items-center gap-2 mt-1 text-xs text-lux-500">
-                                                            <span>{comp.source}</span>
-                                                            <span>·</span>
-                                                            <span className="capitalize">{comp.condition}</span>
-                                                            {comp.daysListed != null && (
-                                                                <>
-                                                                    <span>·</span>
-                                                                    <span>{comp.daysListed}d listed</span>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
-                                    <span className="text-lg font-bold text-lux-900">{formatCurrency(comp.priceEur)}</span>
-                                                    {comp.sourceUrl && (
-                                                        <a
-                                                            href={comp.sourceUrl}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1.5 text-lux-400 transition-colors hover:bg-lux-50 hover:text-lux-gold focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                                            aria-label={`Open comparable listing: ${comp.title}`}
-                                                            title={`Open listing: ${comp.title}`}
-                                                        >
-                                                            <ExternalLink className="h-4 w-4" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Footer */}
-                            <div className="text-center">
-                                <p className="text-xs text-lux-400 uppercase tracking-widest">
-                                    Powered by {result.provider} · {result.brand} {result.model}
-                                </p>
-                            </div>
                         </div>
                     )}
                 </div>

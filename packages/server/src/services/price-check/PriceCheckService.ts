@@ -48,11 +48,17 @@ export class PriceCheckService {
 
     if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
       const refine = [condition, notes].filter(Boolean).join('. ')
-      const searchQuery = `${query} ${refine} price second-hand pre-owned for sale EUR`
 
-      const searchResponse = await this.searchService.searchMarketMulti(searchQuery, {
-        userLocation: { country: 'IE' },
-      })
+      // Step 1: Expand query into canonical attributes + search variants
+      const queryContext = await this.searchService.expandQuery(
+        refine ? `${query}. ${refine}` : query,
+      )
+
+      // Step 2: Fan-out searches across all naming variants
+      const searchResponse = await this.searchService.searchMarketMultiExpanded(
+        queryContext.searchVariants,
+        { userLocation: { country: 'IE' } },
+      )
 
       const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
 
@@ -64,12 +70,29 @@ export class PriceCheckService {
       const gbpToEur = gbpRate || 1.17
       const usdToEur = usdRate || 0.92
 
+      // Build semantic context block for the extraction prompt
+      const aliases = queryContext.searchVariants.filter((v) => v !== query)
+      const itemIntelligenceBlock = queryContext.matchingCriteria
+        ? `ITEM INTELLIGENCE:
+Canonical description: ${queryContext.canonicalDescription}
+${aliases.length > 0 ? `Also known as: ${aliases.join(' | ')}` : ''}
+Key attributes: Brand: ${queryContext.keyAttributes.brand || 'see item'} | Style: ${queryContext.keyAttributes.style}${queryContext.keyAttributes.size ? ` | Size: ${queryContext.keyAttributes.size}` : ''}${queryContext.keyAttributes.colour ? ` | Colour: ${queryContext.keyAttributes.colour}` : ''}${queryContext.keyAttributes.material ? ` | Material: ${queryContext.keyAttributes.material}` : ''}${queryContext.keyAttributes.hardware ? ` | Hardware: ${queryContext.keyAttributes.hardware}` : ''}
+Matching criteria: ${queryContext.matchingCriteria}
+
+SEMANTIC MATCHING:
+A listing is a MATCH if it shares the key attributes above, even if the title wording differs.
+Do NOT require an exact title match — different resellers use different naming conventions for the same bag.
+Example: "Timeless Classic" and "Classic Flap" refer to the same Chanel bag; "2.55" is the same bag family.
+Focus on: brand, style family, size, colour, and material — NOT the exact words in the listing title.
+A listing is NOT a match if it is a clearly different size, different style, or different colour.`
+        : ''
+
       const refineClause = refine ? `Condition/notes: ${refine}` : ''
       const extractionPrompt = `You are a luxury resale pricing expert. Using ONLY the web search results provided below, extract real listing data for the specified item.
 
 Item: "${query}"
 ${refineClause}
-
+${itemIntelligenceBlock ? `\n${itemIntelligenceBlock}\n` : ''}
 === WEB SEARCH RESULTS ===
 ${hasSearchData ? searchResponse.rawText : '(No live results found)'}
 
@@ -86,7 +109,8 @@ Return ONLY a JSON object (no markdown):
 }
 
 RULES (follow ALL of these):
-- Extract only listings that match the specific item described above. Ignore unrelated products, accessories, dust bags, authentication cards, or shipping charges.
+- Extract only listings that match the specific item described above. Use semantic matching — listings with different titles but the same item attributes are valid matches.
+- Ignore unrelated products, accessories, dust bags, authentication cards, or shipping charges.
 - Only include listings where the price is clearly for the main item (handbag, watch, etc.), not a listing fee or accessory.
 - If you find fewer than 2 real listings that clearly match this specific item with confirmed prices, return averageSellingPriceEur: 0 and an empty comps array [].
 - If you find 2 or more listings, extract up to 6 comparable listings and set averageSellingPriceEur to the average of their prices.

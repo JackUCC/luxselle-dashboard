@@ -4,13 +4,14 @@
  */
 import { useState, useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Search, Calendar, Info, Loader2 } from 'lucide-react'
+import { Search, Calendar, Info } from 'lucide-react'
 import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
+import AiThinkingDots from '../../components/feedback/AiThinkingDots'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 
@@ -194,7 +195,7 @@ export default function SerialCheckView() {
               disabled={isLoading}
               className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              {isLoading ? <AiThinkingDots /> : <Search className="h-4 w-4" />}
               {isLoading ? 'Analyzing…' : 'Analyze serial'}
             </button>
             <button
@@ -205,6 +206,11 @@ export default function SerialCheckView() {
               Clear
             </button>
           </div>
+          {isLoading && (
+            <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100 mt-2">
+              <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
+            </div>
+          )}
         </div>
       </div>
 

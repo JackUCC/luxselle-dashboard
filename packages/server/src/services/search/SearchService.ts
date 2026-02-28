@@ -18,6 +18,26 @@ export interface SearchResponse {
   annotations: Array<{ url: string; title: string }>
 }
 
+/**
+ * Structured intelligence about a search query.
+ * Produced by expandQuery() before web searches run.
+ */
+export interface QueryContext {
+  canonicalDescription: string
+  keyAttributes: {
+    brand: string
+    style: string
+    size?: string | null
+    material?: string | null
+    colour?: string | null
+    hardware?: string | null
+  }
+  /** 2–3 alternative search strings that resellers actually use for this item */
+  searchVariants: string[]
+  /** Plain-English criteria an AI extractor can use for semantic matching */
+  matchingCriteria: string
+}
+
 interface UrlCacheEntry {
   hostname: string | null
   blocked: boolean
@@ -172,6 +192,7 @@ export class SearchService {
 
   /**
    * Perform a web search scoped to approved luxury resale domains.
+   * Uses native `filters.allowed_domains` in the WebSearchTool for reliable domain restriction.
    * Returns parsed listings (title, url, snippet) plus the raw AI text.
    */
   async searchMarket(
@@ -187,26 +208,30 @@ export class SearchService {
     try {
       const openai = await this.getOpenAI()
 
+      const webSearchTool: {
+        type: 'web_search'
+        search_context_size: 'high'
+        filters?: { allowed_domains: string[] }
+        user_location?: { type: 'approximate'; country: string }
+      } = {
+        type: 'web_search',
+        search_context_size: 'high',
+      }
+
+      if (domains.length > 0) {
+        webSearchTool.filters = { allowed_domains: domains }
+      }
+
+      if (opts?.userLocation) {
+        webSearchTool.user_location = {
+          type: 'approximate',
+          country: opts.userLocation.country,
+        }
+      }
+
       const response = await openai.responses.create({
         model: 'gpt-4o-mini',
-        tools: [
-          {
-            type: 'web_search' as const,
-            ...(domains.length > 0
-              ? {
-                  search_context_size: 'high' as const,
-                }
-              : {}),
-            ...(opts?.userLocation
-              ? {
-                  user_location: {
-                    type: 'approximate' as const,
-                    country: opts.userLocation.country,
-                  },
-                }
-              : {}),
-          },
-        ],
+        tools: [webSearchTool],
         input: query,
       })
 
@@ -242,7 +267,7 @@ export class SearchService {
   }
 
   /**
-   * Run 2–3 parallel market searches with site: operators and merge results (dedupe by URL).
+   * Run 3 parallel market searches with native domain filtering and merge results (dedupe by URL).
    * Use for price-check and market research to get more listing pages vs generic articles.
    */
   async searchMarketMulti(
@@ -250,14 +275,156 @@ export class SearchService {
     opts?: { domains?: string[]; userLocation?: { country: string } },
   ): Promise<SearchResponse> {
     const trimmed = baseQuery.trim()
-    const queries = [
-      `${trimmed} site:vestiairecollective.com price`,
-      `${trimmed} site:designerexchange.ie`,
-      `${trimmed} pre-owned for sale price EUR`,
+    // Three parallel searches: Vestiaire only, Irish platforms, and a broad EUR search.
+    // Domain filtering is done natively via the WebSearchTool filters.allowed_domains.
+    const searches = [
+      this.searchMarket(trimmed, { ...opts, domains: ['vestiairecollective.com'] }),
+      this.searchMarket(trimmed, {
+        ...opts,
+        domains: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+      }),
+      this.searchMarket(`${trimmed} pre-owned luxury for sale price EUR`, {
+        ...opts,
+        domains: [],
+      }),
     ]
-    const responses = await Promise.all(
-      queries.map((q) => this.searchMarket(q, opts)),
+    const responses = await Promise.all(searches)
+    const seenUrls = new Set<string>()
+    const annotations: Array<{ url: string; title: string }> = []
+    const rawParts: string[] = []
+    for (const r of responses) {
+      for (const a of r.annotations) {
+        if (a.url && !seenUrls.has(a.url)) {
+          seenUrls.add(a.url)
+          annotations.push(a)
+        }
+      }
+      if (r.rawText.trim()) rawParts.push(r.rawText.trim())
+    }
+    const rawText = rawParts.join('\n\n---\n\n')
+    const results = annotations.map((ann) => ({
+      title: ann.title,
+      url: ann.url,
+      snippet: '',
+    }))
+    return { results, rawText, annotations }
+  }
+
+  /**
+   * Expand a free-text luxury item query into structured search intelligence.
+   * Makes one fast OpenAI call to extract canonical attributes, generate
+   * reseller naming aliases, and produce semantic matching criteria.
+   * Falls back gracefully to a single-variant passthrough on error.
+   */
+  async expandQuery(query: string): Promise<QueryContext> {
+    const fallback: QueryContext = {
+      canonicalDescription: query,
+      keyAttributes: { brand: '', style: query },
+      searchVariants: [query],
+      matchingCriteria: '',
+    }
+
+    if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
+      return fallback
+    }
+
+    try {
+      const openai = await this.getOpenAI()
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.1,
+        max_tokens: 400,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: `You are a luxury goods resale expert. Extract structured search intelligence from a free-text item description.
+
+LUXURY TERMINOLOGY REFERENCE (use this to resolve aliases):
+- Chanel: "Classic Flap" = "Timeless Classic" = "2.55" (same bag family); sizes: Small ~23cm, Medium ~25cm, Jumbo ~30cm, Maxi ~33cm; hardware: GHW (gold), SHW (silver), PHW (palladium), RHW (ruthenium); materials: Caviar (textured/grainy), Lambskin (smooth/soft), Jersey (fabric)
+- Hermès: Birkin and Kelly bags; sizes 25/30/35/40/50; leathers: Togo, Epsom, Clemence, Chevre, Barenia; hardware: GHW, PHW, BHW (brushed); grades: A/B/C condition
+- Louis Vuitton: abbreviations LV; Speedy 25/30/35; Neverfull PM/MM/GM; Monogram/Damier/Epi canvas
+- Prada: Re-Edition, Galleria, Cleo; nylon vs leather
+- Dior: Lady Dior Mini/Small/Medium/Large; Saddle; cannage stitching
+- Bottega Veneta: Cassette, Jodie, Arco; intrecciato weave
+- General: MM=Medium, GM=Large/Grande, PM=Small/Petite; pre-owned = second-hand = used = pre-loved; "like new" = excellent condition
+
+Return ONLY a valid JSON object:
+{
+  "canonicalDescription": "<full canonical item description>",
+  "keyAttributes": {
+    "brand": "<brand name>",
+    "style": "<bag style/model name>",
+    "size": "<size if specified, else null>",
+    "material": "<leather/material if specified, else null>",
+    "colour": "<colour if specified, else null>",
+    "hardware": "<hardware colour if specified, else null>"
+  },
+  "searchVariants": ["<variant 1>", "<variant 2>", "<variant 3 if needed>"],
+  "matchingCriteria": "<one sentence describing what a matching listing must have>"
+}
+
+searchVariants rules:
+- Generate 2–3 short search queries (5–8 words each) that resellers actually use
+- Use different naming conventions for the same item
+- Include size and colour where relevant
+- Keep queries concise — they are fed directly to a web search engine`,
+          },
+          {
+            role: 'user',
+            content: query,
+          },
+        ],
+      })
+
+      const text = response.choices[0]?.message?.content ?? ''
+      const parsed = JSON.parse(text) as QueryContext
+
+      if (
+        !parsed.searchVariants ||
+        !Array.isArray(parsed.searchVariants) ||
+        parsed.searchVariants.length === 0
+      ) {
+        return fallback
+      }
+
+      // Cap variants to 3 to avoid excessive API calls downstream
+      return {
+        ...parsed,
+        searchVariants: parsed.searchVariants.slice(0, 3),
+      }
+    } catch (err) {
+      logger.warn('search_expand_query_error', { error: err instanceof Error ? err.message : String(err) })
+      return fallback
+    }
+  }
+
+  /**
+   * Run parallel market searches for multiple query variants and merge results.
+   * Each variant gets a Vestiaire search + Irish platforms search, then a broad EUR search.
+   * Variants are capped at 3 to bound total concurrent requests to ~9.
+   */
+  async searchMarketMultiExpanded(
+    searchVariants: string[],
+    opts?: { userLocation?: { country: string } },
+  ): Promise<SearchResponse> {
+    const variants = searchVariants.slice(0, 3)
+    const allSearches = variants.flatMap((variant) => [
+      this.searchMarket(variant, { ...opts, domains: ['vestiairecollective.com'] }),
+      this.searchMarket(variant, {
+        ...opts,
+        domains: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
+      }),
+    ])
+    // Add one broad EUR search for the first (primary) variant
+    allSearches.push(
+      this.searchMarket(`${variants[0]} pre-owned luxury for sale price EUR`, {
+        ...opts,
+        domains: [],
+      }),
     )
+
+    const responses = await Promise.all(allSearches)
     const seenUrls = new Set<string>()
     const annotations: Array<{ url: string; title: string }> = []
     const rawParts: string[] = []
