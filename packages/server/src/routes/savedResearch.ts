@@ -4,6 +4,7 @@
  */
 import { Router } from 'express'
 import { SavedResearchService } from '../services/SavedResearchService'
+import { requireRole } from '../middleware/auth'
 
 const router = Router()
 const savedResearchService = new SavedResearchService()
@@ -13,7 +14,7 @@ import type { Request } from 'express'
 const getUserId = (req: Request) => (req.headers['x-user-id'] as string) || 'default-user'
 
 // POST /api/saved-research — save research
-router.post('/', async (req, res, next) => {
+router.post('/', requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const userId = getUserId(req)
     const result = await savedResearchService.save(userId, req.body)
@@ -53,7 +54,7 @@ router.get('/:id', async (req, res, next) => {
 })
 
 // PATCH /api/saved-research/:id — update (star/notes)
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const userId = getUserId(req)
     const result = await savedResearchService.update(userId, req.params.id, req.body)
@@ -64,7 +65,7 @@ router.patch('/:id', async (req, res, next) => {
 })
 
 // DELETE /api/saved-research/:id — delete
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireRole('admin'), async (req, res, next) => {
   try {
     const userId = getUserId(req)
     await savedResearchService.delete(userId, req.params.id)

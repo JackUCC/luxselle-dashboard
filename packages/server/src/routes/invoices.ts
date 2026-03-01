@@ -13,6 +13,7 @@ import { InvoicePdfService } from '../services/InvoicePdfService'
 import { vatFromGross } from '../lib/vat'
 import { storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { requireRole } from '../middleware/auth'
 
 const router = Router()
 const invoiceRepo = new InvoiceRepo()
@@ -130,7 +131,7 @@ function buildInvoiceFromInPerson(
 }
 
 // POST /api/invoices — create (from sale or full body)
-router.post('/', async (req, res, next) => {
+router.post('/', requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const raw = req.body as unknown
     if (raw && typeof raw === 'object' && (raw as { fromSale?: boolean }).fromSale === true) {
@@ -195,7 +196,7 @@ router.post('/', async (req, res, next) => {
 })
 
 // POST /api/invoices/upload — upload PDF, create invoice record with pdfUrl
-router.post('/upload', upload.single('file'), async (req, res, next) => {
+router.post('/upload', requireRole('operator', 'admin'), upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No PDF file provided'))
@@ -299,7 +300,7 @@ router.get('/', async (req, res, next) => {
 })
 
 // POST /api/invoices/:id/generate-pdf — generate PDF, upload, update invoice
-router.post('/:id/generate-pdf', async (req, res, next) => {
+router.post('/:id/generate-pdf', requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const invoice = await invoiceRepo.getById(req.params.id)
     if (!invoice) {
@@ -363,7 +364,7 @@ router.get('/:id', async (req, res, next) => {
 })
 
 // DELETE /api/invoices/:id
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireRole('admin'), async (req, res, next) => {
   try {
     const invoice = await invoiceRepo.getById(req.params.id)
     if (!invoice) {

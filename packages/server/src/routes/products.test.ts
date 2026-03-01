@@ -7,6 +7,38 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import { ZodError } from 'zod'
 import { productsRouter } from './products'
 
+
+vi.mock('../middleware/auth', () => ({
+  requireAuth: (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+      return
+    }
+    ;(req as Request & { user?: { role: string } }).user = { role: String(req.headers['x-test-role'] ?? 'readOnly') }
+    next()
+  },
+  requireRole: (...allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+      return
+    }
+    const role = String(req.headers['x-test-role'] ?? 'readOnly')
+    if (!allowedRoles.includes(role)) {
+      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
+      return
+    }
+    ;(req as Request & { user?: { role: string } }).user = { role }
+    next()
+  },
+}))
+
+const authHeaders = (role = 'admin') => ({
+  Authorization: 'Bearer test-token',
+  'x-test-role': role,
+})
+
 const {
   mockList,
   mockGetById,
@@ -84,7 +116,7 @@ describe('GET /api/products', () => {
 
   it('returns 200 with data array when list is empty', async () => {
     mockList.mockResolvedValue([])
-    const res = await request(app).get('/api/products')
+    const res = await request(app).get('/api/products').set(authHeaders('readOnly'))
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
     expect(Array.isArray(res.body.data)).toBe(true)
@@ -104,7 +136,7 @@ describe('GET /api/products', () => {
       status: 'in_stock',
     }
     mockList.mockResolvedValue([one])
-    const res = await request(app).get('/api/products')
+    const res = await request(app).get('/api/products').set(authHeaders('readOnly'))
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
     expect(res.body.data[0].brand).toBe('X')
@@ -116,7 +148,7 @@ describe('GET /api/products', () => {
       { id: 'p2', createdAt: '2024-01-01', updatedAt: '', brand: 'B', model: 'N', costPriceEur: 30, sellPriceEur: 40, status: 'in_stock' },
     ]
     mockList.mockResolvedValue(products)
-    const res = await request(app).get('/api/products?sort=__proto__')
+    const res = await request(app).get('/api/products?sort=__proto__').set(authHeaders('readOnly'))
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(2)
   })
@@ -127,7 +159,7 @@ describe('GET /api/products', () => {
       { id: 'p2', createdAt: '2024-01-02', updatedAt: '', brand: 'Acne', model: 'N', costPriceEur: 30, sellPriceEur: 40, status: 'in_stock' },
     ]
     mockList.mockResolvedValue(products)
-    const res = await request(app).get('/api/products?sort=brand&dir=asc')
+    const res = await request(app).get('/api/products?sort=brand&dir=asc').set(authHeaders('readOnly'))
     expect(res.status).toBe(200)
     expect(res.body.data[0].brand).toBe('Acne')
     expect(res.body.data[1].brand).toBe('Zara')
@@ -162,7 +194,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     mockActivityCreate.mockResolvedValue({ id: 'act1' })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')
+      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
       .send({
         amountEur: 2200,
         customerName: 'John Smith',
@@ -207,11 +239,35 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')
+      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
       .send({ customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
     expect(mockTransactionCreate).not.toHaveBeenCalled()
     expect(mockInvoiceCreate).not.toHaveBeenCalled()
+  })
+})
+
+
+describe('Products auth guards', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns 401 when write action is called without auth', async () => {
+    const res = await request(app)
+      .post('/api/products/p1/sell-with-invoice')
+      .send({ amountEur: 2200 })
+    expect(res.status).toBe(401)
+    expect(res.body.error.code).toBe('UNAUTHORIZED')
+  })
+
+  it('returns 403 when readOnly role calls write action', async () => {
+    const res = await request(app)
+      .post('/api/products/p1/sell-with-invoice')
+      .set(authHeaders('readOnly'))
+      .send({ amountEur: 2200 })
+    expect(res.status).toBe(403)
+    expect(res.body.error.code).toBe('FORBIDDEN')
   })
 })

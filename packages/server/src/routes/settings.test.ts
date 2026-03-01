@@ -3,6 +3,38 @@ import request from 'supertest'
 import express, { type Request, type Response, type NextFunction } from 'express'
 import { settingsRouter } from './settings'
 
+
+vi.mock('../middleware/auth', () => ({
+  requireAuth: (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+      return
+    }
+    ;(req as Request & { user?: { role: string } }).user = { role: String(req.headers['x-test-role'] ?? 'readOnly') }
+    next()
+  },
+  requireRole: (...allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+      return
+    }
+    const role = String(req.headers['x-test-role'] ?? 'readOnly')
+    if (!allowedRoles.includes(role)) {
+      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
+      return
+    }
+    ;(req as Request & { user?: { role: string } }).user = { role }
+    next()
+  },
+}))
+
+const authHeaders = (role = 'admin') => ({
+  Authorization: 'Bearer test-token',
+  'x-test-role': role,
+})
+
 interface TestError {
   status?: number
   code?: string
@@ -80,7 +112,7 @@ describe('GET /api/settings', () => {
   it('should return 200 with the existing settings object', async () => {
     mockGetSettings.mockResolvedValue(MOCK_SETTINGS)
 
-    const res = await request(app).get('/api/settings')
+    const res = await request(app).get('/api/settings').set(authHeaders('readOnly'))
 
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
@@ -92,7 +124,7 @@ describe('GET /api/settings', () => {
     mockGetSettings.mockResolvedValue(null)
     mockUpsertSettings.mockResolvedValue(MOCK_SETTINGS)
 
-    const res = await request(app).get('/api/settings')
+    const res = await request(app).get('/api/settings').set(authHeaders('readOnly'))
 
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
@@ -111,7 +143,7 @@ describe('PATCH /api/settings', () => {
     mockUpsertSettings.mockResolvedValue(updated)
 
     const res = await request(app)
-      .patch('/api/settings')
+      .patch('/api/settings').set(authHeaders('admin'))
       .send({ vatRatePct: 23 })
 
     expect(res.status).toBe(200)
@@ -125,7 +157,7 @@ describe('PATCH /api/settings', () => {
     mockUpsertSettings.mockResolvedValue(updated)
 
     const res = await request(app)
-      .patch('/api/settings')
+      .patch('/api/settings').set(authHeaders('admin'))
       .send({ targetMarginPct: 40 })
 
     expect(res.status).toBe(200)
@@ -134,7 +166,7 @@ describe('PATCH /api/settings', () => {
 
   it('should return 400 with VALIDATION_ERROR code when body has an invalid field type', async () => {
     const res = await request(app)
-      .patch('/api/settings')
+      .patch('/api/settings').set(authHeaders('admin'))
       .send({ targetMarginPct: 'not-a-number' })
 
     expect(res.status).toBe(400)

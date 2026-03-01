@@ -6,6 +6,38 @@ import request from 'supertest'
 import express, { type Request, type Response, type NextFunction } from 'express'
 import { jobsRouter } from './jobs'
 
+
+vi.mock('../middleware/auth', () => ({
+  requireAuth: (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+      return
+    }
+    ;(req as Request & { user?: { role: string } }).user = { role: String(req.headers['x-test-role'] ?? 'readOnly') }
+    next()
+  },
+  requireRole: (...allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+      return
+    }
+    const role = String(req.headers['x-test-role'] ?? 'readOnly')
+    if (!allowedRoles.includes(role)) {
+      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
+      return
+    }
+    ;(req as Request & { user?: { role: string } }).user = { role }
+    next()
+  },
+}))
+
+const authHeaders = (role = 'admin') => ({
+  Authorization: 'Bearer test-token',
+  'x-test-role': role,
+})
+
 const { mockList, mockGetById, mockSet } = vi.hoisted(() => ({
   mockList: vi.fn(),
   mockGetById: vi.fn(),
@@ -45,7 +77,7 @@ describe('GET /api/jobs', () => {
 
   it('returns 200 with data array', async () => {
     mockList.mockResolvedValue([])
-    const res = await request(app).get('/api/jobs')
+    const res = await request(app).get('/api/jobs').set(authHeaders('readOnly'))
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
     expect(Array.isArray(res.body.data)).toBe(true)
@@ -59,7 +91,7 @@ describe('GET /api/jobs/:id', () => {
 
   it('returns 404 with error code and message when job not found', async () => {
     mockGetById.mockResolvedValue(null)
-    const res = await request(app).get('/api/jobs/nonexistent')
+    const res = await request(app).get('/api/jobs/nonexistent').set(authHeaders('readOnly'))
     expect(res.status).toBe(404)
     expect(res.body.error).toBeDefined()
     expect(res.body.error.code).toBe('NOT_FOUND')
@@ -76,7 +108,7 @@ describe('POST /api/jobs/:id/retry', () => {
     const updatedJob = { ...failedJob, status: 'queued', retryCount: 1 }
     mockGetById.mockResolvedValue(failedJob)
     mockSet.mockResolvedValue(updatedJob)
-    const res = await request(app).post('/api/jobs/job-1/retry')
+    const res = await request(app).post('/api/jobs/job-1/retry').set(authHeaders('admin'))
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
     expect(res.body.data.status).toBe('queued')
@@ -84,22 +116,41 @@ describe('POST /api/jobs/:id/retry', () => {
 
   it('returns 404 when job does not exist', async () => {
     mockGetById.mockResolvedValue(null)
-    const res = await request(app).post('/api/jobs/nonexistent/retry')
+    const res = await request(app).post('/api/jobs/nonexistent/retry').set(authHeaders('admin'))
     expect(res.status).toBe(404)
     expect(res.body.error.code).toBe('NOT_FOUND')
   })
 
   it('returns 400 when job is not in a failed state', async () => {
     mockGetById.mockResolvedValue({ id: 'job-1', status: 'running', retryCount: 0, maxRetries: 3 })
-    const res = await request(app).post('/api/jobs/job-1/retry')
+    const res = await request(app).post('/api/jobs/job-1/retry').set(authHeaders('admin'))
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('BAD_REQUEST')
   })
 
   it('returns 400 when max retries exceeded', async () => {
     mockGetById.mockResolvedValue({ id: 'job-1', status: 'failed', retryCount: 3, maxRetries: 3 })
-    const res = await request(app).post('/api/jobs/job-1/retry')
+    const res = await request(app).post('/api/jobs/job-1/retry').set(authHeaders('admin'))
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('BAD_REQUEST')
+  })
+})
+
+
+describe('Jobs auth guards', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('returns 401 when retry is called without auth', async () => {
+    const res = await request(app).post('/api/jobs/job-1/retry')
+    expect(res.status).toBe(401)
+    expect(res.body.error.code).toBe('UNAUTHORIZED')
+  })
+
+  it('returns 403 when retry is called by non-admin role', async () => {
+    const res = await request(app)
+      .post('/api/jobs/job-1/retry')
+      .set(authHeaders('operator'))
+    expect(res.status).toBe(403)
+    expect(res.body.error.code).toBe('FORBIDDEN')
   })
 })
