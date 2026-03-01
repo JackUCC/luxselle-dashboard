@@ -90,25 +90,24 @@ BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
 ```
 
-### 2.4 AI Provider (Optional)
+### 2.4 AI Routing (Optional but Recommended)
 
-**For Perplexity (search, price check, market research):**
+Set dynamic routing so retrieval and extraction can fail over automatically.
+
 ```bash
-AI_PROVIDER=perplexity
+AI_ROUTING_MODE=dynamic
+OPENAI_API_KEY=sk-proj-your-key-here
 PERPLEXITY_API_KEY=pplx-your-key-here
 PERPLEXITY_SEARCH_MODEL=sonar-pro
 PERPLEXITY_EXTRACTION_MODEL=sonar-pro
 ```
 
-**For OpenAI (pricing, market research, image analysis):**
-```bash
-AI_PROVIDER=openai
-OPENAI_API_KEY=sk-proj-your-key-here
-```
+Optional debug overrides (single-provider mode):
 
-**For Mock (no AI, testing only):**
 ```bash
-AI_PROVIDER=mock
+AI_ROUTING_MODE=openai
+# or
+AI_ROUTING_MODE=perplexity
 ```
 
 ### 2.5 Complete Environment Variables Template
@@ -128,10 +127,11 @@ PORT=3001
 BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
 
-# AI Provider (choose one: perplexity, openai, or mock)
-AI_PROVIDER=perplexity
+# AI routing (recommended)
+AI_ROUTING_MODE=dynamic
+OPENAI_API_KEY=sk-proj-...
 PERPLEXITY_API_KEY=pplx-...
-# Or: AI_PROVIDER=openai + OPENAI_API_KEY=sk-proj-...
+# Optional debug override: AI_ROUTING_MODE=openai or AI_ROUTING_MODE=perplexity
 ```
 
 ---

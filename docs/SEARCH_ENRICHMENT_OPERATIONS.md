@@ -9,7 +9,7 @@ Search enrichment is the second stage in the RAG flow:
 1. web search retrieves listing snippets + `sourceUrl` citations
 2. enrichment extracts structured JSON from those results
 
-If enrichment is unavailable, the API returns search results and downstream services should fall back to safe defaults (`ai_fallback`, `mock`, or empty extraction depending on endpoint).
+If enrichment is unavailable, the API returns search results and downstream services should fall back to safe defaults (`ai_fallback` or empty extraction depending on endpoint).
 
 ## Failure modes
 
@@ -83,7 +83,7 @@ export SEARCH_DOMAIN_ALLOWLIST="vestiairecollective.com,designerexchange.ie,luxu
 When enrichment is disabled/capped/fails:
 
 - No blocking errors should be shown for normal user flows.
-- Pricing/market endpoints should return conservative fallback values or `ai_fallback` / `mock` markers.
+- Pricing/market endpoints should return conservative fallback values or `ai_fallback` markers.
 - UI should continue to render with available data and avoid “hard stop” states.
 
 ## Metrics to monitor

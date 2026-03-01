@@ -2,6 +2,11 @@
 
 Complete documentation of every AI-powered function, its routing conditions, prompts, formulas, and data flow.
 
+> [!WARNING]
+> This document contains legacy `AI_PROVIDER/mock` routing references and is not the source of truth for current runtime behavior.
+> Current runtime uses task-based dynamic routing via `packages/server/src/services/ai/AiRouter.ts` with `AI_ROUTING_MODE` and provider failover.
+> Use code + tests as canonical references until this document is fully refreshed.
+
 ---
 
 ## Table of Contents

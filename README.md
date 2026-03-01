@@ -39,7 +39,7 @@ npx get-shit-done-cc@latest --claude --local
 
 2. **Environment**
    - Copy `.env.example` to `.env` in the project root.
-   - For local development, defaults in `.env.example` are sufficient (emulator + mock AI).
+   - For local development, defaults in `.env.example` are sufficient for emulator mode.
 
    | Variable | Purpose |
    |----------|---------|
@@ -49,8 +49,9 @@ npx get-shit-done-cc@latest --claude --local
    | `FIRESTORE_EMULATOR_HOST` | e.g. `127.0.0.1:8082` (match firebase/firebase.json) |
    | `FIREBASE_STORAGE_EMULATOR_HOST` | e.g. `127.0.0.1:9198` (match firebase/firebase.json) |
    | `GOOGLE_APPLICATION_CREDENTIALS` | Path to service account JSON (leave empty for emulator) |
-   | `AI_PROVIDER` | `mock` \| `openai` |
-   | `OPENAI_API_KEY` | Required when `AI_PROVIDER=openai` |
+   | `AI_ROUTING_MODE` | `dynamic` (default) \| `openai` \| `perplexity` |
+   | `OPENAI_API_KEY` | Enables OpenAI extraction/generation/vision |
+   | `PERPLEXITY_API_KEY` | Enables Perplexity web retrieval/extraction |
    | `BASE_CURRENCY` | e.g. `EUR` (used by pricing) |
    | `TARGET_MARGIN_PCT` | Default margin % (e.g. `35`) |
    | `PORT` | Backend port (default `3001`) |

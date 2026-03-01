@@ -30,7 +30,12 @@ const EnvSchema = z.object({
   FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string().optional(),
-  AI_PROVIDER: z.enum(['mock', 'openai', 'perplexity']).default('mock'),
+  // Deprecated: single-provider mode. Kept for backwards compatibility with older env files.
+  AI_PROVIDER: z.preprocess(
+    (value) => (value === 'mock' ? undefined : value),
+    z.enum(['openai', 'perplexity']).optional(),
+  ),
+  AI_ROUTING_MODE: z.enum(['dynamic', 'openai', 'perplexity']).default('dynamic'),
   OPENAI_API_KEY: z.string().optional(),
   PERPLEXITY_API_KEY: z.string().optional(),
   PERPLEXITY_SEARCH_MODEL: z.string().optional().default('sonar-pro'),

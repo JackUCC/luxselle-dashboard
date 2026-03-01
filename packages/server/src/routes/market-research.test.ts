@@ -53,11 +53,11 @@ describe('GET /api/market-research/trending', () => {
   })
 
   it('returns 200 with data when service returns result', async () => {
-    mockGetTrending.mockResolvedValue({ provider: 'mock', items: [], generatedAt: new Date().toISOString() })
+    mockGetTrending.mockResolvedValue({ provider: 'hybrid', items: [], generatedAt: new Date().toISOString() })
     const res = await request(app).get('/api/market-research/trending')
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
-    expect(res.body.data.provider).toBe('mock')
+    expect(res.body.data.provider).toBe('hybrid')
     expect(Array.isArray(res.body.data.items)).toBe(true)
   })
 })
@@ -70,7 +70,7 @@ describe('POST /api/market-research/analyse', () => {
   it('returns 200 with data when service returns result', async () => {
     const generatedAt = new Date().toISOString()
     mockAnalyse.mockResolvedValue({
-      provider: 'mock',
+      provider: 'hybrid',
       brand: 'Chanel',
       model: 'Classic Flap',
       estimatedMarketValueEur: 4500,

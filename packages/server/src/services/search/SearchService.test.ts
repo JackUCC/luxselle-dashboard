@@ -1,13 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { env } from '../../config/env'
 
-const responsesCreate = vi.fn()
-const chatCreate = vi.fn()
+const { mockWebSearch, mockExtractStructuredJson } = vi.hoisted(() => ({
+  mockWebSearch: vi.fn(),
+  mockExtractStructuredJson: vi.fn(),
+}))
+
+vi.mock('../ai/AiRouter', () => ({
+  getAiRouter: () => ({
+    webSearch: mockWebSearch,
+    extractStructuredJson: mockExtractStructuredJson,
+  }),
+}))
 
 vi.mock('../../config/env', () => ({
   env: {
-    AI_PROVIDER: 'openai',
-    OPENAI_API_KEY: 'test-key',
+    AI_ROUTING_MODE: 'dynamic',
+    OPENAI_API_KEY: 'test-openai-key',
+    PERPLEXITY_API_KEY: 'test-perplexity-key',
     SEARCH_ENRICHMENT_ENABLED: true,
     SEARCH_ENRICHMENT_MAX_COUNT: 1,
     SEARCH_ENRICHMENT_CACHE_TTL_MS: 60_000,
@@ -16,39 +26,28 @@ vi.mock('../../config/env', () => ({
   },
 }))
 
-vi.mock('openai', () => ({
-  default: class OpenAI {
-    responses = { create: responsesCreate }
-    chat = { completions: { create: chatCreate } }
-  },
-}))
-
 describe('SearchService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    env.SEARCH_ENRICHMENT_ENABLED = true
+    env.SEARCH_ENRICHMENT_MAX_COUNT = 1
   })
 
   it('filters search annotations by allowlist/denylist domain rules', async () => {
     const { SearchService } = await import('./SearchService')
     const service = new SearchService()
 
-    responsesCreate.mockResolvedValueOnce({
-      output_text: 'result text',
-      output: [
-        {
-          type: 'message',
-          content: [
-            {
-              type: 'output_text',
-              annotations: [
-                { type: 'url_citation', url: 'https://vestiairecollective.com/item/1', title: 'Allowed' },
-                { type: 'url_citation', url: 'https://blocked.example/item/2', title: 'Denied by denylist' },
-                { type: 'url_citation', url: 'https://not-on-allowlist.com/item/3', title: 'Denied by allowlist' },
-              ],
-            },
-          ],
-        },
-      ],
+    mockWebSearch.mockResolvedValueOnce({
+      data: {
+        rawText: 'result text',
+        annotations: [
+          { url: 'https://vestiairecollective.com/item/1', title: 'Allowed' },
+          { url: 'https://blocked.example/item/2', title: 'Denied by denylist' },
+          { url: 'https://not-on-allowlist.com/item/3', title: 'Denied by allowlist' },
+        ],
+      },
+      provider: 'perplexity',
+      fallbackUsed: false,
     })
 
     const result = await service.searchMarket('query')
@@ -64,14 +63,13 @@ describe('SearchService', () => {
     const { SearchService } = await import('./SearchService')
     const service = new SearchService()
 
-    responsesCreate.mockResolvedValueOnce({
-      output_text: 'result text',
-      output: [
-        {
-          type: 'message',
-          content: [{ type: 'output_text', annotations: [{ type: 'url_citation', url: 'https://vestiairecollective.com/item/1', title: 'Allowed' }] }],
-        },
-      ],
+    mockWebSearch.mockResolvedValueOnce({
+      data: {
+        rawText: 'result text',
+        annotations: [{ url: 'https://vestiairecollective.com/item/1', title: 'Allowed' }],
+      },
+      provider: 'openai',
+      fallbackUsed: false,
     })
 
     const result = await service.searchAndExtract<{ ok: boolean }>({
@@ -80,7 +78,7 @@ describe('SearchService', () => {
     })
 
     expect(result.extracted).toBeNull()
-    expect(chatCreate).not.toHaveBeenCalled()
+    expect(mockExtractStructuredJson).not.toHaveBeenCalled()
     env.SEARCH_ENRICHMENT_ENABLED = true
   })
 
@@ -88,18 +86,19 @@ describe('SearchService', () => {
     const { SearchService } = await import('./SearchService')
     const service = new SearchService()
 
-    responsesCreate.mockResolvedValue({
-      output_text: 'result text',
-      output: [
-        {
-          type: 'message',
-          content: [{ type: 'output_text', annotations: [{ type: 'url_citation', url: 'https://designerexchange.ie/item/1', title: 'Listing' }] }],
-        },
-      ],
+    mockWebSearch.mockResolvedValue({
+      data: {
+        rawText: 'result text',
+        annotations: [{ url: 'https://designerexchange.ie/item/1', title: 'Listing' }],
+      },
+      provider: 'perplexity',
+      fallbackUsed: false,
     })
 
-    chatCreate.mockResolvedValueOnce({
-      choices: [{ message: { content: '{"ok":true}' } }],
+    mockExtractStructuredJson.mockResolvedValueOnce({
+      data: { ok: true },
+      provider: 'openai',
+      fallbackUsed: false,
     })
 
     const first = await service.searchAndExtract<{ ok: boolean }>({
@@ -113,6 +112,7 @@ describe('SearchService', () => {
 
     expect(first.extracted).toEqual({ ok: true })
     expect(second.extracted).toBeNull()
+    expect(mockExtractStructuredJson).toHaveBeenCalledTimes(1)
 
     const metrics = service.getEnrichmentMetrics()
     expect(metrics.extractionAttempts).toBe(1)

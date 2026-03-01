@@ -1,13 +1,12 @@
 /**
- * Orchestrates AI pricing: selects provider (mock/openai from env), runs analysis, applies margin and FX (usdToEur).
+ * Orchestrates AI pricing: runs dynamic provider analysis, then applies margin and market policy.
  * @see docs/CODE_REFERENCE.md
- * References: env, fx.ts, IPricingProvider implementations
+ * References: env, IPricingProvider implementations
  */
 import { env } from '../../config/env'
 import { ProductRepo } from '../../repos/ProductRepo'
 import { SettingsRepo } from '../../repos/SettingsRepo'
 import { TransactionRepo } from '../../repos/TransactionRepo'
-import { MockPricingProvider } from './providers/MockPricingProvider'
 import { OpenAIProvider } from './providers/OpenAIProvider'
 import type { IPricingProvider, PricingAnalysisInput } from './providers/IPricingProvider'
 import type { PricingComparable, PricingMarketSummary } from '@shared/schemas'
@@ -72,7 +71,6 @@ export interface AuctionLandedCostResult {
 
 export class PricingService {
   private provider: IPricingProvider
-  private providerName: string
   private transactionRepo: TransactionRepo
   private productRepo: ProductRepo
   private settingsRepo: SettingsRepo
@@ -81,15 +79,9 @@ export class PricingService {
     this.transactionRepo = new TransactionRepo()
     this.productRepo = new ProductRepo()
     this.settingsRepo = new SettingsRepo()
-    
-    // Select provider based on environment
-    if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
-      this.provider = new OpenAIProvider(env.OPENAI_API_KEY)
-      this.providerName = 'openai'
-    } else {
-      this.provider = new MockPricingProvider()
-      this.providerName = 'mock'
-    }
+
+    // Dynamic AI routing lives inside OpenAIProvider (now an orchestration provider).
+    this.provider = new OpenAIProvider()
   }
 
   async analyse(input: PricingAnalysisInput): Promise<PricingServiceResult> {
@@ -124,7 +116,7 @@ export class PricingService {
       historyAvgPaidEur,
       comps: marketProcessed.comps,
       confidence: providerResult.confidence,
-      provider: this.providerName,
+      provider: providerResult.provider,
       marketSummary: marketProcessed.summary,
     }
   }

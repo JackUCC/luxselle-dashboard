@@ -86,9 +86,12 @@ BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
 ```
 
-**AI Provider (optional - start with mock):**
+**AI Routing (optional):**
 ```bash
-AI_PROVIDER=mock
+AI_ROUTING_MODE=dynamic
+# Optional provider keys for live AI features:
+# OPENAI_API_KEY=sk-proj-...
+# PERPLEXITY_API_KEY=pplx-...
 ```
 
 - [ ] If enabling supplier email ingestion + Ireland Buy Box policy, complete:
@@ -188,20 +191,24 @@ curl https://your-backend.railway.app/api/products
 
 ## Phase 5: API Keys (Optional - 5 minutes)
 
-### Step 15: Add OpenAI or Gemini (for AI features)
+### Step 15: Add AI provider keys (for AI features)
 
 **For OpenAI:**
 - [ ] Go to [platform.openai.com](https://platform.openai.com)
 - [ ] Create API key (starts with `sk-proj-...`)
 - [ ] In Railway → **Variables**:
   ```bash
-  AI_PROVIDER=openai
+  AI_ROUTING_MODE=dynamic
   OPENAI_API_KEY=sk-proj-your-key
   ```
 - [ ] Railway will auto-redeploy
 
+**Optional Perplexity (recommended for search-first routing):**
+- [ ] Create/set `PERPLEXITY_API_KEY` in Railway
+- [ ] Keep `AI_ROUTING_MODE=dynamic`
+
 **Skip AI for now:**
-- [ ] Keep `AI_PROVIDER=mock` (no API key needed)
+- [ ] Leave AI keys unset (AI endpoints return explicit unavailable/degraded responses)
 
 ---
 

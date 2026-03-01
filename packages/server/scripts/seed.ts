@@ -215,7 +215,7 @@ async function seed() {
       historyAvgPaidEur: 1100 + i * 30,
       comps: [],
       confidence: 0.7,
-      provider: 'mock',
+      provider: 'hybrid',
     })
     evaluations.push(e)
   }

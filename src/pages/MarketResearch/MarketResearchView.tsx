@@ -451,14 +451,13 @@ export default function MarketResearchView() {
                 purpose="Irish & EU market — Designer Exchange, Luxury Exchange, Siopella, Vestiaire."
                 actions={
                     <>
-                        {status?.aiProvider === 'mock' && (
-                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-ui-label font-medium text-amber-800">Mock Data</span>
+                        {status && !status.providerAvailability.openai && !status.providerAvailability.perplexity && (
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-ui-label font-medium text-amber-800">AI Unavailable</span>
                         )}
-                        {status?.aiProvider === 'openai' && (
-                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-ui-label font-medium text-emerald-800">AI: OpenAI</span>
-                        )}
-                        {status?.aiProvider === 'perplexity' && (
-                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-ui-label font-medium text-blue-800">AI: Perplexity</span>
+                        {status && (status.providerAvailability.openai || status.providerAvailability.perplexity) && (
+                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-ui-label font-medium text-emerald-800">
+                                AI Routing: {status.aiRoutingMode}
+                            </span>
                         )}
                     </>
                 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   basePricingInput,
   makeProduct,
@@ -8,6 +8,7 @@ import {
 const listMock = vi.fn()
 const productListMock = vi.fn()
 const settingsGetMock = vi.fn()
+const analyseMock = vi.fn()
 
 const defaultEnv = {
   NODE_ENV: 'test',
@@ -17,10 +18,33 @@ const defaultEnv = {
   FIREBASE_STORAGE_BUCKET: 'luxselle-dashboard.firebasestorage.app',
   FIRESTORE_EMULATOR_HOST: '127.0.0.1:8082',
   FIREBASE_STORAGE_EMULATOR_HOST: '127.0.0.1:9198',
-  AI_PROVIDER: 'mock',
-  OPENAI_API_KEY: '',
+  AI_ROUTING_MODE: 'dynamic',
+  OPENAI_API_KEY: 'test-openai-key',
+  PERPLEXITY_API_KEY: 'test-perplexity-key',
   BASE_CURRENCY: 'EUR',
   TARGET_MARGIN_PCT: 35,
+}
+
+const defaultProviderResult = {
+  estimatedRetailEur: 3000,
+  confidence: 0.82,
+  comps: [
+    {
+      title: 'Designer Exchange Listing',
+      price: 2900,
+      source: 'Designer Exchange',
+      sourceUrl: 'https://designerexchange.ie/item',
+      marketCountry: 'IE',
+    },
+    {
+      title: 'Vestiaire Listing',
+      price: 3020,
+      source: 'Vestiaire Collective',
+      sourceUrl: 'https://vestiairecollective.com/item',
+      marketCountry: 'EU',
+    },
+  ],
+  provider: 'hybrid' as const,
 }
 
 const loadPricingService = async (overrides: Partial<typeof defaultEnv> = {}) => {
@@ -28,7 +52,11 @@ const loadPricingService = async (overrides: Partial<typeof defaultEnv> = {}) =>
   listMock.mockReset()
   productListMock.mockReset()
   settingsGetMock.mockReset()
+  analyseMock.mockReset()
+  listMock.mockResolvedValue([])
+  productListMock.mockResolvedValue([])
   settingsGetMock.mockResolvedValue(null)
+  analyseMock.mockResolvedValue(defaultProviderResult)
 
   vi.doMock('../../config/env', () => ({
     env: { ...defaultEnv, ...overrides },
@@ -52,6 +80,12 @@ const loadPricingService = async (overrides: Partial<typeof defaultEnv> = {}) =>
     },
   }))
 
+  vi.doMock('./providers/OpenAIProvider', () => ({
+    OpenAIProvider: class {
+      analyse = analyseMock
+    },
+  }))
+
   const module = await import('./PricingService')
   return module.PricingService
 }
@@ -61,10 +95,13 @@ afterEach(() => {
 })
 
 describe('PricingService', () => {
+  beforeEach(() => {
+    listMock.mockResolvedValue([])
+    productListMock.mockResolvedValue([])
+  })
+
   it('calculates max buy price using target margin', async () => {
     const PricingService = await loadPricingService({ TARGET_MARGIN_PCT: 35 })
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
@@ -74,15 +111,11 @@ describe('PricingService', () => {
 
   it('handles margin edge cases', async () => {
     const PricingServiceZero = await loadPricingService({ TARGET_MARGIN_PCT: 0 })
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
     const serviceZero = new PricingServiceZero()
     const resultZero = await serviceZero.analyse(basePricingInput)
     expect(resultZero.maxBuyPriceEur).toBe(Math.round(resultZero.estimatedRetailEur))
 
     const PricingServiceFull = await loadPricingService({ TARGET_MARGIN_PCT: 100 })
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
     const serviceFull = new PricingServiceFull()
     const resultFull = await serviceFull.analyse(basePricingInput)
     expect(resultFull.maxBuyPriceEur).toBe(0)
@@ -90,14 +123,10 @@ describe('PricingService', () => {
 
   it('handles large estimated retail values', async () => {
     const PricingService = await loadPricingService({ TARGET_MARGIN_PCT: 10 })
-    const { MockPricingProvider } = await import('./providers/MockPricingProvider')
-    vi.spyOn(MockPricingProvider.prototype, 'analyse').mockResolvedValue({
-      estimatedRetailEur: 1000000,
-      confidence: 0.8,
-      comps: [],
+    analyseMock.mockResolvedValueOnce({
+      ...defaultProviderResult,
+      estimatedRetailEur: 1_000_000,
     })
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
@@ -106,8 +135,6 @@ describe('PricingService', () => {
 
   it('returns null when no purchase history exists', async () => {
     const PricingService = await loadPricingService()
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
@@ -142,58 +169,18 @@ describe('PricingService', () => {
     expect(result.historyAvgPaidEur).toBeNull()
   })
 
-  it('selects mock provider by default', async () => {
-    const PricingService = await loadPricingService({
-      AI_PROVIDER: 'mock',
-      OPENAI_API_KEY: '',
-    })
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
+  it('passes through provider label from dynamic provider', async () => {
+    const PricingService = await loadPricingService()
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
-    expect(result.provider).toBe('mock')
-  })
-
-  it('selects openai provider when configured', async () => {
-    vi.resetModules()
-    listMock.mockReset()
-    productListMock.mockReset()
-
-    const analyseMock = vi.fn().mockResolvedValue({
-      estimatedRetailEur: 3000,
-      confidence: 0.85,
-      comps: [{ title: 'Test Comp', price: 2900, source: 'OpenAI' }],
-    })
-
-    vi.doMock('../../config/env', () => ({
-      env: { ...defaultEnv, AI_PROVIDER: 'openai', OPENAI_API_KEY: 'test-key' },
-    }))
-    vi.doMock('./providers/OpenAIProvider', () => ({
-      OpenAIProvider: class { analyse = analyseMock },
-    }))
-    vi.doMock('../../repos/TransactionRepo', () => ({
-      TransactionRepo: class { list = listMock },
-    }))
-    vi.doMock('../../repos/ProductRepo', () => ({
-      ProductRepo: class { list = productListMock },
-    }))
-
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
-    const { PricingService } = await import('./PricingService')
-    const service = new PricingService()
-    const result = await service.analyse(basePricingInput)
-
-    expect(result.provider).toBe('openai')
+    expect(result.provider).toBe('hybrid')
   })
 
   it('applies IE-first market policy with EU fallback', async () => {
     const PricingService = await loadPricingService()
-    const { MockPricingProvider } = await import('./providers/MockPricingProvider')
-    vi.spyOn(MockPricingProvider.prototype, 'analyse').mockResolvedValue({
-      estimatedRetailEur: 3000,
-      confidence: 0.82,
+    analyseMock.mockResolvedValueOnce({
+      ...defaultProviderResult,
       comps: [
         {
           title: 'IE Comp',
@@ -218,15 +205,11 @@ describe('PricingService', () => {
         },
       ],
     })
-
     settingsGetMock.mockResolvedValueOnce({
       pricingIeSourceAllowlist: ['adverts.ie'],
       pricingMarketCountryDefault: 'IE',
       pricingMarketMode: 'ie_first_eu_fallback',
     })
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
-
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 
@@ -239,10 +222,8 @@ describe('PricingService', () => {
 
   it('classifies Vestiaire as EU fallback under IE-first policy', async () => {
     const PricingService = await loadPricingService()
-    const { MockPricingProvider } = await import('./providers/MockPricingProvider')
-    vi.spyOn(MockPricingProvider.prototype, 'analyse').mockResolvedValue({
-      estimatedRetailEur: 3000,
-      confidence: 0.82,
+    analyseMock.mockResolvedValueOnce({
+      ...defaultProviderResult,
       comps: [
         {
           title: 'Designer Exchange Listing',
@@ -260,11 +241,6 @@ describe('PricingService', () => {
         },
       ],
     })
-
-    settingsGetMock.mockResolvedValueOnce(null)
-    listMock.mockResolvedValueOnce([])
-    productListMock.mockResolvedValueOnce([])
-
     const service = new PricingService()
     const result = await service.analyse(basePricingInput)
 

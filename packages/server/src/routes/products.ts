@@ -23,11 +23,11 @@ import {
   mapCsvRowToProductPayload,
   type ColumnMapping,
 } from '../lib/csvProductParser'
-import { env } from '../config/env'
 import {
   indexProductImage,
   removeProductImageFromIndex,
 } from '../services/visualSearch/VisualSearchPipeline'
+import { getAiRouter } from '../services/ai/AiRouter'
 import * as XLSX from 'xlsx'
 
 const router = Router()
@@ -36,6 +36,7 @@ const transactionRepo = new TransactionRepo()
 const activityRepo = new ActivityEventRepo()
 const invoiceRepo = new InvoiceRepo()
 const settingsRepo = new SettingsRepo()
+const aiRouter = getAiRouter()
 
 // Multer config for image uploads (10MB max)
 const upload = multer({
@@ -186,22 +187,16 @@ router.post('/import', importUpload.single('file'), async (req, res, next) => {
     const headers = rows.length > 0 ? Object.keys(rows[0]) : []
     const sampleRow = rows.length > 0 ? rows[0] : {}
 
-    if (rows.length > 0 && env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+    if (rows.length > 0) {
       try {
         const prompt = `Given these CSV column names (lowercase): ${JSON.stringify(headers)} and this sample data row: ${JSON.stringify(sampleRow)}, return a JSON object mapping our field names to the exact CSV column name (as in the list). Our fields: brand, model, category, condition, colour, costPriceEur, sellPriceEur, status, quantity, sku, title, notes, customsEur, vatEur. Canonical columns (use these names when present): brand, model, category, condition, colour, cost eur, vat eur, customs eur, sell eur, quantity, status, sku, notes. Use the exact column name from the headers list. If a column is missing, omit it. Return only the JSON, no explanation.`
-        const OpenAI = (await import('openai')).default
-        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 400,
+        const routed = await aiRouter.extractStructuredJson<ColumnMapping>({
+          systemPrompt: 'Map CSV headers to required product import fields. Return ONLY valid JSON.',
+          userPrompt: prompt,
+          maxTokens: 400,
           temperature: 0,
         })
-        const text = response.choices[0]?.message?.content ?? ''
-        const jsonMatch = text.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          aiMapping = JSON.parse(jsonMatch[0]) as ColumnMapping
-        }
+        aiMapping = routed.data
       } catch {
         // Fall back to rule-based mapping
       }

@@ -71,7 +71,7 @@ describe('POST /api/pricing/price-check', () => {
       ],
       maxBuyEur: 780,
       maxBidEur: 729,
-      dataSource: 'mock' as const,
+      dataSource: 'ai_fallback' as const,
       researchedAt,
     })
 
@@ -86,7 +86,7 @@ describe('POST /api/pricing/price-check', () => {
       averageSellingPriceEur: 1200,
       maxBuyEur: 780,
       maxBidEur: 729,
-      dataSource: 'mock',
+      dataSource: 'ai_fallback',
       researchedAt,
     })
     expect(Array.isArray(res.body.data.comps)).toBe(true)
@@ -156,7 +156,7 @@ describe('POST /api/pricing/price-check', () => {
       comps: [],
       maxBuyEur: 715,
       maxBidEur: 668,
-      dataSource: 'mock',
+      dataSource: 'ai_fallback',
       researchedAt: new Date().toISOString(),
     })
 

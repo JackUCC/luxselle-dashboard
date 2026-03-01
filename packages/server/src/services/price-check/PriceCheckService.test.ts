@@ -1,17 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
   mockExpandQuery,
   mockSearchMarketMultiExpanded,
   mockEnrichComparables,
   mockGetRate,
-  mockChatCompletionsCreate,
+  mockExtractStructuredJson,
 } = vi.hoisted(() => ({
   mockExpandQuery: vi.fn(),
   mockSearchMarketMultiExpanded: vi.fn(),
   mockEnrichComparables: vi.fn(),
   mockGetRate: vi.fn(),
-  mockChatCompletionsCreate: vi.fn(),
+  mockExtractStructuredJson: vi.fn(),
 }))
 
 vi.mock('../search/SearchService', () => ({
@@ -19,6 +19,12 @@ vi.mock('../search/SearchService', () => ({
     expandQuery = mockExpandQuery
     searchMarketMultiExpanded = mockSearchMarketMultiExpanded
   },
+}))
+
+vi.mock('../ai/AiRouter', () => ({
+  getAiRouter: () => ({
+    extractStructuredJson: mockExtractStructuredJson,
+  }),
 }))
 
 vi.mock('../search/ComparableImageEnrichmentService', () => ({
@@ -33,13 +39,6 @@ vi.mock('../fx/FxService', () => ({
   }),
 }))
 
-vi.mock('openai', () => ({
-  default: class OpenAI {
-    chat = { completions: { create: mockChatCompletionsCreate } }
-  },
-}))
-
-import { env } from '../../config/env'
 import { PriceCheckService } from './PriceCheckService'
 
 const QUERY_CONTEXT = {
@@ -63,74 +62,56 @@ const SEARCH_RESPONSE = {
 }
 
 describe('PriceCheckService', () => {
-  const previousProvider = env.AI_PROVIDER
-  const previousKey = env.OPENAI_API_KEY
-
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(env as { AI_PROVIDER: 'mock' | 'openai' | 'perplexity' }).AI_PROVIDER = 'openai'
-    ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = 'test-key'
-
     mockExpandQuery.mockResolvedValue(QUERY_CONTEXT)
     mockSearchMarketMultiExpanded.mockResolvedValue(SEARCH_RESPONSE)
     mockEnrichComparables.mockImplementation(async (comparables) => comparables)
     mockGetRate.mockResolvedValue(1)
   })
 
-  afterEach(() => {
-    ;(env as { AI_PROVIDER: 'mock' | 'openai' | 'perplexity' }).AI_PROVIDER = previousProvider
-    ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = previousKey
-  })
-
-  it('returns mock response shape without requiring comparable image enrichment', async () => {
-    ;(env as { AI_PROVIDER: 'mock' | 'openai' | 'perplexity' }).AI_PROVIDER = 'mock'
-    ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = undefined
+  it('returns degraded ai_fallback shape when extraction is unavailable', async () => {
+    mockExtractStructuredJson.mockRejectedValue(new Error('no provider available'))
 
     const service = new PriceCheckService()
     const result = await service.check({ query: 'Chanel Classic Flap' })
 
-    expect(result.dataSource).toBe('mock')
-    expect(result.comps).toHaveLength(2)
-    expect(result.comps[0]).toMatchObject({
-      title: expect.any(String),
-      price: expect.any(Number),
-      source: expect.any(String),
-      sourceUrl: expect.any(String),
-    })
+    expect(result.dataSource).toBe('ai_fallback')
+    expect(result.comps).toEqual([])
+    expect(result.averageSellingPriceEur).toBe(0)
+    expect(result.maxBuyEur).toBe(0)
+    expect(result.maxBidEur).toBe(0)
+    expect(result.diagnostics?.emptyReason).toBe('extraction_failed')
     expect(mockEnrichComparables).not.toHaveBeenCalled()
   })
 
-  it('retries extraction once and succeeds on the second attempt', async () => {
-    mockChatCompletionsCreate
-      .mockRejectedValueOnce(new Error('transient upstream error'))
-      .mockResolvedValueOnce({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              averageSellingPriceEur: 0,
-              comps: [
-                {
-                  title: 'Designer Exchange listing',
-                  price: 3200,
-                  source: 'Designer Exchange',
-                  sourceUrl: 'https://designerexchange.ie/item/1',
-                },
-                {
-                  title: 'Vestiaire listing',
-                  price: 3000,
-                  source: 'Vestiaire Collective',
-                  sourceUrl: 'https://vestiairecollective.com/item/2',
-                },
-              ],
-            }),
+  it('returns web_search result when extraction returns valid comparables', async () => {
+    mockExtractStructuredJson.mockResolvedValueOnce({
+      data: {
+        averageSellingPriceEur: 0,
+        comps: [
+          {
+            title: 'Designer Exchange listing',
+            price: 3200,
+            source: 'Designer Exchange',
+            sourceUrl: 'https://designerexchange.ie/item/1',
           },
-        }],
-      })
+          {
+            title: 'Vestiaire listing',
+            price: 3000,
+            source: 'Vestiaire Collective',
+            sourceUrl: 'https://vestiairecollective.com/item/2',
+          },
+        ],
+      },
+      provider: 'openai',
+      fallbackUsed: false,
+    })
 
     const service = new PriceCheckService()
     const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
 
-    expect(mockChatCompletionsCreate).toHaveBeenCalledTimes(2)
+    expect(mockExtractStructuredJson).toHaveBeenCalledTimes(1)
     expect(mockSearchMarketMultiExpanded).toHaveBeenCalledWith(
       QUERY_CONTEXT.searchVariants,
       expect.objectContaining({ userLocation: { country: 'IE' } }),
@@ -140,15 +121,24 @@ describe('PriceCheckService', () => {
     expect(result.comps).toHaveLength(2)
   })
 
-  it('returns degraded ai_fallback result when extraction fails on all attempts', async () => {
-    mockChatCompletionsCreate
-      .mockRejectedValueOnce(new Error('openai timeout'))
-      .mockRejectedValueOnce(new Error('openai 500'))
+  it('returns degraded ai_fallback result when extraction returns too few valid comparables', async () => {
+    mockExtractStructuredJson.mockResolvedValueOnce({
+      data: {
+        comps: [
+          {
+            title: 'Listing without URL',
+            price: 3200,
+            source: 'Designer Exchange',
+          },
+        ],
+      },
+      provider: 'openai',
+      fallbackUsed: false,
+    })
 
     const service = new PriceCheckService()
     const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
 
-    expect(mockChatCompletionsCreate).toHaveBeenCalledTimes(2)
     expect(result).toMatchObject({
       averageSellingPriceEur: 0,
       comps: [],
@@ -156,11 +146,9 @@ describe('PriceCheckService', () => {
       maxBidEur: 0,
       dataSource: 'ai_fallback',
     })
-    expect(typeof result.researchedAt).toBe('string')
+    expect(result.diagnostics?.emptyReason).toBe('insufficient_valid_comps')
     expect(mockEnrichComparables).not.toHaveBeenCalled()
   })
-
-
 
   it('backfills comparable source urls from search annotations and includes diagnostics', async () => {
     mockSearchMarketMultiExpanded.mockResolvedValue({
@@ -168,26 +156,24 @@ describe('PriceCheckService', () => {
       annotations: [{ title: 'Designer Exchange listing', url: 'https://designerexchange.ie/item/1' }],
     })
 
-    mockChatCompletionsCreate.mockResolvedValueOnce({
-      choices: [{
-        message: {
-          content: JSON.stringify({
-            comps: [
-              {
-                title: 'Designer Exchange listing',
-                price: 3200,
-                source: 'Designer Exchange',
-              },
-              {
-                title: 'Vestiaire listing',
-                price: 3000,
-                source: 'Vestiaire Collective',
-                sourceUrl: 'https://vestiairecollective.com/item/2',
-              },
-            ],
-          }),
-        },
-      }],
+    mockExtractStructuredJson.mockResolvedValueOnce({
+      data: {
+        comps: [
+          {
+            title: 'Designer Exchange listing',
+            price: 3200,
+            source: 'Designer Exchange',
+          },
+          {
+            title: 'Vestiaire listing',
+            price: 3000,
+            source: 'Vestiaire Collective',
+            sourceUrl: 'https://vestiairecollective.com/item/2',
+          },
+        ],
+      },
+      provider: 'openai',
+      fallbackUsed: false,
     })
 
     const service = new PriceCheckService()

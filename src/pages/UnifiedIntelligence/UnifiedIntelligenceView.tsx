@@ -53,7 +53,7 @@ interface PriceCheckResult {
   comps: PriceCheckComp[]
   maxBuyEur: number
   maxBidEur: number
-  dataSource?: 'web_search' | 'ai_fallback' | 'mock'
+  dataSource?: 'web_search' | 'ai_fallback'
   researchedAt?: string
 }
 

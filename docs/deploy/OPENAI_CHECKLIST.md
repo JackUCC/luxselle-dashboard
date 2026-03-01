@@ -1,44 +1,44 @@
-# OpenAI-Only Setup — Verification Checklist
+# OpenAI-Only Setup - Verification Checklist
 
-The app uses **OpenAI only** for AI features (pricing, market research, image analysis). Use this checklist after setting `OPENAI_API_KEY` to confirm everything works.
+Use this checklist when you want OpenAI-only routing for AI features (pricing, market research, image analysis).
 
 ---
 
 ## 1. Environment variables (Railway or local)
 
-- [ ] **`AI_PROVIDER`** = `openai`
+- [ ] **`AI_ROUTING_MODE`** = `openai`
 - [ ] **`OPENAI_API_KEY`** = your OpenAI API key (starts with `sk-...`)
-- [ ] No `GEMINI_API_KEY` or other Gemini vars needed (they are ignored)
+- [ ] Optional: leave `PERPLEXITY_API_KEY` unset for strict OpenAI-only behavior
 
-**Railway:** Project → Variables → confirm both set → redeploy if you just changed them.
+**Railway:** Project -> Variables -> confirm values -> redeploy if you just changed them.
 
 ---
 
 ## 2. Backend health and status
 
 - [ ] **Health:** `GET https://your-railway-url.up.railway.app/api/health` returns `200` and `{"status":"ok",...}`
-- [ ] **Dashboard status:** `GET https://your-railway-url.up.railway.app/api/dashboard/status` returns `200` and `data.aiProvider === "openai"`
+- [ ] **Dashboard status:** `GET https://your-railway-url.up.railway.app/api/dashboard/status` returns `200` and `data.aiRoutingMode === "openai"` with `data.providerAvailability.openai === true`
 
 ```bash
-curl -s "https://luxselleserver-production.up.railway.app/api/dashboard/status" | jq '.data.aiProvider'
-# Expected: "openai"
+curl -s "https://luxselleserver-production.up.railway.app/api/dashboard/status" | jq '.data.aiRoutingMode, .data.providerAvailability'
+# Expected: "openai" and openai=true
 ```
 
 ---
 
-## 3. Feature checks (all use OpenAI when `AI_PROVIDER=openai`)
+## 3. Feature checks (all use OpenAI when `AI_ROUTING_MODE=openai`)
 
 ### Buy Box / Pricing (Evaluator)
 
 - [ ] Open **Buy Box** (Evaluator) page, enter brand/model (e.g. Chanel, Classic Flap), run analysis.
-- [ ] Result shows **AI: OpenAI** or provider `openai`; no 500 error.
+- [ ] Result returns provider `openai` (or `hybrid` only if fallback behavior is enabled in test overrides); no 500 error.
 - [ ] Optional: use **Analyze image** on a product image; brand/model/category/condition/colour should be filled from the image.
 
 ### Market Research
 
 - [ ] Open **Market Research** (Research) page.
-- [ ] Header shows green badge **AI: OpenAI** (not "Mock Data").
-- [ ] Run **Analyse** for an item; response returns market data (not mock).
+- [ ] Header shows green badge **AI Routing: openai**.
+- [ ] Run **Analyse** for an item; response returns live market data or explicit degraded output (no fabricated mock values).
 - [ ] **Trending** loads and shows a list of trending items.
 
 ### Inventory CSV import (optional)
@@ -51,8 +51,8 @@ curl -s "https://luxselleserver-production.up.railway.app/api/dashboard/status" 
 ## 4. If something fails
 
 - **500 on pricing/market-research:** Check Railway logs for `unhandled_error`. Typical causes: missing/invalid `OPENAI_API_KEY`, or **429 quota**. To see the exact error in the response: `curl -H "X-Debug: 1" "https://your-api/api/market-research/trending"`.
-- **429 rate limit:** "You exceeded your current quota" means your OpenAI account has hit usage/billing limits. Fix: add payment method or upgrade plan at [platform.openai.com](https://platform.openai.com); or temporarily set `AI_PROVIDER=mock` for testing.
-- **"Mock Data" badge on Market Research:** Backend is not returning `aiProvider: 'openai'` — confirm env vars and that the server was restarted after changing them.
+- **429 rate limit:** "You exceeded your current quota" means your OpenAI account has hit usage/billing limits. Fix: add payment method or upgrade plan at [platform.openai.com](https://platform.openai.com), or configure `PERPLEXITY_API_KEY` with `AI_ROUTING_MODE=dynamic` as a fallback path.
+- **AI status badge shows unavailable:** Confirm env vars and restart backend. `GET /api/dashboard/status` should report provider availability and routing mode.
 
 ---
 
@@ -64,13 +64,13 @@ curl -s "https://luxselleserver-production.up.railway.app/api/dashboard/status" 
 # Health
 curl -s "$BASE/api/health"
 
-# Status (should show aiProvider: "openai")
+# Status (should show aiRoutingMode + providerAvailability)
 curl -s "$BASE/api/dashboard/status" | jq .
 
-# Market research trending (should return real or mock data, not 500)
+# Market research trending (should return live data or explicit degraded output, not 500)
 curl -s -X GET "$BASE/api/market-research/trending" | jq .
 ```
 
 ---
 
-**Summary:** Set `AI_PROVIDER=openai` and `OPENAI_API_KEY`, then verify dashboard status and one flow from Buy Box and Market Research. If all return 200 and show OpenAI, you’re good.
+**Summary:** Set `AI_ROUTING_MODE=dynamic` and configure `OPENAI_API_KEY` (optionally `PERPLEXITY_API_KEY`), then verify dashboard status and one flow from Buy Box and Market Research.

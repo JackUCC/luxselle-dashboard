@@ -1,10 +1,11 @@
 /**
- * SearchService: wraps OpenAI Responses API with web_search tool
- * to retrieve live market data from approved luxury resale sources.
- * Falls back to a no-results mock when AI_PROVIDER !== 'openai'.
+ * SearchService: shared RAG retrieval + extraction helpers used by price check, market research,
+ * serial decoding, and retail lookup flows.
  */
+import { z } from 'zod'
 import { env } from '../../config/env'
 import { logger } from '../../middleware/requestId'
+import { getAiRouter } from '../ai/AiRouter'
 
 export interface SearchResult {
   title: string
@@ -57,6 +58,20 @@ interface EnrichmentMetrics {
   averageEnrichmentLatencyMs: number
 }
 
+const QueryContextExtractionSchema = z.object({
+  canonicalDescription: z.string().min(1),
+  keyAttributes: z.object({
+    brand: z.string().default(''),
+    style: z.string().default(''),
+    size: z.string().nullish(),
+    material: z.string().nullish(),
+    colour: z.string().nullish(),
+    hardware: z.string().nullish(),
+  }),
+  searchVariants: z.array(z.string().min(1)).min(1).max(3),
+  matchingCriteria: z.string().default(''),
+})
+
 const IRISH_MARKETPLACE_DOMAINS = [
   'designerexchange.ie',
   'luxuryexchange.ie',
@@ -72,6 +87,38 @@ const DEFAULT_MARKETPLACE_ALLOWLIST = [
   ...EU_FALLBACK_MARKETPLACE_DOMAINS,
 ]
 
+const QUERY_EXPANSION_SYSTEM_PROMPT = `You are a luxury goods resale expert. Extract structured search intelligence from a free-text item description.
+
+LUXURY TERMINOLOGY REFERENCE (use this to resolve aliases):
+- Chanel: "Classic Flap" = "Timeless Classic" = "2.55" (same bag family); sizes: Small ~23cm, Medium ~25cm, Jumbo ~30cm, Maxi ~33cm; hardware: GHW (gold), SHW (silver), PHW (palladium), RHW (ruthenium); materials: Caviar (textured/grainy), Lambskin (smooth/soft), Jersey (fabric)
+- Hermès: Birkin and Kelly bags; sizes 25/30/35/40/50; leathers: Togo, Epsom, Clemence, Chevre, Barenia; hardware: GHW, PHW, BHW (brushed); grades: A/B/C condition
+- Louis Vuitton: abbreviations LV; Speedy 25/30/35; Neverfull PM/MM/GM; Monogram/Damier/Epi canvas
+- Prada: Re-Edition, Galleria, Cleo; nylon vs leather
+- Dior: Lady Dior Mini/Small/Medium/Large; Saddle; cannage stitching
+- Bottega Veneta: Cassette, Jodie, Arco; intrecciato weave
+- General: MM=Medium, GM=Large/Grande, PM=Small/Petite; pre-owned = second-hand = used = pre-loved; "like new" = excellent condition
+
+Return ONLY a valid JSON object:
+{
+  "canonicalDescription": "<full canonical item description>",
+  "keyAttributes": {
+    "brand": "<brand name>",
+    "style": "<bag style/model name>",
+    "size": "<size if specified, else null>",
+    "material": "<leather/material if specified, else null>",
+    "colour": "<colour if specified, else null>",
+    "hardware": "<hardware colour if specified, else null>"
+  },
+  "searchVariants": ["<variant 1>", "<variant 2>", "<variant 3 if needed>"],
+  "matchingCriteria": "<one sentence describing what a matching listing must have>"
+}
+
+searchVariants rules:
+- Generate 2–3 short search queries (5–8 words each) that resellers actually use
+- Use different naming conventions for the same item
+- Include size and colour where relevant
+- Keep queries concise — they are fed directly to a web search engine`
+
 function parseDomainList(value?: string): string[] {
   return (value ?? '')
     .split(',')
@@ -84,7 +131,7 @@ function normalizeDomain(hostname: string): string {
 }
 
 export class SearchService {
-  private openai: InstanceType<typeof import('openai').default> | null = null
+  private readonly aiRouter = getAiRouter()
   private readonly cacheTtlMs = env.SEARCH_ENRICHMENT_CACHE_TTL_MS
   private readonly sourceUrlCache = new Map<string, UrlCacheEntry>()
   private readonly allowlist = parseDomainList(env.SEARCH_DOMAIN_ALLOWLIST)
@@ -99,14 +146,6 @@ export class SearchService {
   private enrichmentWindow = {
     startedAt: Date.now(),
     count: 0,
-  }
-
-  private async getOpenAI() {
-    if (!this.openai) {
-      const OpenAI = (await import('openai')).default
-      this.openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
-    }
-    return this.openai
   }
 
   getEnrichmentMetrics(): EnrichmentMetrics {
@@ -190,7 +229,7 @@ export class SearchService {
 
   private nextWindowCount(): number {
     const now = Date.now()
-    const windowMs = 60000
+    const windowMs = 60_000
     if (now - this.enrichmentWindow.startedAt >= windowMs) {
       this.enrichmentWindow = { startedAt: now, count: 0 }
     }
@@ -198,85 +237,8 @@ export class SearchService {
     return this.enrichmentWindow.count
   }
 
-  private hasSearchProvider(): boolean {
-    if (env.AI_PROVIDER === 'openai') {
-      return Boolean(env.OPENAI_API_KEY)
-    }
-    if (env.AI_PROVIDER === 'perplexity') {
-      return Boolean(env.PERPLEXITY_API_KEY)
-    }
-    return false
-  }
-
-  private async searchMarketWithPerplexity(
-    query: string,
-    opts: { domains: string[]; userLocation?: { country: string } },
-  ): Promise<SearchResponse> {
-    if (!env.PERPLEXITY_API_KEY) {
-      return { results: [], rawText: '', annotations: [] }
-    }
-
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: env.PERPLEXITY_SEARCH_MODEL,
-        temperature: 0,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a market search assistant. Return concise listing results with sources.',
-          },
-          {
-            role: 'user',
-            content: query,
-          },
-        ],
-        search_domain_filter: opts.domains.length > 0 ? opts.domains : undefined,
-        user_location: opts.userLocation
-          ? {
-              country: opts.userLocation.country,
-            }
-          : undefined,
-      }),
-    })
-
-    if (!response.ok) {
-      logger.error('search_service_perplexity_error', { status: response.status })
-      return { results: [], rawText: '', annotations: [] }
-    }
-
-    const payload = await response.json() as {
-      choices?: Array<{ message?: { content?: string } }>
-      citations?: string[]
-    }
-
-    const rawText = payload.choices?.[0]?.message?.content ?? ''
-    const citations = Array.isArray(payload.citations) ? payload.citations : []
-    const annotations = this.filterAllowedAnnotations(
-      citations
-        .filter((url): url is string => typeof url === 'string' && url.length > 0)
-        .map((url) => ({ url, title: this.extractCitationTitle(url) })),
-    )
-
-    const results = annotations.map((ann) => ({ title: ann.title, url: ann.url, snippet: '' }))
-    return { results, rawText, annotations }
-  }
-
-  private extractCitationTitle(url: string): string {
-    try {
-      return new URL(url).hostname.replace(/^www\./, '')
-    } catch {
-      return url
-    }
-  }
-
   /**
    * Perform a web search scoped to approved luxury resale domains.
-   * Uses native `filters.allowed_domains` in the WebSearchTool for reliable domain restriction.
    * Returns parsed listings (title, url, snippet) plus the raw AI text.
    */
   async searchMarket(
@@ -285,69 +247,25 @@ export class SearchService {
   ): Promise<SearchResponse> {
     const domains = opts?.domains ?? this.getConfiguredAllowlist()
 
-    if (!this.hasSearchProvider()) {
-      return { results: [], rawText: '', annotations: [] }
-    }
-
     try {
-      if (env.AI_PROVIDER === 'perplexity') {
-        return await this.searchMarketWithPerplexity(query, { domains, userLocation: opts?.userLocation })
-      }
-
-      const openai = await this.getOpenAI()
-
-      const webSearchTool: {
-        type: 'web_search'
-        search_context_size: 'high'
-        filters?: { allowed_domains: string[] }
-        user_location?: { type: 'approximate'; country: string }
-      } = {
-        type: 'web_search',
-        search_context_size: 'high',
-      }
-
-      if (domains.length > 0) {
-        webSearchTool.filters = { allowed_domains: domains }
-      }
-
-      if (opts?.userLocation) {
-        webSearchTool.user_location = {
-          type: 'approximate',
-          country: opts.userLocation.country,
-        }
-      }
-
-      const response = await openai.responses.create({
-        model: 'gpt-4o-mini',
-        tools: [webSearchTool],
-        input: query,
+      const routed = await this.aiRouter.webSearch({
+        query,
+        domains,
+        userLocation: opts?.userLocation,
       })
 
-      const rawText = response.output_text ?? ''
-
-      const annotations: Array<{ url: string; title: string }> = []
-      for (const item of response.output ?? []) {
-        if (item.type === 'message' && Array.isArray(item.content)) {
-          for (const block of item.content) {
-            if (block.type === 'output_text' && Array.isArray(block.annotations)) {
-              for (const ann of block.annotations) {
-                if (ann.type === 'url_citation' && ann.url) {
-                  annotations.push({ url: ann.url, title: ann.title ?? '' })
-                }
-              }
-            }
-          }
-        }
-      }
-
-      const filteredAnnotations = this.filterAllowedAnnotations(annotations)
+      const filteredAnnotations = this.filterAllowedAnnotations(routed.data.annotations)
       const results = filteredAnnotations.map((ann) => ({
         title: ann.title,
         url: ann.url,
         snippet: '',
       }))
 
-      return { results, rawText, annotations: filteredAnnotations }
+      return {
+        results,
+        rawText: routed.data.rawText,
+        annotations: filteredAnnotations,
+      }
     } catch (error) {
       logger.error('search_service_error', error)
       return { results: [], rawText: '', annotations: [] }
@@ -355,7 +273,7 @@ export class SearchService {
   }
 
   /**
-   * Run 3 parallel market searches with native domain filtering and merge results (dedupe by URL).
+   * Run 3 parallel market searches and merge results (dedupe by URL).
    * Use for price-check and market research to get more listing pages vs generic articles.
    */
   async searchMarketMulti(
@@ -363,8 +281,6 @@ export class SearchService {
     opts?: { domains?: string[]; userLocation?: { country: string } },
   ): Promise<SearchResponse> {
     const trimmed = baseQuery.trim()
-    // Three parallel searches: Irish platforms first, then EU fallback, then a broad EUR search.
-    // Domain filtering is done natively via the WebSearchTool filters.allowed_domains.
     const searches = [
       this.searchMarket(trimmed, {
         ...opts,
@@ -383,14 +299,14 @@ export class SearchService {
     const seenUrls = new Set<string>()
     const annotations: Array<{ url: string; title: string }> = []
     const rawParts: string[] = []
-    for (const r of responses) {
-      for (const a of r.annotations) {
-        if (a.url && !seenUrls.has(a.url)) {
-          seenUrls.add(a.url)
-          annotations.push(a)
+    for (const response of responses) {
+      for (const annotation of response.annotations) {
+        if (annotation.url && !seenUrls.has(annotation.url)) {
+          seenUrls.add(annotation.url)
+          annotations.push(annotation)
         }
       }
-      if (r.rawText.trim()) rawParts.push(r.rawText.trim())
+      if (response.rawText.trim()) rawParts.push(response.rawText.trim())
     }
     const rawText = rawParts.join('\n\n---\n\n')
     const results = annotations.map((ann) => ({
@@ -403,93 +319,31 @@ export class SearchService {
 
   /**
    * Expand a free-text luxury item query into structured search intelligence.
-   * Makes one fast OpenAI call to extract canonical attributes, generate
-   * reseller naming aliases, and produce semantic matching criteria.
-   * Falls back gracefully to a single-variant passthrough on error.
+   * Falls back to deterministic heuristics when both providers fail.
    */
   async expandQuery(query: string): Promise<QueryContext> {
-    const fallback: QueryContext = {
-      canonicalDescription: query,
-      keyAttributes: { brand: '', style: query },
-      searchVariants: [query],
-      matchingCriteria: '',
-    }
-
-    if (env.AI_PROVIDER === 'perplexity') {
-      return this.buildHeuristicQueryContext(query)
-    }
-
-    if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
+    const fallback = this.buildHeuristicQueryContext(query)
+    if (!query.trim()) {
       return fallback
     }
 
     try {
-      const openai = await this.getOpenAI()
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const routed = await this.aiRouter.extractStructuredJson<QueryContext>({
+        systemPrompt: QUERY_EXPANSION_SYSTEM_PROMPT,
+        userPrompt: query,
+        schema: QueryContextExtractionSchema,
+        maxTokens: 450,
         temperature: 0.1,
-        max_tokens: 400,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: `You are a luxury goods resale expert. Extract structured search intelligence from a free-text item description.
-
-LUXURY TERMINOLOGY REFERENCE (use this to resolve aliases):
-- Chanel: "Classic Flap" = "Timeless Classic" = "2.55" (same bag family); sizes: Small ~23cm, Medium ~25cm, Jumbo ~30cm, Maxi ~33cm; hardware: GHW (gold), SHW (silver), PHW (palladium), RHW (ruthenium); materials: Caviar (textured/grainy), Lambskin (smooth/soft), Jersey (fabric)
-- Hermès: Birkin and Kelly bags; sizes 25/30/35/40/50; leathers: Togo, Epsom, Clemence, Chevre, Barenia; hardware: GHW, PHW, BHW (brushed); grades: A/B/C condition
-- Louis Vuitton: abbreviations LV; Speedy 25/30/35; Neverfull PM/MM/GM; Monogram/Damier/Epi canvas
-- Prada: Re-Edition, Galleria, Cleo; nylon vs leather
-- Dior: Lady Dior Mini/Small/Medium/Large; Saddle; cannage stitching
-- Bottega Veneta: Cassette, Jodie, Arco; intrecciato weave
-- General: MM=Medium, GM=Large/Grande, PM=Small/Petite; pre-owned = second-hand = used = pre-loved; "like new" = excellent condition
-
-Return ONLY a valid JSON object:
-{
-  "canonicalDescription": "<full canonical item description>",
-  "keyAttributes": {
-    "brand": "<brand name>",
-    "style": "<bag style/model name>",
-    "size": "<size if specified, else null>",
-    "material": "<leather/material if specified, else null>",
-    "colour": "<colour if specified, else null>",
-    "hardware": "<hardware colour if specified, else null>"
-  },
-  "searchVariants": ["<variant 1>", "<variant 2>", "<variant 3 if needed>"],
-  "matchingCriteria": "<one sentence describing what a matching listing must have>"
-}
-
-searchVariants rules:
-- Generate 2–3 short search queries (5–8 words each) that resellers actually use
-- Use different naming conventions for the same item
-- Include size and colour where relevant
-- Keep queries concise — they are fed directly to a web search engine`,
-          },
-          {
-            role: 'user',
-            content: query,
-          },
-        ],
       })
 
-      const text = response.choices[0]?.message?.content ?? ''
-      const parsed = JSON.parse(text) as QueryContext
-
-      if (
-        !parsed.searchVariants ||
-        !Array.isArray(parsed.searchVariants) ||
-        parsed.searchVariants.length === 0
-      ) {
-        return fallback
-      }
-
-      // Cap variants to 3 to avoid excessive API calls downstream
       return {
-        ...parsed,
-        searchVariants: parsed.searchVariants.slice(0, 3),
+        ...routed.data,
+        searchVariants: routed.data.searchVariants.slice(0, 3),
       }
-    } catch (err) {
-      logger.warn('search_expand_query_error', { error: err instanceof Error ? err.message : String(err) })
+    } catch (error) {
+      logger.warn('search_expand_query_error', {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return fallback
     }
   }
@@ -528,7 +382,7 @@ searchVariants rules:
   /**
    * Run parallel market searches for multiple query variants and merge results.
    * Each variant gets an Irish-platforms search + EU fallback search, then a broad EUR search.
-   * Variants are capped at 3 to bound total concurrent requests to ~9.
+   * Variants are capped at 3 to bound total concurrent requests.
    */
   async searchMarketMultiExpanded(
     searchVariants: string[],
@@ -545,26 +399,27 @@ searchVariants rules:
         domains: EU_FALLBACK_MARKETPLACE_DOMAINS,
       }),
     ])
-    // Add one broad EUR search for the first (primary) variant
-    allSearches.push(
-      this.searchMarket(`${variants[0]} pre-owned luxury for sale price EUR`, {
-        ...opts,
-        domains: [],
-      }),
-    )
+    if (variants.length > 0) {
+      allSearches.push(
+        this.searchMarket(`${variants[0]} pre-owned luxury for sale price EUR`, {
+          ...opts,
+          domains: [],
+        }),
+      )
+    }
 
     const responses = await Promise.all(allSearches)
     const seenUrls = new Set<string>()
     const annotations: Array<{ url: string; title: string }> = []
     const rawParts: string[] = []
-    for (const r of responses) {
-      for (const a of r.annotations) {
-        if (a.url && !seenUrls.has(a.url)) {
-          seenUrls.add(a.url)
-          annotations.push(a)
+    for (const response of responses) {
+      for (const annotation of response.annotations) {
+        if (annotation.url && !seenUrls.has(annotation.url)) {
+          seenUrls.add(annotation.url)
+          annotations.push(annotation)
         }
       }
-      if (r.rawText.trim()) rawParts.push(r.rawText.trim())
+      if (response.rawText.trim()) rawParts.push(response.rawText.trim())
     }
     const rawText = rawParts.join('\n\n---\n\n')
     const results = annotations.map((ann) => ({
@@ -580,43 +435,18 @@ searchVariants rules:
    * Used for retail price lookups, serial code research, etc.
    */
   async searchWeb(query: string): Promise<SearchResponse> {
-    if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
-      return { results: [], rawText: '', annotations: [] }
-    }
-
     try {
-      const openai = await this.getOpenAI()
-
-      const response = await openai.responses.create({
-        model: 'gpt-4o-mini',
-        tools: [{ type: 'web_search' as const, search_context_size: 'high' as const }],
-        input: query,
-      })
-
-      const rawText = response.output_text ?? ''
-
-      const annotations: Array<{ url: string; title: string }> = []
-      for (const item of response.output ?? []) {
-        if (item.type === 'message' && Array.isArray(item.content)) {
-          for (const block of item.content) {
-            if (block.type === 'output_text' && Array.isArray(block.annotations)) {
-              for (const ann of block.annotations) {
-                if (ann.type === 'url_citation' && ann.url) {
-                  annotations.push({ url: ann.url, title: ann.title ?? '' })
-                }
-              }
-            }
-          }
-        }
-      }
-
-      const results = annotations.map((ann) => ({
+      const routed = await this.aiRouter.webSearch({ query })
+      const results = routed.data.annotations.map((ann) => ({
         title: ann.title,
         url: ann.url,
         snippet: '',
       }))
-
-      return { results, rawText, annotations }
+      return {
+        results,
+        rawText: routed.data.rawText,
+        annotations: routed.data.annotations,
+      }
     } catch (error) {
       logger.error('search_web_error', error)
       return { results: [], rawText: '', annotations: [] }
@@ -624,14 +454,13 @@ searchVariants rules:
   }
 
   /**
-   * Search + synthesize: performs web search then asks a second model call
-   * to extract structured JSON from the search results.
-   * This is the core RAG pattern: Retrieve (web_search) then Generate (structured extraction).
+   * Search + synthesize: performs web search then extracts structured JSON from search results.
    */
   async searchAndExtract<T>(opts: {
     searchQuery: string
     extractionPrompt: string
     domains?: string[]
+    schema?: z.ZodType<T>
   }): Promise<{ extracted: T | null; searchResponse: SearchResponse }> {
     const searchResponse = await this.searchMarket(opts.searchQuery, {
       domains: opts.domains,
@@ -653,50 +482,28 @@ searchVariants rules:
       return { extracted: null, searchResponse }
     }
 
-    if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
-      return { extracted: null, searchResponse }
-    }
-
     const domains = Array.from(new Set(searchResponse.annotations
-      .map((a) => this.resolveUrlMeta(a.url).hostname)
-      .filter((x): x is string => Boolean(x))))
+      .map((annotation) => this.resolveUrlMeta(annotation.url).hostname)
+      .filter((hostname): hostname is string => Boolean(hostname))))
     const startedAt = Date.now()
     this.metrics.extractionAttempts += 1
     this.recordDomainAttempt(domains)
 
     try {
-      const openai = await this.getOpenAI()
       const contextBlock = searchResponse.rawText
-        ? `Web search results:\n"""\n${searchResponse.rawText}\n"""\n\nSource URLs found:\n${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')}`
+        ? `Web search results:\n"""\n${searchResponse.rawText}\n"""\n\nSource URLs found:\n${searchResponse.annotations.map((annotation) => `- ${annotation.title}: ${annotation.url}`).join('\n')}`
         : 'No web results found.'
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You extract structured data from web search results. Return ONLY valid JSON, no markdown.',
-          },
-          {
-            role: 'user',
-            content: `${contextBlock}\n\n${opts.extractionPrompt}`,
-          },
-        ],
-        max_tokens: 1500,
+      const extraction = await this.aiRouter.extractStructuredJson<T>({
+        systemPrompt: 'You extract structured data from web search results. Return ONLY valid JSON, no markdown.',
+        userPrompt: `${contextBlock}\n\n${opts.extractionPrompt}`,
+        schema: opts.schema,
+        maxTokens: 1500,
         temperature: 0.2,
-        response_format: { type: 'json_object' },
       })
 
-      const text = response.choices[0]?.message?.content ?? ''
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        this.recordDomainFailure(domains)
-        return { extracted: null, searchResponse }
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]) as T
       this.metrics.extractionSuccesses += 1
-      return { extracted: parsed, searchResponse }
+      return { extracted: extraction.data, searchResponse }
     } catch (error) {
       this.recordDomainFailure(domains)
       logger.error('search_extract_error', error)

@@ -1,24 +1,37 @@
 /**
- * OpenAI-based pricing analysis for luxury goods.
- * Uses RAG: web search for real listings, then AI extraction.
- * @see docs/CODE_REFERENCE.md
+ * Dynamic pricing analysis for luxury goods.
+ * Uses RAG: web search for real listings, then structured extraction with AI router failover.
  */
-import OpenAI from 'openai'
+import { z } from 'zod'
 import { SearchService } from '../../../services/search/SearchService'
 import { getFxService } from '../../../services/fx/FxService'
 import { validatePriceEur, filterValidComps, clampConfidence } from '../../../lib/validation'
+import { getAiRouter } from '../../ai/AiRouter'
 import type {
   IPricingProvider,
   PricingAnalysisInput,
   PricingAnalysisResult,
 } from './IPricingProvider'
 
-export class OpenAIProvider implements IPricingProvider {
-  private client: OpenAI
-  private searchService: SearchService
+const PricingExtractionSchema = z.object({
+  estimatedRetailEur: z.number(),
+  confidence: z.number().optional(),
+  comps: z.array(z.object({
+    title: z.string().default(''),
+    price: z.number(),
+    source: z.string().default(''),
+    sourceUrl: z.string().optional(),
+    marketCountry: z.string().optional(),
+    url: z.string().optional(),
+    dataOrigin: z.enum(['web_search', 'ai_estimate']).optional(),
+  })).default([]),
+})
 
-  constructor(apiKey: string) {
-    this.client = new OpenAI({ apiKey })
+export class OpenAIProvider implements IPricingProvider {
+  private readonly aiRouter = getAiRouter()
+  private readonly searchService: SearchService
+
+  constructor() {
     this.searchService = new SearchService()
   }
 
@@ -37,7 +50,7 @@ export class OpenAIProvider implements IPricingProvider {
     const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
     const searchContext = hasSearchData
       ? `=== LIVE WEB SEARCH RESULTS ===\n${searchResponse.rawText}\n\nSource URLs:\n${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')}\n=== END SEARCH RESULTS ===`
-      : '(No live search results available — use your knowledge)'
+      : '(No live search results available)'
 
     const fxService = getFxService()
     const [gbpRate, usdRate] = await Promise.all([
@@ -47,7 +60,7 @@ export class OpenAIProvider implements IPricingProvider {
     const gbpToEur = gbpRate || 1.17
     const usdToEur = usdRate || 0.92
 
-    const prompt = `You are a luxury goods pricing expert. Analyse this item and estimate its current retail market value in EUR.
+    const prompt = `You are a luxury goods pricing expert. Analyse this item and estimate its current resale market value in EUR.
 
 ${searchContext}
 
@@ -62,7 +75,7 @@ ${input.askPriceEur ? `Asking Price: €${input.askPriceEur}` : ''}
 Target Market Country: ${marketCountry}
 Market Mode: ${marketMode}
 
-Return ONLY a JSON object with this exact structure (no markdown, no explanation):
+Return ONLY JSON:
 {
   "estimatedRetailEur": <number>,
   "confidence": <number between 0 and 1>,
@@ -79,58 +92,21 @@ Return ONLY a JSON object with this exact structure (no markdown, no explanation
 }
 
 CRITICAL RULES:
-- Every comparable listing MUST have a sourceUrl that came from the search results above. If estimating without search data, set dataOrigin to "ai_estimate" and sourceUrl to null where unknown.
+- Every comparable listing MUST have a sourceUrl from the search results.
 - If you cannot find at least 2 real listings with prices, set confidence to 0.3 or below.
-- Do NOT invent or fabricate any listing, price, or URL.
-- If a field cannot be determined from the search data, use null instead of guessing.
+- Do NOT invent any listing, price, or URL.
+- If prices are in GBP, convert using 1 GBP = ${gbpToEur.toFixed(2)} EUR.
+- If prices are in USD, convert using 1 USD = ${usdToEur.toFixed(2)} EUR.
+- Prioritize Irish competitor sources first: Designer Exchange, Luxury Exchange, Siopella.
+- Use broader EU fallback sources (including Vestiaire) only when Irish comps are limited.`
 
-Confidence scoring rules:
-- 0.9+: 5+ real listings found with prices from approved sources
-- 0.7-0.89: 3-4 real listings found
-- 0.5-0.69: 1-2 real listings found
-- 0.3-0.49: No real listings but strong knowledge of this specific item
-- Below 0.3: Unfamiliar item or very sparse data
-
-Rules:
-- Extract comparables from the web search results with REAL titles, prices, and URLs
-- If prices are in GBP, convert to EUR using today's rate: 1 GBP = ${gbpToEur.toFixed(2)} EUR
-- If prices are in USD, convert to EUR using today's rate: 1 USD = ${usdToEur.toFixed(2)} EUR
-- Prioritize Irish competitor sources first: Designer Exchange, Luxury Exchange, Siopella
-- Use broader European fallback sources (including Vestiaire Collective) only when Irish comps are limited
-- Mark Designer Exchange, Luxury Exchange, and Siopella as marketCountry "IE" and Vestiaire Collective as "EU"`
-
-    const response = await this.client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You extract structured pricing data from web search results. Return ONLY valid JSON.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: 800,
+    const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof PricingExtractionSchema>>({
+      systemPrompt: 'You extract structured pricing data from web search results. Return ONLY valid JSON.',
+      userPrompt: prompt,
+      schema: PricingExtractionSchema,
+      maxTokens: 900,
       temperature: 0.2,
-      response_format: { type: 'json_object' },
     })
-
-    const text = response.choices[0]?.message?.content ?? ''
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error('OpenAI returned no valid JSON for pricing analysis')
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as {
-      estimatedRetailEur: number
-      confidence: number
-      comps: Array<{
-        title: string
-        price: number
-        source: string
-        sourceUrl?: string
-        marketCountry?: string
-        url?: string
-      }>
-    }
 
     type CompItem = {
       title: string
@@ -141,19 +117,62 @@ Rules:
       url?: string
       dataOrigin?: 'web_search' | 'ai_estimate'
     }
-    const validComps = filterValidComps((parsed.comps ?? []) as CompItem[])
+
+    const validComps = filterValidComps((routed.data.comps ?? []) as CompItem[])
+      .map((comp) => ({
+        ...comp,
+        sourceUrl: comp.sourceUrl ?? comp.url,
+      }))
+      .filter((comp) => this.isValidUrl(comp.sourceUrl))
+
+    const evidenceConfidence = this.confidenceFromEvidence(
+      validComps.length,
+      routed.data.confidence ?? 0,
+    )
 
     return {
-      estimatedRetailEur: validatePriceEur(parsed.estimatedRetailEur),
-      confidence: clampConfidence(parsed.confidence),
-      comps: validComps.map((c) => ({
-        title: c.title,
-        price: Math.round(c.price),
-        source: c.source,
-        sourceUrl: c.sourceUrl ?? c.url,
-        marketCountry: (c.marketCountry ?? 'EU').toUpperCase(),
-        dataOrigin: c.dataOrigin ?? 'web_search',
+      estimatedRetailEur: validatePriceEur(routed.data.estimatedRetailEur),
+      confidence: evidenceConfidence,
+      comps: validComps.map((comp) => ({
+        title: comp.title,
+        price: Math.round(comp.price),
+        source: comp.source,
+        sourceUrl: comp.sourceUrl,
+        marketCountry: (comp.marketCountry ?? 'EU').toUpperCase(),
+        dataOrigin: comp.dataOrigin ?? 'web_search',
       })),
+      provider: this.resolveProviderLabel(routed.provider, routed.fallbackUsed),
+    }
+  }
+
+  private confidenceFromEvidence(compCount: number, modelConfidence: number): number {
+    const evidence = clampConfidence(Math.min(0.95, 0.2 + compCount * 0.15))
+    const model = clampConfidence(modelConfidence)
+    return clampConfidence(evidence * 0.75 + model * 0.25)
+  }
+
+  private resolveProviderLabel(
+    extractionProvider: 'openai' | 'perplexity',
+    fallbackUsed: boolean,
+  ): 'openai' | 'perplexity' | 'hybrid' {
+    const diagnostics = this.aiRouter.getDiagnostics()
+    const bothProvidersAvailable =
+      diagnostics.providerAvailability.openai && diagnostics.providerAvailability.perplexity
+
+    if (fallbackUsed || (diagnostics.aiRoutingMode === 'dynamic' && bothProvidersAvailable)) {
+      return 'hybrid'
+    }
+
+    return extractionProvider
+  }
+
+  private isValidUrl(value?: string): boolean {
+    if (!value) return false
+    try {
+      const url = new URL(value)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
     }
   }
 }

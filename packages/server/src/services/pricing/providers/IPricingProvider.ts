@@ -30,6 +30,7 @@ export interface PricingAnalysisResult {
   estimatedRetailEur: number
   confidence: number
   comps: PricingComparable[]
+  provider: 'openai' | 'perplexity' | 'hybrid'
 }
 
 export interface IPricingProvider {

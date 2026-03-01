@@ -38,5 +38,5 @@ Deploy: Vercel (frontend), Railway (backend).
 ## Environment
 - Never commit `.env` files — use `.env.example` as reference
 - Firebase emulator must be running for local development
-- Set `AI_PROVIDER=mock` for tests (avoids real OpenAI API calls)
+- Set `AI_ROUTING_MODE=dynamic` for tests; test suites mock provider calls and should not make real AI API requests
 - Set `FIREBASE_USE_EMULATOR=true` for local development

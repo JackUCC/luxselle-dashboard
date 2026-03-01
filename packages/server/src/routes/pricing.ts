@@ -27,6 +27,17 @@ const priceCheckService = new PriceCheckService()
 const evaluationRepo = new EvaluationRepo()
 const settingsRepo = new SettingsRepo()
 
+function isAiUnavailableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const message = error.message.toLowerCase()
+  return (
+    message.includes('no configured ai provider') ||
+    message.includes('no_provider_available') ||
+    message.includes('openai_api_key is not configured') ||
+    message.includes('perplexity_api_key is not configured')
+  )
+}
+
 // Multer config for image uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -102,7 +113,7 @@ router.post('/analyse', async (req, res, next) => {
       historyAvgPaidEur: result.historyAvgPaidEur ?? 0,
       comps: result.comps,
       confidence: result.confidence,
-      provider: result.provider as 'mock' | 'openai',
+      provider: result.provider as 'openai' | 'perplexity' | 'hybrid',
       imageUrl: input.imageUrl,
       marketSummary: result.marketSummary,
       landedCostSnapshot: input.landedCostSnapshot,
@@ -116,6 +127,12 @@ router.post('/analyse', async (req, res, next) => {
       },
     })
   } catch (error) {
+    if (isAiUnavailableError(error)) {
+      res
+        .status(503)
+        .json(formatApiError(API_ERROR_CODES.INTERNAL, 'AI providers are unavailable for pricing analysis. Configure OPENAI_API_KEY and/or PERPLEXITY_API_KEY.'))
+      return
+    }
     next(error)
   }
 })
@@ -173,7 +190,16 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
     const imageBase64 = req.file.buffer.toString('base64')
     const mimeType = req.file.mimetype
 
-    // Use OpenAI vision when available
+    if (!env.OPENAI_API_KEY) {
+      res
+        .status(503)
+        .json(formatApiError(
+          API_ERROR_CODES.INTERNAL,
+          'Image analysis requires OpenAI vision. Configure OPENAI_API_KEY to enable this endpoint.',
+        ))
+      return
+    }
+
     let detectedAttributes = {
       brand: '',
       model: '',
@@ -182,61 +208,60 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
       colour: '',
     }
 
-    if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
-      // OpenAI Vision API
-      try {
-        const OpenAI = (await import('openai')).default
-        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+    try {
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: `Analyze this luxury product image and extract brand, model, category, condition, and color. Return ONLY a JSON object: {"brand":"","model":"","category":"","condition":"","colour":""}`,
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Analyze this luxury product image and extract brand, model, category, condition, and color. Return ONLY a JSON object: {"brand":"","model":"","category":"","condition":"","colour":""}`,
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:${mimeType};base64,${imageBase64}`,
                 },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:${mimeType};base64,${imageBase64}`,
-                  },
-                },
-              ],
-            },
-          ],
-          max_tokens: 300,
-        })
+              },
+            ],
+          },
+        ],
+        max_tokens: 300,
+      })
 
-        const text = response.choices[0]?.message?.content || ''
-        const jsonMatch = text.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
-          detectedAttributes = {
-            brand: parsed.brand || '',
-            model: parsed.model || '',
-            category: parsed.category || '',
-            condition: parsed.condition || '',
-            colour: parsed.colour || parsed.color || '',
-          }
-        }
-      } catch (error) {
-        logger.error('openai_vision_error', error)
-        // Fall through to mock response
+      const text = response.choices[0]?.message?.content || ''
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        res
+          .status(503)
+          .json(formatApiError(API_ERROR_CODES.INTERNAL, 'Vision analysis returned invalid JSON. Please retry.'))
+        return
       }
-    }
 
-    // When mock or AI failed: return empty attributes so UI does not show hardcoded data
-    if (!detectedAttributes.brand && env.AI_PROVIDER === 'mock') {
+      const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>
       detectedAttributes = {
-        brand: '',
-        model: '',
-        category: '',
-        condition: '',
-        colour: '',
+        brand: typeof parsed.brand === 'string' ? parsed.brand : '',
+        model: typeof parsed.model === 'string' ? parsed.model : '',
+        category: typeof parsed.category === 'string' ? parsed.category : '',
+        condition: typeof parsed.condition === 'string' ? parsed.condition : '',
+        colour:
+          typeof parsed.colour === 'string'
+            ? parsed.colour
+            : typeof parsed.color === 'string'
+              ? parsed.color
+              : '',
       }
+    } catch (error) {
+      logger.error('openai_vision_error', error)
+      res
+        .status(503)
+        .json(formatApiError(API_ERROR_CODES.INTERNAL, 'Vision analysis is temporarily unavailable. Please retry.'))
+      return
     }
 
     // Build a search-query string for the Price Check search bar (e.g. "Chanel Classic Flap Black")

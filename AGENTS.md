@@ -119,11 +119,11 @@ All three start together with `npm run dev` (uses `concurrently`).
 
 ### Critical: environment variable override for emulator mode
 
-Cursor Cloud injects secrets as shell environment variables (e.g. `FIREBASE_USE_EMULATOR=false`, `AI_PROVIDER=openai`). The backend's `dotenv.config()` does **not** override existing env vars, so injected secrets take precedence over `.env`. To use Firebase emulators locally, you **must** export overrides before starting the backend:
+Cursor Cloud injects secrets as shell environment variables (e.g. `FIREBASE_USE_EMULATOR=false`, `AI_ROUTING_MODE=openai`). The backend's `dotenv.config()` does **not** override existing env vars, so injected secrets take precedence over `.env`. To use Firebase emulators locally, you **must** export overrides before starting the backend:
 
 ```bash
 export FIREBASE_USE_EMULATOR=true
-export AI_PROVIDER=mock
+export AI_ROUTING_MODE=dynamic
 export GOOGLE_APPLICATION_CREDENTIALS_JSON=""
 export SUPPLIER_EMAIL_ENABLED=false
 ```

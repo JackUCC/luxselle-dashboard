@@ -172,12 +172,14 @@ TARGET_MARGIN_PCT=35
 PORT=3001
 NODE_ENV=production
 
-# AI Provider (choose one)
-AI_PROVIDER=openai
+# AI Routing (recommended)
+AI_ROUTING_MODE=dynamic
 OPENAI_API_KEY=sk-proj-...
+PERPLEXITY_API_KEY=pplx-...
 
-# OR disable AI features for now
-# AI_PROVIDER=mock
+# Optional debug override:
+# AI_ROUTING_MODE=openai
+# AI_ROUTING_MODE=perplexity
 ```
 
 #### How to Set Service Account in Railway
@@ -289,22 +291,15 @@ gsutil cors set cors.json gs://luxselle-dashboard.firebasestorage.app
 
 ## 4. API Keys & Configuration
 
-### 4.1 OpenAI API Key (for AI features)
+### 4.1 AI Provider Keys (for AI features)
 
 1. Go to [OpenAI Platform](https://platform.openai.com)
 2. Sign in → **API Keys**
 3. Click **Create new secret key**
 4. Copy the key (starts with `sk-proj-...`)
 5. Add to Railway as `OPENAI_API_KEY`
-6. Set `AI_PROVIDER=openai` in Railway
-
-### 4.2 Mock AI Provider (for testing without API costs)
-
-Set in Railway:
-```bash
-AI_PROVIDER=mock
-```
-This uses fake AI responses for testing - no API key needed.
+6. Optional: also add `PERPLEXITY_API_KEY` for search-first dynamic routing
+7. Set `AI_ROUTING_MODE=dynamic` in Railway (recommended)
 
 ---
 
@@ -413,13 +408,13 @@ Check `firestore.rules` - make sure rules allow the operations you need.
 
 ### Issue: AI features not working
 
-**Cause**: Invalid API key or wrong provider
+**Cause**: Invalid API key, unsupported routing override, or no available provider key
 
 **Fix**:
 1. Verify API key is correct and active
-2. Check `AI_PROVIDER` is set to `openai` (only `openai` and `mock` are supported; `gemini` is not a valid value)
-3. Test API key directly (OpenAI playground)
-4. Use `AI_PROVIDER=mock` temporarily to bypass
+2. Check `AI_ROUTING_MODE` is valid (`dynamic`, `openai`, or `perplexity`)
+3. Ensure the selected mode has a configured key (`OPENAI_API_KEY` and/or `PERPLEXITY_API_KEY`)
+4. Test keys directly in provider consoles if failures persist
 
 ### Issue: PERMISSION_DENIED (code 7) in Railway logs
 
@@ -449,7 +444,7 @@ Check `firestore.rules` - make sure rules allow the operations you need.
 - [ ] Vercel project created
 - [ ] Vercel environment variables set (including `VITE_API_BASE`)
 - [ ] Frontend deployed and accessible
-- [ ] OpenAI API key obtained and set (or `AI_PROVIDER=mock` for testing)
+- [ ] At least one provider key configured (`OPENAI_API_KEY` and/or `PERPLEXITY_API_KEY`) when AI features are required
 - [ ] Tested full user flow
 - [ ] No errors in browser console
 - [ ] No errors in Railway logs

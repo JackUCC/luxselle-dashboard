@@ -9,6 +9,7 @@ import { SourcingRequestRepo } from '../repos/SourcingRequestRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { SystemJobRepo } from '../repos/SystemJobRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
+import { getAiRouter } from '../services/ai/AiRouter'
 
 const router = Router()
 const productRepo = new ProductRepo()
@@ -16,6 +17,7 @@ const sourcingRepo = new SourcingRequestRepo()
 const activityRepo = new ActivityEventRepo()
 const systemJobRepo = new SystemJobRepo()
 const transactionRepo = new TransactionRepo()
+const aiRouter = getAiRouter()
 
 // KPIs: inventory value (in_stock), pending buy list value, active sourcing pipeline
 router.get('/kpis', async (_req, res, next) => {
@@ -82,13 +84,16 @@ router.get('/activity', async (req, res, next) => {
 router.get('/status', async (_req, res, next) => {
   try {
     const jobs = await systemJobRepo.list()
+    const aiDiagnostics = aiRouter.getDiagnostics()
     const lastImportJob = jobs
       .filter((job) => job.jobType === 'supplier_import')
       .sort((a, b) => (b.lastRunAt || '').localeCompare(a.lastRunAt || ''))[0]
 
     res.json({
       data: {
-        aiProvider: env.AI_PROVIDER,
+        aiRoutingMode: aiDiagnostics.aiRoutingMode,
+        providerAvailability: aiDiagnostics.providerAvailability,
+        lastProviderByTask: aiDiagnostics.lastProviderByTask,
         firebaseMode: env.FIREBASE_USE_EMULATOR ? 'emulator' : 'real',
         lastSupplierImport: lastImportJob
           ? {
