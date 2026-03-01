@@ -282,9 +282,16 @@ export class MarketResearchService {
       }
     },
   ): Promise<MarketResearchResult> {
-    const searchContext = searchResponse.rawText
+    const maxSearchContextChars = 12_000
+    const maxSourceUrls = 40
+    const trimmedSearchRawText = searchResponse.rawText.length > maxSearchContextChars
+      ? `${searchResponse.rawText.slice(0, maxSearchContextChars)}\n\n[Search results truncated for faster extraction]`
+      : searchResponse.rawText
+    const trimmedAnnotations = searchResponse.annotations.slice(0, maxSourceUrls)
+
+    const searchContext = trimmedSearchRawText
       + '\n\nSource URLs:\n'
-      + searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
+      + trimmedAnnotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
 
     const fxService = getFxService()
     const [gbpRate, usdRate] = await Promise.all([

@@ -92,7 +92,8 @@ class AiRouterError extends Error {
 
 const TASK_TIMEOUT_MS: Record<AiTaskType, number> = {
   web_search: 12_000,
-  structured_extraction_json: 30_000,
+  // Structured extraction prompts can include large search context and often exceed 30s in production.
+  structured_extraction_json: 45_000,
   freeform_generation: 30_000,
   vision_analysis: 30_000,
 }
@@ -250,7 +251,8 @@ export class AiRouter {
       if (!run) continue
 
       const fallbackUsed = providerIndex > 0
-      const maxAttempts = 2
+      // Structured extraction benefits more from provider fallback than retrying the same provider.
+      const maxAttempts = opts.task === 'structured_extraction_json' ? 1 : 2
 
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         const startedAt = Date.now()
@@ -533,9 +535,6 @@ export class AiRouter {
             { role: 'user', content: opts.query },
           ],
           search_domain_filter: (opts.domains ?? []).length > 0 ? opts.domains : undefined,
-          web_search_options: opts.userLocation
-            ? { user_location: { country: opts.userLocation.country } }
-            : undefined,
         }),
       })
     } catch (error) {
@@ -546,9 +545,10 @@ export class AiRouter {
     }
 
     if (!response.ok) {
+      const body = await this.readErrorBody(response)
       throw new AiRouterError(
         'provider_http_error',
-        `Perplexity search failed (${response.status})`,
+        `Perplexity search failed (${response.status}) model=${env.PERPLEXITY_SEARCH_MODEL}${body ? ` body=${body}` : ''}`,
         response.status,
       )
     }
@@ -907,7 +907,6 @@ ${rawContent}`
         model: env.PERPLEXITY_EXTRACTION_MODEL,
         temperature: 0,
         max_tokens: 1600,
-        response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: 'You repair malformed JSON. Return only valid JSON.' },
           { role: 'user', content: prompt },

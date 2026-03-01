@@ -128,14 +128,27 @@ export class PriceCheckService {
     ])
     const gbpToEur = gbpRate || 1.17
     const usdToEur = usdRate || 0.92
+    const maxSearchContextChars = 8_000
+    const maxSourceUrls = 40
+    const buildExtractionContext = (response: SearchResponse): {
+      searchRawText: string
+      annotations: Array<{ url: string; title: string }>
+    } => {
+      const searchRawText = response.rawText.length > maxSearchContextChars
+        ? `${response.rawText.slice(0, maxSearchContextChars)}\n\n[Search results truncated for faster extraction]`
+        : response.rawText
+      const annotations = response.annotations.slice(0, maxSourceUrls)
+      return { searchRawText, annotations }
+    }
+    const extractionContext = buildExtractionContext(searchResponse)
 
     const extractionPrompt = buildPriceCheckExtractionPrompt({
       query,
       refine,
       queryContext,
       hasSearchData,
-      searchRawText: searchResponse.rawText,
-      annotations: searchResponse.annotations,
+      searchRawText: extractionContext.searchRawText,
+      annotations: extractionContext.annotations,
       gbpToEur,
       usdToEur,
     })
@@ -156,13 +169,14 @@ export class PriceCheckService {
       const broadResponses = await Promise.all(broadSearches)
       searchResponse = broadResponses.reduce((acc, r) => mergeSearchResponses(acc, r), searchResponse)
       strategyUsed = 'broad'
+      const retryExtractionContext = buildExtractionContext(searchResponse)
       const retryPrompt = buildPriceCheckExtractionPrompt({
         query,
         refine,
         queryContext,
         hasSearchData: searchResponse.rawText.length > 50 || searchResponse.results.length > 0,
-        searchRawText: searchResponse.rawText,
-        annotations: searchResponse.annotations,
+        searchRawText: retryExtractionContext.searchRawText,
+        annotations: retryExtractionContext.annotations,
         gbpToEur,
         usdToEur,
       })

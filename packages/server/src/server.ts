@@ -58,7 +58,7 @@ const allowedOrigins: true | (string | RegExp)[] =
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Idempotency-Key'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Idempotency-Key', 'X-Debug'],
 }))
 app.use(express.json({ limit: '2mb' }))
 app.use(requestId as express.RequestHandler)
