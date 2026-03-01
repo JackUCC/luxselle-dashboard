@@ -10,6 +10,7 @@ import {
   DEFAULT_ORG_ID,
   EvaluationSchema,
   LandedCostSnapshotSchema,
+  PriceCheckInputSchema,
   PricingMarketCountrySchema,
   PricingMarketModeSchema,
 } from '@shared/schemas'
@@ -78,12 +79,6 @@ const AuctionLandedCostInputSchema = z.object({
   insuranceEur: z.coerce.number().min(0).optional(),
   customsDutyPct: z.coerce.number().min(0).optional(),
   importVatPct: z.coerce.number().min(0).max(100).optional(),
-})
-
-const PriceCheckInputSchema = z.object({
-  query: z.string().min(1, 'Search query is required'),
-  condition: z.string().optional().default(''),
-  notes: z.string().optional().default(''),
 })
 
 // Analyse pricing
@@ -174,6 +169,12 @@ router.post('/price-check', async (req, res, next) => {
     const result = await priceCheckService.check(input)
     res.json({ data: result })
   } catch (error) {
+    if (isAiUnavailableError(error)) {
+      res
+        .status(503)
+        .json(formatApiError(API_ERROR_CODES.INTERNAL, 'AI providers are unavailable for price check. Configure OPENAI_API_KEY and/or PERPLEXITY_API_KEY.'))
+      return
+    }
     next(error)
   }
 })

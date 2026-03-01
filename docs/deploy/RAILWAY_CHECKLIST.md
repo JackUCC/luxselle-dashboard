@@ -62,7 +62,7 @@ Checklist:
 
 ### 3.3 AI / market research (optional)
 
-Used by `/api/market-research/analyse` and `/api/market-research/trending`.
+Used by `/api/market-research/analyse`, `/api/market-research/trending`, `/api/pricing/price-check`, and `/api/pricing/analyse`. At least one of `OPENAI_API_KEY` or `PERPLEXITY_API_KEY` is required for these endpoints.
 
 | Variable | When to set |
 |----------|-------------|

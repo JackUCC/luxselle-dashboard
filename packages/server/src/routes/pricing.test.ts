@@ -198,6 +198,19 @@ describe('POST /api/pricing/price-check', () => {
     })
   })
 
+  it('returns 503 when AI providers are unavailable', async () => {
+    mockCheck.mockRejectedValue(new Error('no_provider_available'))
+
+    const res = await request(app)
+      .post('/api/pricing/price-check')
+      .set('Content-Type', 'application/json')
+      .send({ query: 'Chanel Flap' })
+
+    expect(res.status).toBe(503)
+    expect(res.body.error.code).toBe(API_ERROR_CODES.INTERNAL)
+    expect(String(res.body.error.message)).toMatch(/ai providers are unavailable for price check/i)
+  })
+
   it('returns 500 when service throws', async () => {
     mockCheck.mockRejectedValue(new Error('Search service unavailable'))
 
