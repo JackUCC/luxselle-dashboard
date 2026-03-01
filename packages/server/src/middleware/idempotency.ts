@@ -12,6 +12,44 @@ import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 const IDEMPOTENCY_COLLECTION = 'idempotency_keys'
 const KEY_TTL_SECONDS = 24 * 60 * 60 // 24 hours
 
+function normalizePath(path: string): string {
+  if (!path) {
+    return '/'
+  }
+
+  const singleSlashPath = path.replace(/\/+/g, '/')
+  if (singleSlashPath.length > 1 && singleSlashPath.endsWith('/')) {
+    return singleSlashPath.slice(0, -1)
+  }
+
+  return singleSlashPath
+}
+
+function stableSerialize(value: unknown): string {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value)
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableSerialize(item)).join(',')}]`
+  }
+
+  const sortedEntries = Object.entries(value as Record<string, unknown>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, nestedValue]) => `${JSON.stringify(key)}:${stableSerialize(nestedValue)}`)
+
+  return `{${sortedEntries.join(',')}}`
+}
+
+function buildRequestFingerprint(req: Request): string {
+  const normalizedPath = normalizePath(`${req.baseUrl || ''}${req.path || ''}`)
+  const bodyHash = createHash('sha256')
+    .update(stableSerialize(req.body))
+    .digest('hex')
+
+  return `${req.method.toUpperCase()}:${normalizedPath}:${bodyHash}`
+}
+
 export interface IdempotentRequest extends Request {
   idempotencyKey?: string
   isReplay?: boolean
@@ -46,6 +84,7 @@ export async function idempotency(
   }
 
   req.idempotencyKey = idempotencyKey
+  const fingerprint = buildRequestFingerprint(req)
 
   try {
     const keyRef = db.collection(IDEMPOTENCY_COLLECTION).doc(idempotencyKey)
@@ -53,6 +92,15 @@ export async function idempotency(
 
     if (keyDoc.exists) {
       const data = keyDoc.data()
+      if (data?.fingerprint !== fingerprint) {
+        res.status(409).json(
+          formatApiError(
+            API_ERROR_CODES.CONFLICT,
+            'Idempotency key reuse across different requests is invalid; use a new idempotency key for each unique request'
+          )
+        )
+        return
+      }
       
       // Key exists - check if the response is ready
       if (data?.status === 'completed' && data?.response) {
@@ -76,7 +124,8 @@ export async function idempotency(
       status: 'pending',
       createdAt: new Date().toISOString(),
       method: req.method,
-      path: req.path,
+      path: normalizePath(`${req.baseUrl || ''}${req.path || ''}`),
+      fingerprint,
       expiresAt: new Date(Date.now() + KEY_TTL_SECONDS * 1000).toISOString(),
     })
 
