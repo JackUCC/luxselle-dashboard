@@ -533,8 +533,8 @@ export class AiRouter {
             { role: 'user', content: opts.query },
           ],
           search_domain_filter: (opts.domains ?? []).length > 0 ? opts.domains : undefined,
-          user_location: opts.userLocation
-            ? { country: opts.userLocation.country }
+          web_search_options: opts.userLocation
+            ? { user_location: { country: opts.userLocation.country } }
             : undefined,
         }),
       })

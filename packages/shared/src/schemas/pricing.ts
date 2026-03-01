@@ -94,3 +94,55 @@ export const SupplierImportTemplateSchema = z.object({
   trimValues: z.boolean().default(true),
 })
 export type SupplierImportTemplate = z.infer<typeof SupplierImportTemplateSchema>
+
+// Price check (RAG) request/response schemas — shared by server and frontend
+export const PriceCheckCompSchema = z.object({
+  title: z.string(),
+  price: z.number(),
+  source: z.string(),
+  sourceUrl: z.string().optional(),
+  previewImageUrl: z.string().optional(),
+  dataOrigin: z.enum(['web_search', 'ai_estimate']).optional(),
+})
+export type PriceCheckComp = z.infer<typeof PriceCheckCompSchema>
+
+export const PriceCheckInputSchema = z.object({
+  query: z.string().min(1, 'Search query is required'),
+  condition: z.string().optional().default(''),
+  notes: z.string().optional().default(''),
+  strategy: z.enum(['auto', 'strict', 'broad']).optional(),
+})
+export type PriceCheckInput = z.infer<typeof PriceCheckInputSchema>
+
+export const PriceCheckDiagnosticsSchema = z.object({
+  emptyReason: z
+    .enum([
+      'no_search_data',
+      'extraction_failed',
+      'insufficient_valid_comps',
+      'insufficient_provenance',
+      'timeout',
+    ])
+    .optional(),
+  searchAnnotationCount: z.number().optional(),
+  searchRawTextLength: z.number().optional(),
+  missingAttributesHint: z
+    .array(z.enum(['brand', 'style', 'size', 'colour', 'material']))
+    .optional(),
+  strategyUsed: z.enum(['strict', 'broad']).optional(),
+  extractedCompCount: z.number().optional(),
+  validCompCount: z.number().optional(),
+  filteredOutCount: z.number().optional(),
+})
+export type PriceCheckDiagnostics = z.infer<typeof PriceCheckDiagnosticsSchema>
+
+export const PriceCheckResultSchema = z.object({
+  averageSellingPriceEur: z.number(),
+  comps: z.array(PriceCheckCompSchema),
+  maxBuyEur: z.number(),
+  maxBidEur: z.number(),
+  dataSource: z.enum(['web_search', 'ai_fallback']),
+  researchedAt: z.string(),
+  diagnostics: PriceCheckDiagnosticsSchema.optional(),
+})
+export type PriceCheckResult = z.infer<typeof PriceCheckResultSchema>

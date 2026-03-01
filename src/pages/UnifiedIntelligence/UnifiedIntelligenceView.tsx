@@ -37,25 +37,8 @@ import {
   type SerialCheckBrand,
 } from '../../lib/serialDateDecoder'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
-import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
+import type { PriceCheckResult, SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 import { deriveSourcingDecision, type DecisionTone } from '../../lib/sourcingDecision'
-
-interface PriceCheckComp {
-  title: string
-  price: number
-  source: string
-  sourceUrl?: string
-  previewImageUrl?: string
-}
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  comps: PriceCheckComp[]
-  maxBuyEur: number
-  maxBidEur: number
-  dataSource?: 'web_search' | 'ai_fallback'
-  researchedAt?: string
-}
 
 interface VisualSearchResult {
   productId?: string

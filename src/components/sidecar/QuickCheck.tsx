@@ -6,6 +6,7 @@ import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DE
 import { formatCurrency, parseNumericInput } from '../../lib/formatters'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import AiThinkingDots from '../feedback/AiThinkingDots'
+import type { PriceCheckResult } from '@shared/schemas'
 
 interface VisualSearchResult {
   productId?: string
@@ -13,21 +14,6 @@ interface VisualSearchResult {
   imageUrl?: string
   title?: string
   score: number
-}
-
-interface PriceCheckComp {
-  title: string
-  price: number
-  source: string
-  sourceUrl?: string
-  previewImageUrl?: string
-}
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  comps: PriceCheckComp[]
-  maxBuyEur: number
-  maxBidEur: number
 }
 
 interface InventoryMatch {

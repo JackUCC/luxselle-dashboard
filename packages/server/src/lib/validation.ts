@@ -50,3 +50,48 @@ export function filterValidComps<T extends { price?: number }>(comps: T[]): T[] 
 export function clampConfidence(value: number): number {
   return clamp(Number(value) || 0, 0, 1)
 }
+
+/** Normalize URL for dedupe: protocol + hostname (no www) + pathname, no trailing slash. */
+function normalizeUrlForDedupe(url?: string): string {
+  if (!url?.trim()) return ''
+  try {
+    const u = new URL(url.trim())
+    return `${u.protocol}//${u.hostname.toLowerCase().replace(/^www\./, '')}${u.pathname}`.replace(/\/$/, '')
+  } catch {
+    return url.trim().toLowerCase()
+  }
+}
+
+/**
+ * Dedupe comparables by normalized sourceUrl; keeps first occurrence.
+ */
+export function dedupeCompsBySourceUrl<T extends { sourceUrl?: string }>(comps: T[]): T[] {
+  if (!Array.isArray(comps)) return []
+  const seen = new Set<string>()
+  return comps.filter((c) => {
+    const key = normalizeUrlForDedupe(c.sourceUrl)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+/**
+ * Filter comparables to those whose price lies in [median * lowMult, median * highMult].
+ * If fewer than 3 comps, returns input unchanged.
+ */
+export function filterPriceOutliers<T extends { price: number }>(
+  comps: T[],
+  lowMult: number = 0.55,
+  highMult: number = 1.9,
+): T[] {
+  if (!Array.isArray(comps) || comps.length < 3) return comps
+  const prices = comps.map((c) => c.price).filter((p) => typeof p === 'number' && !Number.isNaN(p))
+  if (prices.length < 3) return comps
+  const sorted = [...prices].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  const median = sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!
+  const low = median * lowMult
+  const high = median * highMult
+  return comps.filter((c) => c.price >= low && c.price <= high)
+}

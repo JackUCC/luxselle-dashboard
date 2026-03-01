@@ -3,21 +3,7 @@ import toast from 'react-hot-toast'
 import { AlertTriangle, CheckCircle2, Clock3, ListChecks, Loader2, Play, Plus, Trash2 } from 'lucide-react'
 import { ApiError, apiGet, apiPost } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
-
-interface PriceCheckComp {
-  title: string
-  price: number
-  source: string
-  sourceUrl?: string
-  previewImageUrl?: string
-}
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  comps: PriceCheckComp[]
-  maxBuyEur: number
-  maxBidEur: number
-}
+import type { PriceCheckResult } from '@shared/schemas'
 
 interface InventoryMatch {
   id: string

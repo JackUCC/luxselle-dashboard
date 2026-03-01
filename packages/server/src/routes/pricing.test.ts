@@ -198,6 +198,60 @@ describe('POST /api/pricing/price-check', () => {
     })
   })
 
+  it('accepts optional strategy and passes to service', async () => {
+    mockCheck.mockResolvedValue({
+      averageSellingPriceEur: 1100,
+      comps: [],
+      maxBuyEur: 715,
+      maxBidEur: 668,
+      dataSource: 'web_search',
+      researchedAt: new Date().toISOString(),
+    })
+
+    await request(app)
+      .post('/api/pricing/price-check')
+      .set('Content-Type', 'application/json')
+      .send({ query: 'Chanel Flap', strategy: 'broad' })
+
+    expect(mockCheck).toHaveBeenCalledWith(
+      expect.objectContaining({ query: 'Chanel Flap', strategy: 'broad' }),
+    )
+  })
+
+  it('returns additive diagnostics when service includes them', async () => {
+    mockCheck.mockResolvedValue({
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      dataSource: 'ai_fallback',
+      researchedAt: new Date().toISOString(),
+      diagnostics: {
+        emptyReason: 'insufficient_provenance',
+        strategyUsed: 'strict',
+        extractedCompCount: 3,
+        validCompCount: 0,
+        filteredOutCount: 3,
+        searchAnnotationCount: 5,
+      },
+    })
+
+    const res = await request(app)
+      .post('/api/pricing/price-check')
+      .set('Content-Type', 'application/json')
+      .send({ query: 'Chanel Flap' })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data.diagnostics).toMatchObject({
+      emptyReason: 'insufficient_provenance',
+      strategyUsed: 'strict',
+      extractedCompCount: 3,
+      validCompCount: 0,
+      filteredOutCount: 3,
+      searchAnnotationCount: 5,
+    })
+  })
+
   it('returns 503 when AI providers are unavailable', async () => {
     mockCheck.mockRejectedValue(new Error('no_provider_available'))
 

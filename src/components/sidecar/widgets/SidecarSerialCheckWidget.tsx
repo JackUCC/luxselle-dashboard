@@ -10,14 +10,7 @@ import {
   type SerialCheckBrand,
 } from '../../../lib/serialDateDecoder'
 import { calculateSerialPricingGuidance } from '../../../lib/serialValuation'
-import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  maxBuyEur: number
-  maxBidEur: number
-  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string; previewImageUrl?: string }>
-}
+import type { PriceCheckResult, SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 
 export default function SidecarSerialCheckWidget() {
   const [serial, setSerial] = useState('')

@@ -3,9 +3,11 @@
  * Web search for real listings, then AI extraction of avg price, max buy, max bid.
  */
 import { z } from 'zod'
+import type { PriceCheckComp, PriceCheckDiagnostics, PriceCheckInput, PriceCheckResult } from '@shared/schemas'
+import { env } from '../../config/env'
 import { SearchService, type QueryContext, type SearchResponse } from '../search/SearchService'
 import { getFxService } from '../fx/FxService'
-import { filterValidComps } from '../../lib/validation'
+import { dedupeCompsBySourceUrl, filterPriceOutliers, filterValidComps } from '../../lib/validation'
 import { logger } from '../../middleware/requestId'
 import { ComparableImageEnrichmentService } from '../search/ComparableImageEnrichmentService'
 import { getAiRouter } from '../ai/AiRouter'
@@ -23,6 +25,35 @@ const EU_FALLBACK_COMPETITOR_DOMAINS = ['vestiairecollective.com']
 const IE_COMPETITOR_SOURCE_HINTS = ['designer exchange', 'luxury exchange', 'siopaella']
 const EU_FALLBACK_SOURCE_HINTS = ['vestiaire']
 
+function parseSecondaryDomains(): string[] {
+  const raw = env.PRICE_CHECK_SECONDARY_DOMAINS
+  if (!raw?.trim()) return []
+  return raw.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean)
+}
+
+function mergeSearchResponses(a: SearchResponse, b: SearchResponse): SearchResponse {
+  const seenUrls = new Set(a.annotations.map((ann) => normalizeCitationUrl(ann.url)))
+  const annotations = [...a.annotations]
+  for (const ann of b.annotations) {
+    if (ann.url && !seenUrls.has(normalizeCitationUrl(ann.url))) {
+      seenUrls.add(normalizeCitationUrl(ann.url))
+      annotations.push(ann)
+    }
+  }
+  const rawText = [a.rawText, b.rawText].filter(Boolean).join('\n\n---\n\n')
+  const results = annotations.map((ann) => ({ title: ann.title, url: ann.url, snippet: '' }))
+  return { results, rawText, annotations }
+}
+
+function normalizeCitationUrl(url: string): string {
+  try {
+    const u = new URL(url.trim())
+    return `${u.protocol}//${u.hostname.toLowerCase().replace(/^www\./, '')}${u.pathname}`.replace(/\/$/, '')
+  } catch {
+    return url.trim().toLowerCase()
+  }
+}
+
 const PriceCheckExtractionSchema = z.object({
   averageSellingPriceEur: z.number().optional(),
   comps: z.array(z.object({
@@ -34,37 +65,7 @@ const PriceCheckExtractionSchema = z.object({
   })).optional(),
 })
 
-interface PriceCheckDiagnostics {
-  emptyReason?: 'no_search_data' | 'extraction_failed' | 'insufficient_valid_comps'
-  searchAnnotationCount?: number
-  searchRawTextLength?: number
-  missingAttributesHint?: Array<'brand' | 'style' | 'size' | 'colour' | 'material'>
-}
-
-export interface PriceCheckComp {
-  title: string
-  price: number
-  source: string
-  sourceUrl?: string
-  previewImageUrl?: string
-  dataOrigin?: 'web_search' | 'ai_estimate'
-}
-
-export interface PriceCheckInput {
-  query: string
-  condition?: string
-  notes?: string
-}
-
-export interface PriceCheckResult {
-  averageSellingPriceEur: number
-  comps: PriceCheckComp[]
-  maxBuyEur: number
-  maxBidEur: number
-  dataSource: 'web_search' | 'ai_fallback'
-  researchedAt: string
-  diagnostics?: PriceCheckDiagnostics
-}
+export type { PriceCheckComp, PriceCheckInput, PriceCheckResult }
 
 export class PriceCheckService {
   private readonly aiRouter = getAiRouter()
@@ -72,22 +73,34 @@ export class PriceCheckService {
   private readonly comparableImageEnrichmentService = new ComparableImageEnrichmentService()
 
   async check(input: PriceCheckInput): Promise<PriceCheckResult> {
-    const { query, condition = '', notes = '' } = input
+    const { query, condition = '', notes = '', strategy: requestedStrategy } = input
     const refine = [condition, notes].filter(Boolean).join('. ')
+    const effectiveStrategy = requestedStrategy ?? 'strict'
 
     let averageSellingPriceEur = 0
     let comps: PriceCheckComp[] = []
     let dataSource: 'web_search' | 'ai_fallback' = 'ai_fallback'
     let diagnostics: PriceCheckDiagnostics | undefined
+    let strategyUsed: 'strict' | 'broad' = 'strict'
 
     const queryContext = await this.searchService.expandQuery(
       refine ? `${query}. ${refine}` : query,
     )
+    const variants = queryContext.searchVariants.length > 0 ? queryContext.searchVariants : [query]
+    const userLocation = { country: 'IE' as const }
 
-    const searchResponse = await this.searchService.searchMarketMultiExpanded(
-      queryContext.searchVariants.length > 0 ? queryContext.searchVariants : [query],
-      { userLocation: { country: 'IE' } },
-    )
+    let searchResponse = await this.searchService.searchMarketMultiExpanded(variants, { userLocation })
+
+    const secondaryDomains = parseSecondaryDomains()
+    if (effectiveStrategy === 'broad' && secondaryDomains.length > 0) {
+      const broadSearches = variants.map((v) =>
+        this.searchService.searchMarket(v, { domains: secondaryDomains, userLocation }),
+      )
+      const broadResponses = await Promise.all(broadSearches)
+      const merged = broadResponses.reduce((acc, r) => mergeSearchResponses(acc, r), searchResponse)
+      searchResponse = merged
+      strategyUsed = 'broad'
+    }
 
     const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
 
@@ -110,37 +123,112 @@ export class PriceCheckService {
       usdToEur,
     })
 
-    const extraction = await this.extractComparables(extractionPrompt)
+    let extraction = await this.extractComparables(extractionPrompt)
+    let extractedComps = Array.isArray(extraction?.parsed?.comps) ? extraction.parsed.comps : []
+
+    const tryBroadRetry =
+      effectiveStrategy === 'auto' &&
+      env.PRICE_CHECK_BROAD_STRATEGY_ENABLED &&
+      secondaryDomains.length > 0 &&
+      (!extraction.parsed || extractedComps.length < 2)
+
+    if (tryBroadRetry) {
+      const broadSearches = variants.map((v) =>
+        this.searchService.searchMarket(v, { domains: secondaryDomains, userLocation }),
+      )
+      const broadResponses = await Promise.all(broadSearches)
+      searchResponse = broadResponses.reduce((acc, r) => mergeSearchResponses(acc, r), searchResponse)
+      strategyUsed = 'broad'
+      const retryPrompt = buildPriceCheckExtractionPrompt({
+        query,
+        refine,
+        queryContext,
+        hasSearchData: searchResponse.rawText.length > 50 || searchResponse.results.length > 0,
+        searchRawText: searchResponse.rawText,
+        annotations: searchResponse.annotations,
+        gbpToEur,
+        usdToEur,
+      })
+      extraction = await this.extractComparables(retryPrompt)
+      extractedComps = Array.isArray(extraction?.parsed?.comps) ? extraction.parsed.comps : []
+    }
+
+    const extractedCount = extractedComps.length
 
     if (!extraction.parsed) {
       logger.warn('price_check_extraction_degraded', {
         reason: extraction.lastFailureReason,
       })
-      diagnostics = this.buildDiagnostics(searchResponse, queryContext, hasSearchData ? 'extraction_failed' : 'no_search_data')
+      diagnostics = this.buildDiagnostics(
+        searchResponse,
+        queryContext,
+        hasSearchData ? 'extraction_failed' : 'no_search_data',
+        { strategyUsed, extractedCompCount: extractedCount, validCompCount: 0, filteredOutCount: 0 },
+      )
       comps = buildEmptyComparableFallback<PriceCheckComp>()
       averageSellingPriceEur = 0
       dataSource = 'ai_fallback'
     } else {
-      const extractedComps = Array.isArray(extraction.parsed.comps) ? extraction.parsed.comps : []
       const enrichedComps = this.backfillComparableSourceUrls(extractedComps, searchResponse.annotations)
-      const allComps = keepEvidenceBackedComparables(filterValidComps(enrichedComps))
+      const { comps: provenanceComps, filteredOutCount } = this.filterByProvenance(
+        enrichedComps,
+        searchResponse.annotations,
+      )
 
-      if (allComps.length >= 2) {
-        comps = this.orderCompsByMarketPriority(allComps)
-        averageSellingPriceEur = Math.round(
-          comps.reduce((sum, comp) => sum + comp.price, 0) / comps.length,
-        )
-        diagnostics = this.buildDiagnostics(searchResponse, queryContext)
-        dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
-      } else {
-        comps = buildEmptyComparableFallback<PriceCheckComp>()
-        averageSellingPriceEur = 0
+      if (provenanceComps.length === 0 && enrichedComps.length > 0) {
         diagnostics = this.buildDiagnostics(
           searchResponse,
           queryContext,
-          hasSearchData ? 'insufficient_valid_comps' : 'no_search_data',
+          'insufficient_provenance',
+          {
+            strategyUsed,
+            extractedCompCount: extractedCount,
+            validCompCount: 0,
+            filteredOutCount,
+          },
         )
+        comps = buildEmptyComparableFallback<PriceCheckComp>()
+        averageSellingPriceEur = 0
         dataSource = 'ai_fallback'
+      } else {
+        const deduped = dedupeCompsBySourceUrl(provenanceComps)
+        const relevant = env.PRICE_CHECK_V2_ENABLED
+          ? this.filterByRelevance(deduped, queryContext)
+          : deduped
+        const afterOutliers = env.PRICE_CHECK_V2_ENABLED
+          ? filterPriceOutliers(relevant)
+          : relevant
+        const allComps = keepEvidenceBackedComparables(filterValidComps(afterOutliers))
+        const validCount = allComps.length
+
+        if (allComps.length >= 2) {
+          comps = this.orderCompsByMarketPriority(allComps)
+          averageSellingPriceEur = Math.round(
+            comps.reduce((sum, comp) => sum + comp.price, 0) / comps.length,
+          )
+          diagnostics = this.buildDiagnostics(searchResponse, queryContext, undefined, {
+            strategyUsed,
+            extractedCompCount: extractedCount,
+            validCompCount: validCount,
+            filteredOutCount,
+          })
+          dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
+        } else {
+          comps = buildEmptyComparableFallback<PriceCheckComp>()
+          averageSellingPriceEur = 0
+          diagnostics = this.buildDiagnostics(
+            searchResponse,
+            queryContext,
+            hasSearchData ? 'insufficient_valid_comps' : 'no_search_data',
+            {
+              strategyUsed,
+              extractedCompCount: extractedCount,
+              validCompCount: validCount,
+              filteredOutCount,
+            },
+          )
+          dataSource = 'ai_fallback'
+        }
       }
     }
 
@@ -274,10 +362,47 @@ export class PriceCheckService {
     })
   }
 
+  /** Keep only comps whose sourceUrl is in the citation set; return filtered list and count removed. */
+  private filterByProvenance(
+    comps: PriceCheckComp[],
+    annotations: Array<{ url: string; title: string }>,
+  ): { comps: PriceCheckComp[]; filteredOutCount: number } {
+    const citationSet = new Set(annotations.map((a) => normalizeCitationUrl(a.url)))
+    const withProvenance = comps.filter((c) => c.sourceUrl && citationSet.has(normalizeCitationUrl(c.sourceUrl)))
+    return { comps: withProvenance, filteredOutCount: comps.length - withProvenance.length }
+  }
+
+  /** Score comp by how many query key attributes appear in title/source; filter by min score (2 sparse, 3 richer). */
+  private filterByRelevance(comps: PriceCheckComp[], queryContext: QueryContext): PriceCheckComp[] {
+    const attrs = queryContext.keyAttributes
+    const parts = [
+      attrs.brand,
+      attrs.style,
+      attrs.size ?? '',
+      attrs.material ?? '',
+      attrs.colour ?? '',
+      attrs.hardware ?? '',
+    ].filter(Boolean)
+    const richness = parts.length
+    const minScore = richness <= 2 ? 2 : 3
+
+    return comps.filter((comp) => {
+      const text = `${(comp.title ?? '').toLowerCase()} ${(comp.source ?? '').toLowerCase()}`
+      const score = parts.filter((p) => p && text.includes(p.toLowerCase())).length
+      return score >= minScore
+    })
+  }
+
   private buildDiagnostics(
     searchResponse: SearchResponse,
     queryContext: QueryContext,
-    emptyReason?: 'no_search_data' | 'extraction_failed' | 'insufficient_valid_comps',
+    emptyReason?: PriceCheckDiagnostics['emptyReason'],
+    extra?: {
+      strategyUsed?: 'strict' | 'broad'
+      extractedCompCount?: number
+      validCompCount?: number
+      filteredOutCount?: number
+    },
   ): PriceCheckDiagnostics {
     const missingAttributesHint: Array<'brand' | 'style' | 'size' | 'colour' | 'material'> = []
     if (!queryContext.keyAttributes.brand) missingAttributesHint.push('brand')
@@ -291,6 +416,12 @@ export class PriceCheckService {
       searchAnnotationCount: searchResponse.annotations.length,
       searchRawTextLength: searchResponse.rawText.length,
       missingAttributesHint,
+      ...(extra && {
+        strategyUsed: extra.strategyUsed,
+        extractedCompCount: extra.extractedCompCount,
+        validCompCount: extra.validCompCount,
+        filteredOutCount: extra.filteredOutCount,
+      }),
     }
   }
 

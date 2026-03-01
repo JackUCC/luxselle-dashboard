@@ -56,9 +56,15 @@ const QUERY_CONTEXT = {
 }
 
 const SEARCH_RESPONSE = {
-  results: [{ title: 'Listing 1', url: 'https://designerexchange.ie/item/1', snippet: '' }],
+  results: [
+    { title: 'Listing 1', url: 'https://designerexchange.ie/item/1', snippet: '' },
+    { title: 'Listing 2', url: 'https://vestiairecollective.com/item/2', snippet: '' },
+  ],
   rawText: 'Live search results with real listing prices from Irish and EU marketplaces.',
-  annotations: [{ title: 'Listing 1', url: 'https://designerexchange.ie/item/1' }],
+  annotations: [
+    { title: 'Listing 1', url: 'https://designerexchange.ie/item/1' },
+    { title: 'Listing 2', url: 'https://vestiairecollective.com/item/2' },
+  ],
 }
 
 describe('PriceCheckService', () => {
@@ -153,7 +159,10 @@ describe('PriceCheckService', () => {
   it('backfills comparable source urls from search annotations and includes diagnostics', async () => {
     mockSearchMarketMultiExpanded.mockResolvedValue({
       ...SEARCH_RESPONSE,
-      annotations: [{ title: 'Designer Exchange listing', url: 'https://designerexchange.ie/item/1' }],
+      annotations: [
+        { title: 'Designer Exchange listing', url: 'https://designerexchange.ie/item/1' },
+        { title: 'Vestiaire listing', url: 'https://vestiairecollective.com/item/2' },
+      ],
     })
 
     mockExtractStructuredJson.mockResolvedValueOnce({
@@ -180,10 +189,48 @@ describe('PriceCheckService', () => {
     const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
 
     expect(result.comps[0].sourceUrl).toBe('https://designerexchange.ie/item/1')
+    expect(result.comps[1].sourceUrl).toBe('https://vestiairecollective.com/item/2')
     expect(result.diagnostics).toMatchObject({
-      searchAnnotationCount: 1,
+      searchAnnotationCount: 2,
       emptyReason: undefined,
     })
+  })
+
+  it('returns insufficient_provenance when all comps filtered out by citation set', async () => {
+    mockSearchMarketMultiExpanded.mockResolvedValue({
+      ...SEARCH_RESPONSE,
+      annotations: [{ title: 'Only this URL counts', url: 'https://designerexchange.ie/item/1' }],
+    })
+
+    mockExtractStructuredJson.mockResolvedValueOnce({
+      data: {
+        comps: [
+          {
+            title: 'Uncited listing A',
+            price: 3200,
+            source: 'Other',
+            sourceUrl: 'https://other.com/item/a',
+          },
+          {
+            title: 'Uncited listing B',
+            price: 3000,
+            source: 'Other',
+            sourceUrl: 'https://other.com/item/b',
+          },
+        ],
+      },
+      provider: 'openai',
+      fallbackUsed: false,
+    })
+
+    const service = new PriceCheckService()
+    const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
+
+    expect(result.comps).toHaveLength(0)
+    expect(result.diagnostics?.emptyReason).toBe('insufficient_provenance')
+    expect(result.diagnostics?.extractedCompCount).toBe(2)
+    expect(result.diagnostics?.validCompCount).toBe(0)
+    expect(result.diagnostics?.filteredOutCount).toBe(2)
   })
 
   it('orders comparables with Irish competitors before EU fallback', async () => {

@@ -19,29 +19,7 @@ import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
-
-interface PriceCheckComp {
-  title: string
-  price: number
-  source: string
-  sourceUrl?: string
-  previewImageUrl?: string
-}
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  comps: PriceCheckComp[]
-  maxBuyEur: number
-  maxBidEur: number
-  dataSource?: 'web_search' | 'ai_fallback'
-  researchedAt?: string
-  diagnostics?: {
-    emptyReason?: 'no_search_data' | 'extraction_failed' | 'insufficient_valid_comps'
-    searchAnnotationCount?: number
-    searchRawTextLength?: number
-    missingAttributesHint?: Array<'brand' | 'style' | 'size' | 'colour' | 'material'>
-  }
-}
+import type { PriceCheckResult } from '@shared/schemas'
 
 interface VisualSearchResult {
   productId?: string
@@ -99,27 +77,32 @@ export default function EvaluatorView() {
   const error = researchSession.status === 'error' ? (researchSession.error ?? 'Research failed') : null
   const result = researchSession.status === 'success' ? (researchSession.result ?? null) : null
 
-  const runResearch = useCallback(async (q: string, opts?: { condition?: string; notes?: string }) => {
-    const researchQuery: PriceCheckResearchQuery = {
-      query: q,
-      condition: opts?.condition || undefined,
-      notes: opts?.notes || undefined,
-    }
-    startResearchLoading(researchQuery)
-    try {
-      const { data } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: researchQuery.query,
-        condition: researchQuery.condition,
-        notes: researchQuery.notes,
-      })
-      setResearchSuccess(data, researchQuery)
-      toast.success('Market research complete')
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Research failed'
-      setResearchError(msg, researchQuery)
-      toast.error(msg)
-    }
-  }, [setResearchError, setResearchSuccess, startResearchLoading])
+  const runResearch = useCallback(
+    async (q: string, opts?: { condition?: string; notes?: string; strategy?: 'auto' | 'strict' | 'broad' }) => {
+      const researchQuery: PriceCheckResearchQuery = {
+        query: q,
+        condition: opts?.condition || undefined,
+        notes: opts?.notes || undefined,
+      }
+      startResearchLoading(researchQuery)
+      try {
+        const body: { query: string; condition?: string; notes?: string; strategy?: string } = {
+          query: researchQuery.query,
+          condition: researchQuery.condition,
+          notes: researchQuery.notes,
+        }
+        if (opts?.strategy) body.strategy = opts.strategy
+        const { data } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', body)
+        setResearchSuccess(data, researchQuery)
+        toast.success('Market research complete')
+      } catch (err) {
+        const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Research failed'
+        setResearchError(msg, researchQuery)
+        toast.error(msg)
+      }
+    },
+    [setResearchError, setResearchSuccess, startResearchLoading],
+  )
 
   useEffect(() => {
     const persistedQuery = researchSession.query
@@ -148,6 +131,12 @@ export default function EvaluatorView() {
     setFailedCompImages({})
     setLoadedCompImages({})
   }, [result?.comps])
+
+  useEffect(() => {
+    if (result?.diagnostics?.missingAttributesHint?.length && result.comps.length === 0) {
+      setRefineOpen(true)
+    }
+  }, [result?.diagnostics?.missingAttributesHint, result?.comps?.length])
 
   const confidencePct = result
     ? result.comps.length >= 5
@@ -180,11 +169,16 @@ ${fallbackLine}` : fallbackLine))
     setRefineOpen(true)
   }, [fallbackBrand, fallbackStyle, fallbackSize, fallbackColour])
 
-  const emptyComparableGuidance = result?.diagnostics?.emptyReason === 'no_search_data'
-    ? 'We could not find enough Irish/EU listings for this text. Add brand, style, size, and colour to improve match quality.'
-    : result?.diagnostics?.emptyReason === 'extraction_failed'
-      ? 'Search data was found, but extraction was not reliable. Add structured details and retry.'
-      : 'We found some signals, but not enough valid comparable listings. Add brand, style, size, and colour and retry.'
+  const emptyComparableGuidance =
+    result?.diagnostics?.emptyReason === 'no_search_data'
+      ? 'We could not find enough Irish/EU listings for this text. Add brand, style, size, and colour to improve match quality.'
+      : result?.diagnostics?.emptyReason === 'extraction_failed'
+        ? 'Market extraction failed. Retry or use broader search.'
+        : result?.diagnostics?.emptyReason === 'insufficient_provenance'
+          ? 'Listings found but source links could not be verified.'
+          : result?.diagnostics?.emptyReason === 'timeout'
+            ? 'Search timed out. Retry or use broader search.'
+            : 'Not enough matching listings. Add colour/material/hardware.'
 
   if (isSidecar) {
     return (
@@ -575,6 +569,19 @@ ${fallbackLine}` : fallbackLine))
                         />
                       </div>
                     )}
+                    {result?.diagnostics?.missingAttributesHint?.length ? (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        <span className="text-xs text-amber-700 self-center mr-1">Add:</span>
+                        {result.diagnostics.missingAttributesHint.map((hint) => (
+                          <span
+                            key={hint}
+                            className="inline-flex items-center px-2 py-1 rounded-md bg-amber-100 text-amber-800 text-xs font-medium"
+                          >
+                            {hint}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -582,6 +589,13 @@ ${fallbackLine}` : fallbackLine))
                         className="lux-btn-secondary text-xs px-3 py-2 rounded-md"
                       >
                         Add details to refine notes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => runResearch(query.trim(), { condition, notes: notes.trim(), strategy: 'broad' })}
+                        className="lux-btn-secondary text-xs px-3 py-2 rounded-md"
+                      >
+                        Retry with broader search
                       </button>
                       {result?.diagnostics?.searchAnnotationCount !== undefined && (
                         <p className="text-xs text-amber-700 self-center">

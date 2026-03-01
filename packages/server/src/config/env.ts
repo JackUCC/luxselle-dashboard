@@ -71,6 +71,9 @@ const EnvSchema = z.object({
   SEARCH_ENRICHMENT_CACHE_TTL_MS: z.coerce.number().int().positive().default(300000),
   SEARCH_DOMAIN_ALLOWLIST: z.string().optional(),
   SEARCH_DOMAIN_DENYLIST: z.string().optional(),
+  PRICE_CHECK_V2_ENABLED: booleanFromEnv.default(false),
+  PRICE_CHECK_BROAD_STRATEGY_ENABLED: booleanFromEnv.default(false),
+  PRICE_CHECK_SECONDARY_DOMAINS: z.string().optional(),
 })
 
 type ParsedEnv = z.infer<typeof EnvSchema>

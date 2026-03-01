@@ -14,22 +14,7 @@ import { PageHeader, SectionLabel } from '../../components/design-system'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
-import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
-
-interface PriceCheckComp {
-  title: string
-  price: number
-  source: string
-  sourceUrl?: string
-  previewImageUrl?: string
-}
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  comps: PriceCheckComp[]
-  maxBuyEur: number
-  maxBidEur: number
-}
+import type { PriceCheckResult, SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 
 interface SerialCheckQuery {
   serial: string
