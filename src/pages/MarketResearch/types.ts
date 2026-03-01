@@ -16,6 +16,7 @@ export interface MarketComparablePayload extends Omit<MarketComparable, 'preview
 
 export interface MarketResearchResult {
     provider: string
+    providerStatus?: 'available' | 'unavailable'
     brand: string
     model: string
     estimatedMarketValueEur: number

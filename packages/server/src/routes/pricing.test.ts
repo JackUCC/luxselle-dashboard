@@ -252,6 +252,33 @@ describe('POST /api/pricing/price-check', () => {
     })
   })
 
+  it('returns 200 with provider_unavailable when service signals provider outage', async () => {
+    const researchedAt = new Date().toISOString()
+    mockCheck.mockResolvedValue({
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      dataSource: 'provider_unavailable',
+      researchedAt,
+    })
+
+    const res = await request(app)
+      .post('/api/pricing/price-check')
+      .set('Content-Type', 'application/json')
+      .send({ query: 'Chanel Flap' })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({
+      dataSource: 'provider_unavailable',
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      researchedAt,
+    })
+  })
+
   it('returns 503 when AI providers are unavailable', async () => {
     mockCheck.mockRejectedValue(new Error('no_provider_available'))
 

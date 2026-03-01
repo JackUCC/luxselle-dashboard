@@ -652,6 +652,15 @@ export default function MarketResearchView() {
                                 />
                             </div>
 
+                            {result.providerStatus === 'unavailable' && (
+                                <div className="rounded-lux-card border border-red-200 bg-red-50/50 p-5 text-sm text-red-800">
+                                    <p className="font-medium">AI search unavailable</p>
+                                    <p className="mt-1 text-red-700">
+                                        Check that OPENAI_API_KEY and/or PERPLEXITY_API_KEY are configured on the server, then retry.
+                                    </p>
+                                </div>
+                            )}
+
                             <MarketResearchResultPanel 
                                 result={result} 
                                 headerActions={

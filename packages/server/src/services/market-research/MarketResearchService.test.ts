@@ -51,4 +51,32 @@ describe('MarketResearchService comparable enrichment', () => {
     expect(result.comparables[0].sourceUrl).toBe('https://vestiairecollective.com/items/123')
     expect(result.comparables[0].previewImageUrl).toBe('https://images.example.com/flap.jpg')
   })
+
+  it('builds degraded analysis with providerStatus unavailable', () => {
+    const service = new MarketResearchService() as unknown as {
+      buildDegradedAnalysis: (
+        input: {
+          brand: string
+          model: string
+          category: string
+          condition: string
+          currentAskPriceEur?: number
+        },
+        reason: string,
+      ) => { providerStatus?: 'available' | 'unavailable' }
+    }
+
+    const result = service.buildDegradedAnalysis(
+      {
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Handbag',
+        condition: 'excellent',
+        currentAskPriceEur: 4200,
+      },
+      'No sufficient live search data found.',
+    )
+
+    expect(result.providerStatus).toBe('unavailable')
+  })
 })

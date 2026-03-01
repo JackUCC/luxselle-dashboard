@@ -193,7 +193,7 @@ Plans:
   2. On-demand deep-dive mode triggers enriched research for a specific item.
   3. Market Research view shows live vs cached data indicators.
   4. Cost-aware: background jobs batch requests; cost is tracked per run.
-**Plans:** 0/3 plans (not yet planned)
+**Plans:** 3 plans (planned, not executed)
 
 Plans:
 - [ ] 11-01-PLAN.md — Background job scheduling: competitor scraping + caching architecture
@@ -209,7 +209,7 @@ Plans:
   2. Invoice create/save/export flow works with all edge cases covered.
   3. Price prediction confidence scores are more meaningful (reflect data volume + source quality).
   4. Trend signals from scraped data feed into price guidance.
-**Plans:** 0/3 plans (not yet planned)
+**Plans:** 3 plans (planned, not executed)
 
 Plans:
 - [ ] 12-01-PLAN.md — Inventory E2E verification: audit + test gaps, fix any broken flows
@@ -235,5 +235,5 @@ Plans:
 | 8. Jobs and Activity Visibility | 3/3 | Complete | 2026-03-01 |
 | 9. Unified Sourcing Intelligence and Frontend Polish | 3/3 | Complete | 2026-03-01 |
 | 10. AI Reliability + Provider Diagnostics | 0/2 | In Planning | — |
-| 11. INTEL-02 Agentic Market Intelligence | 0/3 | Planned | — |
-| 12. Inventory + Invoice Verification + ML-01 | 0/3 | Planned | — |
+| 11. INTEL-02 Agentic Market Intelligence | 0/3 | In Planning | — |
+| 12. Inventory + Invoice Verification + ML-01 | 0/3 | In Planning | — |

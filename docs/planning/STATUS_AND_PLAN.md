@@ -96,7 +96,7 @@ luxselle-dashboard/
 
 ## Next Actions
 
-1. Plan Phase 10 for **INTEL-02** (Agentic Market Intelligence) with scoped background monitoring jobs.
-2. Plan Phase 10+ for **ML-01** (price confidence upgrades + trend signals).
-3. Run a release-readiness QA sweep across unified `/evaluate` plus operations pages before next deployment.
-4. Keep docs and route references aligned to `/evaluate` as the primary decision entry.
+1. Execute Phase 10 Plan 01 (`.planning/phases/10-ai-reliability-provider-diagnostics/10-01-PLAN.md`) for backend provider-unavailable reliability fixes.
+2. Execute Phase 10 Plan 02 (`.planning/phases/10-ai-reliability-provider-diagnostics/10-02-PLAN.md`) for frontend provider-unavailable UX states.
+3. Continue v3 planning stream with Phase 11 and 12 plan artifacts already drafted under `.planning/phases/11-*` and `.planning/phases/12-*`.
+4. Run a release-readiness QA sweep across unified `/evaluate` plus operations pages before next deployment.

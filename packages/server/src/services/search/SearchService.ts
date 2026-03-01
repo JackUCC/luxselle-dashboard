@@ -22,6 +22,7 @@ export interface SearchResponse {
   results: SearchResult[]
   rawText: string
   annotations: Array<{ url: string; title: string }>
+  providerError?: boolean
 }
 
 /**
@@ -241,7 +242,7 @@ export class SearchService {
       }
     } catch (error) {
       logger.error('search_service_error', error)
-      return { results: [], rawText: '', annotations: [] }
+      return { results: [], rawText: '', annotations: [], providerError: true }
     }
   }
 
@@ -287,7 +288,13 @@ export class SearchService {
       url: ann.url,
       snippet: '',
     }))
-    return { results, rawText, annotations }
+    const allFailed = responses.length > 0 && responses.every((response) => response.providerError === true)
+    return {
+      results,
+      rawText,
+      annotations,
+      ...(allFailed ? { providerError: true as const } : {}),
+    }
   }
 
   /**
@@ -400,7 +407,13 @@ export class SearchService {
       url: ann.url,
       snippet: '',
     }))
-    return { results, rawText, annotations }
+    const allFailed = responses.length > 0 && responses.every((response) => response.providerError === true)
+    return {
+      results,
+      rawText,
+      annotations,
+      ...(allFailed ? { providerError: true as const } : {}),
+    }
   }
 
   /**
@@ -422,7 +435,7 @@ export class SearchService {
       }
     } catch (error) {
       logger.error('search_web_error', error)
-      return { results: [], rawText: '', annotations: [] }
+      return { results: [], rawText: '', annotations: [], providerError: true }
     }
   }
 

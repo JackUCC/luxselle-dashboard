@@ -655,6 +655,10 @@ export default function UnifiedIntelligenceView() {
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20">
                     AI estimate
                   </span>
+                ) : result.dataSource === 'provider_unavailable' ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-600/20">
+                    AI unavailable
+                  </span>
                 ) : null}
               </div>
               <p className="text-sm text-lux-500">
@@ -704,7 +708,14 @@ export default function UnifiedIntelligenceView() {
                   <div>- Auction fee (7%): Max buy / 1.07 = {formatCurrency(result.maxBidEur)} (Max bid)</div>
                 </div>
               )}
-              {result.comps.length > 0 ? (
+              {result.dataSource === 'provider_unavailable' ? (
+                <div className="rounded-lux-card border border-red-200 bg-red-50/50 p-5 text-sm text-red-800">
+                  <p className="font-medium">AI search unavailable</p>
+                  <p className="mt-1 text-red-700">
+                    Check that OPENAI_API_KEY and/or PERPLEXITY_API_KEY are configured on the server, then retry.
+                  </p>
+                </div>
+              ) : result.comps.length > 0 ? (
                 <div>
                   <SectionLabel as="h3" className="mb-2">Comparables</SectionLabel>
                   <div className="space-y-2 max-h-48 overflow-y-auto">

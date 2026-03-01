@@ -24,6 +24,7 @@ import { searchRouter } from './routes/search'
 import { savedResearchRouter } from './routes/savedResearch'
 import { API_ERROR_CODES, formatApiError, ApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
+import { getAiRouter } from './services/ai/AiRouter'
 // Auth middleware available but not applied yet (deferred to Iteration 6)
 // import { requireAuth, requireRole } from './middleware/auth'
 
@@ -64,10 +65,10 @@ app.use(express.json({ limit: '2mb' }))
 app.use(requestId as express.RequestHandler)
 app.use(requestLogger as express.RequestHandler)
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', async (req, res) => {
   const openaiConfigured = Boolean(env.OPENAI_API_KEY)
   const perplexityConfigured = Boolean(env.PERPLEXITY_API_KEY)
-  res.json({
+  const baseResponse = {
     status: 'ok',
     timestamp: new Date().toISOString(),
     aiConfigured: openaiConfigured || perplexityConfigured,
@@ -79,6 +80,80 @@ app.get('/api/health', (_req, res) => {
       },
       searchModel: env.PERPLEXITY_SEARCH_MODEL,
     },
+  }
+
+  if (req.query.test_providers !== '1') {
+    res.json(baseResponse)
+    return
+  }
+
+  const providerTests: Record<string, { ok: boolean; latencyMs?: number; error?: string }> = {}
+
+  if (openaiConfigured) {
+    const startedAt = Date.now()
+    try {
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+      await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+        temperature: 0,
+      })
+      providerTests.openai = { ok: true, latencyMs: Date.now() - startedAt }
+    } catch (error) {
+      providerTests.openai = {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  } else {
+    providerTests.openai = { ok: false, error: 'OPENAI_API_KEY is not configured' }
+  }
+
+  if (perplexityConfigured) {
+    const startedAt = Date.now()
+    try {
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: env.PERPLEXITY_EXTRACTION_MODEL,
+          temperature: 0,
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'ping' }],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Perplexity health probe failed (${response.status})`)
+      }
+
+      providerTests.perplexity = { ok: true, latencyMs: Date.now() - startedAt }
+    } catch (error) {
+      providerTests.perplexity = {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  } else {
+    providerTests.perplexity = { ok: false, error: 'PERPLEXITY_API_KEY is not configured' }
+  }
+
+  // Record the router in diagnostics path so runtime health remains visible for normal requests.
+  const aiRouter = getAiRouter()
+  const diagnostics = aiRouter.getDiagnostics()
+
+  res.json({
+    ...baseResponse,
+    ai: {
+      ...baseResponse.ai,
+      lastProviderByTask: diagnostics.lastProviderByTask,
+    },
+    providerTests,
   })
 })
 

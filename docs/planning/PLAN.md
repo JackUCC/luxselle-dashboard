@@ -148,5 +148,6 @@ Acceptance:
 - Recent execution evidence:
   - `tests/e2e/evaluator.spec.ts tests/e2e/dashboard-shell.spec.ts tests/e2e/sidecar-flow.spec.ts` (all green)
   - `npm test` full suite passing
-- Next planning focus: INTEL-02 (Agentic Market Intelligence) and ML-01.
+- Next planning focus completed: Phase 11 (`INTEL-02`) and Phase 12 (`QUAL-01` + `ML-01`) plan artifacts are now drafted in `.planning/phases/`.
+- Next execution focus: `/gsd:execute-phase 10` (Plans 10-01 and 10-02).
 - Keep changes small and iterative; avoid large refactors.

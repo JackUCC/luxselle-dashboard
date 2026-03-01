@@ -91,6 +91,28 @@ describe('PriceCheckService', () => {
     expect(mockEnrichComparables).not.toHaveBeenCalled()
   })
 
+  it('returns provider_unavailable when all search providers fail', async () => {
+    mockSearchMarketMultiExpanded.mockResolvedValue({
+      results: [],
+      rawText: '',
+      annotations: [],
+      providerError: true,
+    })
+
+    const service = new PriceCheckService()
+    const result = await service.check({ query: 'Chanel Classic Flap' })
+
+    expect(result).toMatchObject({
+      averageSellingPriceEur: 0,
+      comps: [],
+      maxBuyEur: 0,
+      maxBidEur: 0,
+      dataSource: 'provider_unavailable',
+    })
+    expect(mockExtractStructuredJson).not.toHaveBeenCalled()
+    expect(mockEnrichComparables).not.toHaveBeenCalled()
+  })
+
   it('returns web_search result when extraction returns valid comparables', async () => {
     mockExtractStructuredJson.mockResolvedValueOnce({
       data: {

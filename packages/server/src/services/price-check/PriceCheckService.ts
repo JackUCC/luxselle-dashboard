@@ -79,7 +79,7 @@ export class PriceCheckService {
 
     let averageSellingPriceEur = 0
     let comps: PriceCheckComp[] = []
-    let dataSource: 'web_search' | 'ai_fallback' = 'ai_fallback'
+    let dataSource: 'web_search' | 'ai_fallback' | 'provider_unavailable' = 'ai_fallback'
     let diagnostics: PriceCheckDiagnostics | undefined
     let strategyUsed: 'strict' | 'broad' = 'strict'
 
@@ -90,6 +90,22 @@ export class PriceCheckService {
     const userLocation = { country: 'IE' as const }
 
     let searchResponse = await this.searchService.searchMarketMultiExpanded(variants, { userLocation })
+    if (searchResponse.providerError) {
+      return {
+        averageSellingPriceEur: 0,
+        comps: [],
+        maxBuyEur: 0,
+        maxBidEur: 0,
+        dataSource: 'provider_unavailable',
+        researchedAt: new Date().toISOString(),
+        diagnostics: this.buildDiagnostics(searchResponse, queryContext, 'no_search_data', {
+          strategyUsed: effectiveStrategy === 'auto' ? 'strict' : effectiveStrategy,
+          extractedCompCount: 0,
+          validCompCount: 0,
+          filteredOutCount: 0,
+        }),
+      }
+    }
 
     const secondaryDomains = parseSecondaryDomains()
     if (effectiveStrategy === 'broad' && secondaryDomains.length > 0) {

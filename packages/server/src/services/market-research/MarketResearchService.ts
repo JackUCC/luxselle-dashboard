@@ -48,6 +48,7 @@ export interface MarketComparable {
 
 export interface MarketResearchResult {
   provider: string
+  providerStatus?: 'available' | 'unavailable'
   brand: string
   model: string
 
@@ -174,6 +175,9 @@ export class MarketResearchService {
         queryContext.searchVariants,
         { userLocation: { country: 'IE' } },
       )
+      if (searchResponse.providerError) {
+        return this.buildDegradedAnalysis(input, 'AI search providers are currently unavailable.')
+      }
 
       const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
       if (!hasSearchData) {
@@ -365,6 +369,7 @@ export class MarketResearchService {
 
     return {
       provider,
+      providerStatus: 'available',
       brand: input.brand,
       model: input.model,
       estimatedMarketValueEur,
@@ -401,6 +406,7 @@ export class MarketResearchService {
     const ask = input.currentAskPriceEur ?? 0
     return {
       provider: 'hybrid',
+      providerStatus: 'unavailable',
       brand: input.brand,
       model: input.model,
       estimatedMarketValueEur: 0,

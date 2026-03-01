@@ -141,7 +141,7 @@ export const PriceCheckResultSchema = z.object({
   comps: z.array(PriceCheckCompSchema),
   maxBuyEur: z.number(),
   maxBidEur: z.number(),
-  dataSource: z.enum(['web_search', 'ai_fallback']),
+  dataSource: z.enum(['web_search', 'ai_fallback', 'provider_unavailable']),
   researchedAt: z.string(),
   diagnostics: PriceCheckDiagnosticsSchema.optional(),
 })
