@@ -234,14 +234,26 @@ export class SearchService {
         url: ann.url,
         snippet: '',
       }))
+      const rawText = routed.data.rawText
+
+      if (rawText.length < 50 && filteredAnnotations.length === 0) {
+        logger.warn('search_service_empty', {
+          searchEmpty: true,
+          queryLength: query.length,
+          rawTextLength: rawText.length,
+          annotationCount: filteredAnnotations.length,
+        })
+      }
 
       return {
         results,
-        rawText: routed.data.rawText,
+        rawText,
         annotations: filteredAnnotations,
       }
     } catch (error) {
-      logger.error('search_service_error', error)
+      const code = error && typeof error === 'object' && 'code' in error ? (error as { code: string }).code : undefined
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error('search_service_error', { code, message, error })
       return { results: [], rawText: '', annotations: [], providerError: true }
     }
   }

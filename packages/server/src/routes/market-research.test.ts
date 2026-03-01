@@ -8,10 +8,11 @@ import { ZodError } from 'zod'
 import { marketResearchRouter } from './market-research'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
-const { mockGetTrending, mockAnalyse, mockGetCompetitorFeed } = vi.hoisted(() => ({
+const { mockGetTrending, mockAnalyse, mockGetCompetitorFeed, mockGetDegradedAnalysis } = vi.hoisted(() => ({
   mockGetTrending: vi.fn(),
   mockAnalyse: vi.fn(),
   mockGetCompetitorFeed: vi.fn(),
+  mockGetDegradedAnalysis: vi.fn(),
 }))
 
 vi.mock('../services/market-research/MarketResearchService', () => ({
@@ -19,6 +20,7 @@ vi.mock('../services/market-research/MarketResearchService', () => ({
     getTrending = mockGetTrending
     getCompetitorFeed = mockGetCompetitorFeed
     analyse = mockAnalyse
+    getDegradedAnalysis = mockGetDegradedAnalysis
   },
 }))
 
@@ -176,6 +178,49 @@ describe('POST /api/market-research/analyse', () => {
 
     expect(res.status).toBe(400)
     expect(res.body.error).toBeDefined()
+  })
+
+  it('returns 200 with degraded payload when analyse throws (e.g. AI timeout or provider 400)', async () => {
+    mockAnalyse.mockRejectedValue(new Error('openai structured_extraction_json timed out'))
+    mockGetDegradedAnalysis.mockReturnValue({
+      provider: 'hybrid',
+      providerStatus: 'unavailable',
+      brand: 'Bottega Veneta',
+      model: 'Jodie',
+      estimatedMarketValueEur: 0,
+      priceRangeLowEur: 0,
+      priceRangeHighEur: 0,
+      suggestedBuyPriceEur: 0,
+      suggestedSellPriceEur: 0,
+      demandLevel: 'moderate',
+      priceTrend: 'stable',
+      marketLiquidity: 'slow_moving',
+      recommendation: 'hold',
+      confidence: 0.15,
+      marketSummary: 'Market analysis temporarily unavailable.',
+      keyInsights: [],
+      riskFactors: ['Market analysis temporarily unavailable.'],
+      comparables: [],
+    })
+
+    const res = await request(app)
+      .post('/api/market-research/analyse')
+      .set('Content-Type', 'application/json')
+      .send({
+        brand: 'Bottega Veneta',
+        model: 'Jodie',
+        category: 'Handbag',
+        condition: 'Excellent (A)',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toBeDefined()
+    expect(res.body.data.providerStatus).toBe('unavailable')
+    expect(res.body.data.marketSummary).toBe('Market analysis temporarily unavailable.')
+    expect(mockGetDegradedAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ brand: 'Bottega Veneta', model: 'Jodie' }),
+      'Market analysis temporarily unavailable.',
+    )
   })
 })
 

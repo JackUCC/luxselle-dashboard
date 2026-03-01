@@ -91,6 +91,7 @@ export class PriceCheckService {
 
     let searchResponse = await this.searchService.searchMarketMultiExpanded(variants, { userLocation })
     if (searchResponse.providerError) {
+      logger.warn('price_check_provider_unavailable', { reason: 'search_failed' })
       return {
         averageSellingPriceEur: 0,
         comps: [],

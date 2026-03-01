@@ -775,8 +775,28 @@ export default function UnifiedIntelligenceView() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800">
-                  No comparable listings found. Prices shown are AI estimates and may be less reliable.
+                <div className="space-y-3">
+                  <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800">
+                    No comparable listings found. Prices shown are AI estimates and may be less reliable.
+                  </div>
+                  {result.dataSource === 'ai_fallback' && result.comps.length === 0 && result.diagnostics && (
+                    <details className="rounded-lux-card border border-lux-200 bg-lux-50/50 p-3 text-sm text-lux-700">
+                      <summary className="cursor-pointer font-medium hover:text-lux-900 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
+                        Why no results?
+                      </summary>
+                      <ul className="mt-2 space-y-1 text-xs text-lux-600 list-disc pl-4">
+                        {result.diagnostics.emptyReason && (
+                          <li>Reason: {result.diagnostics.emptyReason.replace(/_/g, ' ')}</li>
+                        )}
+                        {typeof result.diagnostics.searchAnnotationCount === 'number' && (
+                          <li>Search citations: {result.diagnostics.searchAnnotationCount}</li>
+                        )}
+                        {typeof result.diagnostics.searchRawTextLength === 'number' && (
+                          <li>Search text length: {result.diagnostics.searchRawTextLength}</li>
+                        )}
+                      </ul>
+                    </details>
+                  )}
                 </div>
               )}
             </div>

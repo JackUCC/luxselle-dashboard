@@ -186,8 +186,12 @@ export class MarketResearchService {
 
       return this.synthesizeFromSearch(input, searchResponse, queryContext)
     } catch (error) {
-      logger.error('market_research_analyse_error', error)
-      return this.buildDegradedAnalysis(input, 'Market analysis temporarily unavailable.')
+      try {
+        logger.error('market_research_analyse_error', error)
+        return this.buildDegradedAnalysis(input, 'Market analysis temporarily unavailable.')
+      } catch (innerError) {
+        return this.buildDegradedAnalysis(input, 'Market analysis temporarily unavailable.')
+      }
     }
   }
 
@@ -400,6 +404,14 @@ export class MarketResearchService {
       comparables: validComps,
       seasonalNotes: parsed.seasonalNotes,
     }
+  }
+
+  /** Public helper for routes to return a valid degraded payload when analyse() throws. */
+  getDegradedAnalysis(input: MarketResearchInput, reason?: string): MarketResearchResult {
+    return this.buildDegradedAnalysis(
+      input,
+      reason ?? 'Market analysis temporarily unavailable.',
+    )
   }
 
   private buildDegradedAnalysis(input: MarketResearchInput, reason: string): MarketResearchResult {

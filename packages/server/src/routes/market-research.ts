@@ -5,9 +5,8 @@
  */
 import { Router } from 'express'
 import { z } from 'zod'
-import {
-    MarketResearchService,
-} from '../services/market-research/MarketResearchService'
+import { MarketResearchService } from '../services/market-research/MarketResearchService'
+import { logger } from '../middleware/requestId'
 
 const router = Router()
 const marketResearchService = new MarketResearchService()
@@ -25,12 +24,25 @@ const MarketResearchInputSchema = z.object({
 
 // POST /api/market-research/analyse — deep market analysis
 router.post('/analyse', async (req, res, next) => {
+    let input: z.infer<typeof MarketResearchInputSchema>
     try {
-        const input = MarketResearchInputSchema.parse(req.body)
+        input = MarketResearchInputSchema.parse(req.body)
+    } catch (parseError) {
+        next(parseError)
+        return
+    }
+    try {
         const result = await marketResearchService.analyse(input)
         res.json({ data: result })
     } catch (error) {
-        next(error)
+        logger.warn('market_research_analyse_fallback', {
+            message: error instanceof Error ? error.message : String(error),
+        })
+        const degraded = marketResearchService.getDegradedAnalysis(
+            input,
+            'Market analysis temporarily unavailable.',
+        )
+        res.status(200).json({ data: degraded })
     }
 })
 
