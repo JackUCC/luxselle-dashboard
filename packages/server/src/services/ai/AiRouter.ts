@@ -421,10 +421,15 @@ export class AiRouter {
 
     if (error instanceof Error) {
       const status = this.extractHttpStatus(error)
+      const providerDetail = this.extractProviderErrorDetail(error)
+      const message = providerDetail
+        ? `${error.message} | provider_detail=${providerDetail}`
+        : error.message
+
       if (status != null) {
-        return new AiRouterError('provider_http_error', error.message, status)
+        return new AiRouterError('provider_http_error', message, status)
       }
-      return new AiRouterError('unknown', error.message)
+      return new AiRouterError('unknown', message)
     }
 
     return new AiRouterError('unknown', 'Unknown AI provider error')
@@ -435,6 +440,29 @@ export class AiRouter {
     if (typeof candidate.status === 'number') return candidate.status
     if (typeof candidate.response?.status === 'number') return candidate.response.status
     return undefined
+  }
+
+  /**
+   * Extract structured error detail from provider SDK errors (e.g. OpenAI SDK).
+   * OpenAI SDK errors expose: error.error.message, error.error.type, error.error.code
+   */
+  private extractProviderErrorDetail(error: Error): string | undefined {
+    const candidate = error as Error & {
+      error?: { message?: string; type?: string; code?: string }
+      code?: string
+      type?: string
+    }
+
+    const parts: string[] = []
+    if (candidate.error?.type) parts.push(`type=${candidate.error.type}`)
+    if (candidate.error?.code) parts.push(`code=${candidate.error.code}`)
+    if (candidate.error?.message && candidate.error.message !== error.message) {
+      parts.push(`detail=${candidate.error.message.slice(0, 200)}`)
+    }
+    if (candidate.code && !candidate.error?.code) parts.push(`code=${candidate.code}`)
+    if (candidate.type && !candidate.error?.type) parts.push(`type=${candidate.type}`)
+
+    return parts.length > 0 ? parts.join(', ') : undefined
   }
 
   private async getOpenAI() {
@@ -613,15 +641,11 @@ export class AiRouter {
       throw new AiRouterError('no_provider_available', 'PERPLEXITY_API_KEY is not configured')
     }
 
-    const basePayload = {
-      model: env.PERPLEXITY_EXTRACTION_MODEL,
-      temperature: opts.temperature ?? 0.2,
-      messages: [
-        { role: 'system', content: opts.systemPrompt },
-        { role: 'user', content: opts.userPrompt },
-      ],
-      max_tokens: opts.maxTokens ?? 1500,
-    }
+    // Perplexity does not support response_format: { type: 'json_object' } (returns 400).
+    // Instead, rely on explicit prompt instructions + parseJsonWithRepair().
+    const systemPrompt = opts.systemPrompt.includes('ONLY valid JSON')
+      ? opts.systemPrompt
+      : `${opts.systemPrompt}\n\nIMPORTANT: Your response must be ONLY valid JSON with no surrounding text, markdown, or explanation.`
 
     let response: Response
     try {
@@ -632,8 +656,13 @@ export class AiRouter {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...basePayload,
-          response_format: { type: 'json_object' },
+          model: env.PERPLEXITY_EXTRACTION_MODEL,
+          temperature: opts.temperature ?? 0.2,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: opts.userPrompt },
+          ],
+          max_tokens: opts.maxTokens ?? 1500,
         }),
       })
     } catch (error) {
@@ -641,31 +670,6 @@ export class AiRouter {
         'network_error',
         `Perplexity extraction request failed: ${error instanceof Error ? error.message : String(error)}`,
       )
-    }
-
-    if (!response.ok && response.status === 400) {
-      const firstBody = await this.readErrorBody(response)
-      logger.warn('perplexity_extraction_request_compat_retry', {
-        model: env.PERPLEXITY_EXTRACTION_MODEL,
-        status: response.status,
-        body: firstBody,
-      })
-
-      try {
-        response = await fetch('https://api.perplexity.ai/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(basePayload),
-        })
-      } catch (error) {
-        throw new AiRouterError(
-          'network_error',
-          `Perplexity extraction retry request failed: ${error instanceof Error ? error.message : String(error)}`,
-        )
-      }
     }
 
     if (!response.ok) {
@@ -798,7 +802,7 @@ export class AiRouter {
   }): Promise<T> {
     const initialParse = this.tryParseJson(opts.rawContent)
     const repaired = initialParse.success
-      ? initialParse.data
+      ? initialParse
       : await this.tryRepairAndParse(opts.provider, opts.rawContent)
 
     if (!repaired.success) {

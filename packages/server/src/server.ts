@@ -106,6 +106,33 @@ app.get('/api/health', async (req, res) => {
         error: error instanceof Error ? error.message : String(error),
       }
     }
+
+    // Test OpenAI extraction (json_object mode) — validates the code path used by all AI extraction
+    if (providerTests.openai?.ok) {
+      const extractStartedAt = Date.now()
+      try {
+        const OpenAI = (await import('openai')).default
+        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+        const extractResponse = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'Return ONLY valid JSON.' },
+            { role: 'user', content: 'Return {"status":"ok"}' },
+          ],
+          max_tokens: 20,
+          temperature: 0,
+          response_format: { type: 'json_object' },
+        })
+        const content = extractResponse.choices[0]?.message?.content ?? ''
+        JSON.parse(content)
+        providerTests.openai_extraction = { ok: true, latencyMs: Date.now() - extractStartedAt }
+      } catch (error) {
+        providerTests.openai_extraction = {
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      }
+    }
   } else {
     providerTests.openai = { ok: false, error: 'OPENAI_API_KEY is not configured' }
   }
@@ -136,6 +163,45 @@ app.get('/api/health', async (req, res) => {
       providerTests.perplexity = {
         ok: false,
         error: error instanceof Error ? error.message : String(error),
+      }
+    }
+
+    // Test Perplexity extraction (prompt-only, no response_format — matches production code path)
+    if (providerTests.perplexity?.ok) {
+      const extractStartedAt = Date.now()
+      try {
+        const extractResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: env.PERPLEXITY_EXTRACTION_MODEL,
+            temperature: 0,
+            max_tokens: 20,
+            messages: [
+              { role: 'system', content: 'Return ONLY valid JSON.' },
+              { role: 'user', content: 'Return {"status":"ok"}' },
+            ],
+          }),
+        })
+
+        if (!extractResponse.ok) {
+          throw new Error(`Perplexity extraction probe failed (${extractResponse.status})`)
+        }
+
+        const payload = (await extractResponse.json()) as {
+          choices?: Array<{ message?: { content?: string } }>
+        }
+        const content = payload.choices?.[0]?.message?.content ?? ''
+        JSON.parse(content)
+        providerTests.perplexity_extraction = { ok: true, latencyMs: Date.now() - extractStartedAt }
+      } catch (error) {
+        providerTests.perplexity_extraction = {
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        }
       }
     }
   } else {
@@ -257,6 +323,22 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
 if (import.meta.url === `file://${process.argv[1]}`) {
   app.listen(env.PORT, '0.0.0.0', () => {
     console.log(`API server running on http://0.0.0.0:${env.PORT}`)
+
+    const openaiKey = Boolean(env.OPENAI_API_KEY)
+    const perplexityKey = Boolean(env.PERPLEXITY_API_KEY)
+    logger.info('ai_providers_configured', {
+      routingMode: env.AI_ROUTING_MODE,
+      openai: openaiKey,
+      perplexity: perplexityKey,
+      perplexitySearchModel: env.PERPLEXITY_SEARCH_MODEL,
+      perplexityExtractionModel: env.PERPLEXITY_EXTRACTION_MODEL,
+    })
+
+    if (env.AI_ROUTING_MODE === 'dynamic' && !openaiKey && !perplexityKey) {
+      logger.error('ai_no_providers', {
+        message: 'AI_ROUTING_MODE=dynamic but neither OPENAI_API_KEY nor PERPLEXITY_API_KEY is set. All AI features will fail.',
+      })
+    }
   })
 }
 

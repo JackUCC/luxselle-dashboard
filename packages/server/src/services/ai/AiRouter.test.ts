@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 
 const responsesCreate = vi.fn()
 const chatCreate = vi.fn()
@@ -165,5 +166,95 @@ describe('AiRouter', () => {
       { url: 'https://designerexchange.ie/item/100', title: 'designerexchange.ie' },
       { url: 'https://vestiairecollective.com/item/200', title: 'vestiairecollective.com' },
     ])
+  })
+
+  it('calls openai extraction with json_object response_format', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    chatCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '{"price":1500}' } }],
+    })
+
+    const result = await router.extractStructuredJson({
+      systemPrompt: 'Return ONLY valid JSON.',
+      userPrompt: 'extract price',
+    })
+
+    expect(result.provider).toBe('openai')
+    expect(result.data).toEqual({ price: 1500 })
+    expect(chatCreate.mock.calls[0][0]).toHaveProperty('response_format', { type: 'json_object' })
+  })
+
+  it('calls perplexity extraction without response_format when openai fails', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    chatCreate.mockRejectedValueOnce(Object.assign(new Error('openai down'), { status: 500 }))
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: '{"items":[{"name":"test"}]}' } }],
+      }),
+    } satisfies Partial<Response>)
+
+    const result = await router.extractStructuredJson({
+      systemPrompt: 'Return ONLY valid JSON.',
+      userPrompt: 'extract items',
+    })
+
+    expect(result.provider).toBe('perplexity')
+    expect(result.fallbackUsed).toBe(true)
+    expect(result.data).toEqual({ items: [{ name: 'test' }] })
+
+    const fetchCallBody = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(fetchCallBody).not.toHaveProperty('response_format')
+  })
+
+  it('validates extraction response against provided Zod schema', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    // OpenAI returns bad data (string instead of number)
+    chatCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '{"count": "not_a_number"}' } }],
+    })
+
+    // Perplexity fallback also returns bad data
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: '{"count": "still_not_a_number"}' } }],
+      }),
+    } satisfies Partial<Response>)
+
+    const schema = z.object({ count: z.number() })
+
+    await expect(
+      router.extractStructuredJson({
+        systemPrompt: 'Return ONLY valid JSON.',
+        userPrompt: 'count items',
+        schema,
+      }),
+    ).rejects.toThrow(/schema/i)
+  })
+
+  it('extracts JSON from markdown-fenced response', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    chatCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '```json\n{"value": 42}\n```' } }],
+    })
+
+    const result = await router.extractStructuredJson({
+      systemPrompt: 'Return ONLY valid JSON.',
+      userPrompt: 'extract value',
+    })
+
+    expect(result.data).toEqual({ value: 42 })
   })
 })
