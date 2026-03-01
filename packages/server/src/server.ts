@@ -65,10 +65,20 @@ app.use(requestId as express.RequestHandler)
 app.use(requestLogger as express.RequestHandler)
 
 app.get('/api/health', (_req, res) => {
+  const openaiConfigured = Boolean(env.OPENAI_API_KEY)
+  const perplexityConfigured = Boolean(env.PERPLEXITY_API_KEY)
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    aiConfigured: Boolean(env.OPENAI_API_KEY || env.PERPLEXITY_API_KEY),
+    aiConfigured: openaiConfigured || perplexityConfigured,
+    ai: {
+      routingMode: env.AI_ROUTING_MODE,
+      providers: {
+        openai: openaiConfigured,
+        perplexity: perplexityConfigured,
+      },
+      searchModel: env.PERPLEXITY_SEARCH_MODEL,
+    },
   })
 })
 

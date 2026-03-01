@@ -23,14 +23,17 @@ Every purchase decision runs through this tool — enter an item, get everything
 - ✓ Competitor Activity feed — track competitor listing activity
 - ✓ Overview/Dashboard — summary of key metrics
 
-### Active
+### Active (v2 complete, v3 planned)
 
-- [x] Unified Sourcing Intelligence page — combine Price Check + Serial Check + Landed Cost into one description-first flow on a single page; serial is optional, landed cost always visible
-- [ ] Agentic Market Intelligence — background competitor + trend scraping that runs continuously, plus on-demand deep-dive research mode; feeds Market Research and Competitor Activity
-- [x] Design consistency pass — OCD-level polish so every page feels like the same product: consistent card styles, spacing, typography, empty states, loading states
-- [x] Sidebar visual cleanup — declutter icons, spacing, and grouping so navigation is clean and purposeful
-- [ ] Inventory + Invoice verification — confirm all flows work end-to-end: status changes, create/save/export invoice, edge cases
-- [ ] ML/API advancement — maximize intelligence across all tools: smarter price predictions, better serial decode confidence, trend signals from scraped data
+- [x] Unified Sourcing Intelligence page — `/evaluate` route with price + optional serial + landed-cost in one flow
+- [x] Design consistency pass — uniform card styles, spacing, typography, empty/loading states
+- [x] Sidebar visual cleanup — Intelligence / Operations groups, clean icons and spacing
+- [x] Dynamic AI routing — Perplexity preferred for web search, OpenAI for structured extraction; automatic fallback
+- [x] Price checker reliability — provenance filter, two-stage strategy, dedup, outlier filter, clearer UX
+- [ ] **STAB-01**: AI provider reliability — surface "provider unavailable" errors in UI instead of silent €0 fallback
+- [ ] **INTEL-02**: Agentic Market Intelligence — background monitoring + on-demand deep-dive research
+- [ ] **QUAL-01**: Inventory + Invoice E2E verification — confirm all flows, edge cases, test coverage
+- [ ] **ML-01**: ML/API advancement — smarter price predictions, confidence scores, trend signals
 
 ### Out of Scope
 
@@ -68,4 +71,4 @@ Every purchase decision runs through this tool — enter an item, get everything
 | Inventory: verify don't rebuild | Already works well; needs testing not rewriting | — Pending |
 
 ---
-*Last updated: 2026-03-01 after Phase 9 completion*
+*Last updated: 2026-03-01 after Phase 9 completion + v3 planning + stabilization fixes*

@@ -59,6 +59,16 @@
 - [x] **UX-02**: Sidebar visual cleanup improves icon/spacing/grouping clarity.
 - [ ] **ML-01**: ML/API intelligence upgrades improve price prediction confidence and trend signaling.
 
+## v3 Requirements
+
+### AI Reliability and Stability
+
+- [ ] **STAB-01**: AI provider failures are surfaced clearly in the UI (not silently returning €0); recoverable error states with actionable guidance shown to users.
+
+### Operational Verification
+
+- [ ] **QUAL-01**: Inventory and Invoice flows verified end-to-end: all status transitions, create/save/export, and edge cases covered with test evidence.
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -99,14 +109,17 @@
 | INTEL-01 | Phase 9 | Complete |
 | UX-01 | Phase 9 | Complete |
 | UX-02 | Phase 9 | Complete |
-| INTEL-02 | Phase 10+ | Planned |
-| ML-01 | Phase 10+ | Planned |
+| INTEL-02 | Phase 11 | Planned |
+| ML-01 | Phase 12 | Planned |
+| STAB-01 | Phase 10 | Planned |
+| QUAL-01 | Phase 12 | Planned |
 
 **Coverage:**
-- v1 requirements: 23 total
-- Mapped to phases: 23
-- Unmapped: 0
+- v1 requirements: 23 total, all satisfied
+- v2 requirements: 5 total, 3 satisfied (INTEL-02 and ML-01 pending)
+- v3 requirements: 2 total, 0 satisfied (STAB-01, QUAL-01 pending)
+- Total unmapped: 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-01 after Phase 9 completion*
+*Last updated: 2026-03-01 after Phase 9 completion + v3 planning*

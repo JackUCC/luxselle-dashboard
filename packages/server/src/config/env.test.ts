@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+// Prevent dotenv from loading the local .env file so tests control env vars explicitly
+vi.mock('dotenv', () => ({ default: { config: vi.fn() } }))
+
 const ORIGINAL_ENV = { ...process.env }
 
 function setEnvValue(key: string, value: string | undefined) {
