@@ -54,9 +54,9 @@ test('dock bar is visible and routes correctly on wide screens', async ({ page }
   const dock = page.getByTestId('dock-bar')
   await expect(dock).toBeVisible()
 
-  await dock.getByRole('link', { name: 'Price Check' }).click()
-  await expect(page).toHaveURL('/buy-box')
-  await expect(page.getByRole('heading', { name: 'Price Check' })).toBeVisible()
+  await dock.getByRole('link', { name: 'Evaluate' }).click()
+  await expect(page).toHaveURL('/evaluate')
+  await expect(page.getByRole('heading', { name: 'Sourcing Intelligence' })).toBeVisible()
 })
 
 test('breadcrumb is hidden on base route and visible on deep state', async ({ page }) => {

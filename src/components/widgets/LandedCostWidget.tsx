@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import SectionLabel from '../design-system/SectionLabel'
 import {
   DEFAULT_AUCTION_FEE_PCT,
@@ -10,8 +10,18 @@ function formatEur(value: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
 }
 
-export default function LandedCostWidget() {
+interface LandedCostWidgetProps {
+  suggestedBid?: number | null
+  suggestionLabel?: string
+}
+
+export default function LandedCostWidget({
+  suggestedBid = null,
+  suggestionLabel = 'Suggested bid target',
+}: LandedCostWidgetProps) {
   const [bidInput, setBidInput] = useState('')
+
+  const hasSuggestion = typeof suggestedBid === 'number' && Number.isFinite(suggestedBid) && suggestedBid > 0
 
   const bid = useMemo(() => {
     const n = parseFloat(bidInput.replace(/,/g, ''))
@@ -22,6 +32,11 @@ export default function LandedCostWidget() {
     if (bid <= 0) return 0
     return bid * (1 + DEFAULT_AUCTION_FEE_PCT / 100) * (1 + DEFAULT_CUSTOMS_PCT / 100) * (1 + DEFAULT_IMPORT_VAT_PCT / 100)
   }, [bid])
+
+  useEffect(() => {
+    if (!hasSuggestion) return
+    setBidInput(Math.round(suggestedBid as number).toString())
+  }, [hasSuggestion, suggestedBid])
 
   return (
     <div className="lux-card p-6 animate-bento-enter stagger-1">
@@ -52,6 +67,11 @@ export default function LandedCostWidget() {
           {formatEur(landed)}
         </span>
       </div>
+      {hasSuggestion ? (
+        <p className="mt-2 text-xs text-lux-500">
+          {suggestionLabel}: {formatEur(suggestedBid as number)} (auto-filled)
+        </p>
+      ) : null}
     </div>
   )
 }

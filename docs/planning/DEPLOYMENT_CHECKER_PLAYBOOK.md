@@ -41,7 +41,7 @@ flowchart LR
 | 1 | Build and deploy | Vercel dashboard → Deployments: latest build green; build command `npm run build`, output `dist`. Root Directory empty or `app` per `docs/deploy/VERCEL.md`. |
 | 2 | Environment variables | Vercel → Settings → Environment Variables: `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_API_BASE` (production). No trailing slash on `VITE_API_BASE`. |
 | 3 | Live URL | Open app URL; no "Backend not configured" banner when `VITE_API_BASE` is set (see `src/lib/api.ts`, `src/LuxselleApp.tsx`). |
-| 4 | SPA routing | Navigate to `/inventory`, `/buy-box`, etc.; no 404 (rewrites in `vercel.json`: `(.*)` → `/index.html`). |
+| 4 | SPA routing | Navigate to `/inventory`, `/evaluate`, etc.; no 404 (rewrites in `vercel.json`: `(.*)` → `/index.html`). |
 | 5 | API connectivity | From live app: dashboard loads, at least one API call succeeds (e.g. KPIs or health). No CORS errors in browser console. |
 | 6 | Docs match | `docs/deploy/VERCEL.md` and `docs/deploy/QUICK_START_CHECKLIST.md` Phase 3 list same env vars and steps. |
 

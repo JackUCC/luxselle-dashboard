@@ -6,7 +6,7 @@
 
 ## Overview
 
-Core Supplier Engine capabilities are already implemented across phases 1-6. Phase 7 completes the remaining release-critical sidecar hardening work: compact-width usability, mode parity, and QA gates across evaluator, inventory, and invoicing journeys.
+Core Supplier Engine capabilities are implemented across phases 1-8. Phase 9 delivers the first v2 step: unified sourcing intelligence UX (price + optional serial + landed-cost in one flow) plus navigation polish and regression coverage.
 
 ## Phases
 
@@ -21,7 +21,8 @@ Core Supplier Engine capabilities are already implemented across phases 1-6. Pha
 - [x] **Phase 5: Sourcing and Operational Jobs** - Sourcing lifecycle and job reliability controls.
 - [x] **Phase 6: Invoicing and Overview UX** - Invoicing workflows and operational overview polish.
 - [x] **Phase 7: Sidecar Mode Hardening + Agent Execution** - Compact UX hardening, parity checks, and release QA. (completed 2026-02-28)
-- [ ] **Phase 8: Jobs and Activity Visibility** - Wire JobsView into app routing and surface activity feed data in the UI. (closes OPS-02, DATA-03 gaps from v1.0 audit)
+- [x] **Phase 8: Jobs and Activity Visibility** - Wire JobsView into app routing and surface activity feed data in the UI. (completed 2026-03-01)
+- [x] **Phase 9: Unified Sourcing Intelligence and Frontend Polish** - Unify price/serial/landed flow on one route with nav cleanup and parity validation. (completed 2026-03-01)
 
 ## Phase Details
 
@@ -127,8 +128,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 07-01: Compact sidecar layout hardening and mode parity fixes
-- [ ] 07-02: Sidecar journey QA, regression validation, and release gate checks
+- [x] 07-01: Compact sidecar layout hardening and mode parity fixes
+- [x] 07-02: Sidecar journey QA, regression validation, and release gate checks
 
 ### Phase 8: Jobs and Activity Visibility
 **Goal:** Surface operational job status and activity feed data that are fully implemented in the backend but unreachable in the current UI.
@@ -139,17 +140,33 @@ Plans:
   1. Users can navigate to `/jobs` and see running/failed jobs with retry capability.
   2. Activity feed data from `GET /api/dashboard/activity` is surfaced in the UI.
   3. Tests cover the `/jobs` route and activity data path.
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 08-01-PLAN.md — Backend unit tests for POST /api/jobs/:id/retry and GET /api/dashboard/activity
-- [ ] 08-02-PLAN.md — Route wiring (/jobs in routeMeta + AnimatedRoutes) and activity feed in DashboardView
-- [ ] 08-03-PLAN.md — E2E navigation tests for /jobs and activity feed visibility
+- [x] 08-01-PLAN.md — Backend unit tests for POST /api/jobs/:id/retry and GET /api/dashboard/activity
+- [x] 08-02-PLAN.md — Route wiring (/jobs in routeMeta + AnimatedRoutes) and activity feed in DashboardView
+- [x] 08-03-PLAN.md — E2E navigation tests for /jobs and activity feed visibility
+
+### Phase 9: Unified Sourcing Intelligence and Frontend Polish
+**Goal:** Combine price-check, optional serial context, and landed-cost planning in one description-first route with cleaner navigation and parity coverage.
+**Depends on:** Phase 8
+**Requirements:** [INTEL-01, UX-01, UX-02]
+**Success Criteria** (what must be TRUE):
+  1. Unified `/evaluate` flow replaces split price/serial decision entry points.
+  2. Legacy `/buy-box` and `/serial-check` links still resolve correctly through redirects.
+  3. Landed-cost bid prefill works in overview mode from decision targets.
+  4. E2E coverage validates unified flow and sidecar parity.
+**Plans:** 3/3 plans complete
+
+Plans:
+- [x] 09-01-PLAN.md — Unified sourcing intelligence page and decision helper wiring
+- [x] 09-02-PLAN.md — Route/nav migration, prefetch updates, and consistency pass
+- [x] 09-03-PLAN.md — Sidebar cleanup and focused E2E parity updates
 
 ## Progress
 
 **Execution Order:**
-1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -160,4 +177,5 @@ Plans:
 | 5. Sourcing and Operational Jobs | 2/2 | Complete | 2026-02-27 |
 | 6. Invoicing and Overview UX | 2/2 | Complete | 2026-02-27 |
 | 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete | 2026-02-28 |
-| 8. Jobs and Activity Visibility | 0/3 | Not started | - |
+| 8. Jobs and Activity Visibility | 3/3 | Complete | 2026-03-01 |
+| 9. Unified Sourcing Intelligence and Frontend Polish | 3/3 | Complete | 2026-03-01 |

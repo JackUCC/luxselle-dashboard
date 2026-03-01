@@ -34,10 +34,6 @@ export default function SidecarSerialCheckWidget() {
       toast.error('Enter serial')
       return
     }
-    if (!normalizedDescription) {
-      toast.error('Add description')
-      return
-    }
     setHasTriedDecode(true)
     setIsLoading(true)
     setGuidance(null)
@@ -49,7 +45,7 @@ export default function SidecarSerialCheckWidget() {
           const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
             serial,
             brand,
-            itemDescription: normalizedDescription,
+            ...(normalizedDescription ? { itemDescription: normalizedDescription } : {}),
           })
           decoded = data
         } catch {
@@ -57,16 +53,17 @@ export default function SidecarSerialCheckWidget() {
         }
       }
 
-      const { data: market } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: normalizedDescription,
-      })
-      const valuation = calculateSerialPricingGuidance({
-        marketAverageEur: market.averageSellingPriceEur,
-        decode: decoded,
-      })
-
       setResult(decoded)
-      setGuidance(valuation)
+
+      if (normalizedDescription) {
+        const { data: market } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
+          query: normalizedDescription,
+        })
+        setGuidance(calculateSerialPricingGuidance({
+          marketAverageEur: market.averageSellingPriceEur,
+          decode: decoded,
+        }))
+      }
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Decode failed'
       toast.error(message)
@@ -95,7 +92,7 @@ export default function SidecarSerialCheckWidget() {
           type="text"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="e.g. Chanel flap medium black"
+          placeholder="Item description (optional, for pricing)"
           className="w-full rounded border border-lux-200 px-2 py-1.5 text-xs text-lux-900 placeholder:text-lux-400 focus:border-lux-300 focus:outline-none"
         />
 
@@ -153,6 +150,11 @@ export default function SidecarSerialCheckWidget() {
               <p>{result.message}</p>
             </div>
           </div>
+        </div>
+      )}
+      {result && !guidance && description.trim().length === 0 && (
+        <div className="mt-2 rounded-md border border-lux-200 bg-lux-50 px-2 py-1.5 text-xs text-lux-600">
+          Add an item description to get worth and max-pay guidance.
         </div>
       )}
       {guidance && (

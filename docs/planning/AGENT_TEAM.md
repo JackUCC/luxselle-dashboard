@@ -22,7 +22,7 @@ Core decision loop:
 | ----- | ---- | ----- | ------------- |
 | **Dashboard Agent** | Dashboard | `/` | KPIs, activity, command bar, mode-aware overview |
 | **Inventory Agent** | Inventory | `/inventory` | Products, drawer, transactions, stock awareness |
-| **Evaluator Agent** | Buy Box | `/buy-box` | Market price check, landed cost, decision support |
+| **Evaluator Agent** | Sourcing Intelligence | `/evaluate` | Market price check, landed cost, decision support |
 | **Sourcing Agent** | Sourcing | `/sourcing` | Sourcing requests, status flow, pipeline |
 | **Jobs Agent** | Jobs | `/jobs` | System jobs, import status, retries |
 | **Invoices Agent** | Invoices | `/invoices` | Invoices list, creation, export |

@@ -50,8 +50,8 @@ This document provides an overview of the project's directory structure and the 
 - **Routes**:
   - `Dashboard` (`/`): Overview, KPIs.
   - `Inventory` (`/inventory`): Product list, details drawer.
-  - `Evaluator` (`/buy-box`): Price check, product analysis.
-  - `Serial Check` (`/serial-check`): Serial check.
+  - `Sourcing Intelligence` (`/evaluate`): Unified price check, optional serial context, landed-cost support.
+  - Legacy redirects: `/buy-box` and `/serial-check` route to `/evaluate`.
   - `Sourcing` (`/sourcing`): Sourcing request pipeline.
   - `Jobs` (`/jobs`): System background jobs.
   - `Invoices` (`/invoices`): Invoices list and detail.

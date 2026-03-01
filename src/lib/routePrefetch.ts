@@ -3,8 +3,9 @@ type RouteImporter = () => Promise<unknown>
 const routeImporters: Record<string, RouteImporter> = {
   '/': () => import('../pages/Dashboard/DashboardView'),
   '/inventory': () => import('../pages/Inventory/InventoryView'),
-  '/buy-box': () => import('../pages/BuyBox/EvaluatorView'),
-  '/serial-check': () => import('../pages/SerialCheck/SerialCheckView'),
+  '/evaluate': () => import('../pages/UnifiedIntelligence/UnifiedIntelligenceView'),
+  '/buy-box': () => import('../pages/UnifiedIntelligence/UnifiedIntelligenceView'),
+  '/serial-check': () => import('../pages/UnifiedIntelligence/UnifiedIntelligenceView'),
   '/retail-price': () => import('../pages/RetailPrice/RetailPriceView'),
   '/market-research': () => import('../pages/MarketResearch/MarketResearchView'),
   '/sourcing': () => import('../pages/Sourcing/SourcingView'),

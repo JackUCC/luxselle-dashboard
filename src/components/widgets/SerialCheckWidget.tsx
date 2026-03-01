@@ -1,63 +1,44 @@
 /**
- * Compact Serial Check widget for the Dashboard overview. Paste serial + brand → see year.
- * Links to full Serial Check page for more detail.
+ * Compact Serial Check widget for the Dashboard overview.
+ * This widget is decode-first; detailed pricing context lives in /evaluate.
  */
 import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import { Search, Calendar, Info } from 'lucide-react'
 import { apiPost, ApiError } from '../../lib/api'
-import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
-import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
-import type { SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
+import type { SerialDecodeResult } from '@shared/schemas'
 import SectionLabel from '../design-system/SectionLabel'
-
-interface PriceCheckResult {
-  averageSellingPriceEur: number
-  maxBuyEur: number
-  maxBidEur: number
-  comps: Array<{ title: string; price: number; source: string; sourceUrl?: string }>
-}
 
 export default function SerialCheckWidget() {
   const [serial, setSerial] = useState('')
   const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
-  const [description, setDescription] = useState('')
   const [result, setResult] = useState<DecodeResult | null>(null)
-  const [guidance, setGuidance] = useState<SerialPricingGuidance | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleDecode = useCallback(async () => {
-    const normalizedDescription = description.trim()
     if (!serial.trim()) { toast.error('Enter serial'); return }
-    if (!normalizedDescription) { toast.error('Add item description'); return }
     setIsLoading(true)
-    setGuidance(null)
     try {
       let decoded = decodeSerialToYear(serial, brand)
       if (decoded.precision === 'unknown' || decoded.confidence < 0.7) {
         try {
           const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
-            brand, serial, itemDescription: normalizedDescription,
+            brand,
+            serial,
           })
           decoded = data
         } catch { /* keep local result */ }
       }
-      const { data: market } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-        query: normalizedDescription,
-      })
       setResult(decoded)
-      setGuidance(calculateSerialPricingGuidance({
-        marketAverageEur: market.averageSellingPriceEur,
-        decode: decoded,
-      }))
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Decode failed')
       setResult(decodeSerialToYear(serial, brand))
     } finally {
       setIsLoading(false)
     }
-  }, [serial, brand, description])
+  }, [serial, brand])
 
   return (
     <div className="lux-card p-6 animate-bento-enter stagger-6">
@@ -89,15 +70,6 @@ export default function SerialCheckWidget() {
           className="lux-input"
         />
 
-        <input
-          id="widget-description"
-          type="text"
-          placeholder="Item description..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="lux-input hidden"
-        />
-
         <div className="flex items-center gap-2 pt-1">
           <button
             type="button"
@@ -110,13 +82,23 @@ export default function SerialCheckWidget() {
           </button>
           <button
             type="button"
-            onClick={() => { setSerial(''); setResult(null); setGuidance(null) }}
+            onClick={() => { setSerial(''); setResult(null) }}
             className="text-xs font-medium text-lux-500 hover:text-lux-700 transition-colors px-3 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             Clear
           </button>
         </div>
       </div>
+
+      <p className="text-xs text-lux-500">
+        Need pricing context too?{' '}
+        <Link
+          to="/evaluate"
+          className="font-medium text-lux-700 hover:text-lux-900 underline focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm"
+        >
+          Open Sourcing Intelligence
+        </Link>
+      </p>
 
       {result && (
         <div
@@ -142,13 +124,6 @@ export default function SerialCheckWidget() {
               <p className="text-xs opacity-80 mt-0.5">{result.message}</p>
             </div>
           </div>
-        </div>
-      )}
-
-      {guidance && (
-        <div className="mt-3 rounded-lux-card border border-lux-200 bg-lux-50/80 px-3 py-2.5 text-xs text-lux-900">
-          <p className="font-semibold">Worth: {formatCurrency(guidance.estimatedWorthEur)}</p>
-          <p>Max pay: {formatCurrency(guidance.recommendedMaxPayEur)}</p>
         </div>
       )}
     </div>

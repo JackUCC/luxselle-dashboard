@@ -18,11 +18,11 @@ export default function MarketIntelligenceWidget() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
-    navigate(`/buy-box?q=${encodeURIComponent(query.trim())}&run=1`)
+    navigate(`/evaluate?q=${encodeURIComponent(query.trim())}&run=1`)
   }
 
   const handleRecentClick = (label: string) => {
-    navigate(`/buy-box?q=${encodeURIComponent(label)}&run=1`)
+    navigate(`/evaluate?q=${encodeURIComponent(label)}&run=1`)
   }
 
   const handleImageClick = () => {
@@ -32,7 +32,7 @@ export default function MarketIntelligenceWidget() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      navigate('/buy-box', { state: { imageFile: file } })
+      navigate('/evaluate', { state: { imageFile: file } })
     }
   }
 
@@ -44,7 +44,7 @@ export default function MarketIntelligenceWidget() {
         <PredictiveInput
           value={query}
           onChange={setQuery}
-          onSelect={(selected) => navigate(`/buy-box?q=${encodeURIComponent(selected)}&run=1`)}
+          onSelect={(selected) => navigate(`/evaluate?q=${encodeURIComponent(selected)}&run=1`)}
           popularItems={POPULAR_SUGGESTIONS}
           placeholder="Search brand, model, SKU, or paste image..."
           ariaLabel="Search market intelligence"

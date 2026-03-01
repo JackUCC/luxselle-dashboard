@@ -25,10 +25,10 @@ Every purchase decision runs through this tool — enter an item, get everything
 
 ### Active
 
-- [ ] Unified Sourcing Intelligence page — combine Price Check + Serial Check + Landed Cost into one description-first flow on a single page; serial is optional, landed cost always visible
+- [x] Unified Sourcing Intelligence page — combine Price Check + Serial Check + Landed Cost into one description-first flow on a single page; serial is optional, landed cost always visible
 - [ ] Agentic Market Intelligence — background competitor + trend scraping that runs continuously, plus on-demand deep-dive research mode; feeds Market Research and Competitor Activity
-- [ ] Design consistency pass — OCD-level polish so every page feels like the same product: consistent card styles, spacing, typography, empty states, loading states
-- [ ] Sidebar visual cleanup — declutter icons, spacing, and grouping so navigation is clean and purposeful
+- [x] Design consistency pass — OCD-level polish so every page feels like the same product: consistent card styles, spacing, typography, empty states, loading states
+- [x] Sidebar visual cleanup — declutter icons, spacing, and grouping so navigation is clean and purposeful
 - [ ] Inventory + Invoice verification — confirm all flows work end-to-end: status changes, create/save/export invoice, edge cases
 - [ ] ML/API advancement — maximize intelligence across all tools: smarter price predictions, better serial decode confidence, trend signals from scraped data
 
@@ -47,9 +47,9 @@ Every purchase decision runs through this tool — enter an item, get everything
 - Deploy: Vercel (frontend), Railway (backend)
 - AI provider: OpenAI (with mock for tests)
 - Navigation has two sections: "check" (tools) and "manage" (operations)
-- Current pages: Overview, Price Check (/buy-box), Retail Price, Serial Check, Market Research, Saved Research, Inventory, Sourcing, Invoices
+- Current pages: Overview, Sourcing Intelligence (/evaluate), Retail Price, Market Research, Saved Research, Inventory, Sourcing, Invoices
 - Competitor Activity exists as a component/feed but not a dedicated nav item
-- The combined Sourcing Intelligence page replaces the separate /buy-box and /serial-check routes (or wraps them)
+- Legacy /buy-box and /serial-check routes redirect to /evaluate for compatibility
 
 ## Constraints
 
@@ -68,4 +68,4 @@ Every purchase decision runs through this tool — enter an item, get everything
 | Inventory: verify don't rebuild | Already works well; needs testing not rewriting | — Pending |
 
 ---
-*Last updated: 2026-02-28 after initialization*
+*Last updated: 2026-03-01 after Phase 9 completion*

@@ -91,11 +91,11 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
           </button>
         </div>
 
-        <div className="space-y-5 overflow-y-auto p-3 pt-4">
+        <div className="space-y-4 overflow-y-auto p-3 pt-4">
           {NAV_GROUPS.map((group) => (
-            <section key={group.section} className="space-y-0.5">
+            <section key={group.section} className="space-y-1">
               {group.title ? (
-                <h2 className="px-2.5 pb-1 text-xs font-semibold uppercase tracking-widest text-lux-400">
+                <h2 className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-lux-400">
                   {group.title}
                 </h2>
               ) : null}

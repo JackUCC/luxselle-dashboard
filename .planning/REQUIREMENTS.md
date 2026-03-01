@@ -53,11 +53,11 @@
 
 ### Unified Intelligence and Polish
 
-- **INTEL-01**: Unified Sourcing Intelligence page combines price, serial, and landed-cost in one description-first flow.
-- **INTEL-02**: Agentic Market Intelligence supports continuous background monitoring and on-demand deep dives.
-- **UX-01**: Design consistency pass unifies spacing, typography, cards, loading, and empty states.
-- **UX-02**: Sidebar visual cleanup improves icon/spacing/grouping clarity.
-- **ML-01**: ML/API intelligence upgrades improve price prediction confidence and trend signaling.
+- [x] **INTEL-01**: Unified Sourcing Intelligence page combines price, serial, and landed-cost in one description-first flow.
+- [ ] **INTEL-02**: Agentic Market Intelligence supports continuous background monitoring and on-demand deep dives.
+- [x] **UX-01**: Design consistency pass unifies spacing, typography, cards, loading, and empty states.
+- [x] **UX-02**: Sidebar visual cleanup improves icon/spacing/grouping clarity.
+- [ ] **ML-01**: ML/API intelligence upgrades improve price prediction confidence and trend signaling.
 
 ## Out of Scope
 
@@ -79,7 +79,7 @@
 | PLAT-04 | Phase 1 | Complete |
 | DATA-01 | Phase 2 | Complete |
 | DATA-02 | Phase 2 | Complete |
-| DATA-03 | Phase 2 + Phase 8 (gap closure) | Pending |
+| DATA-03 | Phase 2 + Phase 8 (gap closure) | Complete |
 | EVAL-01 | Phase 3 | Complete |
 | EVAL-02 | Phase 3 | Complete |
 | EVAL-03 | Phase 3 | Complete |
@@ -87,7 +87,7 @@
 | INV-02 | Phase 4 | Complete |
 | INV-03 | Phase 4 | Complete |
 | OPS-01 | Phase 5 | Complete |
-| OPS-02 | Phase 5 + Phase 8 (gap closure) | Pending |
+| OPS-02 | Phase 5 + Phase 8 (gap closure) | Complete |
 | OPS-03 | Phase 5 | Complete |
 | FIN-01 | Phase 6 | Complete |
 | FIN-02 | Phase 6 | Complete |
@@ -96,6 +96,11 @@
 | SIDE-02 | Phase 7 | Complete |
 | SIDE-03 | Phase 7 | Complete |
 | SIDE-04 | Phase 7 | Complete |
+| INTEL-01 | Phase 9 | Complete |
+| UX-01 | Phase 9 | Complete |
+| UX-02 | Phase 9 | Complete |
+| INTEL-02 | Phase 10+ | Planned |
+| ML-01 | Phase 10+ | Planned |
 
 **Coverage:**
 - v1 requirements: 23 total
@@ -104,4 +109,4 @@
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after GSD planning baseline refresh*
+*Last updated: 2026-03-01 after Phase 9 completion*

@@ -47,7 +47,10 @@ export default function DockBar() {
               {groupIndex > 0 && (
                 <div className="my-2 h-px w-6 bg-lux-300/40" />
               )}
-              <div className="flex flex-col items-center gap-1.5">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-lux-400">
+                {group.title}
+              </p>
+              <div className="flex flex-col items-center gap-1">
                 {routes.map((route) => {
                   const isActive = route.path === '/'
                     ? pathname === '/'

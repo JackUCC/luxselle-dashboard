@@ -29,7 +29,7 @@ test.afterEach(async ({ request }) => {
 })
 
 test('sidecar journey preserves mode across evaluator -> inventory -> invoices and exits to same route', async ({ page }) => {
-  await page.goto('/buy-box?mode=sidecar')
+  await page.goto('/evaluate?mode=sidecar')
 
   await expect(page.getByRole('heading', { name: 'Sidecar' })).toBeVisible()
   await expectNoPageLevelHorizontalOverflow(page)

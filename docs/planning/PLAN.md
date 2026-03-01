@@ -1,6 +1,6 @@
 # Luxselle Supplier Engine - Implementation Plan
 
-Current status: **Phases 1-6 complete**, **Phase 7 execution complete (verification + UAT closeout pending)**.
+Current status: **Phases 1-9 complete** (including unified `/evaluate` decision flow rollout).
 
 This plan tracks the scoped product direction: Supplier Engine with adaptive **Overview** and **Sidecar** modes.
 
@@ -35,7 +35,7 @@ Acceptance:
 
 ## Phase 3: Evaluator and Pricing Engine ✅ Complete
 
-- [x] Price Check evaluator route and UI (`/buy-box`)
+- [x] Price Check evaluator route and UI (legacy `/buy-box`, now unified at `/evaluate`)
 - [x] Pricing analysis contracts and landed-cost calculations
 - [x] Market research helper routes and tools
 
@@ -85,7 +85,7 @@ Acceptance:
 
 ---
 
-## Phase 7: Sidecar Mode Hardening + Agent Execution 🚧 In Verification
+## Phase 7: Sidecar Mode Hardening + Agent Execution ✅ Complete
 
 Objective: make Supplier Engine side-by-side buying support production-ready.
 
@@ -108,13 +108,45 @@ Objective: make Supplier Engine side-by-side buying support production-ready.
 
 ---
 
+## Phase 8: Jobs and Activity Visibility ✅ Complete
+
+- [x] Wire `/jobs` into route and navigation metadata
+- [x] Surface dashboard activity feed from `GET /api/dashboard/activity`
+- [x] Add backend + e2e test coverage for jobs retry and activity visibility
+
+Acceptance:
+
+- [x] Jobs route reachable from dock and mobile nav
+- [x] Activity feed visible in dashboard
+- [x] Focused tests pass for the jobs/activity path
+
+---
+
+## Phase 9: Unified Sourcing Intelligence and Frontend Polish ✅ Complete
+
+- [x] Add unified `/evaluate` page with description-first flow
+- [x] Combine price check + optional serial context + always-visible landed cost
+- [x] Redirect legacy `/buy-box`, `/serial-check`, and `/evaluator` to `/evaluate` with query preservation
+- [x] Add landed-cost prefill from decision target in overview mode
+- [x] Clean up navigation grouping/spacing and consolidate check entry to `Evaluate`
+- [x] Update focused e2e suites for unified flow + sidecar parity
+
+Acceptance:
+
+- [x] Unified evaluator flow works end-to-end on one route
+- [x] Legacy links remain compatible through redirects
+- [x] Sidecar parity remains intact
+- [x] Targeted e2e and full unit test suites pass
+
+---
+
 ## Execution Notes
 
 - Use `npm run gsd:sync` before running GSD command workflows in Cursor.
 - Use `node ./.claude/get-shit-done/bin/gsd-tools.cjs validate health` to validate local planning integrity.
-- Recommended GSD sequence for Phase 7: `/gsd:execute-phase 7` -> `/gsd:verify-work 7`.
-- Phase 7 execution evidence:
-  - `tests/e2e/sidecar-flow.spec.ts` (new sidecar journey suite)
-  - `tests/e2e/evaluator.spec.ts tests/e2e/inventory.spec.ts tests/e2e/invoices.spec.ts` all green (including nav-routing stabilization)
-- Use Quality Lead + QA swarm before signoff on Phase 7 completion.
+- Recommended GSD sequence for future phases: `/gsd:execute-phase <n>` -> `/gsd:verify-work <n>`.
+- Recent execution evidence:
+  - `tests/e2e/evaluator.spec.ts tests/e2e/dashboard-shell.spec.ts tests/e2e/sidecar-flow.spec.ts` (all green)
+  - `npm test` full suite passing
+- Next planning focus: INTEL-02 (Agentic Market Intelligence) and ML-01.
 - Keep changes small and iterative; avoid large refactors.

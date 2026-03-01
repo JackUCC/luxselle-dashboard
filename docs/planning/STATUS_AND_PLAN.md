@@ -1,6 +1,6 @@
 # Luxselle Supplier Engine — Current Status
 
-**Last updated**: 2026-02-28  
+**Last updated**: 2026-03-01  
 **Current State**: Supplier Engine scope with dual-mode UX (Overview + Sidecar)
 
 ---
@@ -10,10 +10,12 @@
 - Iterations 1-6 are implemented across core product surfaces.
 - Scope pivot is complete: Supplier Engine replaces previous tracker framing.
 - Sidecar hardening implementation for Phase 7 is complete across both planned waves.
+- Phase 8 (Jobs + Activity visibility) is complete and committed.
+- Phase 9 (Unified Sourcing Intelligence + Frontend Polish) is complete and committed.
 - GSD framework is installed for spec-driven planning and execution.
 - GSD planning baseline is now present in `.planning/` (`PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, and Phase 7 context).
-- Phase 7 execution summaries are complete (`07-01-SUMMARY.md`, `07-02-SUMMARY.md` pending verification/UAT closeout commit).
-- Pre-existing evaluator E2E nav-routing failure was fixed and now passes in targeted regression runs.
+- Unified `/evaluate` route now combines price check, optional serial context, and landed-cost support.
+- Legacy `/buy-box` and `/serial-check` routes now redirect to unified flow.
 
 ---
 
@@ -43,14 +45,13 @@
 - Frontend pages for dashboard, inventory, buy-box, sourcing, jobs, invoices are active.
 - Error handling, status validation, and baseline QA workflows are in place.
 
-### Phase 7: Execution Complete, Verification In Progress
+### Phase 7-9: Complete
 
 - Sidecar compact UX hardened for QuickCheck, SidecarView, Evaluator, Inventory, and Invoices.
-- Mode-switch context retention implemented (exit removes `mode` while preserving route/query intent).
-- Sidecar journey E2E added (`tests/e2e/sidecar-flow.spec.ts`), plus parity checks in evaluator/inventory/invoices suites.
-- Targeted E2E gate pass confirmed:
-  - `npm run test:e2e -- tests/e2e/sidecar-flow.spec.ts`
-  - `npm run test:e2e -- tests/e2e/evaluator.spec.ts tests/e2e/inventory.spec.ts tests/e2e/invoices.spec.ts`
+- Jobs and activity visibility wiring landed in app routing + dashboard feed.
+- Unified intelligence page delivered at `/evaluate` with route migration from `/buy-box` and `/serial-check`.
+- Targeted regression suites pass for unified flow and sidecar parity:
+  - `npm run test:e2e -- evaluator.spec.ts dashboard-shell.spec.ts sidecar-flow.spec.ts`
 
 ---
 
@@ -95,7 +96,7 @@ luxselle-dashboard/
 
 ## Next Actions
 
-1. Run Phase 7 goal verification and finalize `07-VERIFICATION.md`.
-2. Run conversational UAT via `/gsd:verify-work 7` and persist outcomes in `07-UAT.md`.
-3. Close Phase 7 in roadmap/state/requirements after verification + UAT completion.
-4. Trigger Quality Lead QA swarm for release signoff packaging.
+1. Plan Phase 10 for **INTEL-02** (Agentic Market Intelligence) with scoped background monitoring jobs.
+2. Plan Phase 10+ for **ML-01** (price confidence upgrades + trend signals).
+3. Run a release-readiness QA sweep across unified `/evaluate` plus operations pages before next deployment.
+4. Keep docs and route references aligned to `/evaluate` as the primary decision entry.

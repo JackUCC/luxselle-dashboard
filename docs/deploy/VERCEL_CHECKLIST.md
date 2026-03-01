@@ -23,7 +23,7 @@ The repo has a root [vercel.json](/vercel.json). Vercel can use it automatically
 | Build command | `npm run build` | vercel.json `buildCommand` or Vercel → **Settings** → **Build & Development** |
 | Output directory | `dist` | vercel.json `outputDirectory` or Vercel build output |
 | Install command | `npm install` | vercel.json `installCommand` or default |
-| SPA routing | All routes → `/index.html` | vercel.json `rewrites`: `{"source":"/(.*)","destination":"/index.html"}` so `/inventory`, `/buy-box`, etc. don’t 404 |
+| SPA routing | All routes → `/index.html` | vercel.json `rewrites`: `{"source":"/(.*)","destination":"/index.html"}` so `/inventory`, `/evaluate`, etc. don’t 404 |
 
 Checklist:
 
@@ -69,7 +69,7 @@ Env vars are used only at **build time**. Changing them in the dashboard does no
 |-------|------------|
 | No "Backend not configured" banner | Open your Vercel URL. If the banner appears, set `VITE_API_BASE` and redeploy. |
 | API calls work | Use the app (e.g. Dashboard, Inventory). Data should load from Railway; no repeated "Backend not configured" toasts. |
-| SPA routes | Go to `/inventory`, `/buy-box`, `/buying-list`, etc. directly or refresh — no 404 (thanks to rewrites). |
+| SPA routes | Go to `/inventory`, `/evaluate`, `/buying-list`, etc. directly or refresh — no 404 (thanks to rewrites). |
 | CORS | If API calls fail with CORS in the browser console, the **Railway** backend must allow your Vercel origin. See [RAILWAY_CHECKLIST.md](RAILWAY_CHECKLIST.md); server uses regex for `.vercel.app` and localhost. |
 
 ---
@@ -99,7 +99,7 @@ npm run build
 
 # After deploy: open app and check:
 # - No "Backend not configured" banner when VITE_API_BASE is set
-# - Navigate to /inventory, /buy-box — no 404
+# - Navigate to /inventory, /evaluate — no 404
 ```
 
 ---

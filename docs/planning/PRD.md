@@ -69,9 +69,10 @@ The product has two adaptive modes:
 - KPIs: inventory value, low-stock count, sourcing pipeline state, profitability signals.
 - Activity feed and system status remain visible and stable.
 
-### Evaluator (`/buy-box`)
+### Sourcing Intelligence (`/evaluate`)
 
 - Inputs: brand, model, category, condition, color, notes, supplier ask.
+- Optional serial/date-code context for age-adjusted guidance.
 - Outputs: estimated retail, max buy, landed cost, confidence, market context.
 - Supports sidecar-optimized presentation.
 

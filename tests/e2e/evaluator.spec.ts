@@ -41,8 +41,8 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
     })
   )
 
-  await page.goto('/buy-box')
-  await page.getByLabel(/Search for item/i).fill(query)
+  await page.goto('/evaluate')
+  await page.getByLabel(/Item description/i).fill(query)
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByText('Avg. selling price')).toBeVisible()
   await expect(page.getByText('Max buy target')).toBeVisible()
@@ -54,16 +54,16 @@ test('shows error when price-check fails', async ({ page }) => {
     route.fulfill({ status: 500, body: 'Market research unavailable' })
   )
 
-  await page.goto('/buy-box')
-  await page.getByLabel(/Search for item/i).fill('Chanel Classic Flap')
+  await page.goto('/evaluate')
+  await page.getByLabel(/Item description/i).fill('Chanel Classic Flap')
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByTestId('price-check-inline-error')).toBeVisible()
 })
 
 test('prompts when search is empty', async ({ page }) => {
-  await page.goto('/buy-box')
+  await page.goto('/evaluate')
   await page.getByRole('button', { name: 'Research market' }).click()
-  await expect(page.getByText('Enter an item name to search')).toBeVisible()
+  await expect(page.getByText('Enter an item description first')).toBeVisible()
 })
 
 test('nav routing works for all main routes', async ({ page }) => {
@@ -81,10 +81,10 @@ test('nav routing works for all main routes', async ({ page }) => {
   await expect(page).toHaveURL(/\/inventory(\?|$)/)
   await expect(page.getByRole('heading', { name: 'Inventory' })).toBeVisible()
 
-  // Navigate to Price Check
-  await dock.getByRole('link', { name: 'Price Check' }).click()
-  await expect(page).toHaveURL(/\/buy-box(\?|$)/)
-  await expect(page.getByLabel(/Search for item/i)).toBeVisible()
+  // Navigate to unified evaluator
+  await dock.getByRole('link', { name: 'Evaluate' }).click()
+  await expect(page).toHaveURL(/\/evaluate(\?|$)/)
+  await expect(page.getByLabel(/Item description/i)).toBeVisible()
 
   // Navigate to Sourcing
   await dock.getByRole('link', { name: 'Sourcing' }).click()
@@ -95,7 +95,7 @@ test('nav routing works for all main routes', async ({ page }) => {
 test('sidecar nav keeps mode across routes and exits to active route', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 900 })
 
-  await page.goto('/buy-box?mode=sidecar')
+  await page.goto('/evaluate?mode=sidecar')
   await expect(page.getByRole('heading', { name: 'Sidecar' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Open navigation menu' }).click()
@@ -115,7 +115,11 @@ test('sidecar nav keeps mode across routes and exits to active route', async ({ 
 
 test('legacy route redirects work', async ({ page }) => {
   await page.goto('/evaluator')
-  await expect(page).toHaveURL('/buy-box')
+  await expect(page).toHaveURL('/evaluate')
+  await page.goto('/buy-box?q=Chanel&run=1')
+  await expect(page).toHaveURL(/\/evaluate\?q=Chanel&run=1/)
+  await page.goto('/serial-check?q=LV')
+  await expect(page).toHaveURL(/\/evaluate\?q=LV/)
 })
 
 test('invoices page loads and shows list or empty state', async ({ page }) => {
@@ -138,9 +142,9 @@ test('invoices page create in-person invoice button opens form', async ({ page }
   await expect(page.getByRole('dialog')).not.toBeVisible()
 })
 
-test('Landed Cost tab shows calculator widget', async ({ page }) => {
-  await page.goto('/buy-box')
-
-  await page.getByRole('button', { name: 'Landed Cost' }).click()
-  await expect(page.getByText('Landed Cost Calculator')).toBeVisible()
+test('landed cost is visible and advanced calculator can open', async ({ page }) => {
+  await page.goto('/evaluate')
+  await expect(page.getByRole('heading', { name: 'Landed Cost Calculator' }).first()).toBeVisible()
+  await page.getByText('Advanced landed-cost calculator').click()
+  await expect(page.getByText('Target Buy Price')).toBeVisible()
 })

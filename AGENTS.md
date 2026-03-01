@@ -38,7 +38,7 @@ The main Agent delegates to subagents when it detects a task that matches an age
 |------|-------|------------|-------------|
 | Dashboard | `/` | agent-dashboard | KPIs, activity feed, command bar, low-stock alerts |
 | Inventory | `/inventory` | agent-inventory | Products, drawer, transactions, filters |
-| Evaluator | `/buy-box` | agent-evaluator | Pricing analysis, market price, landed cost |
+| Evaluator | `/evaluate` | agent-evaluator | Pricing analysis, market price, landed cost |
 | Sourcing | `/sourcing` | agent-sourcing | Sourcing requests, status flow, pipeline |
 | Jobs | `/jobs` | agent-jobs | System jobs, import status, retries |
 | Invoices | `/invoices` | agent-invoices | Invoices list, creation, PDF |

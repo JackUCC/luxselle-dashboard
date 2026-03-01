@@ -6,7 +6,6 @@ import {
   Globe,
   House,
   Receipt,
-  ScanLine,
   Tags,
   TrendingUp,
   type LucideIcon,
@@ -24,9 +23,8 @@ export interface RouteMeta {
 
 export const appRoutes: RouteMeta[] = [
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: House, section: 'check' },
-  { path: '/buy-box', label: 'Price Check', navLabel: 'Price Check', icon: CircleDollarSign, section: 'check' },
+  { path: '/evaluate', label: 'Sourcing Intelligence', navLabel: 'Evaluate', icon: CircleDollarSign, section: 'check' },
   { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'check' },
-  { path: '/serial-check', label: 'Serial Check', navLabel: 'Serial Check', icon: ScanLine, section: 'check' },
   { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'check' },
   { path: '/saved-research', label: 'Saved Research', navLabel: 'Saved Research', icon: Bookmark, section: 'check' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Box, section: 'manage' },
@@ -61,9 +59,16 @@ export const deepStateRules: DeepStateRule[] = [
     },
   },
   {
-    route: '/buy-box',
-    keys: ['brand', 'model', 'category', 'condition', 'colour'],
-    toCrumbLabel: () => ['Prefilled'],
+    route: '/evaluate',
+    keys: ['q', 'condition', 'serial', 'brand'],
+    toCrumbLabel: (params) => {
+      const labels: string[] = []
+      if (params.get('serial')) labels.push('Serial Context')
+      if (params.get('condition')) labels.push('Condition')
+      if (!labels.length && params.get('brand')) labels.push('Brand')
+      if (!labels.length && params.get('q')) labels.push('Prefilled')
+      return labels.length ? labels : ['Prefilled']
+    },
   },
   {
     route: '/sourcing',

@@ -16,7 +16,7 @@ Use this list to verify **Vercel (frontend)**, **Firebase**, **Railway (backend)
 ### Build
 - [ ] **Build command** — `npm run build`
 - [ ] **Output directory** — `dist`
-- [ ] **Rewrites** — SPA: all routes → `/index.html` (in `vercel.json` or Settings) so `/inventory`, `/buy-box` etc. don’t 404 on refresh
+- [ ] **Rewrites** — SPA: all routes → `/index.html` (in `vercel.json` or Settings) so `/inventory`, `/evaluate` etc. don’t 404 on refresh
 
 ### Environment variables (Production)
 

@@ -173,9 +173,13 @@ export default function DashboardView() {
           </BentoGrid>
 
           {/* Recent Activity */}
-          {activities.length > 0 && (
-            <div className="lux-card p-5 space-y-3" data-testid="activity-feed">
-              <SectionLabel as="h2">Recent Activity</SectionLabel>
+          <div className="lux-card p-5 space-y-3" data-testid="activity-feed">
+            <SectionLabel as="h2">Recent Activity</SectionLabel>
+            {activities.length === 0 ? (
+              <p className="text-sm text-lux-500">
+                No activity yet. Imports, retries, and status changes will appear here.
+              </p>
+            ) : (
               <ul className="space-y-2">
                 {activities.map((event) => (
                   <li
@@ -193,8 +197,8 @@ export default function DashboardView() {
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </PageLayout>
