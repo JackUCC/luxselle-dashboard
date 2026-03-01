@@ -597,11 +597,30 @@ export class AiRouter {
     }
   }
 
+  private async readErrorBody(response: Response): Promise<string> {
+    try {
+      const text = await response.text()
+      return text.slice(0, 500)
+    } catch {
+      return ''
+    }
+  }
+
   private async extractStructuredJsonWithPerplexity<T>(
     opts: StructuredJsonOptions<T>,
   ): Promise<T> {
     if (!env.PERPLEXITY_API_KEY) {
       throw new AiRouterError('no_provider_available', 'PERPLEXITY_API_KEY is not configured')
+    }
+
+    const basePayload = {
+      model: env.PERPLEXITY_EXTRACTION_MODEL,
+      temperature: opts.temperature ?? 0.2,
+      messages: [
+        { role: 'system', content: opts.systemPrompt },
+        { role: 'user', content: opts.userPrompt },
+      ],
+      max_tokens: opts.maxTokens ?? 1500,
     }
 
     let response: Response
@@ -613,14 +632,8 @@ export class AiRouter {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: env.PERPLEXITY_EXTRACTION_MODEL,
-          temperature: opts.temperature ?? 0.2,
+          ...basePayload,
           response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: opts.systemPrompt },
-            { role: 'user', content: opts.userPrompt },
-          ],
-          max_tokens: opts.maxTokens ?? 1500,
         }),
       })
     } catch (error) {
@@ -630,10 +643,36 @@ export class AiRouter {
       )
     }
 
+    if (!response.ok && response.status === 400) {
+      const firstBody = await this.readErrorBody(response)
+      logger.warn('perplexity_extraction_request_compat_retry', {
+        model: env.PERPLEXITY_EXTRACTION_MODEL,
+        status: response.status,
+        body: firstBody,
+      })
+
+      try {
+        response = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(basePayload),
+        })
+      } catch (error) {
+        throw new AiRouterError(
+          'network_error',
+          `Perplexity extraction retry request failed: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
+    }
+
     if (!response.ok) {
+      const body = await this.readErrorBody(response)
       throw new AiRouterError(
         'provider_http_error',
-        `Perplexity extraction failed (${response.status})`,
+        `Perplexity extraction failed (${response.status}) model=${env.PERPLEXITY_EXTRACTION_MODEL}${body ? ` body=${body}` : ''}`,
         response.status,
       )
     }

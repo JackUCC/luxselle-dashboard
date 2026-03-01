@@ -52,6 +52,60 @@ describe('MarketResearchService comparable enrichment', () => {
     expect(result.comparables[0].previewImageUrl).toBe('https://images.example.com/flap.jpg')
   })
 
+
+
+  it('returns degraded analysis when synthesizeFromSearch rejects asynchronously', async () => {
+    const service = new MarketResearchService() as unknown as {
+      analyse: (input: {
+        brand: string
+        model: string
+        category: string
+        condition: string
+      }) => Promise<{ providerStatus?: 'available' | 'unavailable'; marketSummary: string }>
+      searchService: {
+        expandQuery: (query: string) => Promise<{
+          canonicalDescription: string
+          searchVariants: string[]
+          matchingCriteria: string
+          keyAttributes: { brand: string; style: string }
+        }>
+        searchMarketMultiExpanded: () => Promise<{
+          rawText: string
+          results: Array<{ title: string; url: string; snippet: string }>
+          annotations: Array<{ url: string; title: string }>
+        }>
+      }
+      synthesizeFromSearch: () => Promise<never>
+    }
+
+    service.searchService.expandQuery = async () => ({
+      canonicalDescription: 'Chanel Classic Flap',
+      searchVariants: ['Chanel Classic Flap pre-owned'],
+      matchingCriteria: 'match brand and model',
+      keyAttributes: { brand: 'Chanel', style: 'Classic Flap' },
+    })
+
+    service.searchService.searchMarketMultiExpanded = async () => ({
+      rawText: 'listing content '.repeat(10),
+      results: [{ title: 'listing', url: 'https://example.com/item/1', snippet: '' }],
+      annotations: [{ url: 'https://example.com/item/1', title: 'example' }],
+    })
+
+    service.synthesizeFromSearch = async () => {
+      throw new Error('synthesis failed')
+    }
+
+    const result = await service.analyse({
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      category: 'Handbag',
+      condition: 'excellent',
+    })
+
+    expect(result.providerStatus).toBe('unavailable')
+    expect(result.marketSummary).toBe('Market analysis temporarily unavailable.')
+  })
+
   it('builds degraded analysis with providerStatus unavailable', () => {
     const service = new MarketResearchService() as unknown as {
       buildDegradedAnalysis: (
