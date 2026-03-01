@@ -50,6 +50,7 @@ npx get-shit-done-cc@latest --claude --local
    | `FIREBASE_STORAGE_EMULATOR_HOST` | e.g. `127.0.0.1:9198` (match firebase/firebase.json) |
    | `GOOGLE_APPLICATION_CREDENTIALS` | Path to service account JSON (leave empty for emulator) |
    | `AI_ROUTING_MODE` | `dynamic` (default) \| `openai` \| `perplexity` |
+   | `AI_PROVIDER` (deprecated) | Compatibility input for one release only; scheduled for removal in the next breaking cleanup |
    | `OPENAI_API_KEY` | Enables OpenAI extraction/generation/vision |
    | `PERPLEXITY_API_KEY` | Enables Perplexity web retrieval/extraction |
    | `BASE_CURRENCY` | e.g. `EUR` (used by pricing) |

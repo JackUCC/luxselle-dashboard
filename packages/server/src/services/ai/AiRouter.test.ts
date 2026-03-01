@@ -126,4 +126,40 @@ describe('AiRouter', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(responsesCreate).toHaveBeenCalledTimes(4)
   })
+
+  it('reports fallback provider usage and preserves provider-backed citations without fabrication', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 429 } satisfies Partial<Response>)
+      .mockResolvedValueOnce({ ok: false, status: 429 } satisfies Partial<Response>)
+
+    responsesCreate.mockResolvedValueOnce({
+      output_text: 'openai fallback content',
+      output: [
+        {
+          type: 'message',
+          content: [
+            {
+              type: 'output_text',
+              annotations: [
+                { type: 'url_citation', url: 'https://designerexchange.ie/item/100' },
+                { type: 'url_citation', url: 'https://vestiairecollective.com/item/200' },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await router.webSearch({ query: 'chanel medium flap caviar' })
+
+    expect(result.provider).toBe('openai')
+    expect(result.fallbackUsed).toBe(true)
+    expect(result.data.annotations).toEqual([
+      { url: 'https://designerexchange.ie/item/100', title: 'designerexchange.ie' },
+      { url: 'https://vestiairecollective.com/item/200', title: 'vestiairecollective.com' },
+    ])
+  })
 })

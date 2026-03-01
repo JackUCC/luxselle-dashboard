@@ -10,6 +10,19 @@ import { getFxService } from '../fx/FxService'
 import { logger } from '../../middleware/requestId'
 import { validatePriceEur, filterValidComps, clampConfidence } from '../../lib/validation'
 import { getAiRouter } from '../ai/AiRouter'
+import {
+  buildEmptyComparableFallback,
+  hasValidEvidenceSourceUrl,
+  keepEvidenceBackedComparables,
+} from '../ai/noFabrication'
+import {
+  COMPETITOR_FEED_SYSTEM_PROMPT,
+  MARKET_RESEARCH_EXTRACTION_SYSTEM_PROMPT,
+  TRENDING_SYSTEM_PROMPT,
+  TRENDING_USER_PROMPT,
+  buildMarketResearchExtractionPrompt,
+  buildMarketResearchSearchQuery,
+} from '../ai/prompts/marketResearchPrompts'
 
 export interface MarketResearchInput {
   brand: string
@@ -148,145 +161,6 @@ const CompetitorFeedExtractionSchema = z.object({
   })).default([]),
 })
 
-function buildSearchQuery(input: MarketResearchInput): string {
-  const parts = [input.brand, input.model]
-  if (input.colour) parts.push(input.colour)
-  if (input.category && input.category !== 'Other') parts.push(input.category)
-  return parts.filter(Boolean).join(' ')
-}
-
-function buildRagExtractionPrompt(
-  input: MarketResearchInput,
-  searchContext: string,
-  fx: { gbpRate: number; usdRate: number },
-  queryContext?: {
-    canonicalDescription: string
-    searchVariants: string[]
-    matchingCriteria: string
-    keyAttributes: {
-      brand: string
-      style: string
-      size?: string | null
-      material?: string | null
-      colour?: string | null
-      hardware?: string | null
-    }
-  },
-): string {
-  const aliases = queryContext?.searchVariants.filter((v) => v !== buildSearchQuery(input)) ?? []
-  const semanticBlock = queryContext?.matchingCriteria
-    ? `\nSEMANTIC MATCHING INTELLIGENCE:
-Canonical description: ${queryContext.canonicalDescription}
-${aliases.length > 0 ? `Also known as: ${aliases.join(' | ')}` : ''}
-Key attributes: Brand: ${queryContext.keyAttributes.brand || input.brand} | Style: ${queryContext.keyAttributes.style}${queryContext.keyAttributes.size ? ` | Size: ${queryContext.keyAttributes.size}` : ''}${queryContext.keyAttributes.colour ? ` | Colour: ${queryContext.keyAttributes.colour}` : ''}${queryContext.keyAttributes.material ? ` | Material: ${queryContext.keyAttributes.material}` : ''}${queryContext.keyAttributes.hardware ? ` | Hardware: ${queryContext.keyAttributes.hardware}` : ''}
-Matching criteria: ${queryContext.matchingCriteria}
-
-When identifying comparable listings: use SEMANTIC matching, not exact title matching. Different resellers use different naming conventions for the same bag. Example: "Timeless Classic" and "Classic Flap" are the same Chanel bag. Focus on brand, style family, size, colour, and material — NOT exact wording.
-`
-    : ''
-
-  return `You are a luxury goods market research analyst specializing in the European resale market (Ireland and EU).
-
-You have been provided REAL web search results below. Use ONLY the data from these search results to form your analysis. Do NOT invent listings or prices that are not supported by the search data.
-${semanticBlock}
-=== WEB SEARCH RESULTS ===
-${searchContext}
-=== END SEARCH RESULTS ===
-
-Item to analyse:
-Brand: ${input.brand}
-Model: ${input.model}
-Category: ${input.category}
-Condition: ${input.condition}
-${input.colour ? `Colour: ${input.colour}` : ''}
-${input.year ? `Year: ${input.year}` : ''}
-${input.notes ? `Notes: ${input.notes}` : ''}
-${input.currentAskPriceEur ? `Current Asking Price: €${input.currentAskPriceEur}` : ''}
-
-Return ONLY a valid JSON object with this exact structure (no markdown, no explanation):
-{
-  "estimatedMarketValueEur": <number - average of real prices found in search results>,
-  "priceRangeLowEur": <number - lowest real price found>,
-  "priceRangeHighEur": <number - highest real price found>,
-  "suggestedBuyPriceEur": <number - max price to pay for 35% margin>,
-  "suggestedSellPriceEur": <number - realistic sell price based on found data>,
-  "demandLevel": "<very_high|high|moderate|low|very_low>",
-  "priceTrend": "<rising|stable|declining>",
-  "marketLiquidity": "<fast_moving|moderate|slow_moving>",
-  "recommendation": "<strong_buy|buy|hold|pass>",
-  "confidence": <0 to 1 - higher if many real listings found, lower if sparse>,
-  "marketSummary": "<2-3 sentence overview citing the real data found>",
-  "keyInsights": ["<insight 1>", "<insight 2>", "<insight 3>"],
-  "riskFactors": ["<risk 1>", "<risk 2>"],
-  "comparables": [
-    {
-      "title": "<listing title from search results>",
-      "priceEur": <number - actual price from listing>,
-      "source": "<marketplace name>",
-      "sourceUrl": "<actual URL from search>",
-      "condition": "<condition if mentioned>",
-      "daysListed": <number or null>,
-      "dataOrigin": "web_search"
-    }
-  ],
-  "seasonalNotes": "<any seasonal pricing effects>"
-}
-
-CRITICAL RULES:
-- Every comparable listing MUST have a sourceUrl that came from the search results above.
-- If you cannot find at least 2 real listings with prices, set confidence to 0.3 or below.
-- Do NOT invent or fabricate any listing, price, or URL.
-- If a field cannot be determined from the search data, use null instead of guessing.
-
-Rules:
-- If a price is in GBP, convert to EUR using today's rate: 1 GBP = ${fx.gbpRate.toFixed(2)} EUR
-- If a price is in USD, convert to EUR using today's rate: 1 USD = ${fx.usdRate.toFixed(2)} EUR
-- Preferred sources: Vestiaire Collective, Designer Exchange, Luxury Exchange, Siopella
-- suggestedBuyPriceEur = estimatedMarketValueEur * 0.65 (35% margin)`
-}
-
-const TRENDING_PROMPT = `You are a luxury goods market analyst. Identify the top 8 trending luxury items in the European resale market right now.
-
-Return ONLY a valid JSON object (no markdown, no explanation):
-{
-  "items": [
-    {
-      "brand": "<brand name>",
-      "model": "<model name>",
-      "category": "<Handbag|Wallet|Shoes|Watch|Jewelry|Accessory|Clothing>",
-      "demandLevel": "<very_high|high|moderate>",
-      "priceTrend": "<rising|stable|declining>",
-      "avgPriceEur": <number>,
-      "searchVolume": "<high|medium|low>"
-    }
-  ]
-}`
-
-const COMPETITOR_FEED_PROMPT = `You are a luxury resale data extractor. Extract structured listing data from these web search results from Irish/EU luxury resale platforms.
-
-Domain → source name mapping:
-- designerexchange.ie → "Designer Exchange"
-- luxuryexchange.ie → "Luxury Exchange"
-- siopaella.com → "Siopella"
-
-For each distinct listing found, extract:
-- title: Full product name as listed (brand + model + colour/material if present)
-- priceEur: Price as a number in EUR (convert GBP or USD if needed: £1=€1.17, $1=€0.92)
-- source: One of "Designer Exchange" | "Luxury Exchange" | "Siopella" (infer from URL domain)
-- sourceUrl: Direct URL of the product listing page (not the homepage)
-- condition: Condition string if mentioned (e.g. "Excellent", "Very Good", "Good"), otherwise omit
-- listedAt: ISO date string if identifiable, otherwise omit
-
-Return ONLY a valid JSON object (no markdown):
-{ "items": [...] }
-
-RULES:
-- Every item must include a sourceUrl from the provided search data.
-- Only extract listings with a clear price in EUR or a convertible currency.
-- Maximum 10 items total.
-- Prefer items with direct product page URLs over homepage links.
-- Do NOT fabricate listings not present in the search data.`
-
 export class MarketResearchService {
   private readonly aiRouter = getAiRouter()
   private readonly searchService = new SearchService()
@@ -294,7 +168,7 @@ export class MarketResearchService {
 
   async analyse(input: MarketResearchInput): Promise<MarketResearchResult> {
     try {
-      const baseQuery = buildSearchQuery(input)
+      const baseQuery = buildMarketResearchSearchQuery(input)
       const queryContext = await this.searchService.expandQuery(baseQuery)
       const searchResponse = await this.searchService.searchMarketMultiExpanded(
         queryContext.searchVariants,
@@ -316,8 +190,8 @@ export class MarketResearchService {
   async getTrending(): Promise<TrendingResult> {
     try {
       const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof TrendingExtractionSchema>>({
-        systemPrompt: 'You are a luxury market analyst. Return ONLY valid JSON.',
-        userPrompt: TRENDING_PROMPT,
+        systemPrompt: TRENDING_SYSTEM_PROMPT,
+        userPrompt: TRENDING_USER_PROMPT,
         schema: TrendingExtractionSchema,
         maxTokens: 1500,
         temperature: 0.3,
@@ -358,7 +232,7 @@ export class MarketResearchService {
         + searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
 
       const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof CompetitorFeedExtractionSchema>>({
-        systemPrompt: COMPETITOR_FEED_PROMPT,
+        systemPrompt: COMPETITOR_FEED_SYSTEM_PROMPT,
         userPrompt: searchContext,
         schema: CompetitorFeedExtractionSchema,
         maxTokens: 1500,
@@ -374,7 +248,7 @@ export class MarketResearchService {
           listedAt: item.listedAt ?? undefined,
           condition: item.condition ?? undefined,
         }))
-        .filter((item) => item.title && item.priceEur > 0 && this.isValidUrl(item.sourceUrl))
+        .filter((item) => item.title && item.priceEur > 0 && hasValidEvidenceSourceUrl(item.sourceUrl))
 
       return { items, generatedAt: new Date().toISOString() }
     } catch (error) {
@@ -409,13 +283,16 @@ export class MarketResearchService {
       fxService.getRate('GBP', 'EUR'),
       fxService.getRate('USD', 'EUR'),
     ])
-    const prompt = buildRagExtractionPrompt(input, searchContext, {
+    const prompt = buildMarketResearchExtractionPrompt({
+      input,
+      searchContext,
       gbpRate: gbpRate || 1.17,
       usdRate: usdRate || 0.92,
-    }, queryContext)
+      queryContext,
+    })
 
     const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof MarketResearchExtractionSchema>>({
-      systemPrompt: 'You are a luxury market analyst. Extract structured market intelligence from web search results. Return ONLY valid JSON.',
+      systemPrompt: MARKET_RESEARCH_EXTRACTION_SYSTEM_PROMPT,
       userPrompt: prompt,
       schema: MarketResearchExtractionSchema,
       maxTokens: 2000,
@@ -474,9 +351,10 @@ export class MarketResearchService {
       dataOrigin: comp.dataOrigin ?? 'web_search',
     }))
 
-    const validComps = filterValidComps(rawComps.map((comp) => ({ ...comp, price: comp.priceEur })))
-      .map(({ price, ...rest }) => ({ ...rest, priceEur: price }))
-      .filter((comp) => this.isValidUrl(comp.sourceUrl)) as MarketComparable[]
+    const validComps = keepEvidenceBackedComparables(
+      filterValidComps(rawComps.map((comp) => ({ ...comp, price: comp.priceEur })))
+        .map(({ price, ...rest }) => ({ ...rest, priceEur: price })),
+    ) as MarketComparable[]
 
     const evidenceConfidence = this.confidenceFromEvidence(validComps.length, parsed.confidence)
     const estimatedMarketValueEur = parsed.estimatedMarketValueEur != null
@@ -538,7 +416,7 @@ export class MarketResearchService {
       marketSummary: reason,
       keyInsights: [],
       riskFactors: [reason],
-      comparables: [],
+      comparables: buildEmptyComparableFallback<MarketComparable>(),
       seasonalNotes: undefined,
     }
   }
@@ -550,15 +428,5 @@ export class MarketResearchService {
     }
     const model = clampConfidence(modelConfidence)
     return clampConfidence(evidenceConfidence * 0.75 + model * 0.25)
-  }
-
-  private isValidUrl(value?: string): boolean {
-    if (!value) return false
-    try {
-      const url = new URL(value)
-      return url.protocol === 'http:' || url.protocol === 'https:'
-    } catch {
-      return false
-    }
   }
 }

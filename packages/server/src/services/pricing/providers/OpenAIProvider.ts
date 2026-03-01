@@ -7,6 +7,12 @@ import { SearchService } from '../../../services/search/SearchService'
 import { getFxService } from '../../../services/fx/FxService'
 import { validatePriceEur, filterValidComps, clampConfidence } from '../../../lib/validation'
 import { getAiRouter } from '../../ai/AiRouter'
+import { keepEvidenceBackedComparables } from '../../ai/noFabrication'
+import {
+  PRICING_EXTRACTION_SYSTEM_PROMPT,
+  buildPricingExtractionPrompt,
+  buildPricingSearchQuery,
+} from '../../ai/prompts/pricingPrompts'
 import type {
   IPricingProvider,
   PricingAnalysisInput,
@@ -39,18 +45,13 @@ export class OpenAIProvider implements IPricingProvider {
     const marketCountry = input.marketCountry ?? 'IE'
     const marketMode = input.marketMode ?? 'ie_first_eu_fallback'
 
-    const searchQuery = [input.brand, input.model, input.colour, input.category]
-      .filter(Boolean)
-      .join(' ') + ' price second-hand pre-owned for sale EUR'
+    const searchQuery = buildPricingSearchQuery(input)
 
     const searchResponse = await this.searchService.searchMarketMulti(searchQuery, {
       userLocation: { country: marketCountry },
     })
 
     const hasSearchData = searchResponse.rawText.length > 50 || searchResponse.results.length > 0
-    const searchContext = hasSearchData
-      ? `=== LIVE WEB SEARCH RESULTS ===\n${searchResponse.rawText}\n\nSource URLs:\n${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')}\n=== END SEARCH RESULTS ===`
-      : '(No live search results available)'
 
     const fxService = getFxService()
     const [gbpRate, usdRate] = await Promise.all([
@@ -60,48 +61,19 @@ export class OpenAIProvider implements IPricingProvider {
     const gbpToEur = gbpRate || 1.17
     const usdToEur = usdRate || 0.92
 
-    const prompt = `You are a luxury goods pricing expert. Analyse this item and estimate its current resale market value in EUR.
-
-${searchContext}
-
-Item details:
-Brand: ${input.brand}
-Model: ${input.model}
-Category: ${input.category}
-Condition: ${input.condition}
-Colour: ${input.colour}
-Notes: ${input.notes}
-${input.askPriceEur ? `Asking Price: €${input.askPriceEur}` : ''}
-Target Market Country: ${marketCountry}
-Market Mode: ${marketMode}
-
-Return ONLY JSON:
-{
-  "estimatedRetailEur": <number>,
-  "confidence": <number between 0 and 1>,
-  "comps": [
-    {
-      "title": "<listing title from search results>",
-      "price": <number in EUR>,
-      "source": "<marketplace name>",
-      "sourceUrl": "<actual URL from search>",
-      "marketCountry": "IE|EU",
-      "dataOrigin": "web_search"
-    }
-  ]
-}
-
-CRITICAL RULES:
-- Every comparable listing MUST have a sourceUrl from the search results.
-- If you cannot find at least 2 real listings with prices, set confidence to 0.3 or below.
-- Do NOT invent any listing, price, or URL.
-- If prices are in GBP, convert using 1 GBP = ${gbpToEur.toFixed(2)} EUR.
-- If prices are in USD, convert using 1 USD = ${usdToEur.toFixed(2)} EUR.
-- Prioritize Irish competitor sources first: Designer Exchange, Luxury Exchange, Siopella.
-- Use broader EU fallback sources (including Vestiaire) only when Irish comps are limited.`
+    const prompt = buildPricingExtractionPrompt({
+      input,
+      marketCountry,
+      marketMode,
+      hasSearchData,
+      searchRawText: searchResponse.rawText,
+      annotations: searchResponse.annotations,
+      gbpToEur,
+      usdToEur,
+    })
 
     const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof PricingExtractionSchema>>({
-      systemPrompt: 'You extract structured pricing data from web search results. Return ONLY valid JSON.',
+      systemPrompt: PRICING_EXTRACTION_SYSTEM_PROMPT,
       userPrompt: prompt,
       schema: PricingExtractionSchema,
       maxTokens: 900,
@@ -118,12 +90,13 @@ CRITICAL RULES:
       dataOrigin?: 'web_search' | 'ai_estimate'
     }
 
-    const validComps = filterValidComps((routed.data.comps ?? []) as CompItem[])
-      .map((comp) => ({
-        ...comp,
-        sourceUrl: comp.sourceUrl ?? comp.url,
-      }))
-      .filter((comp) => this.isValidUrl(comp.sourceUrl))
+    const validComps = keepEvidenceBackedComparables(
+      filterValidComps((routed.data.comps ?? []) as CompItem[])
+        .map((comp) => ({
+          ...comp,
+          sourceUrl: comp.sourceUrl ?? comp.url,
+        })),
+    )
 
     const evidenceConfidence = this.confidenceFromEvidence(
       validComps.length,
@@ -164,15 +137,5 @@ CRITICAL RULES:
     }
 
     return extractionProvider
-  }
-
-  private isValidUrl(value?: string): boolean {
-    if (!value) return false
-    try {
-      const url = new URL(value)
-      return url.protocol === 'http:' || url.protocol === 'https:'
-    } catch {
-      return false
-    }
   }
 }

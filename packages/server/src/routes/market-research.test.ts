@@ -60,6 +60,45 @@ describe('GET /api/market-research/trending', () => {
     expect(res.body.data.provider).toBe('hybrid')
     expect(Array.isArray(res.body.data.items)).toBe(true)
   })
+
+  it('returns 200 with degraded analysis payload when evidence is unavailable', async () => {
+    mockAnalyse.mockResolvedValue({
+      provider: 'hybrid',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      estimatedMarketValueEur: 0,
+      priceRangeLowEur: 0,
+      priceRangeHighEur: 0,
+      suggestedBuyPriceEur: 0,
+      suggestedSellPriceEur: 0,
+      demandLevel: 'moderate',
+      priceTrend: 'stable',
+      marketLiquidity: 'slow_moving',
+      recommendation: 'hold',
+      confidence: 0.15,
+      marketSummary: 'No sufficient live search data found.',
+      keyInsights: [],
+      riskFactors: ['No sufficient live search data found.'],
+      comparables: [],
+    })
+
+    const res = await request(app)
+      .post('/api/market-research/analyse')
+      .set('Content-Type', 'application/json')
+      .send({
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Bags',
+        condition: 'Excellent',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({
+      estimatedMarketValueEur: 0,
+      comparables: [],
+      provider: 'hybrid',
+    })
+  })
 })
 
 describe('POST /api/market-research/analyse', () => {

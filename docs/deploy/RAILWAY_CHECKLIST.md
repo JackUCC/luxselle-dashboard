@@ -67,6 +67,7 @@ Used by `/api/market-research/analyse` and `/api/market-research/trending`.
 | Variable | When to set |
 |----------|-------------|
 | `AI_ROUTING_MODE` | `dynamic` (default), `openai`, or `perplexity`. |
+| `AI_PROVIDER` (deprecated) | Compatibility only for one release; scheduled removal in next breaking cleanup. |
 | `PERPLEXITY_API_KEY` | Enables web retrieval and fallback extraction. |
 | `OPENAI_API_KEY` | Enables structured extraction/generation and vision. |
 

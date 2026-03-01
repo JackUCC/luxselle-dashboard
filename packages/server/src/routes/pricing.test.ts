@@ -8,11 +8,33 @@ import { ZodError } from 'zod'
 import { pricingRouter } from './pricing'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
-const { mockCheck } = vi.hoisted(() => ({ mockCheck: vi.fn() }))
+const { mockCheck, mockAnalyse, mockCalculateAuctionLandedCost, mockEvaluationCreate, mockSettingsGet } = vi.hoisted(() => ({
+  mockCheck: vi.fn(),
+  mockAnalyse: vi.fn(),
+  mockCalculateAuctionLandedCost: vi.fn(),
+  mockEvaluationCreate: vi.fn(),
+  mockSettingsGet: vi.fn(),
+}))
 
 vi.mock('../services/price-check/PriceCheckService', () => ({
   PriceCheckService: class {
     check = mockCheck
+  },
+}))
+vi.mock('../services/pricing/PricingService', () => ({
+  PricingService: class {
+    analyse = mockAnalyse
+    calculateAuctionLandedCost = mockCalculateAuctionLandedCost
+  },
+}))
+vi.mock('../repos/EvaluationRepo', () => ({
+  EvaluationRepo: class {
+    create = mockEvaluationCreate
+  },
+}))
+vi.mock('../repos/SettingsRepo', () => ({
+  SettingsRepo: class {
+    getSettings = mockSettingsGet
   },
 }))
 
@@ -187,5 +209,69 @@ describe('POST /api/pricing/price-check', () => {
     expect(res.status).toBe(500)
     expect(res.body.error).toBeDefined()
     expect(res.body.error.code).toBe('INTERNAL_ERROR')
+  })
+})
+
+describe('POST /api/pricing/analyse', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockEvaluationCreate.mockResolvedValue({ id: 'eval-1' })
+  })
+
+  it('returns 200 with analysis payload and evaluationId on success', async () => {
+    mockAnalyse.mockResolvedValue({
+      estimatedRetailEur: 4100,
+      maxBuyPriceEur: 2665,
+      historyAvgPaidEur: null,
+      comps: [],
+      confidence: 0.7,
+      provider: 'hybrid',
+      marketSummary: {
+        marketCountry: 'IE',
+        marketMode: 'ie_first_eu_fallback',
+        ieCount: 0,
+        euFallbackCount: 0,
+        fallbackUsed: false,
+      },
+    })
+
+    const res = await request(app)
+      .post('/api/pricing/analyse')
+      .set('Content-Type', 'application/json')
+      .send({
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Handbag',
+        condition: 'Excellent',
+        colour: 'Black',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({
+      estimatedRetailEur: 4100,
+      maxBuyPriceEur: 2665,
+      provider: 'hybrid',
+      evaluationId: 'eval-1',
+    })
+    expect(mockEvaluationCreate).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns 503 when providers are unavailable', async () => {
+    mockAnalyse.mockRejectedValue(new Error('no_provider_available'))
+
+    const res = await request(app)
+      .post('/api/pricing/analyse')
+      .set('Content-Type', 'application/json')
+      .send({
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Handbag',
+        condition: 'Excellent',
+        colour: 'Black',
+      })
+
+    expect(res.status).toBe(503)
+    expect(res.body.error.code).toBe(API_ERROR_CODES.INTERNAL)
+    expect(String(res.body.error.message)).toMatch(/ai providers are unavailable/i)
   })
 })

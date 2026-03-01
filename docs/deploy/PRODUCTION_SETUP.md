@@ -176,6 +176,7 @@ NODE_ENV=production
 AI_ROUTING_MODE=dynamic
 OPENAI_API_KEY=sk-proj-...
 PERPLEXITY_API_KEY=pplx-...
+# Deprecated compatibility input: AI_PROVIDER (accepted for one release only; remove in next breaking cleanup)
 
 # Optional debug override:
 # AI_ROUTING_MODE=openai

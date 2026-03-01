@@ -11,16 +11,28 @@ const { mockProductList, mockSourcingList, mockActivityList } = vi.hoisted(() =>
   mockSourcingList: vi.fn(),
   mockActivityList: vi.fn(),
 }))
+const { mockGetDiagnostics } = vi.hoisted(() => ({
+  mockGetDiagnostics: vi.fn(),
+}))
 
 vi.mock('../repos/ProductRepo', () => ({ ProductRepo: class { list = mockProductList } }))
 vi.mock('../repos/SourcingRequestRepo', () => ({ SourcingRequestRepo: class { list = mockSourcingList } }))
 vi.mock('../repos/ActivityEventRepo', () => ({ ActivityEventRepo: class { list = mockActivityList } }))
-vi.mock('../repos/SystemJobRepo', () => ({ SystemJobRepo: class {} }))
+vi.mock('../repos/SystemJobRepo', () => ({
+  SystemJobRepo: class {
+    list = vi.fn().mockResolvedValue([])
+  },
+}))
 const { mockTransactionList } = vi.hoisted(() => ({
   mockTransactionList: vi.fn(),
 }))
 vi.mock('../repos/TransactionRepo', () => ({ TransactionRepo: class { list = mockTransactionList } }))
 vi.mock('../repos/SettingsRepo', () => ({ SettingsRepo: class {} }))
+vi.mock('../services/ai/AiRouter', () => ({
+  getAiRouter: () => ({
+    getDiagnostics: mockGetDiagnostics,
+  }),
+}))
 
 interface TestError {
   status?: number
@@ -44,6 +56,15 @@ describe('GET /api/dashboard/kpis', () => {
     vi.clearAllMocks()
     mockProductList.mockResolvedValue([])
     mockSourcingList.mockResolvedValue([])
+    mockGetDiagnostics.mockReturnValue({
+      aiRoutingMode: 'dynamic',
+      providerAvailability: {
+        openai: false,
+        perplexity: false,
+        vision: false,
+      },
+      lastProviderByTask: {},
+    })
   })
 
   it('returns 200 with KPI data shape', async () => {
@@ -98,6 +119,40 @@ describe('GET /api/dashboard/activity', () => {
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
     expect(res.body.data[0].eventType).toBe('new')
+  })
+})
+
+describe('GET /api/dashboard/status', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetDiagnostics.mockReturnValue({
+      aiRoutingMode: 'dynamic',
+      providerAvailability: {
+        openai: true,
+        perplexity: false,
+        vision: true,
+      },
+      lastProviderByTask: {
+        web_search: 'openai',
+      },
+    })
+  })
+
+  it('returns ai routing diagnostics payload', async () => {
+    const res = await request(app).get('/api/dashboard/status')
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({
+      aiRoutingMode: 'dynamic',
+      providerAvailability: {
+        openai: true,
+        perplexity: false,
+        vision: true,
+      },
+      lastProviderByTask: {
+        web_search: 'openai',
+      },
+    })
   })
 })
 

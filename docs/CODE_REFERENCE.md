@@ -99,8 +99,10 @@ The five endpoints added in Wave 1 of the supplier engine sprint:
 |------|--------|------------|
 | `packages/server/src/services/pricing/PricingService.ts` | Orchestrates AI pricing with dynamic routing, then applies margin and market policy. | fx.ts, env, providers |
 | `packages/server/src/services/pricing/providers/IPricingProvider.ts` | Interface for pricing providers. | — |
-| `packages/server/src/services/pricing/providers/MockPricingProvider.ts` | Legacy test helper (not used by runtime routing). | IPricingProvider |
 | `packages/server/src/services/pricing/providers/OpenAIProvider.ts` | Dynamic pricing orchestration provider (OpenAI/Perplexity via `AiRouter`). | AiRouter, SearchService, IPricingProvider |
+| `packages/server/src/services/ai/AiRouter.ts` | Task-based provider routing (web search, extraction, generation, vision) with retry/failover and health tracking. | env, OpenAI API, Perplexity API |
+| `packages/server/src/services/ai/noFabrication.ts` | Shared no-fabrication policy helpers for evidence-backed comparables and conservative fallback outputs. | Pricing/Market/Price-check services |
+| `packages/server/src/services/ai/prompts/*.ts` | Centralized prompt templates/builders for search, pricing, market research, and assistant endpoints. | AiService, SearchService, MarketResearchService |
 | `packages/server/src/services/import/SupplierImportService.ts` | Parse supplier CSV, map columns, validate; create/update suppliers and items. | fx.ts, CSV parse |
 
 ---

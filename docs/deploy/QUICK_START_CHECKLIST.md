@@ -89,6 +89,7 @@ TARGET_MARGIN_PCT=35
 **AI Routing (optional):**
 ```bash
 AI_ROUTING_MODE=dynamic
+# Deprecated compatibility input: AI_PROVIDER (accepted for one release only; remove in next breaking cleanup)
 # Optional provider keys for live AI features:
 # OPENAI_API_KEY=sk-proj-...
 # PERPLEXITY_API_KEY=pplx-...

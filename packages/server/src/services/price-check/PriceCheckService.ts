@@ -9,6 +9,14 @@ import { filterValidComps } from '../../lib/validation'
 import { logger } from '../../middleware/requestId'
 import { ComparableImageEnrichmentService } from '../search/ComparableImageEnrichmentService'
 import { getAiRouter } from '../ai/AiRouter'
+import {
+  buildEmptyComparableFallback,
+  keepEvidenceBackedComparables,
+} from '../ai/noFabrication'
+import {
+  PRICE_CHECK_EXTRACTION_SYSTEM_PROMPT,
+  buildPriceCheckExtractionPrompt,
+} from '../ai/prompts/priceCheckPrompts'
 
 const IE_COMPETITOR_DOMAINS = ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com']
 const EU_FALLBACK_COMPETITOR_DOMAINS = ['vestiairecollective.com']
@@ -91,55 +99,16 @@ export class PriceCheckService {
     const gbpToEur = gbpRate || 1.17
     const usdToEur = usdRate || 0.92
 
-    const aliases = queryContext.searchVariants.filter((variant) => variant !== query)
-    const itemIntelligenceBlock = queryContext.matchingCriteria
-      ? `ITEM INTELLIGENCE:
-Canonical description: ${queryContext.canonicalDescription}
-${aliases.length > 0 ? `Also known as: ${aliases.join(' | ')}` : ''}
-Key attributes: Brand: ${queryContext.keyAttributes.brand || 'see item'} | Style: ${queryContext.keyAttributes.style}${queryContext.keyAttributes.size ? ` | Size: ${queryContext.keyAttributes.size}` : ''}${queryContext.keyAttributes.colour ? ` | Colour: ${queryContext.keyAttributes.colour}` : ''}${queryContext.keyAttributes.material ? ` | Material: ${queryContext.keyAttributes.material}` : ''}${queryContext.keyAttributes.hardware ? ` | Hardware: ${queryContext.keyAttributes.hardware}` : ''}
-Matching criteria: ${queryContext.matchingCriteria}
-
-SEMANTIC MATCHING:
-A listing is a MATCH if it shares the key attributes above, even if the title wording differs.
-Do NOT require an exact title match — different resellers use different naming conventions for the same bag.
-Example: "Timeless Classic" and "Classic Flap" refer to the same Chanel bag; "2.55" is the same bag family.
-Focus on: brand, style family, size, colour, and material — NOT the exact words in the listing title.
-A listing is NOT a match if it is a clearly different size, different style, or different colour.`
-      : ''
-
-    const refineClause = refine ? `Condition/notes: ${refine}` : ''
-    const extractionPrompt = `You are a luxury resale pricing expert. Using ONLY the web search results provided below, extract real listing data for the specified item.
-
-Item: "${query}"
-${refineClause}
-${itemIntelligenceBlock ? `\n${itemIntelligenceBlock}\n` : ''}
-=== WEB SEARCH RESULTS ===
-${hasSearchData ? searchResponse.rawText : '(No live results found)'}
-
-Source URLs:
-${searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n') || '(none)'}
-=== END SEARCH RESULTS ===
-
-Return ONLY a JSON object (no markdown):
-{
-  "averageSellingPriceEur": <number - average of REAL prices found, or 0 if fewer than 2 found>,
-  "comps": [
-    { "title": "<actual listing title from search>", "price": <EUR>, "source": "<marketplace name>", "sourceUrl": "<actual URL from search>", "dataOrigin": "web_search" }
-  ]
-}
-
-RULES (follow ALL of these):
-- Extract only listings that match the specific item described above. Use semantic matching — listings with different titles but the same item attributes are valid matches.
-- Ignore unrelated products, accessories, dust bags, authentication cards, or shipping charges.
-- Only include listings where the price is clearly for the main item (handbag, watch, etc.), not a listing fee or accessory.
-- If you find fewer than 2 real listings that clearly match this specific item with confirmed prices, return averageSellingPriceEur: 0 and an empty comps array [].
-- If you find 2 or more listings, extract up to 6 comparable listings and set averageSellingPriceEur to the average of their prices.
-- Every comparable must include a real sourceUrl.
-- Do NOT invent or fabricate any listing, price, or URL.
-- If prices are in GBP, convert to EUR using today's rate: 1 GBP = ${gbpToEur.toFixed(2)} EUR
-- If prices are in USD, convert to EUR using today's rate: 1 USD = ${usdToEur.toFixed(2)} EUR
-- Prioritize Irish competitor sources first (Designer Exchange, Luxury Exchange, Siopella).
-- Only use broader European fallback sources (including Vestiaire Collective) when Irish comps are limited.`
+    const extractionPrompt = buildPriceCheckExtractionPrompt({
+      query,
+      refine,
+      queryContext,
+      hasSearchData,
+      searchRawText: searchResponse.rawText,
+      annotations: searchResponse.annotations,
+      gbpToEur,
+      usdToEur,
+    })
 
     const extraction = await this.extractComparables(extractionPrompt)
 
@@ -148,18 +117,13 @@ RULES (follow ALL of these):
         reason: extraction.lastFailureReason,
       })
       diagnostics = this.buildDiagnostics(searchResponse, queryContext, hasSearchData ? 'extraction_failed' : 'no_search_data')
-      comps = []
+      comps = buildEmptyComparableFallback<PriceCheckComp>()
       averageSellingPriceEur = 0
       dataSource = 'ai_fallback'
     } else {
       const extractedComps = Array.isArray(extraction.parsed.comps) ? extraction.parsed.comps : []
       const enrichedComps = this.backfillComparableSourceUrls(extractedComps, searchResponse.annotations)
-      const allComps = filterValidComps(enrichedComps)
-        .filter((comp) => Boolean(comp.sourceUrl))
-        .map((comp) => ({
-          ...comp,
-          sourceUrl: comp.sourceUrl!,
-        }))
+      const allComps = keepEvidenceBackedComparables(filterValidComps(enrichedComps))
 
       if (allComps.length >= 2) {
         comps = this.orderCompsByMarketPriority(allComps)
@@ -169,7 +133,7 @@ RULES (follow ALL of these):
         diagnostics = this.buildDiagnostics(searchResponse, queryContext)
         dataSource = hasSearchData ? 'web_search' : 'ai_fallback'
       } else {
-        comps = []
+        comps = buildEmptyComparableFallback<PriceCheckComp>()
         averageSellingPriceEur = 0
         diagnostics = this.buildDiagnostics(
           searchResponse,
@@ -269,7 +233,7 @@ RULES (follow ALL of these):
   ): Promise<{ parsed: z.infer<typeof PriceCheckExtractionSchema> | null; lastFailureReason: string }> {
     try {
       const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof PriceCheckExtractionSchema>>({
-        systemPrompt: 'Extract structured pricing data from web search results. Return ONLY valid JSON.',
+        systemPrompt: PRICE_CHECK_EXTRACTION_SYSTEM_PROMPT,
         userPrompt: extractionPrompt,
         schema: PriceCheckExtractionSchema,
         maxTokens: 900,

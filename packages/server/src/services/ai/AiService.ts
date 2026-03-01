@@ -10,6 +10,17 @@ import { SearchService } from '../search/SearchService'
 import { logger } from '../../middleware/requestId'
 import { validatePriceEur } from '../../lib/validation'
 import { getAiRouter } from './AiRouter'
+import {
+  BUSINESS_INSIGHTS_SYSTEM_PROMPT,
+  DASHBOARD_ASSISTANT_SYSTEM_PROMPT,
+  PRODUCT_DESCRIPTION_SYSTEM_PROMPT,
+  RETAIL_LOOKUP_SYSTEM_PROMPT,
+  SERIAL_DECODE_SYSTEM_PROMPT,
+  buildBusinessInsightsUserPrompt,
+  buildProductDescriptionUserPrompt,
+  buildRetailLookupUserPrompt,
+  buildSerialDecodeUserPrompt,
+} from './prompts/assistantPrompts'
 
 export interface BusinessInsights {
   insights: string[]
@@ -33,21 +44,9 @@ export class AiService {
 
   async generateProductDescription(product: Partial<Product>): Promise<string> {
     try {
-      const prompt = `Write a compelling, luxury-focused product description for SEO for the following item.
-
-Brand: ${product.brand}
-Model: ${product.model}
-Category: ${product.category || 'Luxury Item'}
-Condition: ${product.condition || 'Pre-owned'}
-Colour: ${product.colour || ''}
-Key Features: ${product.notes || ''}
-
-The description should be professional, highlight craftsmanship and value, and stay under 150 words.
-Return plain text only.`
-
       const response = await this.aiRouter.generateText({
-        systemPrompt: 'You are a concise luxury ecommerce copywriter.',
-        userPrompt: prompt,
+        systemPrompt: PRODUCT_DESCRIPTION_SYSTEM_PROMPT,
+        userPrompt: buildProductDescriptionUserPrompt(product),
         maxTokens: 300,
         temperature: 0.7,
       })
@@ -61,23 +60,9 @@ Return plain text only.`
 
   async generateBusinessInsights(kpis: Record<string, unknown>): Promise<BusinessInsights> {
     try {
-      const prompt = `Analyze these business KPIs for a luxury reseller and provide 3 short, actionable bullet insights.
-
-KPIs:
-- Total Inventory Value: €${Number(kpis.totalInventoryValue ?? 0)}
-- Pending Buy List Value: €${Number(kpis.pendingBuyListValue ?? 0)}
-- Active Sourcing Pipeline: €${Number(kpis.activeSourcingPipeline ?? 0)}
-- Total Revenue (Recent): €${Number(kpis.revenue ?? 0)}
-- Margin: ${Number(kpis.margin ?? 0)}%
-
-Return ONLY JSON:
-{
-  "insights": ["insight 1", "insight 2", "insight 3"]
-}`
-
       const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof BusinessInsightsSchema>>({
-        systemPrompt: 'You provide concise business insights for a luxury resale operations dashboard. Return ONLY valid JSON.',
-        userPrompt: prompt,
+        systemPrompt: BUSINESS_INSIGHTS_SYSTEM_PROMPT,
+        userPrompt: buildBusinessInsightsUserPrompt(kpis),
         schema: BusinessInsightsSchema,
         maxTokens: 300,
         temperature: 0.4,
@@ -100,7 +85,7 @@ Return ONLY JSON:
   async prompt(userPrompt: string): Promise<string> {
     try {
       const response = await this.aiRouter.generateText({
-        systemPrompt: 'You are a concise assistant for a luxury resale business dashboard. Answer in 1-2 short sentences.',
+        systemPrompt: DASHBOARD_ASSISTANT_SYSTEM_PROMPT,
         userPrompt,
         maxTokens: 180,
         temperature: 0.5,
@@ -142,28 +127,11 @@ Return ONLY JSON:
         : 'No live web results were found.'
 
       const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof RetailLookupSchema>>({
-        systemPrompt: 'Extract official retail pricing from web search results. Return ONLY valid JSON.',
-        userPrompt: `You are a luxury retail expert. Find the current OFFICIAL brand retail price (new/boutique), not resale price.
-
-${searchContext}
-
-Item description:
-"""
-${trimmed}
-"""
-
-Return ONLY JSON:
-{
-  "retailPriceEur": number or null,
-  "currency": "EUR",
-  "productName": string or null,
-  "note": string
-}
-
-Rules:
-- Prefer official brand/boutique sources.
-- Include source context in note.
-- If no reliable official pricing is found, set retailPriceEur to null.`,
+        systemPrompt: RETAIL_LOOKUP_SYSTEM_PROMPT,
+        userPrompt: buildRetailLookupUserPrompt({
+          searchContext,
+          description: trimmed,
+        }),
         schema: RetailLookupSchema,
         maxTokens: 320,
         temperature: 0.2,
@@ -229,64 +197,13 @@ Rules:
         : '\n=== WEB SEARCH: no reliable reference results found ===\n'
 
       const routed = await this.aiRouter.extractStructuredJson<SerialDecodeResult>({
-        systemPrompt: 'You decode luxury goods serial numbers using reference data. Return ONLY valid JSON.',
-        userPrompt: `You are a luxury authentication assistant focused on serial/date code interpretation.
-${searchContext}
-Task:
-- Using the reference data above (if available), decode this serial/date code.
-- Be conservative and avoid fake precision.
-- Return strict JSON only.
-
-Input:
-- Brand: ${parsedInput.brand}
-- Serial: ${normalizedSerial}
-- Item description: ${parsedInput.itemDescription ?? ''}
-
-Return exactly this JSON shape:
-{
-  "success": boolean,
-  "brand": "${parsedInput.brand}",
-  "normalizedSerial": "${normalizedSerial}",
-  "source": "ai_heuristic",
-  "precision": "exact_week|exact_month|exact_year|year_window|unknown",
-  "confidence": number,
-  "year": number | null,
-  "period": string | null,
-  "productionWindow": {
-    "startYear": number,
-    "endYear": number,
-    "startMonth": number | null,
-    "endMonth": number | null,
-    "label": string | null
-  } | null,
-  "message": string,
-  "note": string | null,
-  "rationale": string[],
-  "uncertainties": string[],
-  "candidates": [
-    {
-      "label": string,
-      "year": number | null,
-      "period": string | null,
-      "productionWindow": {
-        "startYear": number,
-        "endYear": number,
-        "startMonth": number | null,
-        "endMonth": number | null,
-        "label": string | null
-      } | null,
-      "confidence": number,
-      "rationale": string
-    }
-  ] | null,
-  "formatMatched": string | null
-}
-
-Rules:
-- confidence must be 0..1.
-- If uncertain, use precision "year_window" or "unknown".
-- Do not invent exact months/weeks unless justified by reference data.
-- If no reliable inference, set success=false and explain missing signals.`,
+        systemPrompt: SERIAL_DECODE_SYSTEM_PROMPT,
+        userPrompt: buildSerialDecodeUserPrompt({
+          brand: parsedInput.brand,
+          normalizedSerial,
+          itemDescription: parsedInput.itemDescription,
+          searchContext,
+        }),
         schema: SerialDecodeResultSchema,
         maxTokens: 700,
         temperature: 0.2,

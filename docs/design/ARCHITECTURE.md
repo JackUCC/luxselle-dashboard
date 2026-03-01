@@ -90,10 +90,17 @@ luxselle-dashboard/
 │   │   ├── services/       # Business logic
 │   │   │   ├── pricing/
 │   │   │   │   ├── providers/
-│   │   │   │   │   ├── MockPricingProvider.ts
-│   │   │   │   │   ├── OpenAIProvider.ts
-│   │   │   │   │   └── GeminiProvider.ts
+│   │   │   │   │   └── OpenAIProvider.ts
 │   │   │   │   └── PricingService.ts
+│   │   │   ├── ai/
+│   │   │   │   ├── AiRouter.ts
+│   │   │   │   ├── noFabrication.ts
+│   │   │   │   └── prompts/
+│   │   │   │       ├── assistantPrompts.ts
+│   │   │   │       ├── searchPrompts.ts
+│   │   │   │       ├── priceCheckPrompts.ts
+│   │   │   │       ├── pricingPrompts.ts
+│   │   │   │       └── marketResearchPrompts.ts
 │   │   │   └── import/
 │   │   │       └── SupplierImportService.ts
 │   │   ├── repos/          # Data access layer

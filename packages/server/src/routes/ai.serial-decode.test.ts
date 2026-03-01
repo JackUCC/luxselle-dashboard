@@ -89,6 +89,34 @@ describe('POST /api/ai/serial-decode', () => {
     })
   })
 
+  it('returns 200 with degraded payload when service cannot decode reliably', async () => {
+    mockDecodeSerialHeuristic.mockResolvedValue({
+      success: false,
+      brand: 'Gucci',
+      normalizedSerial: 'UNKNOWN123',
+      source: 'ai_heuristic',
+      precision: 'unknown',
+      confidence: 0,
+      message: 'Could not infer a reliable production window from available evidence.',
+      rationale: [],
+      uncertainties: ['No validated reference evidence available for this decode attempt.'],
+      candidates: null,
+      formatMatched: null,
+    })
+
+    const res = await request(app).post('/api/ai/serial-decode').send({
+      brand: 'Gucci',
+      serial: 'UNKNOWN123',
+    })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toMatchObject({
+      success: false,
+      precision: 'unknown',
+      confidence: 0,
+    })
+  })
+
   it('returns 400 validation error for empty serial', async () => {
     const res = await request(app).post('/api/ai/serial-decode').send({
       brand: 'Gucci',

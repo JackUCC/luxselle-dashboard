@@ -1,4 +1,4 @@
-/** Pricing provider interface; implementations: Mock, OpenAI. @see docs/CODE_REFERENCE.md */
+/** Pricing provider interface for dynamic pricing orchestration providers. @see docs/CODE_REFERENCE.md */
 import type {
   PricingMarketCountry,
   PricingMarketMode,

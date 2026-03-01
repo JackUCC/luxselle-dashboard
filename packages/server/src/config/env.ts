@@ -1,6 +1,6 @@
 /**
  * Load and validate environment variables with Zod.
- * Exports typed `env` used by server, Firebase config, and services (PORT, Firebase, AI provider, currency, margin).
+ * Exports typed `env` used by server, Firebase config, and services (PORT, Firebase, AI routing, currency, margin).
  * @see docs/CODE_REFERENCE.md
  * References: dotenv, Zod
  */
@@ -8,6 +8,9 @@ import dotenv from 'dotenv'
 import { z } from 'zod'
 
 dotenv.config()
+
+const ROUTING_MODES = ['dynamic', 'openai', 'perplexity'] as const
+type RoutingMode = (typeof ROUTING_MODES)[number]
 
 // Coerce string env vars "true"/"false" to boolean for FIREBASE_USE_EMULATOR
 const booleanFromEnv = z.preprocess((value) => {
@@ -30,12 +33,23 @@ const EnvSchema = z.object({
   FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string().optional(),
-  // Deprecated: single-provider mode. Kept for backwards compatibility with older env files.
+  // Deprecated: single-provider mode. Kept for one release as compatibility shim.
   AI_PROVIDER: z.preprocess(
-    (value) => (value === 'mock' ? undefined : value),
-    z.enum(['openai', 'perplexity']).optional(),
+    (value) => {
+      if (typeof value !== 'string') return value
+      const normalized = value.trim().toLowerCase()
+      return normalized.length > 0 ? normalized : undefined
+    },
+    z.enum(['openai', 'perplexity', 'mock']).optional(),
   ),
-  AI_ROUTING_MODE: z.enum(['dynamic', 'openai', 'perplexity']).default('dynamic'),
+  AI_ROUTING_MODE: z.preprocess(
+    (value) => {
+      if (typeof value !== 'string') return value
+      const normalized = value.trim().toLowerCase()
+      return normalized.length > 0 ? normalized : undefined
+    },
+    z.enum(ROUTING_MODES).default('dynamic'),
+  ),
   OPENAI_API_KEY: z.string().optional(),
   PERPLEXITY_API_KEY: z.string().optional(),
   PERPLEXITY_SEARCH_MODEL: z.string().optional().default('sonar-pro'),
@@ -59,5 +73,78 @@ const EnvSchema = z.object({
   SEARCH_DOMAIN_DENYLIST: z.string().optional(),
 })
 
+type ParsedEnv = z.infer<typeof EnvSchema>
+
+function normalizeLegacyAiProvider(value: unknown): ParsedEnv['AI_PROVIDER'] {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'openai' || normalized === 'perplexity' || normalized === 'mock') {
+    return normalized
+  }
+  return undefined
+}
+
+function resolveRoutingModeFromCompatibility(
+  rawRoutingMode: unknown,
+  rawLegacyProvider: ParsedEnv['AI_PROVIDER'],
+): { routingMode: RoutingMode | string; usedLegacyProvider: boolean } {
+  if (typeof rawRoutingMode === 'string' && rawRoutingMode.trim().length > 0) {
+    const normalized = rawRoutingMode.trim().toLowerCase()
+    if (normalized === 'dynamic' || normalized === 'openai' || normalized === 'perplexity') {
+      return {
+        routingMode: normalized,
+        usedLegacyProvider: false,
+      }
+    }
+    return {
+      routingMode: normalized,
+      usedLegacyProvider: false,
+    }
+  }
+
+  if (rawLegacyProvider === 'openai' || rawLegacyProvider === 'perplexity') {
+    return {
+      routingMode: rawLegacyProvider,
+      usedLegacyProvider: true,
+    }
+  }
+
+  return {
+    routingMode: 'dynamic',
+    usedLegacyProvider: rawLegacyProvider === 'mock',
+  }
+}
+
+const rawLegacyProvider = normalizeLegacyAiProvider(process.env.AI_PROVIDER)
+const routingResolution = resolveRoutingModeFromCompatibility(
+  process.env.AI_ROUTING_MODE,
+  rawLegacyProvider,
+)
+
+const envInput: Record<string, unknown> = {
+  ...process.env,
+  AI_ROUTING_MODE: routingResolution.routingMode,
+}
+
+if (rawLegacyProvider) {
+  envInput.AI_PROVIDER = rawLegacyProvider
+}
+
+const parsedEnv = EnvSchema.parse(envInput)
+
+if (routingResolution.usedLegacyProvider && rawLegacyProvider) {
+  if (rawLegacyProvider === 'mock') {
+    console.warn(
+      '[env] AI_PROVIDER=mock is deprecated and ignored; runtime mock mode has been removed. ' +
+      'Using AI_ROUTING_MODE=dynamic. AI_PROVIDER compatibility will be removed in the next breaking cleanup.',
+    )
+  } else {
+    console.warn(
+      `[env] AI_PROVIDER=${rawLegacyProvider} is deprecated. Mapped to AI_ROUTING_MODE=${routingResolution.routingMode}. ` +
+      'Set AI_ROUTING_MODE explicitly. AI_PROVIDER compatibility will be removed in the next breaking cleanup.',
+    )
+  }
+}
+
 // Parse and validate on load; throws if required/env shape is invalid
-export const env = EnvSchema.parse(process.env)
+export const env = parsedEnv

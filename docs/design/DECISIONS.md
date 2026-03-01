@@ -20,14 +20,14 @@
 - Emulator limitations (e.g., Storage emulator quirks)
 - Need to handle emulator vs real Firebase config differences
 
-### ADR-003: Mock AI Provider Default
+### ADR-003: Dynamic Multi-Provider AI Routing Default
 **Status**: Accepted  
-**Context**: Must work without API keys.  
-**Decision**: MockPricingProvider is default, returns deterministic results.  
+**Context**: Search and extraction tasks perform better on different providers and runtime mock data is not acceptable for production behavior.  
+**Decision**: Dynamic task-based routing is default (`AI_ROUTING_MODE=dynamic`): Perplexity-first web retrieval, OpenAI-first structured extraction/generation, OpenAI-only vision. Runtime mock mode is removed.  
 **Consequences**:
-- App works immediately without setup
-- Mock results may not reflect real-world pricing
-- Easy to test without API costs
+- Better retrieval/extraction quality and resilience via failover
+- Explicit degraded/503 behavior when provider keys are unavailable
+- Test doubles remain in unit/integration tests only (no runtime mock provider path)
 
 ### ADR-004: Server-Side AI Only
 **Status**: Accepted  
