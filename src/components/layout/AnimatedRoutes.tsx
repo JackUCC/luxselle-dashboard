@@ -17,6 +17,7 @@ const MarketResearchView = lazy(() => import('../../pages/MarketResearch/MarketR
 const SavedResearchView = lazy(() => import('../../pages/SavedResearch/SavedResearchView'))
 const SerialCheckView = lazy(() => import('../../pages/SerialCheck/SerialCheckView'))
 const RetailPriceView = lazy(() => import('../../pages/RetailPrice/RetailPriceView'))
+const JobsView = lazy(() => import('../../pages/Jobs/JobsView'))
 
 const routes = [
   { path: '/', element: <DashboardView /> },
@@ -28,6 +29,7 @@ const routes = [
   { path: '/saved-research', element: <SavedResearchView /> },
   { path: '/sourcing', element: <SourcingView /> },
   { path: '/invoices', element: <InvoicesView /> },
+  { path: '/jobs', element: <JobsView /> },
   { path: '/evaluator', element: <Navigate to="/buy-box" replace /> },
 ]
 

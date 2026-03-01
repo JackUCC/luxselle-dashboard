@@ -9,11 +9,12 @@ import { ArrowRightToLine, RefreshCw } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
+import type { ActivityEvent } from '@luxselle/shared'
 import DashboardSkeleton from './DashboardSkeleton'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import PageLayout from '../../components/layout/PageLayout'
-import { AnimatedNumber, BentoGrid, Button, PageHeader, StatCard } from '../../components/design-system'
+import { AnimatedNumber, BentoGrid, Button, PageHeader, SectionLabel, StatCard } from '../../components/design-system'
 import MarketIntelligenceWidget from '../../components/widgets/MarketIntelligenceWidget'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import EurToYenWidget from '../../components/widgets/EurToYenWidget'
@@ -31,16 +32,19 @@ export default function DashboardView() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activities, setActivities] = useState<ActivityEvent[]>([])
 
   const loadData = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
     try {
-      const [kpisRes, profitRes] = await Promise.all([
+      const [kpisRes, profitRes, activityRes] = await Promise.all([
         apiGet<{ data: KPIs }>('/dashboard/kpis'),
         apiGet<{ data: ProfitSummary }>('/dashboard/profit-summary'),
+        apiGet<{ data: ActivityEvent[] }>('/dashboard/activity?limit=10'),
       ])
       setKpis(kpisRes.data)
       setProfit(profitRes.data ?? null)
+      setActivities(activityRes.data ?? [])
       setError(null)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load dashboard'
@@ -167,6 +171,30 @@ export default function DashboardView() {
           <BentoGrid columns={3}>
             <AiMarketPulseWidget />
           </BentoGrid>
+
+          {/* Recent Activity */}
+          {activities.length > 0 && (
+            <div className="lux-card p-5 space-y-3" data-testid="activity-feed">
+              <SectionLabel as="h2">Recent Activity</SectionLabel>
+              <ul className="space-y-2">
+                {activities.map((event) => (
+                  <li
+                    key={`${event.createdAt}-${event.entityId}`}
+                    className="flex items-start gap-3 text-sm text-lux-700"
+                  >
+                    <span className="shrink-0 rounded-full bg-lux-100 px-2 py-0.5 text-[11px] font-medium text-lux-500 uppercase tracking-wide">
+                      {event.eventType.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-lux-500 text-xs mt-0.5">
+                      {new Date(event.createdAt).toLocaleDateString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </PageLayout>

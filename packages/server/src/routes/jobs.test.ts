@@ -6,18 +6,20 @@ import request from 'supertest'
 import express, { type Request, type Response, type NextFunction } from 'express'
 import { jobsRouter } from './jobs'
 
-const { mockList, mockGetById } = vi.hoisted(() => ({
+const { mockList, mockGetById, mockSet } = vi.hoisted(() => ({
   mockList: vi.fn(),
   mockGetById: vi.fn(),
+  mockSet: vi.fn(),
 }))
 
 vi.mock('../repos/SystemJobRepo', () => ({
   SystemJobRepo: class {
     list = mockList
     getById = mockGetById
+    set = mockSet
   },
 }))
-vi.mock('../services/JobRunner', () => ({ runJob: vi.fn() }))
+vi.mock('../services/JobRunner', () => ({ runJob: vi.fn().mockResolvedValue(undefined) }))
 
 interface TestError {
   status?: number
@@ -63,5 +65,41 @@ describe('GET /api/jobs/:id', () => {
     expect(res.body.error.code).toBe('NOT_FOUND')
     expect(res.body.error.message).toBeDefined()
     expect(typeof res.body.error.message).toBe('string')
+  })
+})
+
+describe('POST /api/jobs/:id/retry', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('returns 200 with updated job data when job is retryable', async () => {
+    const failedJob = { id: 'job-1', status: 'failed', retryCount: 0, maxRetries: 3, jobType: 'supplier_import' }
+    const updatedJob = { ...failedJob, status: 'queued', retryCount: 1 }
+    mockGetById.mockResolvedValue(failedJob)
+    mockSet.mockResolvedValue(updatedJob)
+    const res = await request(app).post('/api/jobs/job-1/retry')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toBeDefined()
+    expect(res.body.data.status).toBe('queued')
+  })
+
+  it('returns 404 when job does not exist', async () => {
+    mockGetById.mockResolvedValue(null)
+    const res = await request(app).post('/api/jobs/nonexistent/retry')
+    expect(res.status).toBe(404)
+    expect(res.body.error.code).toBe('NOT_FOUND')
+  })
+
+  it('returns 400 when job is not in a failed state', async () => {
+    mockGetById.mockResolvedValue({ id: 'job-1', status: 'running', retryCount: 0, maxRetries: 3 })
+    const res = await request(app).post('/api/jobs/job-1/retry')
+    expect(res.status).toBe(400)
+    expect(res.body.error.code).toBe('BAD_REQUEST')
+  })
+
+  it('returns 400 when max retries exceeded', async () => {
+    mockGetById.mockResolvedValue({ id: 'job-1', status: 'failed', retryCount: 3, maxRetries: 3 })
+    const res = await request(app).post('/api/jobs/job-1/retry')
+    expect(res.status).toBe(400)
+    expect(res.body.error.code).toBe('BAD_REQUEST')
   })
 })

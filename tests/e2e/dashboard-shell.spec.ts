@@ -106,3 +106,74 @@ test('inventory missing-info filter works via URL', async ({ page }) => {
   await expect(page).toHaveURL('/inventory?missingInfo=1')
   await expect(page.getByText(/Showing products with missing information/)).toBeVisible()
 })
+
+test('dock bar navigates to /jobs', async ({ page }) => {
+  await page.setViewportSize({ width: 1720, height: 1000 })
+  await page.goto('/')
+
+  const dock = page.getByTestId('dock-bar')
+  await expect(dock).toBeVisible()
+
+  await dock.getByRole('link', { name: 'Jobs' }).click()
+  await expect(page).toHaveURL('/jobs')
+})
+
+test('mobile nav drawer navigates to /jobs', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  await page.getByTestId('mobile-nav-toggle').click()
+  await expect(page.getByTestId('mobile-nav-drawer')).toBeVisible()
+
+  await page.getByTestId('mobile-nav-drawer').getByRole('link', { name: 'Jobs' }).click()
+  await expect(page).toHaveURL('/jobs')
+})
+
+test('activity feed is visible on dashboard overview', async ({ page }) => {
+  await page.route('**/api/dashboard/kpis', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          totalInventoryValue: 0,
+          totalInventoryPotentialValue: 0,
+          totalInventoryItems: 0,
+          activeSourcingPipeline: 0,
+        },
+      }),
+    })
+  })
+  await page.route('**/api/dashboard/profit-summary', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { totalCost: 0, totalRevenue: 0, totalProfit: 0, soldItems: 0 } }),
+    })
+  })
+  await page.route('**/api/dashboard/activity', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            organisationId: 'default',
+            createdAt: '2026-03-01T10:00:00Z',
+            updatedAt: '2026-03-01T10:00:00Z',
+            actor: 'system',
+            eventType: 'import_completed',
+            entityType: 'supplier',
+            entityId: 'sup-1',
+            payload: {},
+          },
+        ],
+      }),
+    })
+  })
+
+  await page.goto('/')
+
+  await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
+  await expect(page.getByTestId('activity-feed')).toBeVisible()
+})

@@ -1,6 +1,7 @@
 import {
   Bookmark,
   Box,
+  Briefcase,
   CircleDollarSign,
   Globe,
   House,
@@ -31,6 +32,7 @@ export const appRoutes: RouteMeta[] = [
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Box, section: 'manage' },
   { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Globe, section: 'manage' },
   { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'manage' },
+  { path: '/jobs', label: 'Jobs', navLabel: 'Jobs', icon: Briefcase, section: 'manage' },
 ]
 
 const formatLabel = (value: string) =>
