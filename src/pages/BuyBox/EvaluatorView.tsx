@@ -35,6 +35,12 @@ interface PriceCheckResult {
   maxBidEur: number
   dataSource?: 'web_search' | 'ai_fallback' | 'mock'
   researchedAt?: string
+  diagnostics?: {
+    emptyReason?: 'no_search_data' | 'extraction_failed' | 'insufficient_valid_comps'
+    searchAnnotationCount?: number
+    searchRawTextLength?: number
+    missingAttributesHint?: Array<'brand' | 'style' | 'size' | 'colour' | 'material'>
+  }
 }
 
 interface VisualSearchResult {
@@ -67,6 +73,10 @@ export default function EvaluatorView() {
   const [query, setQuery] = useState('')
   const [condition, setCondition] = useState('')
   const [notes, setNotes] = useState('')
+  const [fallbackBrand, setFallbackBrand] = useState('')
+  const [fallbackStyle, setFallbackStyle] = useState('')
+  const [fallbackSize, setFallbackSize] = useState('')
+  const [fallbackColour, setFallbackColour] = useState('')
   const [uploadedImage, setUploadedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
@@ -148,6 +158,33 @@ export default function EvaluatorView() {
           ? 50
           : 25
     : 0
+
+
+  const hasEmptyComparableResult = Boolean(result && result.comps.length === 0)
+
+  const applyFallbackDetailsToNotes = useCallback(() => {
+    const fields = [
+      fallbackBrand.trim() ? `brand: ${fallbackBrand.trim()}` : '',
+      fallbackStyle.trim() ? `style: ${fallbackStyle.trim()}` : '',
+      fallbackSize.trim() ? `size: ${fallbackSize.trim()}` : '',
+      fallbackColour.trim() ? `colour: ${fallbackColour.trim()}` : '',
+    ].filter(Boolean)
+
+    if (fields.length === 0) {
+      return
+    }
+
+    const fallbackLine = `Fallback details — ${fields.join(' | ')}`
+    setNotes((prev) => (prev.trim() ? `${prev.trim()}
+${fallbackLine}` : fallbackLine))
+    setRefineOpen(true)
+  }, [fallbackBrand, fallbackStyle, fallbackSize, fallbackColour])
+
+  const emptyComparableGuidance = result?.diagnostics?.emptyReason === 'no_search_data'
+    ? 'We could not find enough Irish/EU listings for this text. Add brand, style, size, and colour to improve match quality.'
+    : result?.diagnostics?.emptyReason === 'extraction_failed'
+      ? 'Search data was found, but extraction was not reliable. Add structured details and retry.'
+      : 'We found some signals, but not enough valid comparable listings. Add brand, style, size, and colour and retry.'
 
   if (isSidecar) {
     return (
@@ -508,8 +545,50 @@ export default function EvaluatorView() {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800">
-                    No comparable listings found. Prices shown are AI estimates and may be less reliable.
+                  <div className="rounded-lux-card border border-amber-200 bg-amber-50/50 p-5 text-sm text-amber-800 space-y-3">
+                    <p>{emptyComparableGuidance}</p>
+                    {hasEmptyComparableResult && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <FloatingInput
+                          type="text"
+                          value={fallbackBrand}
+                          onChange={(e) => setFallbackBrand(e.target.value)}
+                          label="Brand (fallback)"
+                        />
+                        <FloatingInput
+                          type="text"
+                          value={fallbackStyle}
+                          onChange={(e) => setFallbackStyle(e.target.value)}
+                          label="Style / model"
+                        />
+                        <FloatingInput
+                          type="text"
+                          value={fallbackSize}
+                          onChange={(e) => setFallbackSize(e.target.value)}
+                          label="Bag size"
+                        />
+                        <FloatingInput
+                          type="text"
+                          value={fallbackColour}
+                          onChange={(e) => setFallbackColour(e.target.value)}
+                          label="Colour"
+                        />
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={applyFallbackDetailsToNotes}
+                        className="lux-btn-secondary text-xs px-3 py-2 rounded-md"
+                      >
+                        Add details to refine notes
+                      </button>
+                      {result?.diagnostics?.searchAnnotationCount !== undefined && (
+                        <p className="text-xs text-amber-700 self-center">
+                          Search sources found: {result.diagnostics.searchAnnotationCount}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

@@ -198,6 +198,82 @@ export class SearchService {
     return this.enrichmentWindow.count
   }
 
+  private hasSearchProvider(): boolean {
+    if (env.AI_PROVIDER === 'openai') {
+      return Boolean(env.OPENAI_API_KEY)
+    }
+    if (env.AI_PROVIDER === 'perplexity') {
+      return Boolean(env.PERPLEXITY_API_KEY)
+    }
+    return false
+  }
+
+  private async searchMarketWithPerplexity(
+    query: string,
+    opts: { domains: string[]; userLocation?: { country: string } },
+  ): Promise<SearchResponse> {
+    if (!env.PERPLEXITY_API_KEY) {
+      return { results: [], rawText: '', annotations: [] }
+    }
+
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: env.PERPLEXITY_SEARCH_MODEL,
+        temperature: 0,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a market search assistant. Return concise listing results with sources.',
+          },
+          {
+            role: 'user',
+            content: query,
+          },
+        ],
+        search_domain_filter: opts.domains.length > 0 ? opts.domains : undefined,
+        user_location: opts.userLocation
+          ? {
+              country: opts.userLocation.country,
+            }
+          : undefined,
+      }),
+    })
+
+    if (!response.ok) {
+      logger.error('search_service_perplexity_error', { status: response.status })
+      return { results: [], rawText: '', annotations: [] }
+    }
+
+    const payload = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>
+      citations?: string[]
+    }
+
+    const rawText = payload.choices?.[0]?.message?.content ?? ''
+    const citations = Array.isArray(payload.citations) ? payload.citations : []
+    const annotations = this.filterAllowedAnnotations(
+      citations
+        .filter((url): url is string => typeof url === 'string' && url.length > 0)
+        .map((url) => ({ url, title: this.extractCitationTitle(url) })),
+    )
+
+    const results = annotations.map((ann) => ({ title: ann.title, url: ann.url, snippet: '' }))
+    return { results, rawText, annotations }
+  }
+
+  private extractCitationTitle(url: string): string {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '')
+    } catch {
+      return url
+    }
+  }
+
   /**
    * Perform a web search scoped to approved luxury resale domains.
    * Uses native `filters.allowed_domains` in the WebSearchTool for reliable domain restriction.
@@ -207,13 +283,17 @@ export class SearchService {
     query: string,
     opts?: { domains?: string[]; userLocation?: { country: string } },
   ): Promise<SearchResponse> {
-    if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
+    const domains = opts?.domains ?? this.getConfiguredAllowlist()
+
+    if (!this.hasSearchProvider()) {
       return { results: [], rawText: '', annotations: [] }
     }
 
-    const domains = opts?.domains ?? this.getConfiguredAllowlist()
-
     try {
+      if (env.AI_PROVIDER === 'perplexity') {
+        return await this.searchMarketWithPerplexity(query, { domains, userLocation: opts?.userLocation })
+      }
+
       const openai = await this.getOpenAI()
 
       const webSearchTool: {
@@ -335,6 +415,10 @@ export class SearchService {
       matchingCriteria: '',
     }
 
+    if (env.AI_PROVIDER === 'perplexity') {
+      return this.buildHeuristicQueryContext(query)
+    }
+
     if (env.AI_PROVIDER !== 'openai' || !env.OPENAI_API_KEY) {
       return fallback
     }
@@ -407,6 +491,37 @@ searchVariants rules:
     } catch (err) {
       logger.warn('search_expand_query_error', { error: err instanceof Error ? err.message : String(err) })
       return fallback
+    }
+  }
+
+  private buildHeuristicQueryContext(query: string): QueryContext {
+    const normalized = query.trim()
+    if (!normalized) {
+      return {
+        canonicalDescription: query,
+        keyAttributes: { brand: '', style: query },
+        searchVariants: [query],
+        matchingCriteria: '',
+      }
+    }
+
+    const words = normalized.split(/\s+/)
+    const brand = words[0] ?? ''
+    const variantBase = normalized.replace(/\s+/g, ' ').trim()
+    const variants = Array.from(new Set([
+      variantBase,
+      `${variantBase} pre-owned`,
+      `${variantBase} resale ireland`,
+    ])).slice(0, 3)
+
+    return {
+      canonicalDescription: normalized,
+      keyAttributes: {
+        brand,
+        style: words.slice(1).join(' ') || normalized,
+      },
+      searchVariants: variants,
+      matchingCriteria: 'Match brand and style family, then prefer same size/colour/material when available.',
     }
   }
 

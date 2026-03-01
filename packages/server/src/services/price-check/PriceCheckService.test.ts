@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
   mockExpandQuery,
-  mockSearchMarket,
+  mockSearchMarketMultiExpanded,
   mockEnrichComparables,
   mockGetRate,
   mockChatCompletionsCreate,
 } = vi.hoisted(() => ({
   mockExpandQuery: vi.fn(),
-  mockSearchMarket: vi.fn(),
+  mockSearchMarketMultiExpanded: vi.fn(),
   mockEnrichComparables: vi.fn(),
   mockGetRate: vi.fn(),
   mockChatCompletionsCreate: vi.fn(),
@@ -17,7 +17,7 @@ const {
 vi.mock('../search/SearchService', () => ({
   SearchService: class {
     expandQuery = mockExpandQuery
-    searchMarket = mockSearchMarket
+    searchMarketMultiExpanded = mockSearchMarketMultiExpanded
   },
 }))
 
@@ -68,22 +68,22 @@ describe('PriceCheckService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = 'openai'
+    ;(env as { AI_PROVIDER: 'mock' | 'openai' | 'perplexity' }).AI_PROVIDER = 'openai'
     ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = 'test-key'
 
     mockExpandQuery.mockResolvedValue(QUERY_CONTEXT)
-    mockSearchMarket.mockResolvedValue(SEARCH_RESPONSE)
+    mockSearchMarketMultiExpanded.mockResolvedValue(SEARCH_RESPONSE)
     mockEnrichComparables.mockImplementation(async (comparables) => comparables)
     mockGetRate.mockResolvedValue(1)
   })
 
   afterEach(() => {
-    ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = previousProvider
+    ;(env as { AI_PROVIDER: 'mock' | 'openai' | 'perplexity' }).AI_PROVIDER = previousProvider
     ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = previousKey
   })
 
   it('returns mock response shape without requiring comparable image enrichment', async () => {
-    ;(env as { AI_PROVIDER: 'mock' | 'openai' }).AI_PROVIDER = 'mock'
+    ;(env as { AI_PROVIDER: 'mock' | 'openai' | 'perplexity' }).AI_PROVIDER = 'mock'
     ;(env as { OPENAI_API_KEY?: string }).OPENAI_API_KEY = undefined
 
     const service = new PriceCheckService()
@@ -131,17 +131,9 @@ describe('PriceCheckService', () => {
     const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
 
     expect(mockChatCompletionsCreate).toHaveBeenCalledTimes(2)
-    expect(mockSearchMarket).toHaveBeenCalledWith(
-      expect.stringContaining('pre-owned resale Ireland EU price'),
-      expect.objectContaining({
-        userLocation: { country: 'IE' },
-        domains: [
-          'designerexchange.ie',
-          'luxuryexchange.ie',
-          'siopaella.com',
-          'vestiairecollective.com',
-        ],
-      }),
+    expect(mockSearchMarketMultiExpanded).toHaveBeenCalledWith(
+      QUERY_CONTEXT.searchVariants,
+      expect.objectContaining({ userLocation: { country: 'IE' } }),
     )
     expect(result.dataSource).toBe('web_search')
     expect(result.averageSellingPriceEur).toBe(3100)
@@ -166,6 +158,46 @@ describe('PriceCheckService', () => {
     })
     expect(typeof result.researchedAt).toBe('string')
     expect(mockEnrichComparables).not.toHaveBeenCalled()
+  })
+
+
+
+  it('backfills comparable source urls from search annotations and includes diagnostics', async () => {
+    mockSearchMarketMultiExpanded.mockResolvedValue({
+      ...SEARCH_RESPONSE,
+      annotations: [{ title: 'Designer Exchange listing', url: 'https://designerexchange.ie/item/1' }],
+    })
+
+    mockChatCompletionsCreate.mockResolvedValueOnce({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            comps: [
+              {
+                title: 'Designer Exchange listing',
+                price: 3200,
+                source: 'Designer Exchange',
+              },
+              {
+                title: 'Vestiaire listing',
+                price: 3000,
+                source: 'Vestiaire Collective',
+                sourceUrl: 'https://vestiairecollective.com/item/2',
+              },
+            ],
+          }),
+        },
+      }],
+    })
+
+    const service = new PriceCheckService()
+    const result = await service.check({ query: 'Chanel Classic Flap Medium Black' })
+
+    expect(result.comps[0].sourceUrl).toBe('https://designerexchange.ie/item/1')
+    expect(result.diagnostics).toMatchObject({
+      searchAnnotationCount: 1,
+      emptyReason: undefined,
+    })
   })
 
   it('orders comparables with Irish competitors before EU fallback', async () => {
