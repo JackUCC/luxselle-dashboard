@@ -131,8 +131,22 @@ TARGET_MARGIN_PCT=35
 AI_ROUTING_MODE=dynamic
 OPENAI_API_KEY=sk-proj-...
 PERPLEXITY_API_KEY=pplx-...
+PERPLEXITY_SEARCH_MODEL=sonar-pro
+PERPLEXITY_EXTRACTION_MODEL=sonar-pro
 # Deprecated compatibility input: AI_PROVIDER (accepted for one release only; remove in next breaking cleanup)
 # Optional debug override: AI_ROUTING_MODE=openai or AI_ROUTING_MODE=perplexity
+
+# Optional: search enrichment (defaults in code; see .env.example)
+# SEARCH_ENRICHMENT_ENABLED=true
+# SEARCH_ENRICHMENT_MAX_COUNT=25
+# SEARCH_ENRICHMENT_CACHE_TTL_MS=300000
+# SEARCH_DOMAIN_ALLOWLIST=
+# SEARCH_DOMAIN_DENYLIST=
+
+# Optional: price check broad strategy and secondary domains
+# PRICE_CHECK_V2_ENABLED=false
+# PRICE_CHECK_BROAD_STRATEGY_ENABLED=false
+# PRICE_CHECK_SECONDARY_DOMAINS=vestiairecollective.com
 ```
 
 ---
