@@ -92,9 +92,9 @@ class AiRouterError extends Error {
 
 const TASK_TIMEOUT_MS: Record<AiTaskType, number> = {
   web_search: 12_000,
-  structured_extraction_json: 10_000,
-  freeform_generation: 10_000,
-  vision_analysis: 10_000,
+  structured_extraction_json: 30_000,
+  freeform_generation: 30_000,
+  vision_analysis: 30_000,
 }
 
 const RETRYABLE_CODES = new Set<AiRouterErrorCode>([
