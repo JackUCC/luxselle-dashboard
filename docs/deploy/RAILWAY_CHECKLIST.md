@@ -66,7 +66,8 @@ Used by `/api/market-research/analyse` and `/api/market-research/trending`.
 
 | Variable | When to set |
 |----------|-------------|
-| `AI_PROVIDER` | `openai`, `gemini`, or `mock`. Default: `mock`. |
+| `AI_PROVIDER` | `perplexity`, `openai`, `gemini`, or `mock`. Default: `mock`. |
+| `PERPLEXITY_API_KEY` | Required if `AI_PROVIDER=perplexity`. |
 | `OPENAI_API_KEY` | Required if `AI_PROVIDER=openai`. |
 | `GEMINI_API_KEY` | Required if `AI_PROVIDER=gemini`. |
 
@@ -74,7 +75,7 @@ If you don’t set an AI provider or keys, keep `AI_PROVIDER=mock` so those endp
 
 Checklist:
 
-- [ ] Either `AI_PROVIDER=mock`, or `AI_PROVIDER=openai` + `OPENAI_API_KEY`, or `AI_PROVIDER=gemini` + `GEMINI_API_KEY`
+- [ ] Either `AI_PROVIDER=mock`, or `AI_PROVIDER=perplexity` + `PERPLEXITY_API_KEY`, or `AI_PROVIDER=openai` + `OPENAI_API_KEY`, or `AI_PROVIDER=gemini` + `GEMINI_API_KEY`
 
 ---
 
@@ -127,7 +128,7 @@ Checklist:
 3. **Common causes:**
    - **Firebase:** Invalid or missing `GOOGLE_APPLICATION_CREDENTIALS_JSON`; wrong project/bucket; `FIREBASE_USE_EMULATOR` not `false`.
    - **Firestore index:** Error says “index required” or includes a Firebase Console index URL → create that composite index in Firebase, wait for it to build.
-   - **AI:** `AI_PROVIDER=openai` or `gemini` but missing or invalid API key → set key or use `AI_PROVIDER=mock`.
+   - **AI:** `AI_PROVIDER=perplexity`, `openai`, or `gemini` but missing or invalid API key → set key or use `AI_PROVIDER=mock`.
 
 Full steps: [RAILWAY_500_INVESTIGATION.md](RAILWAY_500_INVESTIGATION.md).
 

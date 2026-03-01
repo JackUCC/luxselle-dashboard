@@ -7,7 +7,7 @@ Step-by-step guide to deploy the Express API backend to Railway.
 - Railway account (sign up at [railway.app](https://railway.app))
 - GitHub repository with your code
 - Firebase service account JSON file
-- API key (OpenAI, optional)
+- API key (OpenAI or Perplexity, optional)
 
 ---
 
@@ -92,6 +92,14 @@ TARGET_MARGIN_PCT=35
 
 ### 2.4 AI Provider (Optional)
 
+**For Perplexity (search, price check, market research):**
+```bash
+AI_PROVIDER=perplexity
+PERPLEXITY_API_KEY=pplx-your-key-here
+PERPLEXITY_SEARCH_MODEL=sonar-pro
+PERPLEXITY_EXTRACTION_MODEL=sonar-pro
+```
+
 **For OpenAI (pricing, market research, image analysis):**
 ```bash
 AI_PROVIDER=openai
@@ -120,9 +128,10 @@ PORT=3001
 BASE_CURRENCY=EUR
 TARGET_MARGIN_PCT=35
 
-# AI Provider (choose one)
-AI_PROVIDER=openai
-OPENAI_API_KEY=sk-proj-...
+# AI Provider (choose one: perplexity, openai, or mock)
+AI_PROVIDER=perplexity
+PERPLEXITY_API_KEY=pplx-...
+# Or: AI_PROVIDER=openai + OPENAI_API_KEY=sk-proj-...
 ```
 
 ---
