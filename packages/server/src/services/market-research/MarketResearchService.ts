@@ -184,7 +184,7 @@ export class MarketResearchService {
         return this.buildDegradedAnalysis(input, 'No sufficient live search data found.')
       }
 
-      return this.synthesizeFromSearch(input, searchResponse, queryContext)
+      return await this.synthesizeFromSearch(input, searchResponse, queryContext)
     } catch (error) {
       try {
         logger.error('market_research_analyse_error', error)
