@@ -48,6 +48,10 @@ const {
   mockInvoiceCreate,
   mockGetNextInvoiceNumber,
   mockGetSettings,
+  mockProductsGet,
+  mockProductsLimit,
+  mockBatchDelete,
+  mockBatchCommit,
 } = vi.hoisted(() => ({
   mockList: vi.fn(),
   mockGetById: vi.fn(),
@@ -57,6 +61,10 @@ const {
   mockInvoiceCreate: vi.fn(),
   mockGetNextInvoiceNumber: vi.fn(),
   mockGetSettings: vi.fn(),
+  mockProductsGet: vi.fn(),
+  mockProductsLimit: vi.fn(),
+  mockBatchDelete: vi.fn(),
+  mockBatchCommit: vi.fn(),
 }))
 
 vi.mock('../repos/ProductRepo', () => ({
@@ -85,6 +93,52 @@ vi.mock('../repos/InvoiceRepo', () => ({
 vi.mock('../repos/SettingsRepo', () => ({
   SettingsRepo: class {
     getSettings = mockGetSettings
+  },
+}))
+
+
+vi.mock('../config/firebase', () => ({
+  db: {
+    collection: vi.fn(() => ({
+      limit: mockProductsLimit,
+    })),
+    batch: vi.fn(() => ({
+      delete: mockBatchDelete,
+      commit: mockBatchCommit,
+    })),
+  },
+  storage: {},
+}))
+
+vi.mock('../middleware/auth', () => ({
+  requireAuth: (req: Request & { user?: { uid: string; role: string; orgId: string } }, _res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization
+    if (authHeader === 'Bearer admin-token') {
+      req.user = { uid: 'admin-user', role: 'admin', orgId: 'default' }
+      next()
+      return
+    }
+
+    if (authHeader === 'Bearer operator-token') {
+      req.user = { uid: 'operator-user', role: 'operator', orgId: 'default' }
+      next()
+      return
+    }
+
+    next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
+  },
+  requireRole: (...allowedRoles: string[]) => (req: Request & { user?: { role: string } }, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      next({ status: 401, code: 'UNAUTHORIZED', message: 'Not authenticated' })
+      return
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
+      return
+    }
+
+    next()
   },
 }))
 
@@ -163,6 +217,77 @@ describe('GET /api/products', () => {
     expect(res.status).toBe(200)
     expect(res.body.data[0].brand).toBe('Acne')
     expect(res.body.data[1].brand).toBe('Zara')
+  })
+})
+
+
+describe('POST /api/products/clear', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockProductsLimit.mockReturnValue({ get: mockProductsGet })
+    mockBatchCommit.mockResolvedValue(undefined)
+  })
+
+  it('rejects unauthorized requests', async () => {
+    const res = await request(app).post('/api/products/clear')
+
+    expect(res.status).toBe(401)
+    expect(mockProductsGet).not.toHaveBeenCalled()
+  })
+
+  it('rejects non-admin requests', async () => {
+    const res = await request(app)
+      .post('/api/products/clear')
+      .set('Authorization', 'Bearer operator-token')
+
+    expect(res.status).toBe(403)
+    expect(mockProductsGet).not.toHaveBeenCalled()
+  })
+
+  it('rejects requests without destructive-action confirmation header', async () => {
+    const res = await request(app)
+      .post('/api/products/clear')
+      .set('Authorization', 'Bearer admin-token')
+
+    expect(res.status).toBe(400)
+    expect(mockProductsGet).not.toHaveBeenCalled()
+  })
+
+  it('accepts valid admin requests with confirmation header and emits audit log fields', async () => {
+    mockProductsGet
+      .mockResolvedValueOnce({
+        empty: false,
+        docs: [{ ref: 'doc-1' }, { ref: 'doc-2' }],
+      })
+      .mockResolvedValueOnce({
+        empty: true,
+        docs: [],
+      })
+
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+
+    const res = await request(app)
+      .post('/api/products/clear')
+      .set('Authorization', 'Bearer admin-token')
+      .set('X-Confirm-Destructive-Action', 'CONFIRM_CLEAR_PRODUCTS')
+      .set('X-Request-Id', 'req-1234')
+
+    expect(res.status).toBe(200)
+    expect(res.body.data).toEqual({ deleted: 2 })
+    expect(mockBatchDelete).toHaveBeenCalledTimes(2)
+
+    const logPayload = JSON.parse(infoSpy.mock.calls[0][0] as string) as {
+      requester: string
+      timestamp: string
+      deletedCount: number
+      requestId: string
+    }
+    expect(logPayload.requester).toBe('admin-user')
+    expect(logPayload.requestId).toBe('req-1234')
+    expect(logPayload.deletedCount).toBe(2)
+    expect(typeof logPayload.timestamp).toBe('string')
+
+    infoSpy.mockRestore()
   })
 })
 

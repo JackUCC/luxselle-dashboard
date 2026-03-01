@@ -8,6 +8,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
+import { z } from 'zod'
 import { env } from './env'
 
 const useEmulator = env.FIREBASE_USE_EMULATOR
@@ -25,20 +26,43 @@ const storageBucket = env.FIREBASE_STORAGE_BUCKET
 
 // Prepare credentials for production
 let credential: ReturnType<typeof cert> | undefined
+let credentialStrategy: 'emulator' | 'service-account-json' | 'application-default-env-path' | 'application-default-fallback' = 'application-default-fallback'
+
+const FirebaseServiceAccountSchema = z.object({
+  project_id: z.string().min(1),
+  client_email: z.string().min(1),
+  private_key: z.string().min(1),
+})
 
 if (!useEmulator) {
+  if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON && env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.warn(
+      '[firebase] Both GOOGLE_APPLICATION_CREDENTIALS_JSON and GOOGLE_APPLICATION_CREDENTIALS are set. ' +
+      'Using GOOGLE_APPLICATION_CREDENTIALS_JSON and ignoring GOOGLE_APPLICATION_CREDENTIALS.',
+    )
+  }
+
   if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
     try {
-      const serviceAccount = JSON.parse(env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+      const rawServiceAccount = JSON.parse(env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+      const serviceAccount = FirebaseServiceAccountSchema.parse(rawServiceAccount)
       credential = cert(serviceAccount)
+      credentialStrategy = 'service-account-json'
     } catch {
       throw new Error('Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON — check that it is valid JSON')
     }
   } else if (env.GOOGLE_APPLICATION_CREDENTIALS) {
-    credential = cert(env.GOOGLE_APPLICATION_CREDENTIALS)
+    credentialStrategy = 'application-default-env-path'
+    console.log(
+      '[firebase] GOOGLE_APPLICATION_CREDENTIALS is set. Using Application Default Credentials; ' +
+      'the Admin SDK will load the credential file from this env var.',
+    )
   } else {
-    console.warn('No Firebase credentials provided. Falling back to Application Default Credentials.')
+    credentialStrategy = 'application-default-fallback'
+    console.warn('[firebase] No Firebase credentials provided. Falling back to Application Default Credentials.')
   }
+} else {
+  credentialStrategy = 'emulator'
 }
 
 // Reuse existing app if already initialized (e.g. in tests)
@@ -68,7 +92,7 @@ if (!(globalThis as Record<string, boolean>)[settingsKey]) {
 const storage = getStorage(adminApp)
 
 console.log(
-  `Firebase Admin initialized (project: ${projectId}, emulator: ${useEmulator}${databaseId ? `, database: ${databaseId}` : ''})`
+  `Firebase Admin initialized (project: ${projectId}, emulator: ${useEmulator}${databaseId ? `, database: ${databaseId}` : ''}, credentialStrategy: ${credentialStrategy})`
 )
 
 export { adminApp, db, storage }
