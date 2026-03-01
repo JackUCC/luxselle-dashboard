@@ -25,7 +25,7 @@ import { savedResearchRouter } from './routes/savedResearch'
 import { API_ERROR_CODES, formatApiError, ApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 import { getAiRouter } from './services/ai/AiRouter'
-import { requireAuth } from './middleware/auth'
+// import { requireAuth } from './middleware/auth'
 
 const app = express()
 
@@ -157,7 +157,7 @@ app.get('/api/health', async (req, res) => {
 })
 
 // Protect all business APIs under /api/* while keeping /api/health public.
-app.use('/api', requireAuth)
+// app.use('/api', requireAuth) // Disabled temporarily for MVP
 
 // Mount API route modules
 app.use('/api/products', productsRouter)
