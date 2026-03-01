@@ -163,10 +163,65 @@ Plans:
 - [x] 09-02-PLAN.md — Route/nav migration, prefetch updates, and consistency pass
 - [x] 09-03-PLAN.md — Sidebar cleanup and focused E2E parity updates
 
+---
+
+## Milestone v3.0: Agentic Intelligence + Reliability
+
+**Milestone Goal:** Add agentic market intelligence capabilities and ensure the AI-powered features are robust and clearly communicate their status to users.
+
+### Phase 10: AI Reliability + Provider Diagnostics
+**Goal:** Make AI provider failures visible and recoverable — stop silently returning €0 and start surfacing clear "provider unavailable" states with actionable guidance.
+**Depends on:** Phase 9
+**Requirements:** [STAB-01]
+**Success Criteria:**
+  1. When both AI providers fail, price check and market research return a clear "provider unavailable" status (not silently €0).
+  2. The UI shows a recoverable error state with guidance (check API keys, retry).
+  3. `/api/health` response includes per-provider availability and the active routing mode.
+  4. Local `.env` setup docs clearly explain which API keys are needed and how to test provider connectivity.
+**Plans:** 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Backend: SearchService providerError flag, PriceCheckService early-exit, MarketResearchService providerStatus, shared schema extension, health test_providers mode; covering tests
+- [ ] 10-02-PLAN.md — Frontend: provider_unavailable state in UnifiedIntelligenceView, EvaluatorView, and MarketResearchView; human-verify checkpoint
+
+### Phase 11: INTEL-02 Agentic Market Intelligence
+**Goal:** Build continuous background market monitoring and on-demand deep-dive research that feeds the Market Research and Competitor Activity surfaces.
+**Depends on:** Phase 10
+**Requirements:** [INTEL-02]
+**Success Criteria:**
+  1. Background jobs run scheduled competitor + trend scrapes and persist results.
+  2. On-demand deep-dive mode triggers enriched research for a specific item.
+  3. Market Research view shows live vs cached data indicators.
+  4. Cost-aware: background jobs batch requests; cost is tracked per run.
+**Plans:** 0/3 plans (not yet planned)
+
+Plans:
+- [ ] 11-01-PLAN.md — Background job scheduling: competitor scraping + caching architecture
+- [ ] 11-02-PLAN.md — On-demand deep-dive: trigger flow, enrichment pipeline, result storage
+- [ ] 11-03-PLAN.md — UI integration: live/cached indicators in Market Research; Competitor Activity feed
+
+### Phase 12: Inventory + Invoice Verification + ML-01 Signal Improvements
+**Goal:** Confirm all inventory and invoice flows work end-to-end, and improve price prediction confidence with ML/trend signal improvements.
+**Depends on:** Phase 11
+**Requirements:** [QUAL-01, ML-01]
+**Success Criteria:**
+  1. Inventory status changes, product creation, transaction recording work end-to-end with verified test coverage.
+  2. Invoice create/save/export flow works with all edge cases covered.
+  3. Price prediction confidence scores are more meaningful (reflect data volume + source quality).
+  4. Trend signals from scraped data feed into price guidance.
+**Plans:** 0/3 plans (not yet planned)
+
+Plans:
+- [ ] 12-01-PLAN.md — Inventory E2E verification: audit + test gaps, fix any broken flows
+- [ ] 12-02-PLAN.md — Invoice E2E verification: create/save/export/edge cases
+- [ ] 12-03-PLAN.md — ML-01: price confidence scoring + trend signal integration
+
+---
+
 ## Progress
 
 **Execution Order:**
-1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -179,3 +234,6 @@ Plans:
 | 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete | 2026-02-28 |
 | 8. Jobs and Activity Visibility | 3/3 | Complete | 2026-03-01 |
 | 9. Unified Sourcing Intelligence and Frontend Polish | 3/3 | Complete | 2026-03-01 |
+| 10. AI Reliability + Provider Diagnostics | 0/2 | In Planning | — |
+| 11. INTEL-02 Agentic Market Intelligence | 0/3 | Planned | — |
+| 12. Inventory + Invoice Verification + ML-01 | 0/3 | Planned | — |
