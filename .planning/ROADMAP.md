@@ -139,9 +139,12 @@ Plans:
   1. Users can navigate to `/jobs` and see running/failed jobs with retry capability.
   2. Activity feed data from `GET /api/dashboard/activity` is surfaced in the UI.
   3. Tests cover the `/jobs` route and activity data path.
+**Plans:** 3 plans
 
 Plans:
-- [ ] 08-01: Jobs and Activity Visibility
+- [ ] 08-01-PLAN.md — Backend unit tests for POST /api/jobs/:id/retry and GET /api/dashboard/activity
+- [ ] 08-02-PLAN.md — Route wiring (/jobs in routeMeta + AnimatedRoutes) and activity feed in DashboardView
+- [ ] 08-03-PLAN.md — E2E navigation tests for /jobs and activity feed visibility
 
 ## Progress
 
@@ -157,4 +160,4 @@ Plans:
 | 5. Sourcing and Operational Jobs | 2/2 | Complete | 2026-02-27 |
 | 6. Invoicing and Overview UX | 2/2 | Complete | 2026-02-27 |
 | 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete | 2026-02-28 |
-| 8. Jobs and Activity Visibility | 0/1 | Not started | - |
+| 8. Jobs and Activity Visibility | 0/3 | Not started | - |
