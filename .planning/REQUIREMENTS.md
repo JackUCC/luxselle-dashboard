@@ -79,7 +79,7 @@
 | PLAT-04 | Phase 1 | Complete |
 | DATA-01 | Phase 2 | Complete |
 | DATA-02 | Phase 2 | Complete |
-| DATA-03 | Phase 2 | Complete |
+| DATA-03 | Phase 2 + Phase 8 (gap closure) | Pending |
 | EVAL-01 | Phase 3 | Complete |
 | EVAL-02 | Phase 3 | Complete |
 | EVAL-03 | Phase 3 | Complete |
@@ -87,7 +87,7 @@
 | INV-02 | Phase 4 | Complete |
 | INV-03 | Phase 4 | Complete |
 | OPS-01 | Phase 5 | Complete |
-| OPS-02 | Phase 5 | Complete |
+| OPS-02 | Phase 5 + Phase 8 (gap closure) | Pending |
 | OPS-03 | Phase 5 | Complete |
 | FIN-01 | Phase 6 | Complete |
 | FIN-02 | Phase 6 | Complete |

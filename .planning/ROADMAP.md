@@ -21,6 +21,7 @@ Core Supplier Engine capabilities are already implemented across phases 1-6. Pha
 - [x] **Phase 5: Sourcing and Operational Jobs** - Sourcing lifecycle and job reliability controls.
 - [x] **Phase 6: Invoicing and Overview UX** - Invoicing workflows and operational overview polish.
 - [x] **Phase 7: Sidecar Mode Hardening + Agent Execution** - Compact UX hardening, parity checks, and release QA. (completed 2026-02-28)
+- [ ] **Phase 8: Jobs and Activity Visibility** - Wire JobsView into app routing and surface activity feed data in the UI. (closes OPS-02, DATA-03 gaps from v1.0 audit)
 
 ## Phase Details
 
@@ -129,10 +130,23 @@ Plans:
 - [ ] 07-01: Compact sidecar layout hardening and mode parity fixes
 - [ ] 07-02: Sidecar journey QA, regression validation, and release gate checks
 
+### Phase 8: Jobs and Activity Visibility
+**Goal:** Surface operational job status and activity feed data that are fully implemented in the backend but unreachable in the current UI.
+**Depends on:** Phase 7
+**Requirements:** [OPS-02, DATA-03]
+**Gap Closure:** Closes gaps from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Users can navigate to `/jobs` and see running/failed jobs with retry capability.
+  2. Activity feed data from `GET /api/dashboard/activity` is surfaced in the UI.
+  3. Tests cover the `/jobs` route and activity data path.
+
+Plans:
+- [ ] 08-01: Jobs and Activity Visibility
+
 ## Progress
 
 **Execution Order:**
-1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -142,4 +156,5 @@ Plans:
 | 4. Inventory and Stock Intelligence | 2/2 | Complete | 2026-02-27 |
 | 5. Sourcing and Operational Jobs | 2/2 | Complete | 2026-02-27 |
 | 6. Invoicing and Overview UX | 2/2 | Complete | 2026-02-27 |
-| 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete    | 2026-02-28 |
+| 7. Sidecar Mode Hardening + Agent Execution | 2/2 | Complete | 2026-02-28 |
+| 8. Jobs and Activity Visibility | 0/1 | Not started | - |
