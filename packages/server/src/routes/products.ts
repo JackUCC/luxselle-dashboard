@@ -3,7 +3,7 @@
  * @see docs/CODE_REFERENCE.md
  * References: Express, multer, sharp, Firebase Storage, @shared/schemas
  */
-import { Router } from 'express'
+import { type NextFunction, type Response, Router } from 'express'
 import { z } from 'zod'
 import multer from 'multer'
 import sharp from 'sharp'
@@ -16,6 +16,7 @@ import { InvoiceRepo } from '../repos/InvoiceRepo'
 import { SettingsRepo } from '../repos/SettingsRepo'
 import { db, storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
+import { type AuthenticatedRequest, requireAuth, requireRole } from '../middleware/auth'
 import { vatFromGross } from '../lib/vat'
 import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
 import {
@@ -324,7 +325,32 @@ router.post('/import-pdf', importUpload.single('file'), async (req, res, next) =
 
 // POST /api/products/clear - Delete all products (same DB as the running server, e.g. eur3). Use with care.
 const BATCH_SIZE = 500
-router.post('/clear', async (_req, res, next) => {
+const DESTRUCTIVE_CONFIRM_HEADER = 'x-confirm-destructive-action'
+const DESTRUCTIVE_CONFIRM_VALUE = 'CONFIRM_CLEAR_PRODUCTS'
+
+function requireDestructiveActionConfirmation(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  const confirmationHeader = req.headers[DESTRUCTIVE_CONFIRM_HEADER]
+  const confirmationValue =
+    typeof confirmationHeader === 'string' ? confirmationHeader : undefined
+
+  if (confirmationValue !== DESTRUCTIVE_CONFIRM_VALUE) {
+    res.status(400).json(
+      formatApiError(
+        API_ERROR_CODES.VALIDATION,
+        `Missing or invalid ${DESTRUCTIVE_CONFIRM_HEADER} header`,
+      ),
+    )
+    return
+  }
+
+  next()
+}
+
+router.post('/clear', requireAuth, requireRole('admin'), requireDestructiveActionConfirmation, async (req, res, next) => {
   try {
     const coll = db.collection('products')
     let totalDeleted = 0
@@ -337,6 +363,20 @@ router.post('/clear', async (_req, res, next) => {
       await batch.commit()
       totalDeleted += snapshot.docs.length
     }
+
+    const authReq = req as AuthenticatedRequest & { requestId?: string }
+    const requestId = authReq.requestId || (req.headers['x-request-id'] as string | undefined) || randomUUID()
+
+    console.info(
+      JSON.stringify({
+        event: 'products_clear',
+        requester: authReq.user?.uid ?? 'unknown',
+        timestamp: new Date().toISOString(),
+        deletedCount: totalDeleted,
+        requestId,
+      }),
+    )
+
     res.json({ data: { deleted: totalDeleted } })
   } catch (error) {
     next(error)
