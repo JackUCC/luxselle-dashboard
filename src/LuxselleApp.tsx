@@ -96,7 +96,7 @@ const AppContent = () => {
 
   if (isSidecar) {
     return (
-      <div className="min-h-screen bg-white text-lux-800 font-sans">
+      <div className="min-h-screen overflow-x-clip bg-white text-lux-800 font-sans">
         <SidecarNav />
         <Toaster
           position="top-right"
@@ -112,7 +112,7 @@ const AppContent = () => {
             },
           }}
         />
-        <main className="px-3 py-3">
+        <main className="px-2.5 py-3 min-[360px]:px-3 min-[420px]:px-4">
           <ErrorBoundary>
             <Suspense fallback={<SidecarFallback />}>
               <AnimatedRoutes />
@@ -124,7 +124,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white text-lux-800 font-sans">
+    <div className="min-h-screen overflow-x-clip bg-white text-lux-800 font-sans">
       {isConnected === false && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800">
           <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-2">
@@ -178,7 +178,7 @@ const AppContent = () => {
         }}
       />
 
-      <main className="mx-auto max-w-8xl px-5 py-5 sm:px-6 sm:py-6 xl:pl-24">
+      <main className="mx-auto max-w-8xl px-4 py-5 min-[360px]:px-5 sm:px-6 sm:py-6 xl:pl-24 2xl:pl-28">
         <DeepStateBreadcrumb />
         <ErrorBoundary>
           <Suspense fallback={<OverviewFallback />}>

@@ -180,13 +180,13 @@ export default function QuickCheck() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Paste full listing description..."
-              className="w-full rounded-lg border border-lux-200 bg-white py-2 pl-8 pr-3 text-sm text-lux-900 placeholder:text-lux-400 focus-visible:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+              className="min-h-[44px] w-full rounded-lg border border-lux-200 bg-white py-2 pl-8 pr-3 text-sm text-lux-900 placeholder:text-lux-400 focus-visible:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
             />
           </div>
           <button
             type="submit"
             disabled={isResearching}
-            className="w-full shrink-0 rounded-lg bg-lux-900 px-3 py-2 text-sm font-medium text-white hover:bg-lux-800 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none min-[360px]:w-auto"
+            className="min-h-[44px] w-full shrink-0 rounded-lg bg-lux-900 px-3 py-2 text-sm font-medium text-white hover:bg-lux-800 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none min-[360px]:w-auto"
           >
             {isResearching ? <AiThinkingDots /> : 'Run'}
           </button>
@@ -203,18 +203,18 @@ export default function QuickCheck() {
                   type="button"
                   onClick={handleFindSimilar}
                   disabled={isFindingSimilar}
-                  className="rounded bg-lux-800 px-2 py-1 text-xs font-medium text-white hover:bg-lux-700 disabled:opacity-50 flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  className="flex min-h-[40px] items-center gap-1 rounded bg-lux-800 px-2 py-1 text-xs font-medium text-white hover:bg-lux-700 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
                   {isFindingSimilar ? 'Finding…' : 'Find similar'}
                 </button>
-                <button type="button" onClick={handleRemoveImage} className="p-1 text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
+                <button type="button" onClick={handleRemoveImage} className="min-h-[40px] min-w-[40px] p-1 text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
           ) : (
-            <label className="mt-1.5 flex items-center gap-2 rounded border border-dashed border-lux-200 bg-white px-2 py-2 cursor-pointer hover:border-lux-300 min-h-[40px]">
+            <label className="mt-1.5 flex min-h-[44px] items-center gap-2 rounded border border-dashed border-lux-200 bg-white px-2 py-2 cursor-pointer hover:border-lux-300">
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
               <Upload className="h-3.5 w-3.5 text-lux-400 shrink-0" />
               <span className="text-xs text-lux-500">Upload image</span>
@@ -303,7 +303,7 @@ export default function QuickCheck() {
                 value={bidInput}
                 onChange={(e) => setBidInput(e.target.value)}
                 placeholder="0"
-                className="min-w-[92px] flex-1 rounded border border-lux-200 bg-white px-2 py-1 text-right text-sm font-mono text-lux-900 focus-visible:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                className="min-w-[72px] flex-1 rounded border border-lux-200 bg-white px-2 py-1 text-right text-sm font-mono text-lux-900 focus-visible:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 min-[420px]:min-w-[92px]"
               />
               <span className="whitespace-nowrap text-sm font-bold text-lux-900">{formatCurrency(landed)}</span>
             </div>

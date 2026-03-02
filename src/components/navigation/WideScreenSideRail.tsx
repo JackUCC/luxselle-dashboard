@@ -4,7 +4,7 @@ import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
-  return `group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-xs font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isActive
+  return `group flex min-h-[44px] items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isActive
     ? 'bg-lux-800 text-white'
     : 'text-lux-500 hover:bg-lux-200/50 hover:text-lux-800'
   }`

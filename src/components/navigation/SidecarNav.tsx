@@ -25,7 +25,7 @@ export default function SidecarNav() {
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="inline-flex min-h-[34px] min-w-[34px] items-center justify-center rounded-xl border border-lux-200 bg-white/95 p-1.5 text-lux-600 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-white hover:text-lux-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-lux-200 bg-white/95 p-2 text-lux-600 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-white hover:text-lux-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           aria-label="Open navigation menu"
         >
           <Menu className="h-[18px] w-[18px]" />
@@ -43,12 +43,12 @@ export default function SidecarNav() {
         <Link
           to={getExitSidecarPath('/', location.search)}
           replace
-          className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-lux-200 bg-white px-2.5 py-1.5 text-ui-label font-semibold text-lux-700 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+          className="inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-xl border border-lux-200 bg-white px-2.5 py-1.5 text-ui-label font-semibold text-lux-700 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           title="Exit sidecar and return to overview"
           aria-label="Exit sidecar and return to overview"
         >
           <ArrowLeftToLine className="h-3.5 w-3.5" />
-          Exit
+          <span className="hidden min-[380px]:inline">Exit</span>
         </Link>
       </nav>
 
@@ -79,7 +79,7 @@ export default function SidecarNav() {
                         onTouchStart={handleRouteWarmup(route.path)}
                         onClick={() => setDrawerOpen(false)}
                         className={({ isActive }) =>
-                          `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-all duration-150 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+                          `group relative flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-all duration-150 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                             isActive
                               ? 'border border-lux-gold/30 bg-white text-lux-900 shadow-[0_4px_12px_rgba(15,23,42,0.08)]'
                               : 'border border-transparent text-lux-600 hover:-translate-y-0.5 hover:bg-white/80 hover:text-lux-900'

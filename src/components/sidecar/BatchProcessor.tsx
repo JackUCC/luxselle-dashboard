@@ -297,7 +297,7 @@ export default function BatchProcessor() {
           <button
             type="button"
             onClick={handleQueueItems}
-            className="inline-flex items-center gap-1 rounded-lg border border-lux-200 bg-white px-2.5 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+            className="inline-flex min-h-[40px] items-center gap-1 rounded-lg border border-lux-200 bg-white px-2.5 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           >
             <Plus className="h-3.5 w-3.5" />
             Queue items
@@ -306,7 +306,7 @@ export default function BatchProcessor() {
             type="button"
             onClick={handleProcessBatch}
             disabled={isProcessingBatch}
-            className="inline-flex items-center gap-1 rounded-lg bg-lux-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-lux-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+            className="inline-flex min-h-[40px] items-center gap-1 rounded-lg bg-lux-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-lux-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           >
             {isProcessingBatch ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             Run batch
@@ -320,7 +320,7 @@ export default function BatchProcessor() {
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
             <p className="text-xs font-semibold text-lux-800">Last batch report</p>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
+          <div className="mt-2 grid grid-cols-1 gap-1.5 text-xs min-[360px]:grid-cols-2">
             <div className="rounded-lg bg-lux-50 p-2">
               <p className="text-lux-500">Processed</p>
               <p className="font-semibold text-lux-800">{lastBatchReport.processed}</p>
@@ -360,7 +360,7 @@ export default function BatchProcessor() {
           <button
             type="button"
             onClick={handleClearCompleted}
-            className="inline-flex items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-xs font-medium text-lux-600 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+            className="inline-flex min-h-[40px] items-center gap-1 rounded-md border border-lux-200 px-2 py-1 text-xs font-medium text-lux-600 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           >
             <Trash2 className="h-3 w-3" />
             Clear completed
@@ -387,7 +387,7 @@ export default function BatchProcessor() {
                     type="button"
                     onClick={() => handleProcessItem(item.id)}
                     disabled={isProcessingBatch || item.status === 'running'}
-                    className="inline-flex items-center gap-1 rounded-md border border-lux-200 bg-white px-2 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-md border border-lux-200 bg-white px-2 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
                   >
                     {item.status === 'running' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                     Run item
@@ -396,7 +396,7 @@ export default function BatchProcessor() {
                     type="button"
                     onClick={() => handleRemoveItem(item.id)}
                     disabled={item.status === 'running'}
-                    className="inline-flex items-center gap-1 rounded-md border border-lux-200 bg-white px-2 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-md border border-lux-200 bg-white px-2 py-1 text-xs font-medium text-lux-700 transition-colors hover:bg-lux-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
                   >
                     <Trash2 className="h-3 w-3" />
                     Remove
@@ -415,7 +415,7 @@ export default function BatchProcessor() {
                     <summary className="cursor-pointer font-medium text-lux-600 hover:text-lux-800">
                       View report
                     </summary>
-                    <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                    <div className="mt-1.5 grid grid-cols-1 gap-1.5 min-[360px]:grid-cols-3">
                       <div className="rounded-md bg-lux-50 p-1.5">
                         <p className="text-lux-500">Avg sell</p>
                         <p className="font-semibold text-lux-800">{formatCurrency(item.result.averageSellingPriceEur)}</p>

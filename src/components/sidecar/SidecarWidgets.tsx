@@ -109,7 +109,7 @@ export default function SidecarWidgets() {
         <p className="mt-1 text-xs text-lux-500">
           Expand only what you need for the current listing.
         </p>
-        <div className="mt-2 grid grid-cols-2 gap-1.5">
+        <div className="mt-2 grid grid-cols-1 gap-1.5 min-[380px]:grid-cols-2">
           <span className="rounded-md border border-lux-200 bg-white px-2 py-1 text-[11px] font-medium text-lux-600">Landed Cost</span>
           <span className="rounded-md border border-lux-200 bg-white px-2 py-1 text-[11px] font-medium text-lux-600">Serial Check</span>
           <span className="rounded-md border border-lux-200 bg-white px-2 py-1 text-[11px] font-medium text-lux-600">FX Conversion</span>
@@ -145,7 +145,7 @@ export default function SidecarWidgets() {
                   onClick={() => toggleCollapsed(widgetId)}
                   aria-expanded={!isCollapsed}
                   aria-controls={panelId}
-                  className="inline-flex min-h-[28px] shrink-0 items-center justify-center rounded-md px-1.5 text-lux-400 transition-colors hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:ring-offset-1"
+                  className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md px-1.5 text-lux-400 transition-colors hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:ring-offset-1"
                 >
                   {isCollapsed ? (
                     <>

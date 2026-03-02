@@ -14,8 +14,10 @@ interface MobileNavDrawerProps {
 
 export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const location = useLocation()
+  const drawerRef = useRef<HTMLElement>(null)
   const lastPathRef = useRef(location.pathname)
   const onCloseRef = useRef(onClose)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
   const handleRouteWarmup = (path: string) => () => prefetchRoute(path)
   onCloseRef.current = onClose
 
@@ -46,14 +48,59 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
   useEffect(() => {
     if (!open) return
 
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',')
+
+    const getFocusable = () =>
+      drawerRef.current
+        ? Array.from(drawerRef.current.querySelectorAll<HTMLElement>(focusableSelector))
+        : []
+
+    const focusableOnOpen = getFocusable()
+    ;(focusableOnOpen[0] ?? drawerRef.current)?.focus()
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCloseRef.current()
+      if (event.key === 'Escape') {
+        onCloseRef.current()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const focusable = getFocusable()
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+        return
+      }
+
+      if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     window.addEventListener('keydown', onKeyDown)
 
     return () => {
       window.removeEventListener('keydown', onKeyDown)
+      previousFocusRef.current?.focus()
     }
   }, [open])
 
@@ -69,7 +116,9 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
       />
 
       <aside
-        className={`relative h-full w-[280px] max-w-[85%] border-r border-lux-200 bg-white transition-transform duration-200 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        ref={drawerRef}
+        tabIndex={-1}
+        className={`relative h-full w-[min(20rem,90vw)] max-w-[90%] border-r border-lux-200 bg-white transition-transform duration-200 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'}`}
         data-testid="mobile-nav-drawer"
       >
         <div className="flex h-12 items-center justify-between border-b border-lux-200 px-4">

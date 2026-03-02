@@ -76,7 +76,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
   return (
     <section className="min-w-0 max-w-full space-y-3 overflow-x-clip">
       <header className="sticky top-0 z-20">
-        <div className="overflow-x-clip rounded-xl border border-lux-200 bg-gradient-to-b from-white to-lux-50/80 p-2.5 shadow-[0_8px_20px_rgba(15,23,42,0.07)]">
+        <div className="overflow-x-clip rounded-xl border border-lux-200 bg-gradient-to-b from-white to-lux-50/80 p-2.5 min-[420px]:p-3 shadow-[0_8px_20px_rgba(15,23,42,0.07)]">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
@@ -90,12 +90,12 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
             <button
               type="button"
               onClick={handleExitSidecar}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-lux-200 bg-white px-2 py-1.5 text-xs font-semibold text-lux-700 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-lg border border-lux-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-lux-700 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               title="Exit sidecar and return to overview"
               aria-label="Exit sidecar and return to overview"
             >
               <ArrowLeftToLine className="h-3 w-3" />
-              Exit
+              <span className="hidden min-[380px]:inline">Exit</span>
             </button>
           </div>
 
@@ -111,7 +111,7 @@ export default function SidecarView({ initialTab = 'quick' }: { initialTab?: Sid
                       aria-label={`${tab.label} mode`}
                       type="button"
                       onClick={() => setActiveTab(tab.id)}
-                      className="relative min-w-0 overflow-hidden rounded-md px-2 py-1.5 text-xs font-semibold text-lux-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                      className="relative min-h-[40px] min-w-0 overflow-hidden rounded-md px-2 py-1.5 text-xs font-semibold text-lux-600 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none min-[420px]:min-h-[44px]"
                     >
                       {isActive ? (
                         <motion.span
