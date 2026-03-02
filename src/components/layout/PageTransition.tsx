@@ -40,20 +40,26 @@ function usePrefersReducedMotion(): boolean {
 export default function PageTransition({ children, pathKey }: PageTransitionProps) {
   const shouldReduceMotion = usePrefersReducedMotion()
 
-  const duration = shouldReduceMotion ? 0 : 0.3
-  const exitDuration = shouldReduceMotion ? 0 : 0.15
+  const enterTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { type: 'spring' as const, stiffness: 240, damping: 28, mass: 0.85 }
+  const exitTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: 0.18, ease: [0.4, 0, 1, 1] as [number, number, number, number] }
 
   return (
     <motion.div
       key={pathKey}
-      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 14, scale: 0.992 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{
         opacity: shouldReduceMotion ? 1 : 0,
-        y: 0,
-        transition: { duration: exitDuration },
+        y: shouldReduceMotion ? 0 : -6,
+        scale: shouldReduceMotion ? 1 : 0.998,
+        transition: exitTransition,
       }}
-      transition={{ duration, ease: [0.16, 1, 0.3, 1] }}
+      transition={enterTransition}
+      className="will-change-transform"
     >
       {children}
     </motion.div>

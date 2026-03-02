@@ -18,6 +18,7 @@ import DeepStateBreadcrumb from './components/layout/DeepStateBreadcrumb'
 import DockBar from './components/navigation/DockBar'
 import MobileNavDrawer from './components/navigation/MobileNavDrawer'
 import SidecarNav from './components/navigation/SidecarNav'
+import Skeleton from './components/feedback/Skeleton'
 import { queryClient } from './lib/queryClient'
 import { ServerStatusProvider, useServerStatus } from './lib/ServerStatusContext'
 import { LayoutModeProvider, getSidecarPath, useLayoutMode } from './lib/LayoutModeContext'
@@ -30,10 +31,21 @@ const SidecarFallback = () => (
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     transition={{ duration: 0.2 }}
-    className="flex items-center justify-center py-12 text-xs text-lux-400"
-    aria-hidden
+    className="space-y-3 py-3"
+    aria-hidden="true"
   >
-    Loading…
+    <div className="rounded-xl border border-lux-200 bg-white p-3">
+      <div className="grid grid-cols-3 gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-7 w-full rounded-md" variant="rect" />
+        ))}
+      </div>
+    </div>
+    <div className="space-y-2 rounded-xl border border-lux-200 bg-white p-3">
+      <Skeleton className="h-4 w-40" />
+      <Skeleton className="h-3 w-28" />
+      <Skeleton className="h-28 w-full rounded-lg" variant="rect" />
+    </div>
   </motion.div>
 )
 
@@ -43,10 +55,18 @@ const OverviewFallback = () => (
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     transition={{ duration: 0.2 }}
-    className="min-h-[40vh] flex items-center justify-center text-xs text-lux-400"
-    aria-hidden
+    className="min-h-[40vh] space-y-5"
+    aria-hidden="true"
   >
-    Loading…
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-lux-200 bg-white p-5">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="mt-2 h-8 w-36" variant="rect" />
+          <Skeleton className="mt-3 h-3 w-20" />
+        </div>
+      ))}
+    </div>
   </motion.div>
 )
 

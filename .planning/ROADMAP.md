@@ -13,7 +13,7 @@
 ## Phases
 
 - [x] **Phase Polish-1: Design Foundation and Navigation Polish** - Bold visual hierarchy, advanced navbar, and professional sidecar widget treatment
-- [ ] **Phase Polish-2: Animation Layer and Skeleton Loading** - Energetic Framer Motion animations across all 11 pages and skeleton loading screens
+- [x] **Phase Polish-2: Animation Layer and Skeleton Loading** - Energetic Framer Motion animations across all 11 pages and skeleton loading screens
 - [ ] **Phase Polish-3: AI Loaders and Previews** - Animated AI progress steps, product image lightbox, and inline AI result previews
 - [ ] **Phase Polish-4: Demo QA Sweep** - All 11 pages verified clean, no blank states or broken layouts in the happy path
 
@@ -41,7 +41,7 @@
   2. Buttons, cards, and interactive elements respond to hover and click with micro-interactions — the UI feels reactive.
   3. Every data-driven page (Dashboard, Inventory, Invoices, Sourcing, Jobs, Market Research, Saved Research) shows skeleton placeholders while data loads rather than a blank screen or a spinner.
   4. Skeleton screens are shaped like the content they replace — grid skeletons for lists, card skeletons for panels.
-**Plans:** TBD
+**Plans:** Polish-2-01 (complete)
 
 ### Phase Polish-3: AI Loaders and Previews
 **Goal:** Long-running AI operations feel transparent and dramatic rather than opaque, and product/result content can be previewed without leaving context.
@@ -75,7 +75,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | Polish-1. Design Foundation and Navigation Polish | 1/1 | Complete | 2026-03-02 |
-| Polish-2. Animation Layer and Skeleton Loading | 0/TBD | Not started | — |
+| Polish-2. Animation Layer and Skeleton Loading | 1/1 | Complete | 2026-03-02 |
 | Polish-3. AI Loaders and Previews | 0/TBD | Not started | — |
 | Polish-4. Demo QA Sweep | 0/TBD | Not started | — |
 
@@ -87,14 +87,14 @@
 |-------------|-------|--------|
 | STYLE-01 | Phase Polish-1 | Complete |
 | STYLE-02 | Phase Polish-1 | Complete |
-| ANIM-01 | Phase Polish-2 | Pending |
-| LOAD-01 | Phase Polish-2 | Pending |
+| ANIM-01 | Phase Polish-2 | Complete |
+| LOAD-01 | Phase Polish-2 | Complete |
 | LOAD-02 | Phase Polish-3 | Pending |
 | PREV-01 | Phase Polish-3 | Pending |
 | PREV-02 | Phase Polish-3 | Pending |
 | QA-01 | Phase Polish-4 | Pending |
 
-**Coverage:** 8/8 UI polish requirements mapped. 2 complete, 6 pending.
+**Coverage:** 8/8 UI polish requirements mapped. 4 complete, 4 pending.
 
 ---
 
@@ -109,4 +109,4 @@ The following phases from the v3.0 Agentic Intelligence milestone are deferred u
 ---
 
 *Roadmap created: 2026-03-02 — UI Polish milestone kickoff*
-*Last updated: 2026-03-02 after completing Phase Polish-1 / Plan 01*
+*Last updated: 2026-03-02 after completing Phase Polish-2 / Plan 01*

@@ -132,11 +132,11 @@
 
 ### Animations
 
-- [ ] **ANIM-01**: Bold, energetic animations via Framer Motion — entrance animations, micro-interactions, and smooth transitions across all 11 pages
+- [x] **ANIM-01**: Bold, energetic animations via Framer Motion — entrance animations, micro-interactions, and smooth transitions across all 11 pages
 
 ### Loading States
 
-- [ ] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching (Dashboard, Inventory, Invoices, Sourcing, Jobs, Market Research, Saved Research)
+- [x] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching (Dashboard, Inventory, Invoices, Sourcing, Jobs, Market Research, Saved Research)
 - [ ] **LOAD-02**: Animated AI progress steps — AI operations (market research, price check, sourcing analysis) show step-by-step status indicators ("Searching… Analysing… Building report…")
 
 ### Previews
@@ -154,16 +154,16 @@
 |-------------|-------|--------|
 | STYLE-01 | Phase Polish-1 | Complete |
 | STYLE-02 | Phase Polish-1 | Complete |
-| ANIM-01 | Phase Polish-2 | Pending |
-| LOAD-01 | Phase Polish-2 | Pending |
+| ANIM-01 | Phase Polish-2 | Complete |
+| LOAD-01 | Phase Polish-2 | Complete |
 | LOAD-02 | Phase Polish-3 | Pending |
 | PREV-01 | Phase Polish-3 | Pending |
 | PREV-02 | Phase Polish-3 | Pending |
 | QA-01 | Phase Polish-4 | Pending |
 
 **Coverage:**
-- UI polish requirements: 8 total, 2 satisfied
+- UI polish requirements: 8 total, 4 satisfied
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-02 after completing Phase Polish-1*
+*Last updated: 2026-03-02 after completing Phase Polish-2*

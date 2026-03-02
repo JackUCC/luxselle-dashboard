@@ -632,11 +632,45 @@ export default function MarketResearchView() {
                 {/* ─── Results panel ─── */}
                 <div>
                     {!result ? (
+                        isLoading ? (
+                            <div className="lux-card min-h-[500px] p-6 space-y-5">
+                                <div className="flex items-center gap-2">
+                                    <Skeleton className="h-4 w-28" />
+                                    <Skeleton className="h-4 w-16 rounded-full" variant="rect" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-11/12" />
+                                    <Skeleton className="h-4 w-9/12" />
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    {Array.from({ length: 4 }).map((_, i) => (
+                                        <div key={i} className="rounded-xl border border-lux-100 bg-lux-50/50 p-4">
+                                            <Skeleton className="h-3 w-24" />
+                                            <Skeleton className="mt-2 h-6 w-20" variant="rect" />
+                                            <Skeleton className="mt-2 h-3 w-16" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="space-y-2">
+                                    {Array.from({ length: 4 }).map((_, i) => (
+                                        <div key={i} className="flex items-center justify-between rounded-lg border border-lux-100 px-3 py-2.5">
+                                            <div className="space-y-1.5">
+                                                <Skeleton className="h-3.5 w-40" />
+                                                <Skeleton className="h-2.5 w-24" />
+                                            </div>
+                                            <Skeleton className="h-4 w-14" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
                         <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-lux-400">
                             <BarChart3 className="h-14 w-14 mb-4 opacity-20 animate-float" />
                             <p className="text-lg font-medium">Ready to research</p>
                             <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
                         </div>
+                        )
                     ) : (
                         <div className="space-y-5">
                             {/* AI Executive Summary */}

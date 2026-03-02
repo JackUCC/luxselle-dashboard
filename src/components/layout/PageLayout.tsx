@@ -14,7 +14,7 @@ const variantClasses = {
 }
 
 export default function PageLayout({ children, variant = 'default', className = '' }: PageLayoutProps) {
-  const base = 'w-full space-y-8'
+  const base = 'w-full space-y-8 animate-bento-enter'
   const variantClass = variantClasses[variant]
   return (
     <div className={[base, variantClass, className].filter(Boolean).join(' ')}>
