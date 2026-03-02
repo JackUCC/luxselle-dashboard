@@ -104,7 +104,7 @@ export default function DashboardView() {
               type="button"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="rounded-lg p-2 text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               title="Refresh data"
               aria-label="Refresh dashboard data"
             >
@@ -117,7 +117,7 @@ export default function DashboardView() {
       {isLoading ? (
         <DashboardSkeleton />
       ) : error ? (
-        <div className="lux-card p-6 text-center">
+        <div className="lux-card border-rose-200 bg-rose-50/60 p-6 text-center animate-bento-enter stagger-0">
           <p className="text-sm text-rose-600 font-medium">{error}</p>
           <button
             type="button"

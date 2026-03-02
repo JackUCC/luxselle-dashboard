@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Bookmark, Star, Search, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bookmark, Star, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, Button } from '../../components/design-system'
+import { PageHeader, Button, Card, EmptyState } from '../../components/design-system'
 import { LuxSelect } from '../../components/design-system/Input'
 import Drawer from '../../components/design-system/Drawer'
 import { apiGet, apiDelete, apiPut } from '../../lib/api'
@@ -25,8 +26,11 @@ export interface SavedResearchItem {
 }
 
 export default function SavedResearchView() {
+    const navigate = useNavigate()
     const [items, setItems] = useState<SavedResearchItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [reloadKey, setReloadKey] = useState(0)
     const [filter, setFilter] = useState<'all' | 'starred'>('all')
     const [brandFilter, setBrandFilter] = useState<string>('all')
     
@@ -38,17 +42,24 @@ export default function SavedResearchView() {
             setIsLoading(true)
             try {
                 const { data } = await apiGet<{ data: SavedResearchItem[] }>('/saved-research')
-                if (!cancelled) setItems(data || [])
+                if (!cancelled) {
+                    setItems(data || [])
+                    setError(null)
+                }
             } catch (err) {
                 console.error('Failed to load saved research', err)
-                if (!cancelled) toast.error('Failed to load saved research')
+                const message = err instanceof Error ? err.message : 'Failed to load saved research'
+                if (!cancelled) {
+                    setError(message)
+                    toast.error(message)
+                }
             } finally {
                 if (!cancelled) setIsLoading(false)
             }
         }
         load()
         return () => { cancelled = true }
-    }, [])
+    }, [reloadKey])
 
     const uniqueBrands = useMemo(() => {
         const brands = new Set<string>()
@@ -106,15 +117,17 @@ export default function SavedResearchView() {
             />
             
             {/* Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
-                <div className="flex items-center gap-1 bg-lux-100 p-1 rounded-lg">
+            <div className="mb-6 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="flex w-full items-center gap-1 rounded-lg bg-lux-100 p-1 sm:w-auto">
                     <button
+                        type="button"
                         onClick={() => setFilter('all')}
                         className={`min-h-[44px] rounded-md px-4 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'all' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
                     >
                         All
                     </button>
                     <button
+                        type="button"
                         onClick={() => setFilter('starred')}
                         className={`flex min-h-[44px] items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${filter === 'starred' ? 'bg-white shadow-sm text-lux-900' : 'text-lux-600 hover:text-lux-800'}`}
                     >
@@ -153,27 +166,44 @@ export default function SavedResearchView() {
                         </div>
                     ))}
                 </div>
+            ) : error ? (
+                <Card className="border-rose-200 bg-rose-50/60 p-6 text-center animate-bento-enter stagger-1">
+                    <p className="text-sm font-medium text-rose-600">{error}</p>
+                    <Button
+                        variant="secondary"
+                        className="mt-4"
+                        onClick={() => setReloadKey((prev) => prev + 1)}
+                    >
+                        Retry
+                    </Button>
+                </Card>
             ) : items.length === 0 ? (
-                <div className="lux-card border-dashed border-2 min-h-[400px] flex flex-col items-center justify-center text-center p-6">
-                    <div className="h-16 w-16 bg-lux-50 rounded-full flex items-center justify-center mb-4">
-                        <Bookmark className="h-8 w-8 text-lux-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-lux-900 mb-1">No saved research yet</h3>
-                    <p className="text-sm text-lux-500 max-w-sm">
-                        Research an item in the Market Research tool and click Save to keep it here for quick reference.
-                    </p>
-                    <Button variant="primary" className="mt-6" onClick={() => window.location.href = '/market-research'}>
-                        <Search className="h-4 w-4 mr-2" />
-                        Go to Market Research
-                    </Button>
-                </div>
+                <Card className="min-h-[400px] border-2 border-dashed animate-bento-enter stagger-1">
+                    <EmptyState
+                        icon={Bookmark}
+                        title="No saved research yet"
+                        description="Research an item in the Market Research tool and click Save to keep it here for quick reference."
+                        action={(
+                            <Button variant="primary" className="inline-flex items-center gap-2" onClick={() => navigate('/market-research')}>
+                                <Search className="h-4 w-4" />
+                                Go to Market Research
+                            </Button>
+                        )}
+                    />
+                </Card>
             ) : filteredItems.length === 0 ? (
-                <div className="lux-card border-dashed border-2 min-h-[300px] flex flex-col items-center justify-center text-center p-6">
-                    <p className="text-lux-500">No matching research found for these filters.</p>
-                    <Button variant="secondary" className="mt-4" onClick={() => { setFilter('all'); setBrandFilter('all'); }}>
-                        Clear Filters
-                    </Button>
-                </div>
+                <Card className="min-h-[300px] border-2 border-dashed animate-bento-enter stagger-1">
+                    <EmptyState
+                        icon={Search}
+                        title="No matching research found"
+                        description="Try a different filter combination or clear filters."
+                        action={(
+                            <Button variant="secondary" onClick={() => { setFilter('all'); setBrandFilter('all'); }}>
+                                Clear Filters
+                            </Button>
+                        )}
+                    />
+                </Card>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence>

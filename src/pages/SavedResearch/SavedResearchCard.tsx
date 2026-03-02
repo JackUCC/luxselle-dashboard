@@ -68,6 +68,13 @@ export default function SavedResearchCard({
         setShowDeleteConfirm(true)
     }
 
+    const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onClick(item)
+        }
+    }
+
     const handleConfirmDelete = async () => {
         setIsDeleting(true)
         try {
@@ -91,7 +98,10 @@ export default function SavedResearchCard({
                 <div 
                     className="lux-card group relative overflow-hidden transition-all cursor-pointer hover:shadow-md hover:border-lux-300 flex flex-col h-full focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     onClick={() => onClick(item)}
+                    onKeyDown={handleCardKeyDown}
                     tabIndex={0}
+                    role="button"
+                    aria-label={`Open saved research for ${item.result.brand} ${item.result.model}`}
                 >
                     {/* Header */}
                     <div className="p-5 flex items-start justify-between">
@@ -137,7 +147,7 @@ export default function SavedResearchCard({
                             </div>
                             
                             {/* Hover actions */}
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <div className="z-10 flex items-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                                 <button
                                     type="button"
                                     onClick={handleDeleteClick}

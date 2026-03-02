@@ -8,8 +8,7 @@ import { Tags, Loader2, Euro, Info, Sparkles } from 'lucide-react'
 import { apiPost } from '../../lib/api'
 import { formatCurrency } from '../../lib/formatters'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader } from '../../components/design-system'
-import SectionLabel from '../../components/design-system/SectionLabel'
+import { Button, Card, EmptyState, PageHeader, SectionLabel } from '../../components/design-system'
 
 interface RetailLookupResult {
   retailPriceEur: number | null
@@ -63,7 +62,10 @@ export default function RetailPriceView() {
 
   return (
     <PageLayout variant="content">
-      <PageHeader title="Retail Price" />
+      <PageHeader
+        title="Retail Price"
+        purpose="Estimate official boutique price for an item description and compare new-retail context with resale decisions."
+      />
 
       {/* Example chips */}
       <div className="flex flex-wrap items-center gap-2">
@@ -86,7 +88,7 @@ export default function RetailPriceView() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left: Form */}
         <div className="space-y-6">
-          <div className="lux-card p-6">
+          <Card className="p-6">
             <SectionLabel className="mb-5">Item Lookup</SectionLabel>
 
             <div className="space-y-4">
@@ -107,56 +109,68 @@ export default function RetailPriceView() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
                   data-testid="retail-lookup-btn"
                   onClick={handleLookup}
-                  disabled={loading}
-                  className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  isLoading={loading}
+                  className="inline-flex items-center gap-2"
                 >
-                  {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Tags className="h-4 w-4" />
-                  )}
+                  {!loading && <Tags className="h-4 w-4" />}
                   {loading ? 'Looking up…' : 'Look up retail price'}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="secondary"
                   onClick={handleClear}
                   disabled={loading}
-                  className="lux-btn-secondary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  className="inline-flex items-center gap-2"
                 >
                   Clear
-                </button>
+                </Button>
               </div>
 
               <p className="text-xs text-lux-400 pt-1">
                 Estimates are indicative. Always check the brand's official site for current retail prices.
               </p>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Right: Result or empty state */}
         <div>
-          {error && (
-            <div className="lux-card p-6 text-center border-rose-200 bg-rose-50/60 mb-6">
+          {loading ? (
+            <Card className="mb-6 p-6 animate-bento-enter stagger-1">
+              <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
+                <Loader2 className="mb-3 h-8 w-8 animate-spin text-lux-400" />
+                <p className="text-sm font-medium text-lux-700">Looking up official retail price…</p>
+                <p className="mt-1 text-xs text-lux-500">Checking available sources for brand pricing context.</p>
+              </div>
+            </Card>
+          ) : error ? (
+            <Card className="mb-6 border-rose-200 bg-rose-50/60 p-6 text-center animate-bento-enter stagger-1">
               <p className="text-sm text-rose-600 font-medium">{error}</p>
-              <button
-                type="button"
-                onClick={() => setError(null)}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
-
-          {result ? (
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleLookup}
+                  disabled={!description.trim()}
+                >
+                  Retry lookup
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setError(null)}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </Card>
+          ) : result ? (
             <div
               data-testid="retail-result"
-              className={`lux-card p-6 ${
+              className={`lux-card p-6 animate-bento-enter stagger-1 ${
                 result.retailPriceEur != null
                   ? 'border-emerald-200 bg-emerald-50/40'
                   : 'border-amber-200 bg-amber-50/40'
@@ -190,15 +204,15 @@ export default function RetailPriceView() {
                 </div>
               </div>
             </div>
-          ) : !error ? (
-            <div className="lux-card border-dashed border-2 border-lux-200 min-h-[320px] flex flex-col items-center justify-center text-lux-400 p-8">
-              <Tags className="h-12 w-12 mb-4 opacity-20" />
-              <p className="text-sm font-medium text-lux-500">Ready to look up</p>
-              <p className="text-xs opacity-60 mt-1 max-w-xs text-center">
-                Paste an item description or select an example to get the brand's official retail price.
-              </p>
-            </div>
-          ) : null}
+          ) : (
+            <Card className="min-h-[320px] border-2 border-dashed border-lux-200 animate-bento-enter stagger-1">
+              <EmptyState
+                icon={Tags}
+                title="Ready to look up"
+                description="Paste an item description or select an example to get the brand's official retail price."
+              />
+            </Card>
+          )}
         </div>
       </div>
     </PageLayout>

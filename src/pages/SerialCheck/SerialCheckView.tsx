@@ -10,8 +10,8 @@ import { formatCurrency } from '../../lib/formatters'
 import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type DecodeResult } from '../../lib/serialDateDecoder'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, SectionLabel } from '../../components/design-system'
-import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
+import { Card, EmptyState, PageHeader, SectionLabel } from '../../components/design-system'
+import { LuxSelect } from '../../components/design-system/Input'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
 import AiProgressSteps, { type AiProgressStep } from '../../components/feedback/AiProgressSteps'
 import LiveResultPreview from '../../components/feedback/LiveResultPreview'
@@ -138,7 +138,7 @@ export default function SerialCheckView() {
         purpose="Paste serial, select brand, and add item details to get a tighter decode plus age-adjusted price guidance."
       />
 
-      <div className="lux-card p-6 animate-bento-enter stagger-0">
+      <Card className="p-6 animate-bento-enter stagger-0">
         <SectionLabel className="mb-4">Lookup details</SectionLabel>
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -212,10 +212,10 @@ export default function SerialCheckView() {
             />
           )}
         </div>
-      </div>
+      </Card>
 
       {serialError && !isLoading && (
-        <div className="lux-card border-rose-200 bg-rose-50/60 p-6 text-center">
+        <Card className="border-rose-200 bg-rose-50/60 p-6 text-center animate-bento-enter stagger-1">
           <p className="text-sm text-rose-600 font-medium">{serialError}</p>
           <button
             type="button"
@@ -224,7 +224,7 @@ export default function SerialCheckView() {
           >
             Dismiss
           </button>
-        </div>
+        </Card>
       )}
 
       {!decodeResult && isLoading && (
@@ -236,10 +236,13 @@ export default function SerialCheckView() {
       )}
 
       {!decodeResult && !isLoading && !serialError && (
-        <div className="lux-card border-dashed min-h-[120px] flex flex-col items-center justify-center p-6 text-center animate-bento-enter stagger-1">
-          <Search className="h-10 w-10 mb-3 opacity-30 text-lux-400" />
-          <p className="text-sm text-lux-600">Enter a serial and item description, then click <strong>Analyze serial</strong> to see decode and price guidance.</p>
-        </div>
+        <Card className="min-h-[140px] border-2 border-dashed animate-bento-enter stagger-1">
+          <EmptyState
+            icon={Search}
+            title="Ready to analyze serial"
+            description="Enter a serial and item description, then click Analyze serial to see decode and price guidance."
+          />
+        </Card>
       )}
 
       {decodeResult && (

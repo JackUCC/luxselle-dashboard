@@ -434,7 +434,7 @@ export default function UnifiedIntelligenceView() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <div className="lux-card evaluator-form-card flex flex-col p-5 lg:p-6 h-fit animate-bento-enter stagger-0">
             <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
               <div>
@@ -458,7 +458,7 @@ export default function UnifiedIntelligenceView() {
                   <div className="relative aspect-video rounded-lux-card overflow-hidden border border-lux-200">
                     <img src={imagePreview} alt="Upload preview" className="w-full h-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1">
                         <button
                           type="button"
                           onClick={handleAnalyzeImage}
@@ -594,7 +594,7 @@ export default function UnifiedIntelligenceView() {
                 type="button"
                 onClick={handleSerialAnalysis}
                 disabled={isSerialLoading}
-                className="lux-btn-secondary inline-flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                className="lux-btn-secondary inline-flex min-h-[44px] items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 {isSerialLoading ? <AiThinkingDots /> : <Sparkles className="h-4 w-4" />}
                 {isSerialLoading ? 'Analyzing serial...' : 'Analyze serial'}
@@ -605,7 +605,7 @@ export default function UnifiedIntelligenceView() {
                   setSerial('')
                   clearSerialSession()
                 }}
-                className="text-xs font-medium text-lux-500 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                className="inline-flex min-h-[44px] items-center rounded-lg border border-lux-200 px-3 text-xs font-medium text-lux-500 hover:bg-lux-50 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               >
                 Clear serial context
               </button>
@@ -622,7 +622,26 @@ export default function UnifiedIntelligenceView() {
             )}
 
             {serialError && (
-              <p className="mt-3 text-sm font-medium text-rose-600">{serialError}</p>
+              <div className="mt-3 rounded-lux-card border border-rose-200 bg-rose-50/60 p-3 text-center">
+                <p className="text-sm font-medium text-rose-600">{serialError}</p>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSerialAnalysis}
+                    disabled={isSerialLoading || !serial.trim() || !query.trim()}
+                    className="inline-flex min-h-[36px] items-center rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearSerialSession}
+                    className="inline-flex min-h-[36px] items-center rounded-lg px-3 py-1.5 text-xs font-medium text-lux-600 hover:bg-lux-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
             )}
 
             {hasSerialDescriptionDrift && !serialError && (
@@ -688,7 +707,7 @@ export default function UnifiedIntelligenceView() {
           </details>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {!result ? (
             isResearching ? (
               <LiveResultPreview
@@ -704,8 +723,8 @@ export default function UnifiedIntelligenceView() {
               </div>
             )
           ) : (
-            <div className="lux-card p-6 space-y-6 animate-bento-enter stagger-2">
-              <div className="flex items-center justify-between">
+            <div className="lux-card min-w-0 p-6 space-y-6 animate-bento-enter stagger-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <SectionLabel>Market Research</SectionLabel>
                 {result.dataSource === 'web_search' ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20">
@@ -923,7 +942,7 @@ export default function UnifiedIntelligenceView() {
                   No similar items in the index yet. Add product images or import supplier catalogs.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {visualResults.map((visualResult, index) => (
                     <div key={index} className="rounded-lux-card border border-lux-200 overflow-hidden bg-white">
                       {visualResult.imageUrl ? (

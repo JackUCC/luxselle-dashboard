@@ -10,7 +10,7 @@ import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 import { staggerClass } from '../../lib/staggerClass'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, SectionLabel } from '../../components/design-system'
+import { Button, Card, EmptyState, PageHeader, SectionLabel } from '../../components/design-system'
 import Skeleton from '../../components/feedback/Skeleton'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
@@ -91,6 +91,29 @@ export default function SourcingView() {
   useEffect(() => {
     loadRequests()
   }, [])
+
+  useEffect(() => {
+    if (!showCreateForm && !editingRequest) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+
+      if (showDeleteConfirm) {
+        setShowDeleteConfirm(false)
+        return
+      }
+
+      if (editingRequest) {
+        setEditingRequest(null)
+        return
+      }
+
+      setShowCreateForm(false)
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showCreateForm, editingRequest, showDeleteConfirm])
 
   useEffect(() => {
     const allowedStatuses = new Set([
@@ -229,14 +252,14 @@ export default function SourcingView() {
         title="Sourcing"
         purpose="Customer requests pipeline."
         actions={
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={() => setShowCreateForm(true)}
-            className="lux-btn-primary flex min-h-[44px] items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            className="inline-flex min-h-[44px] items-center gap-2"
           >
             <Plus className="h-4 w-4" />
             New Request
-          </button>
+          </Button>
         }
       />
 
@@ -260,9 +283,14 @@ export default function SourcingView() {
       {/* Create Form Overlay */}
       {showCreateForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-sourcing-title"
+            className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in"
+          >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-lux-900">New Sourcing Request</h2>
+              <h2 id="create-sourcing-title" className="text-lg font-bold text-lux-900">New Sourcing Request</h2>
               <button 
                 type="button"
                 onClick={() => setShowCreateForm(false)}
@@ -376,9 +404,14 @@ export default function SourcingView() {
       {/* Edit Form Overlay */}
       {editingRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-sourcing-title"
+            className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in"
+          >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-lux-900">Edit Sourcing Request</h2>
+              <h2 id="edit-sourcing-title" className="text-lg font-bold text-lux-900">Edit Sourcing Request</h2>
               <button
                 type="button"
                 onClick={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
@@ -579,15 +612,40 @@ export default function SourcingView() {
             ))}
           </div>
         ) : error ? (
-          <div className="lux-card p-6 text-rose-600 bg-rose-50/50">{error}</div>
+          <Card className="border-rose-200 bg-rose-50/60 p-6 text-center animate-bento-enter stagger-1">
+            <p className="text-sm text-rose-600 font-medium">{error}</p>
+            <button
+              type="button"
+              onClick={loadRequests}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            >
+              Retry
+            </button>
+          </Card>
         ) : filteredRequests.length === 0 ? (
-          <div className="lux-card p-12 text-center">
-            <Users className="mx-auto h-8 w-8 text-lux-400 mb-3" />
-            <p className="text-lux-600 font-medium">No sourcing requests found</p>
-            <p className="text-sm text-lux-500 mt-1">
-              {statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Create a new request to start sourcing items for customers.'}
-            </p>
-          </div>
+          <Card className="border-2 border-dashed p-12 text-center animate-bento-enter stagger-1">
+            <EmptyState
+              icon={Users}
+              title={statusFilter !== 'all' ? 'No requests for this status' : 'No sourcing requests found'}
+              description={
+                statusFilter !== 'all'
+                  ? 'Try adjusting your filters.'
+                  : 'Create a new request to start sourcing items for customers.'
+              }
+              action={(
+                statusFilter !== 'all' ? (
+                  <Button variant="secondary" onClick={() => setStatusFilter('all')}>
+                    Clear Filters
+                  </Button>
+                ) : (
+                  <Button variant="primary" className="inline-flex items-center gap-2" onClick={() => setShowCreateForm(true)}>
+                    <Plus className="h-4 w-4" />
+                    New Request
+                  </Button>
+                )
+              )}
+            />
+          </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredRequests.map((request, i) => (
@@ -611,7 +669,7 @@ export default function SourcingView() {
                   <button
                     type="button"
                     onClick={() => openEditForm(request)}
-                    className="ml-2 flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center text-lux-400 opacity-0 transition-opacity hover:text-lux-600 group-hover:opacity-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                    className="ml-2 flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center text-lux-400 opacity-100 transition-opacity hover:text-lux-600 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                     aria-label="Edit request"
                   >
                     <Pencil className="h-4 w-4" />
