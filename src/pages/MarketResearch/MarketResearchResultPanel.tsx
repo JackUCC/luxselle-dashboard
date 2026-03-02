@@ -62,18 +62,18 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                 const rec = RECOMMENDATION_CONFIG[result.recommendation]
                 return (
                     <div className={`lux-card overflow-hidden ${rec.bg} border ${rec.border}`}>
-                        <div className="p-5 flex items-center justify-between">
-                            <div>
+                        <div className="p-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0">
                                 <div className="text-xs text-lux-500 uppercase tracking-wide mb-1">Recommendation</div>
                                 <div className={`text-xl sm:text-2xl font-display font-bold ${rec.color} flex items-center gap-2`}>
                                     <span>{rec.icon}</span> {rec.label}
                                 </div>
                                 <div className="text-sm text-lux-600 mt-1.5 max-w-md">{result.marketSummary}</div>
                             </div>
-                            <div className="flex items-center gap-6 text-right shrink-0">
+                            <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-center sm:justify-end sm:text-right">
                                 <ConfidenceGauge value={result.confidence} />
                                 {headerActions && (
-                                    <div className="flex items-center">
+                                    <div className="min-w-0">
                                         {headerActions}
                                     </div>
                                 )}

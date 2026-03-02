@@ -174,7 +174,7 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
                     {/* Results */}
                     {result && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="rounded-lux-card border border-emerald-200 bg-emerald-50 p-5 text-center">
                                     <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-100 mx-auto mb-2 border border-emerald-200">
                                         <CheckCircle className="h-6 w-6 text-emerald-600" />

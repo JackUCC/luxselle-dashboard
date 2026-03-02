@@ -66,6 +66,13 @@ None.
 **Current Milestone:** UI Polish — 4 phases, 8 requirements, complete.
 **Next Milestone (Deferred):** v3.0 Agentic Intelligence — Phases 10-12 resume after this milestone ships.
 
+## Sprint 3 Execution Update (2026-03-02)
+
+- Executed Sprint 3 responsive/accessibility implementation wave for Inventory, Invoices, Jobs, Evaluator, Market Research, and Sidecar Quick Check surfaces.
+- Added table overflow containment and responsive drawer/form layout hardening across inventory and invoicing workflows.
+- Added modal focus-trap + focus-restore behavior in shared design-system modal for keyboard safety.
+- Validation evidence captured in `docs/planning/ux-ui-responsive-audit-baseline.md` and `docs/planning/ux-ui-release-checklist.md`.
+
 ## Session
 
 **Last Date:** 2026-03-02T12:25:00.000Z

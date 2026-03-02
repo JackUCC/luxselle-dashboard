@@ -350,7 +350,7 @@ export default function InvoicesView() {
 
           {selected && (
             <div className="lux-card p-6 animate-bento-enter stagger-1 print:border-2 print:shadow-none print:border-lux-200">
-              <div className="mb-6 flex items-start justify-between no-print">
+              <div className="mb-6 flex flex-col gap-3 no-print sm:flex-row sm:items-start sm:justify-between">
                 <SectionLabel>Invoice detail</SectionLabel>
                 <div className="flex flex-wrap justify-end gap-2">
                   <Button variant="secondary" size={isSidecar ? 'sm' : 'md'} onClick={handleExportPdf} className="inline-flex items-center gap-2" aria-label="Export PDF">
@@ -381,8 +381,8 @@ export default function InvoicesView() {
                     {selected.customerEmail && <div>{selected.customerEmail}</div>}
                   </div>
                 </div>
-                <div className="mt-6 overflow-x-auto">
-                  <table className="w-full min-w-[520px] text-body-sm">
+                <div className="mt-6 -mx-1 overflow-x-auto px-1">
+                  <table className="w-full min-w-[640px] text-body-sm">
                     <thead>
                       <tr className="border-b border-lux-200 text-left text-lux-500">
                         <th className="pb-2 font-semibold">Description</th>
@@ -441,7 +441,7 @@ export default function InvoicesView() {
           <form onSubmit={handleCreateInPerson} className="space-y-6">
             <section className="space-y-3" aria-labelledby="create-sale-heading">
               <SectionLabel as="h3" id="create-sale-heading" className="border-b border-lux-100 pb-1">Sale details</SectionLabel>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="create-date" className="mb-1 block text-ui-label font-medium text-lux-700">Date</label>
                   <Input

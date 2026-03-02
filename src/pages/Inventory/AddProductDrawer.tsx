@@ -156,7 +156,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 placeholder="e.g. 28643AV"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label htmlFor="add-product-brand" className="block text-sm font-medium text-lux-700 mb-1">Brand <span className="text-red-500">*</span></label>
                                 <input
@@ -192,7 +192,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label htmlFor="add-product-category" className="block text-sm font-medium text-lux-700 mb-1">Category</label>
                                 <input
@@ -229,7 +229,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label htmlFor="add-product-cost-price-eur" className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
                                 <div className="relative">
@@ -261,7 +261,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                                 </div>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label htmlFor="add-product-customs-eur" className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
                                 <div className="relative">
@@ -294,7 +294,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label htmlFor="add-product-quantity" className="block text-sm font-medium text-lux-700 mb-1">Quantity</label>
                                 <input

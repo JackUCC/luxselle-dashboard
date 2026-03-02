@@ -181,7 +181,7 @@ export default function JobsView() {
         title="System Jobs"
         purpose="Monitor imports, background tasks, and system operations."
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2">
           <div className="relative">
             <label htmlFor="jobs-status-filter" className="sr-only">Filter by status</label>
             <select
@@ -245,8 +245,8 @@ export default function JobsView() {
           </p>
         </div>
       ) : (
-        <div className="lux-card overflow-hidden animate-bento-enter stagger-0">
-          <table className="min-w-full divide-y divide-lux-100">
+        <div className="lux-card overflow-x-auto animate-bento-enter stagger-0">
+          <table className="w-full min-w-[980px] divide-y divide-lux-100">
             <thead className="bg-lux-50/60">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
@@ -485,7 +485,7 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
             <div className="animate-bento-enter stagger-1">
               <SectionLabel as="h3" className="mb-3">Progress</SectionLabel>
               <div className="lux-card p-5 space-y-4">
-                <div className="grid grid-cols-4 gap-3 text-center">
+                <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
                   <div className="lux-card-accent rounded-lux-card p-5">
                     <div className="text-xl sm:text-2xl font-bold text-lux-900">
                       {job.progress.total}

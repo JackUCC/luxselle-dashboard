@@ -658,12 +658,12 @@ export default function InventoryView() {
       ) : viewMode === "table" ? (
         <div
           ref={shouldVirtualize ? tableContainerRef : null}
-          className={`lux-card animate-bento-enter stagger-2 ${isSidecar ? "overflow-x-auto overflow-y-auto" : shouldVirtualize ? "overflow-auto" : "overflow-hidden"}`}
+          className={`lux-card animate-bento-enter stagger-2 overflow-x-auto ${isSidecar || shouldVirtualize ? "overflow-y-auto" : "overflow-y-visible"}`}
           style={{
             ...(isSidecar ? { maxHeight: "min(70vh, 500px)" } : shouldVirtualize ? { maxHeight: "600px" } : {}),
           } as React.CSSProperties}
         >
-          <table className="min-w-full divide-y divide-lux-200">
+          <table className="w-full min-w-[920px] divide-y divide-lux-200">
             <thead className="bg-lux-50/80 sticky top-0 z-10 backdrop-blur-md">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">

@@ -302,7 +302,7 @@ ${fallbackLine}` : fallbackLine))
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Search + Refine */}
-          <div className="lux-card evaluator-form-card flex flex-col p-5 lg:p-6 h-fit animate-bento-enter stagger-0">
+          <div className="lux-card evaluator-form-card min-w-0 flex flex-col p-5 lg:p-6 h-fit animate-bento-enter stagger-0">
             <form onSubmit={handleResearch} className="flex flex-col flex-1 min-h-0 gap-4 sm:gap-5">
               <div>
                 <FloatingInput
@@ -323,7 +323,7 @@ ${fallbackLine}` : fallbackLine))
                   <div className="relative aspect-video rounded-lux-card overflow-hidden border border-lux-200">
                     <img src={imagePreview} alt="Upload" className="w-full h-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1">
                         <button
                           type="button"
                           onClick={handleAnalyzeImage}
@@ -430,7 +430,7 @@ ${fallbackLine}` : fallbackLine))
           </div>
 
           {/* Results + Landed cost */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {!result ? (
               isResearching ? (
                 <LiveResultPreview
@@ -446,8 +446,8 @@ ${fallbackLine}` : fallbackLine))
               </div>
               )
             ) : (
-              <div className="lux-card p-6 space-y-6 animate-bento-enter stagger-1">
-                <div className="flex items-center justify-between">
+              <div className="lux-card min-w-0 p-6 space-y-6 animate-bento-enter stagger-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <SectionLabel>Market Research</SectionLabel>
                   {result.dataSource === 'web_search' ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20">
@@ -683,7 +683,7 @@ ${fallbackLine}` : fallbackLine))
                 {visualResults.length === 0 ? (
                   <p className="text-sm text-lux-500">No similar items in the index yet. Add product images or import supplier catalogs.</p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {visualResults.map((r, i) => (
                       <div key={i} className="rounded-lux-card border border-lux-200 overflow-hidden bg-white">
                         {r.imageUrl ? (

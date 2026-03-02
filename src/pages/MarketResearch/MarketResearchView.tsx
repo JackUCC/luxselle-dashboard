@@ -581,7 +581,7 @@ export default function MarketResearchView() {
 
             {/* ─── Main 2-column: Form + Results ─── */}
             <div className="grid gap-6 lg:grid-cols-2">
-                <div className="space-y-6">
+                <div className="min-w-0 space-y-6">
                     {/* Research Form */}
                     <div className="lux-card p-6">
                         <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em] mb-5">
@@ -700,7 +700,7 @@ export default function MarketResearchView() {
                 </div>
 
                 {/* ─── Results panel ─── */}
-                <div>
+                <div className="min-w-0">
                     {!result ? (
                         isLoading ? (
                             <div className="lux-card min-h-[500px] p-6 space-y-5">
@@ -782,7 +782,7 @@ export default function MarketResearchView() {
                             <MarketResearchResultPanel 
                                 result={result} 
                                 headerActions={
-                                    <div className="flex items-center gap-2 border-l border-lux-200/50 pl-6">
+                                    <div className="flex flex-wrap items-center gap-2 pt-2 sm:border-l sm:border-lux-200/50 sm:pl-6 sm:pt-0">
                                         <button
                                             type="button"
                                             onClick={handleDeepDive}

@@ -198,7 +198,7 @@ export default function QuickCheck() {
           {imagePreview ? (
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               <img src={imagePreview} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
-              <div className="flex-1 min-w-0 flex items-center gap-1">
+              <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1">
                 <button
                   type="button"
                   onClick={handleFindSimilar}
@@ -229,7 +229,7 @@ export default function QuickCheck() {
           {visualResults.length === 0 ? (
             <p className="text-xs text-lux-500">No similar items in index.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto min-[360px]:grid-cols-3">
+            <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto min-[360px]:grid-cols-2 min-[420px]:grid-cols-3">
               {visualResults.slice(0, 9).map((r, i) => (
                 <div key={i} className="rounded border border-lux-100 overflow-hidden">
                   {r.imageUrl ? (

@@ -19,18 +19,67 @@ export default function Modal({
   size = 'sm',
 }: ModalProps) {
   const onCloseRef = useRef(onClose)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
   onCloseRef.current = onClose
 
   useScrollLock(isOpen)
 
   useEffect(() => {
     if (!isOpen) return
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCloseRef.current()
+
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const panel = panelRef.current
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',')
+
+    const getFocusable = () =>
+      panel ? Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector)) : []
+
+    const focusableOnOpen = getFocusable()
+    ;(focusableOnOpen[0] ?? panel)?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCloseRef.current()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const focusable = getFocusable()
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+        return
+      }
+
+      if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
-    document.addEventListener('keydown', handleEscape)
+
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
-      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('keydown', handleKeyDown)
+      previousFocusRef.current?.focus()
     }
   }, [isOpen])
 
@@ -54,6 +103,8 @@ export default function Modal({
         <div
           className={`w-full overflow-hidden rounded-lux-modal border-2 border-lux-200 bg-white shadow-float ${maxW} animate-scale-in`}
           onClick={(e) => e.stopPropagation()}
+          ref={panelRef}
+          tabIndex={-1}
         >
           {children}
         </div>

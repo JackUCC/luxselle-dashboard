@@ -51,7 +51,7 @@ export default function LiveResultPreview({
             'Preparing draft output from your current inputs.'
           )}
         </p>
-        <div className={`grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
+        <div className={`grid gap-2 ${compact ? 'grid-cols-1 min-[360px]:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
           {['Avg Sell', 'Max Buy', 'Max Bid'].map((metric) => (
             <div key={metric} className="rounded-lg border border-lux-200 bg-lux-50/60 p-2">
               <p className="text-[11px] text-lux-500 uppercase tracking-wide">{metric}</p>

@@ -227,20 +227,22 @@ export default function ProductDetailDrawer({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-lux-200 px-6 bg-white">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === tab.id
-                ? 'border-lux-gold text-lux-800'
-                : 'border-transparent text-lux-500 hover:text-lux-700 hover:border-lux-200'
-                }`}
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          ))}
+        <div className="border-b border-lux-200 bg-white overflow-x-auto no-scrollbar">
+          <div className="flex min-w-max px-3 sm:px-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${activeTab === tab.id
+                  ? 'border-lux-gold text-lux-800'
+                  : 'border-transparent text-lux-500 hover:text-lux-700 hover:border-lux-200'
+                  }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content */}
@@ -523,7 +525,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
 
       {/* Images Grid */}
       {hasImages && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* New format images */}
           {images.map((img) => (
             <div
@@ -582,7 +584,7 @@ function ImagesTab({ product, onProductUpdated }: ImagesTabProps) {
           {visualResults.length === 0 ? (
             <p className="text-sm text-lux-500">No similar items in the index.</p>
           ) : (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {visualResults.map((r, i) => (
                 <div key={i} className="rounded-lg border border-lux-200 overflow-hidden bg-white">
                   {r.imageUrl ? (
@@ -632,7 +634,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
           placeholder="e.g. 28643AV"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="product-details-brand" className="block text-sm font-medium text-lux-700 mb-1">Brand</label>
           <input
@@ -666,7 +668,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="product-details-category" className="block text-sm font-medium text-lux-700 mb-1">Category</label>
           <input
@@ -703,7 +705,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="product-details-status" className="block text-sm font-medium text-lux-400 mb-1">Status</label>
           <div className="relative">
@@ -735,7 +737,7 @@ function DetailsTab({ product, getCurrentValue, onFieldChange, onStatusChange }:
 
       <div className="pt-4 border-t border-lux-200">
         <h4 className="text-sm font-medium text-lux-700 mb-3">Record Info</h4>
-        <dl className="grid grid-cols-2 gap-3 text-sm">
+        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-lux-500">Created</dt>
             <dd className="font-medium text-lux-900">
@@ -783,7 +785,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="product-financials-cost" className="block text-sm font-medium text-lux-700 mb-1">Purchase / Cost (EUR)</label>
           <div className="relative">
@@ -815,7 +817,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="product-financials-customs" className="block text-sm font-medium text-lux-700 mb-1">Customs (EUR)</label>
           <div className="relative">
@@ -861,7 +863,7 @@ function FinancialsTab({ product, getCurrentValue, onFieldChange }: FinancialsTa
       {/* Margin Summary */}
       <div className="rounded-lg bg-lux-50 border border-lux-200 p-5">
         <h4 className="text-sm font-medium text-lux-700 mb-4">Margin Analysis</h4>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-lux-900">{formatCurrency(margin)}</div>
             <div className="text-xs text-lux-500 mt-1">Profit</div>
@@ -1024,9 +1026,9 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-medium text-lux-900">Transaction History</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => handleOpenModal('sale')}
             disabled={product.status === 'sold'}
