@@ -420,7 +420,7 @@ export default function UnifiedIntelligenceView() {
                   leadingAdornment={<Search className="h-4 w-4 text-lux-400" />}
                 />
                 <p className="mt-1 text-xs text-lux-400">
-                  Start with the full listing description, then optionally layer serial context.
+                  Use a detailed description for best results, e.g. "Chanel Classic Flap Medium, black caviar, gold hardware"
                 </p>
               </div>
 
