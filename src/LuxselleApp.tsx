@@ -178,7 +178,7 @@ const AppContent = () => {
         }}
       />
 
-      <main className="mx-auto max-w-8xl px-4 py-5 min-[360px]:px-5 sm:px-6 sm:py-6 xl:pl-24 2xl:pl-28">
+      <main className="mx-auto max-w-8xl px-4 py-5 min-[360px]:px-5 sm:px-6 sm:py-6 xl:pl-32 2xl:pl-36">
         <DeepStateBreadcrumb />
         <ErrorBoundary>
           <Suspense fallback={<OverviewFallback />}>

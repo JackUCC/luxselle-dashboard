@@ -13,7 +13,7 @@ export default function DockBar() {
 
   return (
     <nav
-      className="fixed left-4 top-1/2 z-50 hidden -translate-y-1/2 xl:flex flex-col items-center rounded-[24px] border border-white/70 bg-gradient-to-b from-white/95 to-lux-50/70 px-3 py-4 shadow-glass-lg backdrop-blur-2xl"
+      className="fixed left-4 top-1/2 z-50 hidden min-w-0 -translate-y-1/2 overflow-hidden xl:flex xl:w-28 2xl:w-32 flex-col items-center rounded-[24px] border border-white/70 bg-gradient-to-b from-white/95 to-lux-50/70 px-3 py-4 shadow-glass-lg backdrop-blur-2xl"
       data-testid="dock-bar"
       aria-label="Main navigation"
     >
@@ -48,7 +48,7 @@ export default function DockBar() {
                 <div className="my-2.5 h-px w-8 bg-gradient-to-r from-transparent via-lux-300/60 to-transparent" />
               )}
               <section className="w-full px-1 py-0.5">
-                <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-lux-500">
+                <p className="mb-1 min-w-0 truncate text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-lux-500" title={group.title}>
                   {group.title}
                 </p>
                 <div className="flex flex-col items-center gap-1">
