@@ -77,7 +77,7 @@ export default function DockBar() {
                           <motion.span
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.96 }}
-                            transition={{ duration: 0.15 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                             className="relative flex h-11 w-11 items-center justify-center"
                           >
                             {isActive && (
@@ -95,16 +95,16 @@ export default function DockBar() {
                               />
                             )}
                             <span
-                              className={`relative z-10 flex h-11 w-11 items-center justify-center rounded-[14px] transition-all duration-200 group-hover:scale-105 ${
+                              className={`relative z-10 flex h-11 w-11 items-center justify-center rounded-[14px] transition-colors duration-150 ${
                                 isActive
                                   ? 'text-lux-900'
-                                  : 'text-lux-500 group-hover:bg-white/80 group-hover:text-lux-800'
+                                  : 'text-lux-500 group-hover:bg-lux-100/90 group-hover:text-lux-800'
                               }`}
                             >
                               <route.icon className="h-5 w-5" />
                             </span>
                           </motion.span>
-                          <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-lux-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-lux-700 opacity-0 shadow-soft transition-all duration-150 group-hover:ml-3 group-hover:opacity-100">
+                          <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 opacity-0 shadow-soft transition-all duration-200 ease-out group-hover:ml-3 group-hover:opacity-100 delay-75">
                             {route.navLabel}
                           </span>
                         </NavLink>
