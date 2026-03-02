@@ -10,6 +10,15 @@ import { db } from '../config/firebase'
 import { DEFAULT_ORG_ID } from '@shared/schemas'
 
 export type WithId<T> = T & { id: string }
+type QueryPrimitive = string | number | boolean | null
+
+export interface RepoListQueryOptions {
+  orgId?: string
+  limit?: number
+  orderBy?: { field: string; direction?: 'asc' | 'desc' }
+  whereEquals?: Array<{ field: string; value: QueryPrimitive }>
+  whereIn?: { field: string; values: QueryPrimitive[] }
+}
 
 /** Convert Firestore Timestamp objects to ISO strings for Zod schema compatibility. */
 function serializeDocData(data: DocumentData): Record<string, unknown> {
@@ -62,18 +71,51 @@ export class BaseRepo<T extends Record<string, unknown>> {
     return db.collection(this.collectionName)
   }
 
+  private applyOrgFilter(
+    query: Query<DocumentData>,
+    orgId?: string,
+  ): Query<DocumentData> {
+    if (!this.useOrgSubcollections && orgId) {
+      return query.where('organisationId', '==', orgId)
+    }
+    return query
+  }
+
   /**
    * List all documents, optionally filtered by org
    */
   async list(orgId?: string): Promise<WithId<T>[]> {
     const collection = this.getCollection(orgId)
-    let query: Query<DocumentData> = collection
-    
-    // In legacy mode, filter by organisationId field if provided
-    if (!this.useOrgSubcollections && orgId) {
-      query = collection.where('organisationId', '==', orgId)
+    let query: Query<DocumentData> = this.applyOrgFilter(collection, orgId)
+    const snapshot = await query.get()
+    return snapshot.docs.map((doc) => this.parseDoc(doc.id, doc.data()!))
+  }
+
+  async listByQuery(options: RepoListQueryOptions = {}): Promise<WithId<T>[]> {
+    const collection = this.getCollection(options.orgId)
+    let query: Query<DocumentData> = this.applyOrgFilter(collection, options.orgId)
+
+    for (const constraint of options.whereEquals ?? []) {
+      query = query.where(constraint.field, '==', constraint.value)
     }
-    
+
+    const whereIn = options.whereIn
+    if (whereIn && whereIn.values.length > 0) {
+      query = query.where(whereIn.field, 'in', whereIn.values.slice(0, 10))
+    }
+
+    if (options.orderBy) {
+      query = query.orderBy(options.orderBy.field, options.orderBy.direction ?? 'asc')
+    }
+
+    const boundedLimit =
+      typeof options.limit === 'number' && Number.isFinite(options.limit) && options.limit > 0
+        ? Math.max(1, Math.floor(options.limit))
+        : undefined
+    if (boundedLimit != null) {
+      query = query.limit(boundedLimit)
+    }
+
     const snapshot = await query.get()
     return snapshot.docs.map((doc) => this.parseDoc(doc.id, doc.data()!))
   }

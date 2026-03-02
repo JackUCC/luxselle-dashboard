@@ -18,16 +18,21 @@ const activityRepo = new ActivityEventRepo()
 const systemJobRepo = new SystemJobRepo()
 const transactionRepo = new TransactionRepo()
 const aiRouter = getAiRouter()
+const DASHBOARD_IN_STOCK_SCAN_LIMIT = 2000
+const DASHBOARD_SOURCING_SCAN_LIMIT = 2000
+const DASHBOARD_STATUS_SCAN_LIMIT = 200
+const DASHBOARD_ACTIVITY_LIMIT_DEFAULT = 20
+const DASHBOARD_ACTIVITY_LIMIT_MAX = 100
+const DASHBOARD_SOLD_SCAN_LIMIT = 2000
+const DASHBOARD_SALE_TRANSACTION_SCAN_LIMIT = 2000
 
 // KPIs: inventory value (in_stock), pending buy list value, active sourcing pipeline
 router.get('/kpis', async (_req, res, next) => {
   try {
-    const [products, sourcingRequests] = await Promise.all([
-      productRepo.list(),
-      sourcingRepo.list(),
+    const [inStockProducts, sourcingRequests] = await Promise.all([
+      productRepo.listByStatus('in_stock', { limit: DASHBOARD_IN_STOCK_SCAN_LIMIT }),
+      sourcingRepo.listByStatuses(['open', 'sourcing'], { limit: DASHBOARD_SOURCING_SCAN_LIMIT }),
     ])
-
-    const inStockProducts = products.filter((p) => p.status === 'in_stock')
 
     // Total Inventory Cost (sum cost where status=in_stock)
     const totalInventoryValue = inStockProducts.reduce(
@@ -45,11 +50,7 @@ router.get('/kpis', async (_req, res, next) => {
     const totalInventoryItems = inStockProducts.reduce((sum, p) => sum + p.quantity, 0)
 
     // Active Sourcing Pipeline (sum budgets where status IN [open, sourcing])
-    const activeSourcingPipeline = sourcingRequests
-      .filter(
-        (req) => req.status === 'open' || req.status === 'sourcing'
-      )
-      .reduce((sum, req) => sum + req.budget, 0)
+    const activeSourcingPipeline = sourcingRequests.reduce((sum, req) => sum + req.budget, 0)
 
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate')
     res.json({
@@ -68,11 +69,11 @@ router.get('/kpis', async (_req, res, next) => {
 // Recent activity: activity events sorted by createdAt desc, optional limit
 router.get('/activity', async (req, res, next) => {
   try {
-    const limit = parseInt(String(req.query.limit || '20'))
-    const allEvents = await activityRepo.list()
-    const recentEvents = allEvents
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .slice(0, limit)
+    const rawLimit = Number.parseInt(String(req.query.limit ?? DASHBOARD_ACTIVITY_LIMIT_DEFAULT), 10)
+    const limit = Number.isNaN(rawLimit)
+      ? DASHBOARD_ACTIVITY_LIMIT_DEFAULT
+      : Math.max(1, Math.min(rawLimit, DASHBOARD_ACTIVITY_LIMIT_MAX))
+    const recentEvents = await activityRepo.listRecent(limit)
 
     res.json({ data: recentEvents })
   } catch (error) {
@@ -83,11 +84,9 @@ router.get('/activity', async (req, res, next) => {
 // Get system status
 router.get('/status', async (_req, res, next) => {
   try {
-    const jobs = await systemJobRepo.list()
+    const jobs = await systemJobRepo.listRecent(DASHBOARD_STATUS_SCAN_LIMIT)
     const aiDiagnostics = aiRouter.getDiagnostics()
-    const lastImportJob = jobs
-      .filter((job) => job.jobType === 'supplier_import')
-      .sort((a, b) => (b.lastRunAt || '').localeCompare(a.lastRunAt || ''))[0]
+    const lastImportJob = jobs.find((job) => job.jobType === 'supplier_import')
 
     res.json({
       data: {
@@ -112,34 +111,30 @@ router.get('/status', async (_req, res, next) => {
 // Get profit summary
 router.get('/profit-summary', async (_req, res, next) => {
   try {
-    const [products, transactions] = await Promise.all([
-      productRepo.list(),
-      transactionRepo.list(),
+    const [soldProducts, saleTransactions] = await Promise.all([
+      productRepo.listByStatus('sold', { limit: DASHBOARD_SOLD_SCAN_LIMIT }),
+      transactionRepo.listByType('sale', { limit: DASHBOARD_SALE_TRANSACTION_SCAN_LIMIT }),
     ])
-
-    // Get sold products
-    const soldProducts = products.filter((p) => p.status === 'sold')
     const itemsSold = soldProducts.length
 
     // Calculate from sold products (multiply by quantity for multi-unit sales)
     const totalCost = soldProducts.reduce((sum, p) => sum + p.costPriceEur * p.quantity, 0)
     const totalRevenue = soldProducts.reduce((sum, p) => sum + p.sellPriceEur * p.quantity, 0)
-    
+
     // Also include actual sale transactions for more accuracy
-    const saleTransactions = transactions.filter((t) => t.type === 'sale')
     const transactionRevenue = saleTransactions.reduce((sum, t) => sum + t.amountEur, 0)
-    
+
     // Use transaction revenue if available, otherwise use sell prices
     const actualRevenue = transactionRevenue > 0 ? transactionRevenue : totalRevenue
-    
+
     const totalProfit = actualRevenue - totalCost
     const marginPct = actualRevenue > 0 ? (totalProfit / actualRevenue) * 100 : 0
-    
+
     // Calculate average margin per item
-    const avgMarginPct = itemsSold > 0 
+    const avgMarginPct = itemsSold > 0
       ? soldProducts.reduce((sum, p) => {
-          const margin = p.sellPriceEur > 0 
-            ? ((p.sellPriceEur - p.costPriceEur) / p.sellPriceEur) * 100 
+          const margin = p.sellPriceEur > 0
+            ? ((p.sellPriceEur - p.costPriceEur) / p.sellPriceEur) * 100
             : 0
           return sum + margin
         }, 0) / itemsSold

@@ -7,4 +7,12 @@ export class SystemJobRepo extends BaseRepo<SystemJob> {
   constructor() {
     super('system_jobs', SystemJobSchema)
   }
+
+  async listRecent(limit: number, orgId?: string) {
+    return this.listByQuery({
+      orgId,
+      limit,
+      orderBy: { field: 'createdAt', direction: 'desc' },
+    })
+  }
 }

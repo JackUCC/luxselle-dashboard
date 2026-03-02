@@ -9,7 +9,7 @@ import { Download, FileText, Loader2, Plus, Upload, X, Trash2 } from 'lucide-rea
 import type { Invoice } from '@shared/schemas'
 import { apiGet, apiPost, apiPostFormData, apiDelete } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
-import { Button, Input, Modal, PageHeader, SectionLabel } from '../../components/design-system'
+import { Button, IconButton, Input, Modal, PageHeader, SectionLabel, TableShell } from '../../components/design-system'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import Skeleton from '../../components/feedback/Skeleton'
 import { staggerClass } from '../../lib/staggerClass'
@@ -360,14 +360,11 @@ export default function InvoicesView() {
                   <Button variant="secondary" size={isSidecar ? 'sm' : 'md'} onClick={handleDeleteInvoice} className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200" aria-label="Delete Invoice">
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <button
-                    type="button"
+                  <IconButton
+                    icon={<X className="h-5 w-5" />}
+                    label="Close"
                     onClick={() => setSelected(null)}
-                    className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                    aria-label="Close"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                  />
                 </div>
               </div>
               <div className="invoice-content">
@@ -381,8 +378,8 @@ export default function InvoicesView() {
                     {selected.customerEmail && <div>{selected.customerEmail}</div>}
                   </div>
                 </div>
-                <div className="mt-6 -mx-1 overflow-x-auto px-1">
-                  <table className="w-full min-w-[640px] text-body-sm">
+                <div className="mt-6 -mx-1 px-1">
+                  <TableShell asCard={false} tableClassName="min-w-[640px] text-body-sm">
                     <thead>
                       <tr className="border-b border-lux-200 text-left text-lux-500">
                         <th className="pb-2 font-semibold">Description</th>
@@ -403,7 +400,7 @@ export default function InvoicesView() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </TableShell>
                 </div>
                 <div className="mt-6 space-y-1 border-t border-lux-200 pt-4 text-body-sm">
                   <div className="flex justify-between text-lux-600">
@@ -434,9 +431,11 @@ export default function InvoicesView() {
         <div className="max-h-[90vh] overflow-y-auto p-6">
           <div className="mb-4 flex items-center justify-between border-b border-lux-200 pb-4">
             <h2 id="create-invoice-title" className="text-card-header font-semibold text-lux-800">Create in-person invoice</h2>
-            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Close">
-              <X className="h-5 w-5" />
-            </button>
+            <IconButton
+              icon={<X className="h-5 w-5" />}
+              label="Close"
+              onClick={closeAddModal}
+            />
           </div>
           <form onSubmit={handleCreateInPerson} className="space-y-6">
             <section className="space-y-3" aria-labelledby="create-sale-heading">
@@ -544,9 +543,11 @@ export default function InvoicesView() {
         <div className="max-h-[90vh] overflow-y-auto p-6">
           <div className="mb-4 flex items-center justify-between border-b border-lux-200 pb-4">
             <h2 id="upload-invoice-title" className="text-card-header font-semibold text-lux-800">Add invoice (PDF)</h2>
-            <button type="button" onClick={closeAddModal} className="rounded-lg p-2 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Close">
-              <X className="h-5 w-5" />
-            </button>
+            <IconButton
+              icon={<X className="h-5 w-5" />}
+              label="Close"
+              onClick={closeAddModal}
+            />
           </div>
           <p className="mb-4 text-body-sm text-lux-500">
             Upload a PDF invoice to store it here. Enter the invoice number (required); other fields are optional.

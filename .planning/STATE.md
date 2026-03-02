@@ -6,8 +6,8 @@ current_phase: Polish-4
 current_phase_name: Demo QA Sweep
 current_plan: 01
 status: complete
-stopped_at: UI Polish milestone completed (Polish-4 / Plan 01)
-last_updated: "2026-03-02T12:25:00.000Z"
+stopped_at: UI Polish + Sprint 4/5 hardening complete
+last_updated: "2026-03-02T23:15:00.000Z"
 last_activity: 2026-03-02
 progress:
   total_phases: 4
@@ -24,7 +24,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core Value:** Every purchase decision runs through this tool — it needs to feel as sharp as the decisions it supports.
-**Current Focus:** UI Polish milestone completion and handoff to deferred v3.0 phases.
+**Current Focus:** Post-polish hardening complete; handoff to deferred v3.0 phases.
 
 ## Current Position
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 **Status:** Milestone complete
 **Progress:** [██████████] 100%
 **Last Activity:** 2026-03-02
-**Last Activity Description:** Completed Phase Polish-4 / Plan 01 with full unit + targeted e2e validation and requirement QA-01 closure.
+**Last Activity Description:** Closed Sprint 4/5 hardening: shared UI primitives, oversized-page splits, backend atomic multi-write safeguards, bounded dashboard/status queries, and validation sweep.
 
 ## Decisions Made
 
@@ -53,8 +53,8 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Pending Todos
 
 - Resume deferred Phase 10 execution (`.planning/phases/10-ai-reliability-provider-diagnostics/10-01-PLAN.md`)
-- Prepare release notes for UI Polish milestone completion
-- Run optional full e2e matrix beyond targeted Phase 4 suite if pre-deploy confidence uplift is needed
+- Prepare release notes covering UI polish plus Sprint 4/5 hardening closure
+- Resolve full `npm run test:e2e` pretest hang in this environment (targeted suites are passing)
 
 ## Blockers
 
@@ -73,8 +73,17 @@ None.
 - Added modal focus-trap + focus-restore behavior in shared design-system modal for keyboard safety.
 - Validation evidence captured in `docs/planning/ux-ui-responsive-audit-baseline.md` and `docs/planning/ux-ui-release-checklist.md`.
 
+## Sprint 4/5 Closure Update (2026-03-02)
+
+- Sprint 4.1 complete: extracted shared design-system primitives (`IconButton`, `TableShell`, `FilterChipGroup`) and migrated Inventory/Invoices/Jobs/Sourcing usage.
+- Sprint 4.2 complete: split oversized page concerns into local subcomponents for Inventory, Unified Intelligence, and Market Research.
+- Sprint 4.4 complete: product transaction and sell-with-invoice flows now commit via a single Firestore batch to prevent partial writes.
+- Sprint 4.5 complete: dashboard and supplier sync status paths now use bounded repo queries to avoid unbounded collection scans.
+- Sprint 5.1 validation complete: `npm run typecheck`, `npm run test`, targeted backend route/service tests, and targeted e2e suites passed.
+- Full `npm run test:e2e` is currently hanging during pretest browser setup in this environment; tracked for follow-up.
+
 ## Session
 
-**Last Date:** 2026-03-02T12:25:00.000Z
-**Stopped At:** UI Polish milestone completed (Polish-4 / Plan 01)
+**Last Date:** 2026-03-02T23:15:00.000Z
+**Stopped At:** UI Polish + Sprint 4/5 hardening complete
 **Resume File:** .planning/phases/Polish-4-demo-qa-sweep/Polish-4-01-SUMMARY.md

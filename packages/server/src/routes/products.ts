@@ -8,7 +8,15 @@ import { z } from 'zod'
 import multer from 'multer'
 import sharp from 'sharp'
 import { randomUUID } from 'crypto'
-import { DEFAULT_ORG_ID, ProductSchema, ProductStatusSchema, type ProductImage } from '@shared/schemas'
+import {
+  ActivityEventSchema,
+  DEFAULT_ORG_ID,
+  InvoiceSchema,
+  ProductSchema,
+  ProductStatusSchema,
+  TransactionSchema,
+  type ProductImage,
+} from '@shared/schemas'
 import { ProductRepo } from '../repos/ProductRepo'
 import { TransactionRepo } from '../repos/TransactionRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
@@ -720,8 +728,8 @@ router.post('/:id/transactions', requireRole('operator', 'admin'), async (req, r
     }
     const now = new Date().toISOString()
 
-    // Create transaction
-    const transaction = await transactionRepo.create({
+    const transactionRef = db.collection('transactions').doc()
+    const transactionData = TransactionSchema.parse({
       organisationId: DEFAULT_ORG_ID,
       createdAt: now,
       updatedAt: now,
@@ -731,17 +739,9 @@ router.post('/:id/transactions', requireRole('operator', 'admin'), async (req, r
       occurredAt: now,
       notes: input.notes ?? '',
     })
-
-    // If it's a sale, update product status
-    if (input.type === 'sale') {
-      await productRepo.set(id, {
-        status: 'sold',
-        updatedAt: now,
-      })
-    }
-
-    // Create activity event
-    await activityRepo.create({
+    const transaction = { id: transactionRef.id, ...transactionData }
+    const activityRef = db.collection('activity_events').doc()
+    const activityEvent = ActivityEventSchema.parse({
       organisationId: DEFAULT_ORG_ID,
       createdAt: now,
       updatedAt: now,
@@ -756,6 +756,16 @@ router.post('/:id/transactions', requireRole('operator', 'admin'), async (req, r
         type: input.type,
       },
     })
+    const writeBatch = db.batch()
+    writeBatch.set(transactionRef, transactionData)
+    if (input.type === 'sale') {
+      writeBatch.set(db.collection('products').doc(id), {
+        status: 'sold',
+        updatedAt: now,
+      }, { merge: true })
+    }
+    writeBatch.set(activityRef, activityEvent)
+    await writeBatch.commit()
 
     res.status(201).json({ data: transaction })
   } catch (error) {
@@ -787,8 +797,14 @@ router.post('/:id/sell-with-invoice', requireRole('operator', 'admin'), async (r
       return
     }
     const now = new Date().toISOString()
+    const vatPct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
+    const { netEur, vatEur } = vatFromGross(input.amountEur, vatPct)
+    const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
+    const descriptionBase = product.title?.trim() || `${product.brand} ${product.model}`.trim()
+    const lineDescription = input.description?.trim() || (product.sku ? `${descriptionBase} (SKU: ${product.sku})` : descriptionBase)
 
-    const transaction = await transactionRepo.create({
+    const transactionRef = db.collection('transactions').doc()
+    const transactionData = TransactionSchema.parse({
       organisationId: DEFAULT_ORG_ID,
       createdAt: now,
       updatedAt: now,
@@ -798,18 +814,14 @@ router.post('/:id/sell-with-invoice', requireRole('operator', 'admin'), async (r
       occurredAt: now,
       notes: input.notes ?? '',
     })
-
-    const updatedProduct = await productRepo.set(id, {
-      status: 'sold',
+    const transaction = { id: transactionRef.id, ...transactionData }
+    const updatedProduct = {
+      ...product,
+      status: 'sold' as const,
       updatedAt: now,
-    })
-
-    const vatPct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
-    const { netEur, vatEur } = vatFromGross(input.amountEur, vatPct)
-    const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
-    const descriptionBase = product.title?.trim() || `${product.brand} ${product.model}`.trim()
-    const lineDescription = input.description?.trim() || (product.sku ? `${descriptionBase} (SKU: ${product.sku})` : descriptionBase)
-    const invoice = await invoiceRepo.create({
+    }
+    const invoiceRef = db.collection('invoices').doc()
+    const invoiceData = InvoiceSchema.parse({
       organisationId: DEFAULT_ORG_ID,
       createdAt: now,
       updatedAt: now,
@@ -833,8 +845,9 @@ router.post('/:id/sell-with-invoice', requireRole('operator', 'admin'), async (r
       productId: id,
       notes: input.notes ?? '',
     })
-
-    await activityRepo.create({
+    const invoice = { id: invoiceRef.id, ...invoiceData }
+    const activityRef = db.collection('activity_events').doc()
+    const activityEvent = ActivityEventSchema.parse({
       organisationId: DEFAULT_ORG_ID,
       createdAt: now,
       updatedAt: now,
@@ -850,6 +863,15 @@ router.post('/:id/sell-with-invoice', requireRole('operator', 'admin'), async (r
         invoiceId: invoice.id,
       },
     })
+    const writeBatch = db.batch()
+    writeBatch.set(transactionRef, transactionData)
+    writeBatch.set(db.collection('products').doc(id), {
+      status: 'sold',
+      updatedAt: now,
+    }, { merge: true })
+    writeBatch.set(invoiceRef, invoiceData)
+    writeBatch.set(activityRef, activityEvent)
+    await writeBatch.commit()
 
     res.status(201).json({
       data: {

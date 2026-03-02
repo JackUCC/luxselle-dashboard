@@ -45,6 +45,7 @@ const BRAND_MODELS: Record<string, string[]> = {
 }
 
 import type { MarketComparable, MarketComparablePayload, MarketResearchResult, MarketResearchResultPayload } from './types'
+import FreshnessBadge from './FreshnessBadge'
 
 // ─── Types ─────────────────────────────────────────────────────
 interface TrendingItem {
@@ -202,25 +203,6 @@ function normalizeMarketResearchResult(result: MarketResearchResult): MarketRese
             title: normalizeComparableTitle(comp.title),
         })),
     }
-}
-
-function freshnessTone(status?: MarketResearchResult['intel'] extends { freshnessStatus?: infer T } ? T : string): string {
-    if (status === 'live') return 'bg-emerald-100 text-emerald-800'
-    if (status === 'fresh') return 'bg-sky-100 text-sky-800'
-    if (status === 'stale') return 'bg-amber-100 text-amber-800'
-    if (status === 'expired') return 'bg-rose-100 text-rose-800'
-    return 'bg-lux-100 text-lux-700'
-}
-
-function freshnessLabel(result: MarketResearchResult): string {
-    const freshness = result.intel?.freshnessStatus ?? 'unknown'
-    const age = result.intel?.snapshotAgeMinutes
-    if (freshness === 'live') return 'Live'
-    if (typeof age === 'number') return `Cached · ${age}m`
-    if (freshness === 'fresh') return 'Fresh cache'
-    if (freshness === 'stale') return 'Stale cache'
-    if (freshness === 'expired') return 'Expired cache'
-    return 'Freshness unknown'
 }
 
 // ─── Brand tiers for cross-brand suggestions ──────────────────
@@ -756,12 +738,10 @@ export default function MarketResearchView() {
                                     <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
                                     AI Analysis
                                     </div>
-                                    <span
-                                        data-testid="market-research-freshness-badge"
-                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${freshnessTone(result.intel?.freshnessStatus)}`}
-                                    >
-                                        {freshnessLabel(result)}
-                                    </span>
+                                    <FreshnessBadge
+                                        status={result.intel?.freshnessStatus}
+                                        snapshotAgeMinutes={result.intel?.snapshotAgeMinutes}
+                                    />
                                 </div>
                                 <TypewriterText
                                     text={result.marketSummary}

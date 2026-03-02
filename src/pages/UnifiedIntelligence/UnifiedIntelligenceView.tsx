@@ -42,6 +42,8 @@ import {
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import type { PriceCheckResult, SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
 import { deriveSourcingDecision, type DecisionTone } from '../../lib/sourcingDecision'
+import ConfidenceDiagnosticsPanel from './ConfidenceDiagnosticsPanel'
+import ResearchDataSourceBadge from './ResearchDataSourceBadge'
 
 interface VisualSearchResult {
   productId?: string
@@ -726,20 +728,7 @@ export default function UnifiedIntelligenceView() {
             <div className="lux-card min-w-0 p-6 space-y-6 animate-bento-enter stagger-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <SectionLabel>Market Research</SectionLabel>
-                {result.dataSource === 'web_search' ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    Live data
-                  </span>
-                ) : result.dataSource === 'ai_fallback' ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20">
-                    AI estimate
-                  </span>
-                ) : result.dataSource === 'provider_unavailable' ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-600/20">
-                    AI unavailable
-                  </span>
-                ) : null}
+                <ResearchDataSourceBadge dataSource={result.dataSource} />
               </div>
               <p className="text-sm text-lux-500">
                 Based on {result.comps.length} comparable listing{result.comps.length !== 1 ? 's' : ''} | Confidence: {confidencePct}%
@@ -747,14 +736,7 @@ export default function UnifiedIntelligenceView() {
                   <span className="ml-2 text-lux-400">- Researched {formatRelativeDate(result.researchedAt)}</span>
                 )}
               </p>
-              {result.confidenceBreakdown && (
-                <div className="rounded-lux-card border border-lux-200 bg-lux-50/60 p-3 text-xs text-lux-700">
-                  <p className="font-medium text-lux-800">Confidence diagnostics</p>
-                  <p className="mt-1">
-                    Evidence: {result.confidenceBreakdown.evidenceCount} · Provenance: {Math.round(result.confidenceBreakdown.provenanceRatio * 100)}% · Freshness weight: {Math.round(result.confidenceBreakdown.freshnessWeight * 100)}% · {trendSignalLabel}
-                  </p>
-                </div>
-              )}
+              <ConfidenceDiagnosticsPanel confidenceBreakdown={result.confidenceBreakdown} trendSignalLabel={trendSignalLabel} />
               <div className="lux-card-accent rounded-lux-card p-5 text-center">
                 <SectionLabel as="span" className="mb-1 block">Avg. selling price (second-hand)</SectionLabel>
                 <div className="text-xl sm:text-2xl font-bold text-lux-900">

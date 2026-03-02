@@ -8,6 +8,14 @@ export class TransactionRepo extends BaseRepo<Transaction> {
     super('transactions', TransactionSchema)
   }
 
+  async listByType(type: Transaction['type'], options?: { limit?: number; orgId?: string }) {
+    return this.listByQuery({
+      orgId: options?.orgId,
+      limit: options?.limit,
+      whereEquals: [{ field: 'type', value: type }],
+    })
+  }
+
   async findByProductId(productId: string, orgId?: string): Promise<WithId<Transaction>[]> {
     const collection = this.getCollection(orgId)
     const snapshot = await collection

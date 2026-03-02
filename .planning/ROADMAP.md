@@ -2,11 +2,11 @@
 
 ## Milestone: UI Polish — Demo-Ready Dashboard
 
-**Milestone Goal:** Make every page of the Luxselle dashboard look as sharp as the sourcing decisions it supports — bold, energetic, and polished enough to show to anyone. Styling and animation only; zero logic changes.
+**Milestone Goal:** Make every page of the Luxselle dashboard look as sharp as the sourcing decisions it supports — bold, energetic, and polished enough to show to anyone.
 
 **Context:** Phases 1-9 of the Supplier Engine milestone are complete. Phases 10-12 (v3.0 Agentic Intelligence) are deferred until this milestone ships. The codebase is fully functional — this milestone is front-end presentation only.
 
-**Constraint:** Primary scope is UI polish with no new dependencies; only minimal QA-harness compatibility fixes are allowed when required to complete Phase Polish-4 validation.
+**Constraint:** Primary scope is UI polish with no new dependencies; post-polish Sprint 4/5 hardening allows contained code-quality and reliability fixes where they preserve API/UI behavior.
 
 ---
 
@@ -68,6 +68,18 @@
 
 ---
 
+## Post-Polish Hardening (Completed 2026-03-02)
+
+After Polish-4 closure, the Sprint 4/5 hardening plan was executed to keep UX polish sustainable:
+
+- Sprint 4.1: shared UI primitives extracted and adopted (`IconButton`, `TableShell`, `FilterChipGroup`).
+- Sprint 4.2: oversized page splits completed for Inventory, Unified Intelligence, and Market Research.
+- Sprint 4.4: critical product multi-write flows (`/products/:id/transactions`, `/products/:id/sell-with-invoice`) refactored to atomic Firestore batch commits.
+- Sprint 4.5: bounded repo-query path added and adopted in dashboard/status endpoints to reduce UI-visible scan latency.
+- Sprint 5: validation and planning-document closure completed with typecheck + unit tests + targeted e2e evidence.
+
+---
+
 ## Progress
 
 **Execution Order:** Polish-1 -> Polish-2 -> Polish-3 -> Polish-4
@@ -109,4 +121,4 @@ The following phases from the v3.0 Agentic Intelligence milestone are deferred u
 ---
 
 *Roadmap created: 2026-03-02 — UI Polish milestone kickoff*
-*Last updated: 2026-03-02 after completing Phase Polish-4 / Plan 01*
+*Last updated: 2026-03-02 after Sprint 4/5 hardening closure*

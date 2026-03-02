@@ -63,10 +63,8 @@ export class SupplierEmailSyncService {
   }
 
   async getStatus(): Promise<SupplierEmailStatus> {
-    const jobs = await this.jobRepo.list()
-    const lastSync = jobs
-      .filter((job) => job.jobType === 'supplier_email_sync')
-      .sort((a, b) => (b.lastRunAt || b.createdAt).localeCompare(a.lastRunAt || a.createdAt))[0]
+    const jobs = await this.jobRepo.listRecent(100)
+    const lastSync = jobs.find((job) => job.jobType === 'supplier_email_sync')
 
     return {
       enabled: env.SUPPLIER_EMAIL_ENABLED,

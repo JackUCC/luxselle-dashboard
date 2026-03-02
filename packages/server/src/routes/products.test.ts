@@ -61,27 +61,29 @@ const authHeaders = (role = 'admin') => ({
 const {
   mockList,
   mockGetById,
-  mockProductSet,
-  mockTransactionCreate,
-  mockActivityCreate,
-  mockInvoiceCreate,
   mockGetNextInvoiceNumber,
   mockGetSettings,
   mockProductsGet,
   mockProductsLimit,
+  mockProductsDoc,
+  mockTransactionsDoc,
+  mockInvoicesDoc,
+  mockActivityEventsDoc,
+  mockBatchSet,
   mockBatchDelete,
   mockBatchCommit,
 } = vi.hoisted(() => ({
   mockList: vi.fn(),
   mockGetById: vi.fn(),
-  mockProductSet: vi.fn(),
-  mockTransactionCreate: vi.fn(),
-  mockActivityCreate: vi.fn(),
-  mockInvoiceCreate: vi.fn(),
   mockGetNextInvoiceNumber: vi.fn(),
   mockGetSettings: vi.fn(),
   mockProductsGet: vi.fn(),
   mockProductsLimit: vi.fn(),
+  mockProductsDoc: vi.fn(),
+  mockTransactionsDoc: vi.fn(),
+  mockInvoicesDoc: vi.fn(),
+  mockActivityEventsDoc: vi.fn(),
+  mockBatchSet: vi.fn(),
   mockBatchDelete: vi.fn(),
   mockBatchCommit: vi.fn(),
 }))
@@ -90,22 +92,20 @@ vi.mock('../repos/ProductRepo', () => ({
   ProductRepo: class {
     list = mockList
     getById = mockGetById
-    set = mockProductSet
   },
 }))
 vi.mock('../repos/TransactionRepo', () => ({
   TransactionRepo: class {
-    create = mockTransactionCreate
+    findByProductId = vi.fn()
   },
 }))
 vi.mock('../repos/ActivityEventRepo', () => ({
   ActivityEventRepo: class {
-    create = mockActivityCreate
+    create = vi.fn()
   },
 }))
 vi.mock('../repos/InvoiceRepo', () => ({
   InvoiceRepo: class {
-    create = mockInvoiceCreate
     getNextInvoiceNumber = mockGetNextInvoiceNumber
   },
 }))
@@ -118,10 +118,34 @@ vi.mock('../repos/SettingsRepo', () => ({
 
 vi.mock('../config/firebase', () => ({
   db: {
-    collection: vi.fn(() => ({
-      limit: mockProductsLimit,
-    })),
+    collection: vi.fn((name: string) => {
+      if (name === 'products') {
+        return {
+          limit: mockProductsLimit,
+          doc: mockProductsDoc,
+        }
+      }
+      if (name === 'transactions') {
+        return {
+          doc: mockTransactionsDoc,
+        }
+      }
+      if (name === 'invoices') {
+        return {
+          doc: mockInvoicesDoc,
+        }
+      }
+      if (name === 'activity_events') {
+        return {
+          doc: mockActivityEventsDoc,
+        }
+      }
+      return {
+        doc: vi.fn(),
+      }
+    }),
     batch: vi.fn(() => ({
+      set: mockBatchSet,
       delete: mockBatchDelete,
       commit: mockBatchCommit,
     })),
@@ -281,6 +305,11 @@ describe('POST /api/products/clear', () => {
 describe('POST /api/products/:id/sell-with-invoice', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockBatchCommit.mockResolvedValue(undefined)
+    mockTransactionsDoc.mockReturnValue({ id: 'tx1' })
+    mockInvoicesDoc.mockReturnValue({ id: 'inv1' })
+    mockActivityEventsDoc.mockReturnValue({ id: 'act1' })
+    mockProductsDoc.mockImplementation((id: string) => ({ id }))
   })
 
   it('creates sale transaction, marks product sold, and creates invoice', async () => {
@@ -298,12 +327,8 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       status: 'in_stock',
       quantity: 1,
     })
-    mockTransactionCreate.mockResolvedValue({ id: 'tx1', amountEur: 2200 })
-    mockProductSet.mockResolvedValue({ id: 'p1', status: 'sold' })
     mockGetSettings.mockResolvedValue({ vatRatePct: 23 })
     mockGetNextInvoiceNumber.mockResolvedValue('INV-0009')
-    mockInvoiceCreate.mockResolvedValue({ id: 'inv1', invoiceNumber: 'INV-0009' })
-    mockActivityCreate.mockResolvedValue({ id: 'act1' })
 
     const res = await request(app)
       .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
@@ -315,14 +340,21 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       })
 
     expect(res.status).toBe(201)
-    expect(mockTransactionCreate).toHaveBeenCalledWith(expect.objectContaining({
+    expect(mockBatchCommit).toHaveBeenCalledTimes(1)
+    expect(mockBatchSet).toHaveBeenCalledTimes(4)
+
+    const transactionWrite = mockBatchSet.mock.calls.find(([ref]) => ref.id === 'tx1')
+    expect(transactionWrite?.[1]).toEqual(expect.objectContaining({
       type: 'sale',
       productId: 'p1',
       amountEur: 2200,
       notes: 'Sold via showroom',
     }))
-    expect(mockProductSet).toHaveBeenCalledWith('p1', expect.objectContaining({ status: 'sold' }))
-    expect(mockInvoiceCreate).toHaveBeenCalledWith(expect.objectContaining({
+    const productWrite = mockBatchSet.mock.calls.find(([ref]) => ref.id === 'p1')
+    expect(productWrite?.[1]).toEqual(expect.objectContaining({ status: 'sold' }))
+
+    const invoiceWrite = mockBatchSet.mock.calls.find(([ref]) => ref.id === 'inv1')
+    expect(invoiceWrite?.[1]).toEqual(expect.objectContaining({
       transactionId: 'tx1',
       productId: 'p1',
       customerName: 'John Smith',
@@ -355,8 +387,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       .send({ customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
-    expect(mockTransactionCreate).not.toHaveBeenCalled()
-    expect(mockInvoiceCreate).not.toHaveBeenCalled()
+    expect(mockBatchCommit).not.toHaveBeenCalled()
   })
 
   it('returns 409 when product is already sold', async () => {
@@ -378,8 +409,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       .send({ amountEur: 2200, customerName: 'John Smith' })
 
     expect(res.status).toBe(409)
-    expect(mockTransactionCreate).not.toHaveBeenCalled()
-    expect(mockInvoiceCreate).not.toHaveBeenCalled()
+    expect(mockBatchCommit).not.toHaveBeenCalled()
   })
 
   it('returns 400 when amountEur is not positive', async () => {
@@ -401,14 +431,43 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       .send({ amountEur: 0, customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
-    expect(mockTransactionCreate).not.toHaveBeenCalled()
-    expect(mockInvoiceCreate).not.toHaveBeenCalled()
+    expect(mockBatchCommit).not.toHaveBeenCalled()
   })
 })
 
 describe('POST /api/products/:id/transactions sale validation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockBatchCommit.mockResolvedValue(undefined)
+    mockTransactionsDoc.mockReturnValue({ id: 'tx-sale-1' })
+    mockActivityEventsDoc.mockReturnValue({ id: 'act-sale-1' })
+    mockProductsDoc.mockImplementation((id: string) => ({ id }))
+  })
+
+  it('creates sale transaction and commits transaction/product/activity atomically', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'p1',
+      organisationId: 'default',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      costPriceEur: 1000,
+      sellPriceEur: 2200,
+      status: 'in_stock',
+      quantity: 1,
+    })
+
+    const res = await request(app)
+      .post('/api/products/p1/transactions').set(authHeaders('operator'))
+      .send({ type: 'sale', amountEur: 2200, notes: 'Sold at pop-up event' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.data.id).toBe('tx-sale-1')
+    expect(mockBatchCommit).toHaveBeenCalledTimes(1)
+    expect(mockBatchSet).toHaveBeenCalledTimes(3)
+    const productWrite = mockBatchSet.mock.calls.find(([ref]) => ref.id === 'p1')
+    expect(productWrite?.[1]).toEqual(expect.objectContaining({ status: 'sold' }))
   })
 
   it('returns 409 when sale transaction is attempted on already sold product', async () => {
@@ -430,8 +489,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
       .send({ type: 'sale', amountEur: 2200 })
 
     expect(res.status).toBe(409)
-    expect(mockTransactionCreate).not.toHaveBeenCalled()
-    expect(mockProductSet).not.toHaveBeenCalled()
+    expect(mockBatchCommit).not.toHaveBeenCalled()
   })
 
   it('returns 400 when sale transaction amount is not positive', async () => {
@@ -453,7 +511,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
       .send({ type: 'sale', amountEur: 0 })
 
     expect(res.status).toBe(400)
-    expect(mockTransactionCreate).not.toHaveBeenCalled()
+    expect(mockBatchCommit).not.toHaveBeenCalled()
   })
 })
 

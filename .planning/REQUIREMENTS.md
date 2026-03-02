@@ -164,6 +164,30 @@
 **Coverage:**
 - UI polish requirements: 8 total, 8 satisfied
 
+## Sprint 4/5 Hardening Addendum
+
+**Added:** 2026-03-02  
+**Goal:** Ensure UX polish is maintainable and production-safe via reusable UI primitives, safer backend writes, and bounded high-traffic queries.
+
+- [x] **HARDEN-01**: Shared page-level UI patterns are extracted into reusable design-system primitives and adopted in high-traffic pages.
+- [x] **HARDEN-02**: Oversized page files are split into focused local subcomponents without behavior regressions.
+- [x] **HARDEN-03**: Product sell/transaction multi-write paths prevent partial commit states using atomic Firestore batch semantics.
+- [x] **HARDEN-04**: Dashboard/status endpoints avoid unbounded full-collection scans by using bounded query paths.
+- [x] **HARDEN-05**: Post-hardening validation evidence includes typecheck, unit tests, and targeted e2e coverage for touched workflows.
+
+## Sprint 4/5 Hardening Traceability
+
+| Requirement | Status |
+|-------------|--------|
+| HARDEN-01 | Complete |
+| HARDEN-02 | Complete |
+| HARDEN-03 | Complete |
+| HARDEN-04 | Complete |
+| HARDEN-05 | Complete |
+
+**Coverage:**
+- Sprint 4/5 hardening requirements: 5 total, 5 satisfied
+
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-02 after completing Phase Polish-4*
+*Last updated: 2026-03-02 after Sprint 4/5 hardening closure*

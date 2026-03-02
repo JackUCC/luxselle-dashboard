@@ -7,4 +7,12 @@ export class ActivityEventRepo extends BaseRepo<ActivityEvent> {
   constructor() {
     super('activity_events', ActivityEventSchema)
   }
+
+  async listRecent(limit: number, orgId?: string) {
+    return this.listByQuery({
+      orgId,
+      limit,
+      orderBy: { field: 'createdAt', direction: 'desc' },
+    })
+  }
 }

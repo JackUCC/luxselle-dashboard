@@ -10,7 +10,7 @@ import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 import { staggerClass } from '../../lib/staggerClass'
 import PageLayout from '../../components/layout/PageLayout'
-import { Button, Card, EmptyState, PageHeader, SectionLabel } from '../../components/design-system'
+import { Button, Card, EmptyState, FilterChipGroup, PageHeader, SectionLabel } from '../../components/design-system'
 import Skeleton from '../../components/feedback/Skeleton'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
@@ -49,6 +49,10 @@ const getStatusDotColor = (status: string) => {
 }
 
 const STATUSES = ['all', 'open', 'sourcing', 'sourced', 'fulfilled', 'lost'] as const
+const STATUS_OPTIONS = STATUSES.map((value) => ({
+  value,
+  label: value === 'all' ? 'All' : value.charAt(0).toUpperCase() + value.slice(1),
+}))
 
 export default function SourcingView() {
   const [requests, setRequests] = useState<SourcingRequestWithId[]>([])
@@ -263,22 +267,12 @@ export default function SourcingView() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by status">
-        {STATUSES.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setStatusFilter(s)}
-            className={`min-h-[44px] rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
-              statusFilter === s
-                ? 'bg-lux-900 text-white border-lux-900'
-                : 'bg-white text-lux-600 border-[var(--lux-border)] hover:border-[var(--lux-border-hover)]'
-            }`}
-          >
-            {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-          </button>
-        ))}
-      </div>
+      <FilterChipGroup
+        options={STATUS_OPTIONS}
+        selected={statusFilter}
+        onChange={setStatusFilter}
+        ariaLabel="Filter by status"
+      />
 
       {/* Create Form Overlay */}
       {showCreateForm && (

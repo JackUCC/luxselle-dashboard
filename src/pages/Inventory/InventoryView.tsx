@@ -17,7 +17,6 @@ import {
   LayoutList,
   LayoutGrid,
   Plus,
-  MoreVertical,
   ChevronDown,
   Loader2,
   Package,
@@ -26,7 +25,6 @@ import {
   SlidersHorizontal,
   X,
   Trash2,
-  Pencil,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../../lib/api";
 import { formatCurrency } from "../../lib/formatters";
@@ -38,6 +36,7 @@ import type { ProductWithId } from "../../types/dashboard";
 import ProductDetailDrawer from "./ProductDetailDrawer";
 import AddProductDrawer from "./AddProductDrawer";
 import ImportInventoryDrawer from "./ImportInventoryDrawer";
+import InventoryRowActions from "./InventoryRowActions";
 import Skeleton from "../../components/feedback/Skeleton";
 
 interface ProductsResponse {
@@ -69,76 +68,10 @@ function getStatusBadgeVariant(
 
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import PageLayout from "../../components/layout/PageLayout";
-import { Badge, Button, Card, EmptyState, PageHeader, PredictiveInput, SectionLabel } from "../../components/design-system";
+import { Badge, Button, Card, EmptyState, IconButton, PageHeader, PredictiveInput, SectionLabel, TableShell } from "../../components/design-system";
 import { useLayoutMode } from "../../lib/LayoutModeContext";
 import { POPULAR_SUGGESTIONS } from "../../lib/searchSuggestions";
 import { staggerClass } from "../../lib/staggerClass";
-
-function InventoryRowActions({
-  product,
-  onEdit,
-  onDelete,
-}: {
-  product: ProductWithId;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const openRef = useRef(open);
-  openRef.current = open;
-
-  useEffect(() => {
-    const close = (e: MouseEvent) => {
-      if (openRef.current && ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, []);
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
-        className="text-lux-400 hover:text-lux-600 p-2 rounded-lg hover:bg-lux-100 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-        aria-label="Row actions"
-      >
-        <MoreVertical className="h-4 w-4" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 py-1 bg-white border border-lux-200 rounded-lux-card shadow-lg z-20 min-w-[120px]">
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onEdit();
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-lux-700 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onDelete();
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function hasMissingInfo(product: ProductWithId): boolean {
   return (
@@ -477,30 +410,28 @@ export default function InventoryView() {
 
               {/* View Toggles */}
               <div className="flex rounded-lux-card border border-lux-200 bg-lux-50 p-1">
-                <button
+                <IconButton
                   onClick={() => setViewMode("table")}
-                  className={`rounded-lg p-2 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+                  icon={<LayoutList className="h-4 w-4" />}
+                  label="Table view"
+                  className={`transition-all ${
                     viewMode === "table"
                       ? "bg-white shadow-sm text-lux-900"
                       : "text-lux-400 hover:text-lux-700"
                   }`}
                   data-testid="inventory-view-table"
-                  aria-label="Table view"
-                >
-                  <LayoutList className="h-4 w-4" />
-                </button>
-                <button
+                />
+                <IconButton
                   onClick={() => setViewMode("grid")}
-                  className={`rounded-lg p-2 transition-all focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+                  icon={<LayoutGrid className="h-4 w-4" />}
+                  label="Grid view"
+                  className={`transition-all ${
                     viewMode === "grid"
                       ? "bg-white shadow-sm text-lux-900"
                       : "text-lux-400 hover:text-lux-700"
                   }`}
                   data-testid="inventory-view-grid"
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
+                />
               </div>
             </div>
           </div>
@@ -656,14 +587,15 @@ export default function InventoryView() {
           />
         </Card>
       ) : viewMode === "table" ? (
-        <div
+        <TableShell
           ref={shouldVirtualize ? tableContainerRef : null}
-          className={`lux-card animate-bento-enter stagger-2 overflow-x-auto ${isSidecar || shouldVirtualize ? "overflow-y-auto" : "overflow-y-visible"}`}
+          cardClassName="animate-bento-enter stagger-2"
+          className={isSidecar || shouldVirtualize ? "overflow-y-auto" : "overflow-y-visible"}
+          tableClassName="min-w-[920px] divide-y divide-lux-200"
           style={{
             ...(isSidecar ? { maxHeight: "min(70vh, 500px)" } : shouldVirtualize ? { maxHeight: "600px" } : {}),
           } as React.CSSProperties}
         >
-          <table className="w-full min-w-[920px] divide-y divide-lux-200">
             <thead className="bg-lux-50/80 sticky top-0 z-10 backdrop-blur-md">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
@@ -845,8 +777,7 @@ export default function InventoryView() {
                 })
               )}
             </tbody>
-          </table>
-        </div>
+        </TableShell>
       ) : (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((product, index) => {

@@ -24,7 +24,7 @@ import {
 import type { SystemJob } from '@shared/schemas'
 import { apiGet, apiPost } from '../../lib/api'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, SectionLabel } from '../../components/design-system'
+import { IconButton, PageHeader, SectionLabel, TableShell } from '../../components/design-system'
 
 type SystemJobWithId = SystemJob & { id: string }
 
@@ -245,8 +245,7 @@ export default function JobsView() {
           </p>
         </div>
       ) : (
-        <div className="lux-card overflow-x-auto animate-bento-enter stagger-0">
-          <table className="w-full min-w-[980px] divide-y divide-lux-100">
+        <TableShell cardClassName="animate-bento-enter stagger-0" tableClassName="min-w-[980px] divide-y divide-lux-100">
             <thead className="bg-lux-50/60">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.08em] text-lux-400">
@@ -363,8 +362,7 @@ export default function JobsView() {
                 )
               })}
             </tbody>
-          </table>
-        </div>
+        </TableShell>
       )}
 
       {/* Job Detail Drawer */}
@@ -418,13 +416,11 @@ function JobDetailDrawer({ job, onClose, onRetry }: JobDetailDrawerProps) {
               <p className="text-xs text-lux-500 font-mono">#{job.id}</p>
             </div>
           </div>
-          <button
+          <IconButton
+            icon={<X className="h-5 w-5" />}
+            label="Close"
             onClick={onClose}
-            aria-label="Close"
-            className="rounded-lg p-2 text-lux-400 hover:text-lux-700 hover:bg-lux-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          />
         </div>
 
         {/* Content */}
