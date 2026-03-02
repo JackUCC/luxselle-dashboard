@@ -672,6 +672,20 @@ export default function UnifiedIntelligenceView() {
               </div>
             )}
           </div>
+
+          <LandedCostWidget
+            suggestedBid={decision.recommendedMaxPayEur}
+            suggestionLabel={decisionSuggestionLabel}
+          />
+
+          <details className="lux-card p-5 animate-bento-enter stagger-5">
+            <summary className="cursor-pointer text-sm font-medium text-lux-700 hover:text-lux-900 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded">
+              Advanced landed-cost calculator
+            </summary>
+            <div className="mt-4">
+              <CalculatorWidget />
+            </div>
+          </details>
         </div>
 
         <div className="space-y-6">
@@ -946,19 +960,6 @@ export default function UnifiedIntelligenceView() {
             </div>
           )}
 
-          <LandedCostWidget
-            suggestedBid={decision.recommendedMaxPayEur}
-            suggestionLabel={decisionSuggestionLabel}
-          />
-
-          <details className="lux-card p-5 animate-bento-enter stagger-5">
-            <summary className="cursor-pointer text-sm font-medium text-lux-700 hover:text-lux-900 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded">
-              Advanced landed-cost calculator
-            </summary>
-            <div className="mt-4">
-              <CalculatorWidget />
-            </div>
-          </details>
         </div>
       </div>
       <ImageLightbox
