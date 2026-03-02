@@ -5,9 +5,11 @@ import SectionLabel from '../design-system/SectionLabel'
 import PredictiveInput from '../design-system/PredictiveInput'
 import { POPULAR_SUGGESTIONS } from '../../lib/searchSuggestions'
 
-const RECENT_SEARCHES = [
-  { label: 'Hermes Birkin 30', image: '/placeholder-birkin.jpg' },
-  { label: 'Chanel Classic Flap', image: '/placeholder-chanel.jpg' },
+const POPULAR_SEARCHES = [
+  'Chanel Classic Flap Medium',
+  'Hermès Birkin 25',
+  'Louis Vuitton Neverfull MM',
+  'Gucci Marmont Small',
 ]
 
 export default function MarketIntelligenceWidget() {
@@ -21,7 +23,7 @@ export default function MarketIntelligenceWidget() {
     navigate(`/evaluate?q=${encodeURIComponent(query.trim())}&run=1`)
   }
 
-  const handleRecentClick = (label: string) => {
+  const handlePopularClick = (label: string) => {
     navigate(`/evaluate?q=${encodeURIComponent(label)}&run=1`)
   }
 
@@ -79,21 +81,18 @@ export default function MarketIntelligenceWidget() {
         />
       </form>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium uppercase tracking-wider text-lux-400">
-          Recent:
+          Popular:
         </span>
-        {RECENT_SEARCHES.map((item) => (
+        {POPULAR_SEARCHES.map((label) => (
           <button
-            key={item.label}
+            key={label}
             type="button"
-            onClick={() => handleRecentClick(item.label)}
-            className="flex items-center gap-2 rounded-full border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:border-lux-300 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            onClick={() => handlePopularClick(label)}
+            className="rounded-full border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 transition-colors hover:border-lux-300 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
-            <div className="h-5 w-5 overflow-hidden rounded-full bg-lux-100">
-              <div className="h-full w-full bg-lux-200" />
-            </div>
-            {item.label}
+            {label}
           </button>
         ))}
       </div>

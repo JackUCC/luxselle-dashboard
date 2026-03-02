@@ -11,6 +11,7 @@ import { decodeSerialToYear, SERIAL_CHECK_BRANDS, type SerialCheckBrand, type De
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
+import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
@@ -27,6 +28,8 @@ interface SerialCheckSessionResult {
   pricingGuidance: SerialPricingGuidance
   marketResult: PriceCheckResult
 }
+
+const SERIAL_BRAND_OPTIONS = SERIAL_CHECK_BRANDS.map((b) => ({ value: b, label: b }))
 
 export default function SerialCheckView() {
   const [serial, setSerial] = useState('')
@@ -128,50 +131,47 @@ export default function SerialCheckView() {
       <div className="lux-card p-6 animate-bento-enter stagger-0">
         <SectionLabel className="mb-4">Lookup details</SectionLabel>
         <div className="space-y-4">
-          <div>
-            <label htmlFor="serial-input" className="block text-sm font-medium text-lux-700 mb-1.5">
-              Serial / date code
-            </label>
-            <textarea
-              id="serial-input"
-              data-testid="serial-input"
-              rows={2}
-              className="lux-input"
-              placeholder="e.g. SR3179 or 25xxxxxx"
-              value={serial}
-              onChange={(e) => setSerial(e.target.value)}
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="serial-input" className="block text-xs font-medium text-lux-600 mb-1.5">
+                Serial / date code
+              </label>
+              <textarea
+                id="serial-input"
+                data-testid="serial-input"
+                rows={2}
+                className="lux-input"
+                placeholder="e.g. SR3179 or 25xxxxxx"
+                value={serial}
+                onChange={(e) => setSerial(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="brand-select" className="block text-xs font-medium text-lux-600 mb-1.5">
+                Brand
+              </label>
+              <LuxSelect
+                id="brand-select"
+                value={brand}
+                onValueChange={(value) => setBrand(value as SerialCheckBrand)}
+                options={SERIAL_BRAND_OPTIONS}
+                ariaLabel="Serial check brand"
+              />
+            </div>
           </div>
           <div>
-            <label htmlFor="description-input" className="block text-sm font-medium text-lux-700 mb-1.5">
+            <label htmlFor="description-input" className="block text-xs font-medium text-lux-600 mb-1.5">
               Item description (for market lookup)
             </label>
             <textarea
               id="description-input"
               rows={2}
               className="lux-input"
-              placeholder="e.g. Chanel Classic Flap Medium black caviar"
+              placeholder="e.g. Chanel Classic Flap Medium, black caviar, gold hardware"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </div>
-          <div>
-            <label htmlFor="brand-select" className="block text-sm font-medium text-lux-700 mb-1.5">
-              Brand
-            </label>
-            <select
-              id="brand-select"
-              data-testid="brand-select"
-              className="lux-input"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value as SerialCheckBrand)}
-            >
-              {SERIAL_CHECK_BRANDS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
+            <p className="mt-1 text-xs text-lux-400">Use a detailed description for best market price results</p>
           </div>
           <div className="flex flex-wrap gap-3 pt-1">
             <button
@@ -182,7 +182,7 @@ export default function SerialCheckView() {
               className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
             >
               {isLoading ? <AiThinkingDots /> : <Search className="h-4 w-4" />}
-              {isLoading ? 'Analyzing…' : 'Analyze serial'}
+              {isLoading ? 'Analyzing...' : 'Analyze serial'}
             </button>
             <button
               type="button"
