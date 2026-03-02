@@ -13,6 +13,9 @@ import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
+import AiProgressSteps, { type AiProgressStep } from '../../components/feedback/AiProgressSteps'
+import LiveResultPreview from '../../components/feedback/LiveResultPreview'
+import ImageLightbox from '../../components/feedback/ImageLightbox'
 import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import type { PriceCheckResult, SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
@@ -31,10 +34,17 @@ interface SerialCheckSessionResult {
 
 const SERIAL_BRAND_OPTIONS = SERIAL_CHECK_BRANDS.map((b) => ({ value: b, label: b }))
 
+const SERIAL_ANALYSIS_STEPS: AiProgressStep[] = [
+  { label: 'Decoding serial', detail: 'Applying brand-specific pattern checks.' },
+  { label: 'Cross-checking with AI', detail: 'Running AI decode fallback when needed.' },
+  { label: 'Building price guidance', detail: 'Merging decode confidence with market comps.' },
+]
+
 export default function SerialCheckView() {
   const [serial, setSerial] = useState('')
   const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
   const [description, setDescription] = useState('')
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string; sourceUrl?: string } | null>(null)
   const {
     session: serialSession,
     startLoading: startSerialLoading,
@@ -193,9 +203,13 @@ export default function SerialCheckView() {
             </button>
           </div>
           {isLoading && (
-            <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100 mt-2">
-              <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
-            </div>
+            <AiProgressSteps
+              isActive={isLoading}
+              steps={SERIAL_ANALYSIS_STEPS}
+              compact
+              title="Serial analysis progress"
+              className="mt-2"
+            />
           )}
         </div>
       </div>
@@ -211,6 +225,14 @@ export default function SerialCheckView() {
             Dismiss
           </button>
         </div>
+      )}
+
+      {!decodeResult && isLoading && (
+        <LiveResultPreview
+          isActive={isLoading}
+          query={description}
+          className="animate-bento-enter stagger-1"
+        />
       )}
 
       {!decodeResult && !isLoading && !serialError && (
@@ -304,12 +326,20 @@ export default function SerialCheckView() {
                   <div key={`${comp.title}-${i}`} className="flex items-center justify-between gap-3 text-sm py-2 border-b border-lux-100 last:border-0">
                     <div className="min-w-0 flex items-center gap-3 pr-2">
                       {previewImageUrl && (
-                        <img
-                          src={previewImageUrl}
-                          alt=""
-                          className="h-12 w-12 shrink-0 rounded-lg border border-lux-100 object-cover"
-                          loading="lazy"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => setLightboxImage({ url: previewImageUrl, title: comp.title, subtitle: comp.source, sourceUrl: comp.sourceUrl })}
+                          className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-lux-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                          aria-label={`Preview comparable image for ${comp.title}`}
+                        >
+                          <img
+                            src={previewImageUrl}
+                            alt={`Comparable listing: ${comp.title}`}
+                            className="h-12 w-12 object-cover"
+                            loading="lazy"
+                          />
+                          <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                        </button>
                       )}
                       <div className="min-w-0">
                         {comp.sourceUrl ? (
@@ -339,6 +369,14 @@ export default function SerialCheckView() {
         This tool is a guide only. Date codes do not confirm authenticity; use a professional
         authenticator when in doubt.
       </p>
+      <ImageLightbox
+        isOpen={Boolean(lightboxImage)}
+        imageUrl={lightboxImage?.url ?? null}
+        title={lightboxImage?.title}
+        subtitle={lightboxImage?.subtitle}
+        sourceUrl={lightboxImage?.sourceUrl}
+        onClose={() => setLightboxImage(null)}
+      />
     </PageLayout>
   )
 }

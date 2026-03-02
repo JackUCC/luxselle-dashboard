@@ -29,13 +29,13 @@ Every purchase decision runs through this tool — enter an item, get everything
 
 ### Active (UI Polish Milestone)
 
-- [ ] **STYLE-01**: Advanced navbar — bold visual hierarchy, smooth hover states, active indicators, polished transitions
-- [ ] **STYLE-02**: Sidecar widget visual treatment — looks professional and scannable in compact mode
-- [ ] **ANIM-01**: Bold, energetic animations — Framer Motion entrance animations, micro-interactions, smooth transitions across all 11 pages
-- [ ] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching
-- [ ] **LOAD-02**: Animated AI progress steps — AI operations show step-by-step status ("Searching… Analysing… Building report…") with animated indicators
-- [ ] **PREV-01**: Product image previews — hover or click to preview product images at full size
-- [ ] **PREV-02**: Inline result previews — AI analysis panels show building results as they arrive
+- [x] **STYLE-01**: Advanced navbar — bold visual hierarchy, smooth hover states, active indicators, polished transitions
+- [x] **STYLE-02**: Sidecar widget visual treatment — looks professional and scannable in compact mode
+- [x] **ANIM-01**: Bold, energetic animations — Framer Motion entrance animations, micro-interactions, smooth transitions across all 11 pages
+- [x] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching
+- [x] **LOAD-02**: Animated AI progress steps — AI operations show step-by-step status ("Searching… Analysing… Building report…") with animated indicators
+- [x] **PREV-01**: Product image previews — hover or click to preview product images at full size
+- [x] **PREV-02**: Inline result previews — AI analysis panels show building results as they arrive
 - [ ] **QA-01**: Demo readiness — all 11 pages load cleanly, no blank states or broken layouts in the happy path
 
 ### Out of Scope
@@ -71,11 +71,11 @@ Every purchase decision runs through this tool — enter an item, get everything
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Styling-only constraint | Logic is working; regression risk not worth it for a polish milestone | — Pending |
-| Bold & energetic visual style | Tool should feel as decisive as the sourcing decisions it supports | — Pending |
-| Animated AI progress steps (not streaming) | More dramatic and legible than raw streaming text for a demo | — Pending |
-| Defer v3 AI reliability phases | Polish first; resume Phase 10 once the tool looks the part | — Pending |
-| Framer Motion for all animation | Already installed — no new deps needed | — Pending |
+| Styling-only constraint | Logic is working; regression risk not worth it for a polish milestone | Applied |
+| Bold & energetic visual style | Tool should feel as decisive as the sourcing decisions it supports | Applied |
+| Animated AI progress steps (not streaming) | More dramatic and legible than raw streaming text for a demo | Applied |
+| Defer v3 AI reliability phases | Polish first; resume Phase 10 once the tool looks the part | Applied |
+| Framer Motion for all animation | Already installed — no new deps needed | Applied |
 
 ---
-*Last updated: 2026-03-02 after UI polish milestone kickoff (Phases 1-9 complete)*
+*Last updated: 2026-03-02 after completing Phase Polish-3*

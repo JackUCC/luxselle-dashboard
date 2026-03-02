@@ -6,6 +6,9 @@ import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DE
 import { formatCurrency, parseNumericInput } from '../../lib/formatters'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import AiThinkingDots from '../feedback/AiThinkingDots'
+import AiProgressSteps, { type AiProgressStep } from '../feedback/AiProgressSteps'
+import LiveResultPreview from '../feedback/LiveResultPreview'
+import ImageLightbox from '../feedback/ImageLightbox'
 import type { PriceCheckResult } from '@shared/schemas'
 
 interface VisualSearchResult {
@@ -34,6 +37,12 @@ interface QuickCheckSessionResult {
   inventoryMatches: InventoryMatch[]
 }
 
+const QUICK_CHECK_STEPS: AiProgressStep[] = [
+  { label: 'Searching listings', detail: 'Running quick market lookup.' },
+  { label: 'Scoring comparables', detail: 'Matching title and price relevance.' },
+  { label: 'Publishing targets', detail: 'Computing avg sell, max buy, and max bid.' },
+]
+
 export default function QuickCheck() {
   const [query, setQuery] = useState('')
   const [bidInput, setBidInput] = useState('')
@@ -41,6 +50,7 @@ export default function QuickCheck() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const {
     session: quickCheckSession,
@@ -223,7 +233,15 @@ export default function QuickCheck() {
               {visualResults.slice(0, 9).map((r, i) => (
                 <div key={i} className="rounded border border-lux-100 overflow-hidden">
                   {r.imageUrl ? (
-                    <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setLightboxImage({ url: r.imageUrl ?? '', title: r.title, subtitle: `${Math.round(r.score * 100)}% match` })}
+                      className="group relative block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                      aria-label={`Preview image for ${r.title ?? 'visual result'}`}
+                    >
+                      <img src={r.imageUrl} alt={r.title ?? 'Visual result'} className="w-full aspect-square object-cover" />
+                      <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                    </button>
                   ) : (
                     <div className="w-full aspect-square bg-lux-100 flex items-center justify-center">
                       <ImageIcon className="h-5 w-5 text-lux-400" />
@@ -238,14 +256,14 @@ export default function QuickCheck() {
       )}
 
       {isResearching && (
-        <div className="space-y-2 rounded-lux-card border border-lux-200 bg-white px-3 py-2 text-xs text-lux-600">
-          <div className="flex items-center gap-2">
-            <AiThinkingDots />
-            Running quick check...
-          </div>
-          <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100">
-            <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
-          </div>
+        <div className="space-y-2 rounded-lux-card border border-lux-200 bg-white px-2.5 py-2 text-xs text-lux-600">
+          <AiProgressSteps
+            isActive={isResearching}
+            steps={QUICK_CHECK_STEPS}
+            compact
+            title="Quick check progress"
+          />
+          <LiveResultPreview isActive={isResearching} query={query} compact />
         </div>
       )}
 
@@ -359,6 +377,13 @@ export default function QuickCheck() {
           Paste a full listing title and run a quick check. You will get price targets, landed estimate, and inventory context in one place.
         </div>
       )}
+      <ImageLightbox
+        isOpen={Boolean(lightboxImage)}
+        imageUrl={lightboxImage?.url ?? null}
+        title={lightboxImage?.title}
+        subtitle={lightboxImage?.subtitle}
+        onClose={() => setLightboxImage(null)}
+      />
     </div>
   )
 }

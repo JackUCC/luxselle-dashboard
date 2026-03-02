@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: ui-polish
 milestone_name: UI Polish Demo Readiness
-current_phase: Polish-3
-current_phase_name: AI Loaders and Previews
+current_phase: Polish-4
+current_phase_name: Demo QA Sweep
 current_plan: 01
 status: planning
-stopped_at: Phase Polish-2 executed and summarized
-last_updated: "2026-03-02T12:05:00.000Z"
+stopped_at: Phase Polish-3 executed and summarized
+last_updated: "2026-03-02T13:30:00.000Z"
 last_activity: 2026-03-02
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -28,15 +28,15 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-**Current Phase:** Polish-3
-**Current Phase Name:** AI Loaders and Previews
+**Current Phase:** Polish-4
+**Current Phase Name:** Demo QA Sweep
 **Total Phases:** 4
 **Current Plan:** 01
 **Total Plans in Phase:** TBD
 **Status:** Ready to plan
-**Progress:** [█████░░░░░] 50%
+**Progress:** [███████░░░] 75%
 **Last Activity:** 2026-03-02
-**Last Activity Description:** Completed Phase Polish-2 / Plan 01 (animation layer + skeleton loading). Phase Polish-3 is next.
+**Last Activity Description:** Completed Phase Polish-3 / Plan 01 (AI loaders, inline previews, and lightboxes). Phase Polish-4 is next.
 
 ## Decisions Made
 
@@ -51,9 +51,9 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Pending Todos
 
-- Plan Phase Polish-3: AI Loaders and Previews (LOAD-02, PREV-01, PREV-02)
-- Implement animated multi-step AI progress indicators for long-running tasks
-- Add product image preview lightbox/popover and inline partial-result rendering
+- Plan Phase Polish-4: Demo QA Sweep (QA-01)
+- Run happy-path walkthrough across all 11 pages and confirm no blank/broken states
+- Validate that all newly added phase-1 through phase-3 polish effects render cleanly in both overview and sidecar flows
 
 ## Blockers
 
@@ -67,6 +67,6 @@ Test suite execution is sandbox-limited (`EPERM` when route tests bind listeners
 
 ## Session
 
-**Last Date:** 2026-03-02T12:05:00.000Z
-**Stopped At:** Phase Polish-2 executed and summarized
-**Resume File:** .planning/phases/Polish-2-animation-layer-and-skeleton-loading/Polish-2-01-SUMMARY.md
+**Last Date:** 2026-03-02T13:30:00.000Z
+**Stopped At:** Phase Polish-3 executed and summarized
+**Resume File:** .planning/phases/Polish-3-ai-loaders-and-previews/Polish-3-01-SUMMARY.md

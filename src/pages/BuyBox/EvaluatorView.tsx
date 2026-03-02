@@ -13,6 +13,9 @@ import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
+import AiProgressSteps, { type AiProgressStep } from '../../components/feedback/AiProgressSteps'
+import LiveResultPreview from '../../components/feedback/LiveResultPreview'
+import ImageLightbox from '../../components/feedback/ImageLightbox'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
@@ -44,6 +47,12 @@ const CONDITION_OPTIONS = [
   { value: 'used', label: 'Used' },
 ]
 
+const PRICE_CHECK_STEPS: AiProgressStep[] = [
+  { label: 'Searching listings', detail: 'Scanning Irish and EU marketplaces for fresh comparables.' },
+  { label: 'Analysing pricing fit', detail: 'Filtering out noisy comps and weighting condition cues.' },
+  { label: 'Building report', detail: 'Calculating confidence, max buy, and max bid targets.' },
+]
+
 export default function EvaluatorView() {
   const { isSidecar } = useLayoutMode()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -64,6 +73,7 @@ export default function EvaluatorView() {
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const [failedCompImages, setFailedCompImages] = useState<Record<number, boolean>>({})
   const [loadedCompImages, setLoadedCompImages] = useState<Record<number, boolean>>({})
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string; sourceUrl?: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoRanQueryRef = useRef<string | null>(null)
   const {
@@ -392,9 +402,12 @@ ${fallbackLine}` : fallbackLine))
                 {isResearching ? 'Researching…' : 'Research market'}
               </button>
               {isResearching && (
-                <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100">
-                  <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
-                </div>
+                <AiProgressSteps
+                  isActive={isResearching}
+                  steps={PRICE_CHECK_STEPS}
+                  compact
+                  title="Price-check progress"
+                />
               )}
               {error && (
                 <div className="flex flex-col items-center gap-2">
@@ -419,11 +432,19 @@ ${fallbackLine}` : fallbackLine))
           {/* Results + Landed cost */}
           <div className="space-y-6">
             {!result ? (
+              isResearching ? (
+                <LiveResultPreview
+                  isActive={isResearching}
+                  query={query}
+                  className="animate-bento-enter stagger-1"
+                />
+              ) : (
               <div className="lux-card border-dashed border-2 border-lux-200 min-h-[280px] flex flex-col items-center justify-center p-6 animate-bento-enter stagger-1">
                 <Search className="h-12 w-12 mb-4 opacity-30 text-lux-400" />
                 <p className="font-medium text-lux-600">Enter an item and run research</p>
                 <p className="text-sm text-lux-500 mt-1">Irish competitors + Vestiaire Collective</p>
               </div>
+              )
             ) : (
               <div className="lux-card p-6 space-y-6 animate-bento-enter stagger-1">
                 <div className="flex items-center justify-between">
@@ -506,7 +527,21 @@ ${fallbackLine}` : fallbackLine))
                         return (
                           <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 justify-between text-sm py-2 border-b border-lux-100 last:border-0">
                             <div className="flex min-w-0 w-full sm:flex-1 items-start gap-2.5">
-                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (!previewImageUrl || failedCompImages[i]) return
+                                  setLightboxImage({
+                                    url: previewImageUrl,
+                                    title: c.title,
+                                    subtitle: c.source,
+                                    sourceUrl: c.sourceUrl,
+                                  })
+                                }}
+                                className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                                aria-label={previewImageUrl ? `Preview comparable image for ${c.title}` : 'No comparable image available'}
+                                disabled={!previewImageUrl || failedCompImages[i]}
+                              >
                                 {previewImageUrl && !failedCompImages[i] ? (
                                   <>
                                     {!loadedCompImages[i] && (
@@ -516,7 +551,7 @@ ${fallbackLine}` : fallbackLine))
                                     )}
                                     <img
                                       src={previewImageUrl}
-                                      alt=""
+                                      alt={`Comparable listing: ${c.title}`}
                                       loading="lazy"
                                       className={`h-full w-full object-cover ${loadedCompImages[i] ? 'opacity-100' : 'opacity-0'}`}
                                       onLoad={() => setLoadedCompImages((prev) => ({ ...prev, [i]: true }))}
@@ -531,7 +566,10 @@ ${fallbackLine}` : fallbackLine))
                                     <ImageIcon className="h-4 w-4 text-lux-300" />
                                   </div>
                                 )}
-                              </div>
+                                {previewImageUrl && !failedCompImages[i] && (
+                                  <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                                )}
+                              </button>
                               <div className="min-w-0 pr-1">
                                 {c.sourceUrl ? (
                                   <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="text-lux-800 hover:text-lux-gold truncate block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm">
@@ -649,7 +687,15 @@ ${fallbackLine}` : fallbackLine))
                     {visualResults.map((r, i) => (
                       <div key={i} className="rounded-lux-card border border-lux-200 overflow-hidden bg-white">
                         {r.imageUrl ? (
-                          <img src={r.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage({ url: r.imageUrl ?? '', title: r.title, subtitle: `${Math.round(r.score * 100)}% match` })}
+                            className="group relative block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                            aria-label={`Preview image for ${r.title ?? 'visual result'}`}
+                          >
+                            <img src={r.imageUrl} alt={r.title ?? 'Visual result'} className="w-full aspect-square object-cover" />
+                            <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                          </button>
                         ) : (
                           <div className="w-full aspect-square bg-lux-50 flex items-center justify-center">
                             <ImageIcon className="h-8 w-8 text-lux-400" />
@@ -675,6 +721,14 @@ ${fallbackLine}` : fallbackLine))
           </div>
         </div>
       )}
+      <ImageLightbox
+        isOpen={Boolean(lightboxImage)}
+        imageUrl={lightboxImage?.url ?? null}
+        title={lightboxImage?.title}
+        subtitle={lightboxImage?.subtitle}
+        sourceUrl={lightboxImage?.sourceUrl}
+        onClose={() => setLightboxImage(null)}
+      />
     </PageLayout>
   )
 }

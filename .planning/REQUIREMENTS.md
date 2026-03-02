@@ -137,12 +137,12 @@
 ### Loading States
 
 - [x] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching (Dashboard, Inventory, Invoices, Sourcing, Jobs, Market Research, Saved Research)
-- [ ] **LOAD-02**: Animated AI progress steps — AI operations (market research, price check, sourcing analysis) show step-by-step status indicators ("Searching… Analysing… Building report…")
+- [x] **LOAD-02**: Animated AI progress steps — AI operations (market research, price check, sourcing analysis) show step-by-step status indicators ("Searching… Analysing… Building report…")
 
 ### Previews
 
-- [ ] **PREV-01**: Product image previews — hover or click to preview product images at full size (lightbox or popover)
-- [ ] **PREV-02**: Inline result previews — AI analysis panels show partial results building as they arrive
+- [x] **PREV-01**: Product image previews — hover or click to preview product images at full size (lightbox or popover)
+- [x] **PREV-02**: Inline result previews — AI analysis panels show partial results building as they arrive
 
 ### Quality Assurance
 
@@ -156,14 +156,14 @@
 | STYLE-02 | Phase Polish-1 | Complete |
 | ANIM-01 | Phase Polish-2 | Complete |
 | LOAD-01 | Phase Polish-2 | Complete |
-| LOAD-02 | Phase Polish-3 | Pending |
-| PREV-01 | Phase Polish-3 | Pending |
-| PREV-02 | Phase Polish-3 | Pending |
+| LOAD-02 | Phase Polish-3 | Complete |
+| PREV-01 | Phase Polish-3 | Complete |
+| PREV-02 | Phase Polish-3 | Complete |
 | QA-01 | Phase Polish-4 | Pending |
 
 **Coverage:**
-- UI polish requirements: 8 total, 4 satisfied
+- UI polish requirements: 8 total, 7 satisfied
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-02 after completing Phase Polish-2*
+*Last updated: 2026-03-02 after completing Phase Polish-3*

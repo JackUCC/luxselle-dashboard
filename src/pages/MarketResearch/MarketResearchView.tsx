@@ -27,6 +27,7 @@ import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, TypewriterText } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
+import AiProgressSteps, { type AiProgressStep } from '../../components/feedback/AiProgressSteps'
 import Skeleton from '../../components/feedback/Skeleton'
 
 // ─── Brand database ────────────────────────────────────────────
@@ -141,6 +142,12 @@ const CONDITION_OPTIONS = [
     { value: 'good', label: 'Good (B)' },
     { value: 'fair', label: 'Fair (C)' },
     { value: 'used', label: 'Used' },
+]
+
+const MARKET_RESEARCH_STEPS: AiProgressStep[] = [
+    { label: 'Searching market', detail: 'Pulling listings from configured marketplaces.' },
+    { label: 'Scoring demand and trend', detail: 'Computing liquidity, demand, and trend signals.' },
+    { label: 'Building recommendation', detail: 'Generating summary, pricing range, and guidance.' },
 ]
 
 import MarketResearchResultPanel, { TREND_CONFIG } from './MarketResearchResultPanel'
@@ -621,9 +628,13 @@ export default function MarketResearchView() {
                                 )}
                             </button>
                             {isLoading && (
-                                <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100 mt-2">
-                                    <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
-                                </div>
+                                <AiProgressSteps
+                                    isActive={isLoading}
+                                    steps={MARKET_RESEARCH_STEPS}
+                                    compact
+                                    title="Research progress"
+                                    className="mt-2"
+                                />
                             )}
                         </form>
                     </div>
@@ -634,6 +645,12 @@ export default function MarketResearchView() {
                     {!result ? (
                         isLoading ? (
                             <div className="lux-card min-h-[500px] p-6 space-y-5">
+                                <AiProgressSteps
+                                    isActive={isLoading}
+                                    steps={MARKET_RESEARCH_STEPS}
+                                    compact
+                                    title="AI analysis progress"
+                                />
                                 <div className="flex items-center gap-2">
                                     <Skeleton className="h-4 w-28" />
                                     <Skeleton className="h-4 w-16 rounded-full" variant="rect" />

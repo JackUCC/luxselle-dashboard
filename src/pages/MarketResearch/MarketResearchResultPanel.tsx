@@ -14,6 +14,7 @@ import {
 import { formatCurrency } from '../../lib/formatters'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import { ConfidenceGauge } from '../../components/design-system'
+import ImageLightbox from '../../components/feedback/ImageLightbox'
 import type { MarketResearchResult } from './types'
 
 export const DEMAND_CONFIG = {
@@ -52,6 +53,7 @@ interface MarketResearchResultPanelProps {
 
 export default function MarketResearchResultPanel({ result, headerActions }: MarketResearchResultPanelProps) {
     const [failedComparableImages, setFailedComparableImages] = useState<Record<string, boolean>>({})
+    const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string; sourceUrl?: string } | null>(null)
 
     return (
         <div className="space-y-5">
@@ -228,15 +230,28 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                                 >
                                     <div className="min-w-0 flex items-center gap-3 w-full sm:flex-1 pr-0 sm:pr-4">
                                         {previewImageUrl && !failedComparableImages[previewImageUrl] ? (
-                                            <img
-                                                src={previewImageUrl}
-                                                alt={comp.title !== FALLBACK_COMPARABLE_TITLE ? comp.title : `${result.brand} ${result.model} comparable`}
-                                                className="w-12 h-12 rounded-lg object-cover border border-lux-200 bg-white shrink-0"
-                                                loading="lazy"
-                                                onError={() => {
-                                                    setFailedComparableImages(prev => ({ ...prev, [previewImageUrl]: true }))
-                                                }}
-                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setLightboxImage({
+                                                    url: previewImageUrl,
+                                                    title: comp.title,
+                                                    subtitle: comp.source,
+                                                    sourceUrl: comp.sourceUrl,
+                                                })}
+                                                className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-lux-200 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                                                aria-label={`Preview comparable image for ${comp.title}`}
+                                            >
+                                                <img
+                                                    src={previewImageUrl}
+                                                    alt={comp.title !== FALLBACK_COMPARABLE_TITLE ? comp.title : `${result.brand} ${result.model} comparable`}
+                                                    className="h-full w-full object-cover"
+                                                    loading="lazy"
+                                                    onError={() => {
+                                                        setFailedComparableImages(prev => ({ ...prev, [previewImageUrl]: true }))
+                                                    }}
+                                                />
+                                                <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                                            </button>
                                         ) : (
                                             <div className="w-12 h-12 rounded-lg border border-lux-200 bg-white shrink-0 grid place-items-center text-xs text-lux-400 font-medium">
                                                 No image
@@ -285,6 +300,14 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                     Powered by {result.provider} · {result.brand} {result.model}
                 </p>
             </div>
+            <ImageLightbox
+                isOpen={Boolean(lightboxImage)}
+                imageUrl={lightboxImage?.url ?? null}
+                title={lightboxImage?.title}
+                subtitle={lightboxImage?.subtitle}
+                sourceUrl={lightboxImage?.sourceUrl}
+                onClose={() => setLightboxImage(null)}
+            />
         </div>
     )
 }

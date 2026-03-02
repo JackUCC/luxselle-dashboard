@@ -24,6 +24,9 @@ import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import SidecarView from '../../components/sidecar/SidecarView'
 import AiThinkingDots from '../../components/feedback/AiThinkingDots'
+import AiProgressSteps, { type AiProgressStep } from '../../components/feedback/AiProgressSteps'
+import LiveResultPreview from '../../components/feedback/LiveResultPreview'
+import ImageLightbox from '../../components/feedback/ImageLightbox'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
@@ -77,6 +80,18 @@ const CONDITION_OPTIONS = [
 ]
 
 const SERIAL_BRAND_OPTIONS = SERIAL_CHECK_BRANDS.map((brand) => ({ value: brand, label: brand }))
+
+const PRICE_CHECK_STEPS: AiProgressStep[] = [
+  { label: 'Searching listings', detail: 'Scanning Irish and EU marketplaces for comparables.' },
+  { label: 'Analysing price fit', detail: 'Reviewing condition and title relevance.' },
+  { label: 'Building sourcing report', detail: 'Calculating targets and confidence.' },
+]
+
+const SERIAL_STEPS: AiProgressStep[] = [
+  { label: 'Decoding serial', detail: 'Applying brand-specific date/serial patterns.' },
+  { label: 'Cross-checking with AI', detail: 'Running AI fallback when confidence is low.' },
+  { label: 'Merging market guidance', detail: 'Combining decode output with price baseline.' },
+]
 
 function getDecisionToneStyles(tone: DecisionTone): {
   wrapper: string
@@ -134,6 +149,7 @@ export default function UnifiedIntelligenceView() {
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const [failedCompImages, setFailedCompImages] = useState<Record<number, boolean>>({})
   const [loadedCompImages, setLoadedCompImages] = useState<Record<number, boolean>>({})
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string; sourceUrl?: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const autoRanQueryRef = useRef<string | null>(null)
 
@@ -515,9 +531,12 @@ export default function UnifiedIntelligenceView() {
                 {isResearching ? 'Researching...' : 'Research market'}
               </button>
               {isResearching && (
-                <div className="relative h-1 w-full overflow-hidden rounded-full bg-lux-100">
-                  <div className="absolute inset-y-0 left-0 w-1/4 rounded-full bg-lux-gold animate-progress-indeterminate" />
-                </div>
+                <AiProgressSteps
+                  isActive={isResearching}
+                  steps={PRICE_CHECK_STEPS}
+                  compact
+                  title="Market research progress"
+                />
               )}
               {priceCheckError && (
                 <div className="flex flex-col items-center gap-2">
@@ -582,6 +601,16 @@ export default function UnifiedIntelligenceView() {
               </button>
             </div>
 
+            {isSerialLoading && (
+              <AiProgressSteps
+                isActive={isSerialLoading}
+                steps={SERIAL_STEPS}
+                compact
+                title="Serial analysis progress"
+                className="mt-3"
+              />
+            )}
+
             {serialError && (
               <p className="mt-3 text-sm font-medium text-rose-600">{serialError}</p>
             )}
@@ -637,11 +666,19 @@ export default function UnifiedIntelligenceView() {
 
         <div className="space-y-6">
           {!result ? (
-            <div className="lux-card border-dashed border-2 border-lux-200 min-h-[240px] flex flex-col items-center justify-center p-6 animate-bento-enter stagger-2">
-              <Search className="h-12 w-12 mb-4 opacity-30 text-lux-400" />
-              <p className="font-medium text-lux-600">Run market research to start decisioning</p>
-              <p className="text-sm text-lux-500 mt-1">You will get price targets, comparables, and a landed-cost prefill.</p>
-            </div>
+            isResearching ? (
+              <LiveResultPreview
+                isActive={isResearching}
+                query={query}
+                className="animate-bento-enter stagger-2"
+              />
+            ) : (
+              <div className="lux-card border-dashed border-2 border-lux-200 min-h-[240px] flex flex-col items-center justify-center p-6 animate-bento-enter stagger-2">
+                <Search className="h-12 w-12 mb-4 opacity-30 text-lux-400" />
+                <p className="font-medium text-lux-600">Run market research to start decisioning</p>
+                <p className="text-sm text-lux-500 mt-1">You will get price targets, comparables, and a landed-cost prefill.</p>
+              </div>
+            )
           ) : (
             <div className="lux-card p-6 space-y-6 animate-bento-enter stagger-2">
               <div className="flex items-center justify-between">
@@ -724,7 +761,21 @@ export default function UnifiedIntelligenceView() {
                       return (
                         <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 justify-between text-sm py-2 border-b border-lux-100 last:border-0">
                           <div className="flex min-w-0 w-full sm:flex-1 items-start gap-2.5">
-                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!previewImageUrl || failedCompImages[index]) return
+                                setLightboxImage({
+                                  url: previewImageUrl,
+                                  title: comp.title,
+                                  subtitle: comp.source,
+                                  sourceUrl: comp.sourceUrl,
+                                })
+                              }}
+                              className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-lux-200 bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                              aria-label={previewImageUrl ? `Preview comparable image for ${comp.title}` : 'No comparable image available'}
+                              disabled={!previewImageUrl || failedCompImages[index]}
+                            >
                               {previewImageUrl && !failedCompImages[index] ? (
                                 <>
                                   {!loadedCompImages[index] && (
@@ -734,7 +785,7 @@ export default function UnifiedIntelligenceView() {
                                   )}
                                   <img
                                     src={previewImageUrl}
-                                    alt=""
+                                    alt={`Comparable listing: ${comp.title}`}
                                     loading="lazy"
                                     className={`h-full w-full object-cover ${loadedCompImages[index] ? 'opacity-100' : 'opacity-0'}`}
                                     onLoad={() => setLoadedCompImages((prev) => ({ ...prev, [index]: true }))}
@@ -749,7 +800,10 @@ export default function UnifiedIntelligenceView() {
                                   <ImageIcon className="h-4 w-4 text-lux-300" />
                                 </div>
                               )}
-                            </div>
+                              {previewImageUrl && !failedCompImages[index] && (
+                                <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                              )}
+                            </button>
                             <div className="min-w-0 pr-1">
                               {comp.sourceUrl ? (
                                 <a
@@ -841,7 +895,15 @@ export default function UnifiedIntelligenceView() {
                   {visualResults.map((visualResult, index) => (
                     <div key={index} className="rounded-lux-card border border-lux-200 overflow-hidden bg-white">
                       {visualResult.imageUrl ? (
-                        <img src={visualResult.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setLightboxImage({ url: visualResult.imageUrl ?? '', title: visualResult.title, subtitle: `${Math.round(visualResult.score * 100)}% match` })}
+                          className="group relative block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                          aria-label={`Preview image for ${visualResult.title ?? 'visual result'}`}
+                        >
+                          <img src={visualResult.imageUrl} alt={visualResult.title ?? 'Visual result'} className="w-full aspect-square object-cover" />
+                          <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                        </button>
                       ) : (
                         <div className="w-full aspect-square bg-lux-50 flex items-center justify-center">
                           <ImageIcon className="h-8 w-8 text-lux-400" />
@@ -881,6 +943,14 @@ export default function UnifiedIntelligenceView() {
           </details>
         </div>
       </div>
+      <ImageLightbox
+        isOpen={Boolean(lightboxImage)}
+        imageUrl={lightboxImage?.url ?? null}
+        title={lightboxImage?.title}
+        subtitle={lightboxImage?.subtitle}
+        sourceUrl={lightboxImage?.sourceUrl}
+        onClose={() => setLightboxImage(null)}
+      />
     </PageLayout>
   )
 }
