@@ -5,16 +5,16 @@ milestone_name: UI Polish Demo Readiness
 current_phase: Polish-4
 current_phase_name: Demo QA Sweep
 current_plan: 01
-status: planning
-stopped_at: Phase Polish-3 executed and summarized
-last_updated: "2026-03-02T13:30:00.000Z"
+status: complete
+stopped_at: UI Polish milestone completed (Polish-4 / Plan 01)
+last_updated: "2026-03-02T12:25:00.000Z"
 last_activity: 2026-03-02
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -24,7 +24,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core Value:** Every purchase decision runs through this tool — it needs to feel as sharp as the decisions it supports.
-**Current Focus:** UI Polish milestone — styling, animation, and UX only. No logic changes.
+**Current Focus:** UI Polish milestone completion and handoff to deferred v3.0 phases.
 
 ## Current Position
 
@@ -32,11 +32,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 **Current Phase Name:** Demo QA Sweep
 **Total Phases:** 4
 **Current Plan:** 01
-**Total Plans in Phase:** TBD
-**Status:** Ready to plan
-**Progress:** [███████░░░] 75%
+**Total Plans in Phase:** 1
+**Status:** Milestone complete
+**Progress:** [██████████] 100%
 **Last Activity:** 2026-03-02
-**Last Activity Description:** Completed Phase Polish-3 / Plan 01 (AI loaders, inline previews, and lightboxes). Phase Polish-4 is next.
+**Last Activity Description:** Completed Phase Polish-4 / Plan 01 with full unit + targeted e2e validation and requirement QA-01 closure.
 
 ## Decisions Made
 
@@ -48,25 +48,26 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 | Polish-3 | Lightbox or popover for image preview | Quick-access preview without navigation disruption |
 | All | Framer Motion 12 for all animations | Already installed — no new dependencies |
 | Roadmap | Deferred v3.0 phases (10-12) until after this milestone | Polish milestone ships first, then resume Agentic Intelligence work |
+| Polish-4 | E2E stack sets `SKIP_AUTH=true` in dev-only script | Keeps Playwright happy-path setup calls deterministic without production auth wiring |
 
 ## Pending Todos
 
-- Plan Phase Polish-4: Demo QA Sweep (QA-01)
-- Run happy-path walkthrough across all 11 pages and confirm no blank/broken states
-- Validate that all newly added phase-1 through phase-3 polish effects render cleanly in both overview and sidecar flows
+- Resume deferred Phase 10 execution (`.planning/phases/10-ai-reliability-provider-diagnostics/10-01-PLAN.md`)
+- Prepare release notes for UI Polish milestone completion
+- Run optional full e2e matrix beyond targeted Phase 4 suite if pre-deploy confidence uplift is needed
 
 ## Blockers
 
-Test suite execution is sandbox-limited (`EPERM` when route tests bind listeners).
+None.
 
 ## Milestone Context
 
 **Previous Milestone (Complete):** v1.0 Supplier Engine — Phases 1-9 all complete as of 2026-03-01.
-**Current Milestone:** UI Polish — 4 phases, 8 requirements, styling only.
+**Current Milestone:** UI Polish — 4 phases, 8 requirements, complete.
 **Next Milestone (Deferred):** v3.0 Agentic Intelligence — Phases 10-12 resume after this milestone ships.
 
 ## Session
 
-**Last Date:** 2026-03-02T13:30:00.000Z
-**Stopped At:** Phase Polish-3 executed and summarized
-**Resume File:** .planning/phases/Polish-3-ai-loaders-and-previews/Polish-3-01-SUMMARY.md
+**Last Date:** 2026-03-02T12:25:00.000Z
+**Stopped At:** UI Polish milestone completed (Polish-4 / Plan 01)
+**Resume File:** .planning/phases/Polish-4-demo-qa-sweep/Polish-4-01-SUMMARY.md

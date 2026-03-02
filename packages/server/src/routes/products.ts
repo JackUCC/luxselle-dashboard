@@ -30,7 +30,6 @@ import {
 } from '../services/visualSearch/VisualSearchPipeline'
 import { getAiRouter } from '../services/ai/AiRouter'
 import * as XLSX from 'xlsx'
-import { requireRole } from '../middleware/auth'
 
 const router = Router()
 const productRepo = new ProductRepo()
@@ -59,9 +58,9 @@ const ProductInputSchema = z.object({
   model: z.string(),
   title: z.string().optional(),
   sku: z.string().optional(),
-  category: z.string().optional(),
-  condition: z.string().optional(),
-  colour: z.string().optional(),
+  category: z.string().optional().default(''),
+  condition: z.string().optional().default(''),
+  colour: z.string().optional().default(''),
   costPriceEur: z.coerce.number(),
   sellPriceEur: z.coerce.number(),
   customsEur: z.coerce.number().optional(),

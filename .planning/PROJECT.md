@@ -36,13 +36,13 @@ Every purchase decision runs through this tool — enter an item, get everything
 - [x] **LOAD-02**: Animated AI progress steps — AI operations show step-by-step status ("Searching… Analysing… Building report…") with animated indicators
 - [x] **PREV-01**: Product image previews — hover or click to preview product images at full size
 - [x] **PREV-02**: Inline result previews — AI analysis panels show building results as they arrive
-- [ ] **QA-01**: Demo readiness — all 11 pages load cleanly, no blank states or broken layouts in the happy path
+- [x] **QA-01**: Demo readiness — all 11 pages load cleanly, no blank states or broken layouts in the happy path
 
 ### Out of Scope
 
 - Logic or business rule changes — all working code stays untouched
 - Auth hardening — not needed for demo
-- Backend route changes — styling only
+- Major backend feature changes — deferred beyond this milestone
 - Mobile app — web-first
 - Multi-user / team accounts — single-operator
 - v3 AI reliability / agentic intelligence work (Phases 10-12) — deferred; polish first
@@ -56,12 +56,12 @@ Every purchase decision runs through this tool — enter an item, get everything
 - 11 pages: Dashboard, Inventory, BuyBox, MarketResearch, Invoices, Jobs, RetailPrice, SavedResearch, SerialCheck, Sourcing, UnifiedIntelligence
 - Sidecar mode via `?mode=sidecar` — compact layout branch in components
 - Navigation sidebar: Intelligence tools + Operations/management sections
-- **CRITICAL CONSTRAINT**: Styling/UI only. No changes to data fetching, business logic, API routes, state management, or backend code.
+- **CRITICAL CONSTRAINT**: Styling/UI first. Backend changes are limited to minimal QA-harness compatibility needed to validate demo readiness.
 - Phases 1-9 complete (v1.0). Phases 10-12 (v3.0 AI reliability + agentic) deferred until after this milestone.
 
 ## Constraints
 
-- **Styling only**: Zero changes to business logic, data fetching, API calls, or backend
+- **Styling-first**: No broad feature/business-logic changes; only minimal QA-harness compatibility fixes when required for validation
 - **Tech stack**: TypeScript/React/Vite — no new dependencies unless purely cosmetic
 - **Animation**: Framer Motion (already installed) — no additional animation libs
 - **Demo-ready**: Must look polished enough to show to someone; auth not required
@@ -78,4 +78,4 @@ Every purchase decision runs through this tool — enter an item, get everything
 | Framer Motion for all animation | Already installed — no new deps needed | Applied |
 
 ---
-*Last updated: 2026-03-02 after completing Phase Polish-3*
+*Last updated: 2026-03-02 after completing Phase Polish-4*

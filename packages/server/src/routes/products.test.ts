@@ -7,29 +7,48 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import { ZodError } from 'zod'
 import { productsRouter } from './products'
 
+const resolveRoleFromRequest = (req: Request): string => {
+  const explicitRole = req.headers['x-test-role']
+  if (typeof explicitRole === 'string' && explicitRole.length > 0) {
+    return explicitRole
+  }
+
+  const authHeader = req.headers.authorization
+  if (authHeader === 'Bearer admin-token') return 'admin'
+  if (authHeader === 'Bearer operator-token') return 'operator'
+  if (authHeader === 'Bearer readOnly-token') return 'readOnly'
+
+  return 'readOnly'
+}
 
 vi.mock('../middleware/auth', () => ({
-  requireAuth: (req: Request, _res: Response, next: NextFunction) => {
+  requireAuth: (req: Request & { user?: { uid: string; role: string; orgId: string } }, _res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization
     if (!authHeader?.startsWith('Bearer ')) {
       next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
       return
     }
-    ;(req as Request & { user?: { role: string } }).user = { role: String(req.headers['x-test-role'] ?? 'readOnly') }
+    const role = resolveRoleFromRequest(req)
+    req.user = { uid: `${role}-user`, role, orgId: 'default' }
     next()
   },
-  requireRole: (...allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction) => {
+  requireRole: (...allowedRoles: string[]) => (req: Request & { user?: { role: string } }, _res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization
     if (!authHeader?.startsWith('Bearer ')) {
       next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
       return
     }
-    const role = String(req.headers['x-test-role'] ?? 'readOnly')
+
+    const role = req.user?.role ?? resolveRoleFromRequest(req)
+
     if (!allowedRoles.includes(role)) {
       next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
       return
     }
-    ;(req as Request & { user?: { role: string } }).user = { role }
+
+    if (!req.user) {
+      req.user = { role }
+    }
     next()
   },
 }))
@@ -108,38 +127,6 @@ vi.mock('../config/firebase', () => ({
     })),
   },
   storage: {},
-}))
-
-vi.mock('../middleware/auth', () => ({
-  requireAuth: (req: Request & { user?: { uid: string; role: string; orgId: string } }, _res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization
-    if (authHeader === 'Bearer admin-token') {
-      req.user = { uid: 'admin-user', role: 'admin', orgId: 'default' }
-      next()
-      return
-    }
-
-    if (authHeader === 'Bearer operator-token') {
-      req.user = { uid: 'operator-user', role: 'operator', orgId: 'default' }
-      next()
-      return
-    }
-
-    next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
-  },
-  requireRole: (...allowedRoles: string[]) => (req: Request & { user?: { role: string } }, _res: Response, next: NextFunction) => {
-    if (!req.user) {
-      next({ status: 401, code: 'UNAUTHORIZED', message: 'Not authenticated' })
-      return
-    }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
-      return
-    }
-
-    next()
-  },
 }))
 
 interface TestError {

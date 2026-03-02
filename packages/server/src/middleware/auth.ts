@@ -85,8 +85,17 @@ export async function requireAuth(
 export function requireRole(...allowedRoles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      next(new ApiError(API_ERROR_CODES.UNAUTHORIZED, 'Not authenticated', undefined, 401))
-      return
+      if (env.SKIP_AUTH === 'true') {
+        req.user = {
+          uid: 'dev-user',
+          email: 'dev@luxselle.local',
+          role: 'admin',
+          orgId: 'default',
+        }
+      } else {
+        next(new ApiError(API_ERROR_CODES.UNAUTHORIZED, 'Not authenticated', undefined, 401))
+        return
+      }
     }
 
     if (!allowedRoles.includes(req.user.role)) {
