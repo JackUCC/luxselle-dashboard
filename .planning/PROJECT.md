@@ -6,7 +6,7 @@ Luxselle Dashboard is an internal sourcing intelligence tool for luxury resale. 
 
 ## Core Value
 
-Every purchase decision runs through this tool — enter an item, get everything you need to know before committing.
+Every purchase decision runs through this tool — enter an item, get everything you need to know before committing. It needs to feel as sharp as the decisions it supports.
 
 ## Requirements
 
@@ -20,55 +20,62 @@ Every purchase decision runs through this tool — enter an item, get everything
 - ✓ Inventory management — track stock, status, product details
 - ✓ Sourcing tracker — manage supplier leads and deal pipeline
 - ✓ Invoices — create, save, export invoices
-- ✓ Competitor Activity feed — track competitor listing activity
-- ✓ Overview/Dashboard — summary of key metrics
+- ✓ Jobs — background job tracking and visibility
+- ✓ Overview/Dashboard — summary of key metrics and activity feed
+- ✓ Unified Sourcing Intelligence — `/evaluate` with price + serial + landed-cost in one flow
+- ✓ Sidecar mode — compact `?mode=sidecar` widget for quick lookups
+- ✓ Navigation — grouped sidebar with Intelligence / Operations sections
+- ✓ Dynamic AI routing — Perplexity + OpenAI fallback, per-task timeouts
 
-### Active (v2 complete, v3 planned)
+### Active (UI Polish Milestone)
 
-- [x] Unified Sourcing Intelligence page — `/evaluate` route with price + optional serial + landed-cost in one flow
-- [x] Design consistency pass — uniform card styles, spacing, typography, empty/loading states
-- [x] Sidebar visual cleanup — Intelligence / Operations groups, clean icons and spacing
-- [x] Dynamic AI routing — Perplexity preferred for web search, OpenAI for structured extraction; automatic fallback
-- [x] Price checker reliability — provenance filter, two-stage strategy, dedup, outlier filter, clearer UX
-- [ ] **STAB-01**: AI provider reliability — surface "provider unavailable" errors in UI instead of silent €0 fallback
-- [ ] **INTEL-02**: Agentic Market Intelligence — background monitoring + on-demand deep-dive research
-- [ ] **QUAL-01**: Inventory + Invoice E2E verification — confirm all flows, edge cases, test coverage
-- [ ] **ML-01**: ML/API advancement — smarter price predictions, confidence scores, trend signals
+- [ ] **STYLE-01**: Advanced navbar — bold visual hierarchy, smooth hover states, active indicators, polished transitions
+- [ ] **STYLE-02**: Sidecar widget visual treatment — looks professional and scannable in compact mode
+- [ ] **ANIM-01**: Bold, energetic animations — Framer Motion entrance animations, micro-interactions, smooth transitions across all 11 pages
+- [ ] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching
+- [ ] **LOAD-02**: Animated AI progress steps — AI operations show step-by-step status ("Searching… Analysing… Building report…") with animated indicators
+- [ ] **PREV-01**: Product image previews — hover or click to preview product images at full size
+- [ ] **PREV-02**: Inline result previews — AI analysis panels show building results as they arrive
+- [ ] **QA-01**: Demo readiness — all 11 pages load cleanly, no blank states or broken layouts in the happy path
 
 ### Out of Scope
 
-- Mobile app — web-first; mobile can come later
-- Customer-facing features — internal tool only
-- Multi-user / team accounts — single-operator for now
-- Real-time notifications / push — not a priority for v1 polish milestone
-- Public marketplace integrations (listing to Vestiaire etc.) — out of scope this cycle
+- Logic or business rule changes — all working code stays untouched
+- Auth hardening — not needed for demo
+- Backend route changes — styling only
+- Mobile app — web-first
+- Multi-user / team accounts — single-operator
+- v3 AI reliability / agentic intelligence work (Phases 10-12) — deferred; polish first
 
 ## Context
 
 - TypeScript monorepo: React/Vite frontend + Express backend + shared Zod schemas
-- Firebase Firestore (emulator local, production GCP)
-- Deploy: Vercel (frontend), Railway (backend)
-- AI provider: OpenAI (with mock for tests)
-- Navigation has two sections: "check" (tools) and "manage" (operations)
-- Current pages: Overview, Sourcing Intelligence (/evaluate), Retail Price, Market Research, Saved Research, Inventory, Sourcing, Invoices
-- Competitor Activity exists as a component/feed but not a dedicated nav item
-- Legacy /buy-box and /serial-check routes redirect to /evaluate for compatibility
+- Firebase Firestore (emulator local, production GCP); Vercel (frontend) + Railway (backend)
+- Framer Motion 12 already installed — primary tool for all animations
+- Tailwind CSS 3.4 + tailwindcss-animate already configured
+- 11 pages: Dashboard, Inventory, BuyBox, MarketResearch, Invoices, Jobs, RetailPrice, SavedResearch, SerialCheck, Sourcing, UnifiedIntelligence
+- Sidecar mode via `?mode=sidecar` — compact layout branch in components
+- Navigation sidebar: Intelligence tools + Operations/management sections
+- **CRITICAL CONSTRAINT**: Styling/UI only. No changes to data fetching, business logic, API routes, state management, or backend code.
+- Phases 1-9 complete (v1.0). Phases 10-12 (v3.0 AI reliability + agentic) deferred until after this milestone.
 
 ## Constraints
 
-- **Tech Stack**: TypeScript/React/Vite + Express — no framework changes
-- **Testing**: All changes must pass existing Vitest suite; new flows need tests
-- **AI Costs**: Agentic scraping must be cost-aware — background jobs batched, not per-request
-- **No regressions**: Inventory, Sourcing, Invoices must continue to work while being verified
+- **Styling only**: Zero changes to business logic, data fetching, API calls, or backend
+- **Tech stack**: TypeScript/React/Vite — no new dependencies unless purely cosmetic
+- **Animation**: Framer Motion (already installed) — no additional animation libs
+- **Demo-ready**: Must look polished enough to show to someone; auth not required
+- **No regressions**: Existing Vitest suite must continue to pass
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Description-first on combined page | User starts with item description, not serial — serial is supplementary | — Pending |
-| Agentic intel = background + on-demand | User wants always-on monitoring AND ability to trigger deep dives | — Pending |
-| Sidebar: polish not restructure | Visual clutter is the issue, not the information architecture | — Pending |
-| Inventory: verify don't rebuild | Already works well; needs testing not rewriting | — Pending |
+| Styling-only constraint | Logic is working; regression risk not worth it for a polish milestone | — Pending |
+| Bold & energetic visual style | Tool should feel as decisive as the sourcing decisions it supports | — Pending |
+| Animated AI progress steps (not streaming) | More dramatic and legible than raw streaming text for a demo | — Pending |
+| Defer v3 AI reliability phases | Polish first; resume Phase 10 once the tool looks the part | — Pending |
+| Framer Motion for all animation | Already installed — no new deps needed | — Pending |
 
 ---
-*Last updated: 2026-03-01 after Phase 9 completion + v3 planning + stabilization fixes*
+*Last updated: 2026-03-02 after UI polish milestone kickoff (Phases 1-9 complete)*

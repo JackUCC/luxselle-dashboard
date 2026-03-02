@@ -120,6 +120,50 @@
 - v3 requirements: 2 total, 0 satisfied (STAB-01, QUAL-01 pending)
 - Total unmapped: 0
 
+## UI Polish Milestone Requirements
+
+**Added:** 2026-03-02
+**Milestone goal:** Demo-ready UI — bold, energetic, polished across all 11 pages. Styling only. No logic changes.
+
+### Styling & Layout
+
+- [ ] **STYLE-01**: Advanced navbar — bold visual hierarchy, smooth hover states, active route indicators, polished transitions
+- [ ] **STYLE-02**: Sidecar widget visual treatment — professional, scannable, and polished in compact `?mode=sidecar` mode
+
+### Animations
+
+- [ ] **ANIM-01**: Bold, energetic animations via Framer Motion — entrance animations, micro-interactions, and smooth transitions across all 11 pages
+
+### Loading States
+
+- [ ] **LOAD-01**: Skeleton loading screens — all data-driven pages show skeleton placeholders while fetching (Dashboard, Inventory, Invoices, Sourcing, Jobs, Market Research, Saved Research)
+- [ ] **LOAD-02**: Animated AI progress steps — AI operations (market research, price check, sourcing analysis) show step-by-step status indicators ("Searching… Analysing… Building report…")
+
+### Previews
+
+- [ ] **PREV-01**: Product image previews — hover or click to preview product images at full size (lightbox or popover)
+- [ ] **PREV-02**: Inline result previews — AI analysis panels show partial results building as they arrive
+
+### Quality Assurance
+
+- [ ] **QA-01**: Demo readiness — all 11 pages load cleanly with no blank states, broken layouts, or console errors in the happy path
+
+## UI Polish Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| STYLE-01 | Phase Polish-1 | Pending |
+| STYLE-02 | Phase Polish-1 | Pending |
+| ANIM-01 | Phase Polish-2 | Pending |
+| LOAD-01 | Phase Polish-2 | Pending |
+| LOAD-02 | Phase Polish-3 | Pending |
+| PREV-01 | Phase Polish-3 | Pending |
+| PREV-02 | Phase Polish-3 | Pending |
+| QA-01 | Phase Polish-4 | Pending |
+
+**Coverage:**
+- UI polish requirements: 8 total, 0 satisfied
+
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-01 after Phase 9 completion + v3 planning*
+*Last updated: 2026-03-02 after UI polish milestone kickoff*
