@@ -46,6 +46,7 @@ function formatInsight(item: TrendingItem): string {
 
 export default function AiMarketPulseWidget() {
   const [items, setItems] = useState<TrendingItem[]>([])
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -55,11 +56,30 @@ export default function AiMarketPulseWidget() {
       .then((res) => {
         if (cancelled) return
         setItems(res.data.items.slice(0, 4))
+        setGeneratedAt(res.data.generatedAt ?? null)
       })
       .catch(() => { if (!cancelled) setError(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
+
+  const snapshotAgeMinutes = generatedAt
+    ? Math.max(0, Math.round((Date.now() - new Date(generatedAt).getTime()) / 60000))
+    : null
+  const freshnessLabel = snapshotAgeMinutes == null
+    ? 'Freshness unknown'
+    : snapshotAgeMinutes <= 5
+      ? 'Live'
+      : snapshotAgeMinutes <= 60
+        ? `Cached ${snapshotAgeMinutes}m`
+        : `Stale ${snapshotAgeMinutes}m`
+  const freshnessClass = snapshotAgeMinutes == null
+    ? 'bg-lux-100 text-lux-700'
+    : snapshotAgeMinutes <= 5
+      ? 'bg-emerald-100 text-emerald-800'
+      : snapshotAgeMinutes <= 60
+        ? 'bg-sky-100 text-sky-800'
+        : 'bg-amber-100 text-amber-800'
 
   return (
     <div className="lux-card p-5 animate-bento-enter stagger-9">
@@ -71,6 +91,14 @@ export default function AiMarketPulseWidget() {
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
+      </div>
+      <div className="mb-3">
+        <span
+          data-testid="ai-market-pulse-freshness"
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${freshnessClass}`}
+        >
+          {freshnessLabel}
         </span>
       </div>
 

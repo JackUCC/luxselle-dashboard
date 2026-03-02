@@ -147,6 +147,9 @@ describe('PriceCheckService', () => {
     expect(result.dataSource).toBe('web_search')
     expect(result.averageSellingPriceEur).toBe(3100)
     expect(result.comps).toHaveLength(2)
+    expect(result.confidenceBreakdown).toBeDefined()
+    expect(typeof result.confidenceBreakdown?.freshnessWeight).toBe('number')
+    expect(result.trendSignal).toBeDefined()
   })
 
   it('returns degraded ai_fallback result when extraction returns too few valid comparables', async () => {

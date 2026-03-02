@@ -29,11 +29,27 @@ export interface MarketResearchResult {
     marketLiquidity: 'fast_moving' | 'moderate' | 'slow_moving'
     recommendation: 'strong_buy' | 'buy' | 'hold' | 'pass'
     confidence: number
+    confidenceBreakdown?: {
+        evidenceCount: number
+        provenanceRatio: number
+        freshnessWeight: number
+        trendAgreement: number
+        score: number
+    }
     marketSummary: string
     keyInsights: string[]
     riskFactors: string[]
     comparables: MarketComparable[]
+    trendSignal?: 'up' | 'down' | 'flat' | 'unknown'
     seasonalNotes?: string
+    intel?: {
+        runId?: string
+        mode?: 'standard' | 'background' | 'deep_dive'
+        snapshotAgeMinutes?: number
+        freshnessStatus?: 'live' | 'fresh' | 'stale' | 'expired' | 'unknown'
+        generatedAt?: string
+        cached?: boolean
+    }
 }
 
 export interface MarketResearchResultPayload extends Omit<MarketResearchResult, 'comparables'> {

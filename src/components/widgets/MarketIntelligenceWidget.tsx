@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Camera } from 'lucide-react'
 import SectionLabel from '../design-system/SectionLabel'
 import PredictiveInput from '../design-system/PredictiveInput'
 import { POPULAR_SUGGESTIONS } from '../../lib/searchSuggestions'
+import { apiGet } from '../../lib/api'
 
 const POPULAR_SEARCHES = [
   'Chanel Classic Flap Medium',
@@ -14,8 +15,40 @@ const POPULAR_SEARCHES = [
 
 export default function MarketIntelligenceWidget() {
   const [query, setQuery] = useState('')
+  const [snapshotStatus, setSnapshotStatus] = useState<string>('No cached snapshot yet')
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    apiGet<{
+      data: Array<{
+        brand: string
+        model: string
+        snapshotAgeMinutes: number
+        freshnessStatus: 'live' | 'fresh' | 'stale' | 'expired' | 'unknown'
+      }>
+    }>('/market-research/snapshots?limit=1')
+      .then((res) => {
+        if (cancelled) return
+        const latest = res.data?.[0]
+        if (!latest) {
+          setSnapshotStatus('No cached snapshot yet')
+          return
+        }
+        if (latest.freshnessStatus === 'live') {
+          setSnapshotStatus(`Live snapshot · ${latest.brand} ${latest.model}`)
+          return
+        }
+        setSnapshotStatus(`Cached ${latest.snapshotAgeMinutes}m · ${latest.brand} ${latest.model}`)
+      })
+      .catch(() => {
+        if (!cancelled) setSnapshotStatus('Snapshot status unavailable')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,6 +115,15 @@ export default function MarketIntelligenceWidget() {
       </form>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span
+          data-testid="market-intelligence-snapshot-status"
+          className="rounded-full bg-lux-100 px-2.5 py-1 text-[11px] font-semibold text-lux-700"
+        >
+          {snapshotStatus}
+        </span>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium uppercase tracking-wider text-lux-400">
           Popular:
         </span>

@@ -706,6 +706,18 @@ router.post('/:id/transactions', requireRole('operator', 'admin'), async (req, r
     }
 
     const input = TransactionInputSchema.parse(req.body)
+    if (input.type === 'sale' && input.amountEur <= 0) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'Sale amount must be greater than 0'))
+      return
+    }
+    if (input.type === 'sale' && product.status === 'sold') {
+      res.status(409).json(formatApiError(API_ERROR_CODES.CONFLICT, 'Product is already sold'))
+      return
+    }
+    if (input.type === 'sale' && (product.quantity ?? 1) <= 0) {
+      res.status(409).json(formatApiError(API_ERROR_CODES.CONFLICT, 'Product quantity must be greater than 0 to record a sale'))
+      return
+    }
     const now = new Date().toISOString()
 
     // Create transaction
@@ -762,6 +774,18 @@ router.post('/:id/sell-with-invoice', requireRole('operator', 'admin'), async (r
     }
 
     const input = SellWithInvoiceInputSchema.parse(req.body)
+    if (input.amountEur <= 0) {
+      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'amountEur must be greater than 0'))
+      return
+    }
+    if (product.status === 'sold') {
+      res.status(409).json(formatApiError(API_ERROR_CODES.CONFLICT, 'Product is already sold'))
+      return
+    }
+    if ((product.quantity ?? 1) <= 0) {
+      res.status(409).json(formatApiError(API_ERROR_CODES.CONFLICT, 'Product quantity must be greater than 0 to sell'))
+      return
+    }
     const now = new Date().toISOString()
 
     const transaction = await transactionRepo.create({

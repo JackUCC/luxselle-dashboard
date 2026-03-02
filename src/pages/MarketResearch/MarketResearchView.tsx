@@ -78,6 +78,19 @@ interface CompetitorFeedResult {
     generatedAt: string
 }
 
+interface DeepDiveResponse {
+    data: {
+        runId: string
+        result: MarketResearchResultPayload
+        snapshot: {
+            id: string
+            generatedAt: string
+            freshnessStatus: 'live' | 'fresh' | 'stale' | 'expired' | 'unknown'
+            snapshotAgeMinutes: number
+        }
+    }
+}
+
 interface MarketResearchFormData {
     brand: string
     model: string
@@ -191,6 +204,25 @@ function normalizeMarketResearchResult(result: MarketResearchResult): MarketRese
     }
 }
 
+function freshnessTone(status?: MarketResearchResult['intel'] extends { freshnessStatus?: infer T } ? T : string): string {
+    if (status === 'live') return 'bg-emerald-100 text-emerald-800'
+    if (status === 'fresh') return 'bg-sky-100 text-sky-800'
+    if (status === 'stale') return 'bg-amber-100 text-amber-800'
+    if (status === 'expired') return 'bg-rose-100 text-rose-800'
+    return 'bg-lux-100 text-lux-700'
+}
+
+function freshnessLabel(result: MarketResearchResult): string {
+    const freshness = result.intel?.freshnessStatus ?? 'unknown'
+    const age = result.intel?.snapshotAgeMinutes
+    if (freshness === 'live') return 'Live'
+    if (typeof age === 'number') return `Cached · ${age}m`
+    if (freshness === 'fresh') return 'Fresh cache'
+    if (freshness === 'stale') return 'Stale cache'
+    if (freshness === 'expired') return 'Expired cache'
+    return 'Freshness unknown'
+}
+
 // ─── Brand tiers for cross-brand suggestions ──────────────────
 const BRAND_TIERS: Record<string, string[]> = {
     ultra:   ['Chanel', 'Hermès'],
@@ -242,6 +274,7 @@ export default function MarketResearchView() {
     const [isSaved, setIsSaved] = useState(false)
     const [isStarred, setIsStarred] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [isDeepDiveLoading, setIsDeepDiveLoading] = useState(false)
 
     const availableModels = useMemo(() => {
         if (!formData.brand) return []
@@ -358,6 +391,32 @@ export default function MarketResearchView() {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analysis failed'
             setResearchError(msg, formData)
             toast.error(msg)
+        }
+    }
+
+    const handleDeepDive = async () => {
+        if (!formData.brand || !formData.model) return
+        setIsDeepDiveLoading(true)
+        setFeedError(null)
+        try {
+            const { data } = await apiPost<DeepDiveResponse>('/market-research/deep-dive', {
+                ...formData,
+                mode: 'deep_dive',
+                currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
+            })
+
+            const normalizedResult = normalizeMarketResearchResult({
+                ...data.result,
+                comparables: data.result.comparables.map(normalizeComparableImage),
+            })
+            setResearchSuccess(normalizedResult, formData)
+            toast.success(`Deep-dive complete (run ${data.runId.slice(0, 8)})`)
+        } catch (err) {
+            const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Deep-dive failed'
+            setResearchError(msg, formData)
+            toast.error(msg)
+        } finally {
+            setIsDeepDiveLoading(false)
         }
     }
 
@@ -692,9 +751,17 @@ export default function MarketResearchView() {
                         <div className="space-y-5">
                             {/* AI Executive Summary */}
                             <div className="relative lux-card p-5 overflow-hidden border-l-2 lux-market-accent-border">
-                                <div className="flex items-center gap-1.5 text-xs font-semibold text-lux-400 uppercase tracking-wide mb-2">
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-lux-400 uppercase tracking-wide">
                                     <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
                                     AI Analysis
+                                    </div>
+                                    <span
+                                        data-testid="market-research-freshness-badge"
+                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${freshnessTone(result.intel?.freshnessStatus)}`}
+                                    >
+                                        {freshnessLabel(result)}
+                                    </span>
                                 </div>
                                 <TypewriterText
                                     text={result.marketSummary}
@@ -716,6 +783,16 @@ export default function MarketResearchView() {
                                 result={result} 
                                 headerActions={
                                     <div className="flex items-center gap-2 border-l border-lux-200/50 pl-6">
+                                        <button
+                                            type="button"
+                                            onClick={handleDeepDive}
+                                            disabled={isDeepDiveLoading}
+                                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-sm font-medium text-lux-700 hover:bg-lux-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                            data-testid="market-research-deep-dive"
+                                        >
+                                            {isDeepDiveLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                                            Deep-dive
+                                        </button>
                                         <button
                                             type="button"
                                             onClick={handleSave}

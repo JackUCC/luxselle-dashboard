@@ -7,7 +7,7 @@ import type { PriceCheckComp, PriceCheckDiagnostics, PriceCheckInput, PriceCheck
 import { env } from '../../config/env'
 import { SearchService, type QueryContext, type SearchResponse } from '../search/SearchService'
 import { getFxService } from '../fx/FxService'
-import { dedupeCompsBySourceUrl, filterPriceOutliers, filterValidComps } from '../../lib/validation'
+import { clampConfidence, dedupeCompsBySourceUrl, filterPriceOutliers, filterValidComps } from '../../lib/validation'
 import { logger } from '../../middleware/requestId'
 import { ComparableImageEnrichmentService } from '../search/ComparableImageEnrichmentService'
 import { getAiRouter } from '../ai/AiRouter'
@@ -81,6 +81,16 @@ export class PriceCheckService {
     let comps: PriceCheckComp[] = []
     let dataSource: 'web_search' | 'ai_fallback' | 'provider_unavailable' = 'ai_fallback'
     let diagnostics: PriceCheckDiagnostics | undefined
+    let confidenceBreakdown:
+      | {
+        evidenceCount: number
+        provenanceRatio: number
+        freshnessWeight: number
+        trendAgreement: number
+        score: number
+      }
+      | undefined
+    let trendSignal: 'up' | 'down' | 'flat' | 'unknown' = 'unknown'
     let strategyUsed: 'strict' | 'broad' = 'strict'
 
     const queryContext = await this.searchService.expandQuery(
@@ -98,6 +108,14 @@ export class PriceCheckService {
         maxBuyEur: 0,
         maxBidEur: 0,
         dataSource: 'provider_unavailable',
+        confidenceBreakdown: this.buildConfidenceBreakdown({
+          evidenceCount: 0,
+          provenanceRatio: 0,
+          freshnessWeight: 0.2,
+          trendAgreement: 0,
+          score: 0.1,
+        }),
+        trendSignal: 'unknown',
         researchedAt: new Date().toISOString(),
         diagnostics: this.buildDiagnostics(searchResponse, queryContext, 'no_search_data', {
           strategyUsed: effectiveStrategy === 'auto' ? 'strict' : effectiveStrategy,
@@ -233,13 +251,21 @@ export class PriceCheckService {
         const validCount = allComps.length
 
         if (allComps.length >= 2) {
-          comps = this.orderCompsByMarketPriority(allComps)
-          averageSellingPriceEur = Math.round(
-            comps.reduce((sum, comp) => sum + comp.price, 0) / comps.length,
-          )
-          diagnostics = this.buildDiagnostics(searchResponse, queryContext, undefined, {
-            strategyUsed,
-            extractedCompCount: extractedCount,
+        comps = this.orderCompsByMarketPriority(allComps)
+        averageSellingPriceEur = Math.round(
+          comps.reduce((sum, comp) => sum + comp.price, 0) / comps.length,
+        )
+        trendSignal = this.inferTrendSignal(comps)
+        confidenceBreakdown = this.buildConfidenceBreakdown({
+          evidenceCount: validCount,
+          provenanceRatio: validCount > 0 ? Math.min(1, 0.6 + validCount * 0.08) : 0,
+          freshnessWeight: hasSearchData ? 1 : 0.3,
+          trendAgreement: trendSignal === 'unknown' ? 0.4 : 0.75,
+          score: clampConfidence(Math.min(0.95, 0.25 + validCount * 0.14)),
+        })
+        diagnostics = this.buildDiagnostics(searchResponse, queryContext, undefined, {
+          strategyUsed,
+          extractedCompCount: extractedCount,
             validCompCount: validCount,
             filteredOutCount,
           })
@@ -247,6 +273,14 @@ export class PriceCheckService {
         } else {
           comps = buildEmptyComparableFallback<PriceCheckComp>()
           averageSellingPriceEur = 0
+          trendSignal = 'unknown'
+          confidenceBreakdown = this.buildConfidenceBreakdown({
+            evidenceCount: validCount,
+            provenanceRatio: validCount > 0 ? 0.4 : 0,
+            freshnessWeight: hasSearchData ? 0.6 : 0.2,
+            trendAgreement: 0.3,
+            score: validCount > 0 ? 0.35 : 0.2,
+          })
           diagnostics = this.buildDiagnostics(
             searchResponse,
             queryContext,
@@ -274,8 +308,44 @@ export class PriceCheckService {
       maxBuyEur,
       maxBidEur,
       dataSource,
+      confidenceBreakdown,
+      trendSignal,
       researchedAt: new Date().toISOString(),
       diagnostics,
+    }
+  }
+
+  private inferTrendSignal(comps: PriceCheckComp[]): 'up' | 'down' | 'flat' | 'unknown' {
+    if (comps.length < 3) return 'unknown'
+    const prices = comps
+      .map((comp) => comp.price)
+      .filter((price) => Number.isFinite(price))
+      .sort((a, b) => a - b)
+    if (prices.length < 3) return 'unknown'
+    const lower = prices.slice(0, Math.floor(prices.length / 2))
+    const upper = prices.slice(Math.ceil(prices.length / 2))
+    const lowerAvg = lower.reduce((sum, value) => sum + value, 0) / lower.length
+    const upperAvg = upper.reduce((sum, value) => sum + value, 0) / upper.length
+    if (!Number.isFinite(lowerAvg) || !Number.isFinite(upperAvg) || lowerAvg <= 0) return 'unknown'
+    const delta = (upperAvg - lowerAvg) / lowerAvg
+    if (delta > 0.08) return 'up'
+    if (delta < -0.08) return 'down'
+    return 'flat'
+  }
+
+  private buildConfidenceBreakdown(input: {
+    evidenceCount: number
+    provenanceRatio: number
+    freshnessWeight: number
+    trendAgreement: number
+    score: number
+  }) {
+    return {
+      evidenceCount: Math.max(0, Math.round(input.evidenceCount)),
+      provenanceRatio: clampConfidence(input.provenanceRatio),
+      freshnessWeight: clampConfidence(input.freshnessWeight),
+      trendAgreement: clampConfidence(input.trendAgreement),
+      score: clampConfidence(input.score),
     }
   }
 

@@ -177,3 +177,76 @@ test('activity feed is visible on dashboard overview', async ({ page }) => {
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
   await expect(page.getByTestId('activity-feed')).toBeVisible()
 })
+
+test('dashboard intelligence widgets show snapshot freshness metadata', async ({ page }) => {
+  await page.route('**/api/dashboard/kpis', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          totalInventoryValue: 10_000,
+          totalInventoryPotentialValue: 14_000,
+          totalInventoryItems: 10,
+          activeSourcingPipeline: 5_000,
+        },
+      }),
+    })
+  })
+  await page.route('**/api/dashboard/profit-summary', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { totalCost: 0, totalRevenue: 0, totalProfit: 0, soldItems: 0 } }),
+    })
+  })
+  await page.route('**/api/dashboard/activity**', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) })
+  })
+  await page.route('**/api/market-research/trending', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          provider: 'openai',
+          generatedAt: new Date(Date.now() - 90 * 60_000).toISOString(),
+          items: [
+            {
+              brand: 'Chanel',
+              model: 'Classic Flap',
+              category: 'Handbag',
+              demandLevel: 'high',
+              priceTrend: 'stable',
+              avgPriceEur: 5000,
+              searchVolume: 'high',
+            },
+          ],
+        },
+      }),
+    })
+  })
+  await page.route('**/api/market-research/snapshots?limit=1', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'snap-1',
+            brand: 'Chanel',
+            model: 'Classic Flap',
+            generatedAt: new Date(Date.now() - 40 * 60_000).toISOString(),
+            freshnessStatus: 'fresh',
+            snapshotAgeMinutes: 40,
+          },
+        ],
+      }),
+    })
+  })
+
+  await page.goto('/')
+  await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
+  await expect(page.getByTestId('ai-market-pulse-freshness')).toBeVisible()
+  await expect(page.getByTestId('market-intelligence-snapshot-status')).toContainText(/Live|Cached/)
+})

@@ -38,10 +38,13 @@ const authHeaders = (role = 'admin') => ({
   'x-test-role': role,
 })
 
-const { mockList, mockGetById, mockGetSettings } = vi.hoisted(() => ({
+const { mockList, mockGetById, mockGetSettings, mockCreate, mockUpdate, mockPdfGenerate } = vi.hoisted(() => ({
   mockList: vi.fn(),
   mockGetById: vi.fn(),
   mockGetSettings: vi.fn(),
+  mockCreate: vi.fn(),
+  mockUpdate: vi.fn(),
+  mockPdfGenerate: vi.fn(),
 }))
 
 vi.mock('../repos/InvoiceRepo', () => ({
@@ -49,7 +52,9 @@ vi.mock('../repos/InvoiceRepo', () => ({
     list = mockList
     getById = mockGetById
     getNextInvoiceNumber = vi.fn().mockResolvedValue('INV-001')
-    create = vi.fn()
+    create = mockCreate
+    update = mockUpdate
+    remove = vi.fn()
   },
 }))
 vi.mock('../repos/SettingsRepo', () => ({
@@ -57,7 +62,11 @@ vi.mock('../repos/SettingsRepo', () => ({
     getSettings = mockGetSettings
   },
 }))
-vi.mock('../services/InvoicePdfService', () => ({ InvoicePdfService: class {} }))
+vi.mock('../services/InvoicePdfService', () => ({
+  InvoicePdfService: class {
+    generate = mockPdfGenerate
+  },
+}))
 
 interface TestError {
   status?: number
@@ -116,5 +125,54 @@ describe('GET /api/invoices/:id', () => {
     expect(res.body.error.code).toBe('NOT_FOUND')
     expect(res.body.error.message).toBeDefined()
     expect(typeof res.body.error.message).toBe('string')
+  })
+})
+
+describe('POST /api/invoices validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns 400 for fromInPerson payload with non-positive amount', async () => {
+    const res = await request(app)
+      .post('/api/invoices')
+      .set(authHeaders('operator'))
+      .send({
+        fromInPerson: true,
+        amountPaidEur: 0,
+        description: 'Counter sale',
+      })
+
+    expect(res.status).toBe(400)
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/invoices/:id/generate-pdf', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns 502 when PDF generation fails', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'inv1',
+      invoiceNumber: 'INV-001',
+      issuedAt: new Date().toISOString(),
+      lineItems: [{ description: 'Sale', quantity: 1, unitPriceEur: 100, vatPct: 23, amountEur: 100 }],
+      subtotalEur: 100,
+      vatEur: 23,
+      totalEur: 123,
+      currency: 'EUR',
+    })
+    mockGetSettings.mockResolvedValue({ vatRatePct: 23 })
+    mockPdfGenerate.mockRejectedValue(new Error('pdfmake exploded'))
+
+    const res = await request(app)
+      .post('/api/invoices/inv1/generate-pdf')
+      .set(authHeaders('operator'))
+      .send({})
+
+    expect(res.status).toBe(502)
+    expect(res.body.error.message).toMatch(/Failed to generate PDF/)
   })
 })

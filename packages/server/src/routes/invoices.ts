@@ -32,7 +32,7 @@ const CreateInvoiceFromSaleSchema = z.object({
   fromSale: z.literal(true),
   transactionId: z.string().optional(),
   productId: z.string().optional(),
-  amountEur: z.number().min(0),
+  amountEur: z.number().positive(),
   vatPct: z.number().min(0).max(100).optional(),
   customerName: z.string().optional().default(''),
   customerEmail: z.string().email().optional(),
@@ -43,7 +43,7 @@ const CreateInvoiceFromSaleSchema = z.object({
 const CreateInvoiceFromInPersonSchema = z.object({
   fromInPerson: z.literal(true),
   issuedAt: z.string().optional(),
-  amountPaidEur: z.number().min(0),
+  amountPaidEur: z.number().positive(),
   description: z.string().min(1),
   sku: z.string().optional(),
   customerName: z.string().optional().default(''),
@@ -316,7 +316,13 @@ router.post('/:id/generate-pdf', requireRole('operator', 'admin'), async (req, r
     try {
       pdfBuffer = await pdfService.generate(invoice, settings)
     } catch (err) {
-      throw new Error(`Failed to generate PDF: ${err instanceof Error ? err.message : String(err)}`)
+      res.status(502).json(
+        formatApiError(
+          API_ERROR_CODES.INTERNAL,
+          `Failed to generate PDF: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      )
+      return
     }
 
     // Upload to Firebase Storage

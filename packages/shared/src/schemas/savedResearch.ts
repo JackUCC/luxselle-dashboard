@@ -17,6 +17,7 @@ export type MarketComparable = z.infer<typeof MarketComparableSchema>
 
 export const MarketResearchResultSchema = z.object({
   provider: z.string(),
+  providerStatus: z.enum(['available', 'unavailable']).optional(),
   brand: z.string(),
   model: z.string(),
   estimatedMarketValueEur: z.number(),
@@ -29,12 +30,32 @@ export const MarketResearchResultSchema = z.object({
   marketLiquidity: z.enum(['fast_moving', 'moderate', 'slow_moving']),
   recommendation: z.enum(['strong_buy', 'buy', 'hold', 'pass']),
   confidence: z.number(),
+  confidenceBreakdown: z
+    .object({
+      evidenceCount: z.number().min(0),
+      provenanceRatio: z.number().min(0).max(1),
+      freshnessWeight: z.number().min(0).max(1),
+      trendAgreement: z.number().min(0).max(1),
+      score: z.number().min(0).max(1),
+    })
+    .optional(),
   marketSummary: z.string(),
   keyInsights: z.array(z.string()),
   riskFactors: z.array(z.string()),
   comparables: z.array(MarketComparableSchema),
   trendingScore: z.number().optional(),
+  trendSignal: z.enum(['up', 'down', 'flat', 'unknown']).optional(),
   seasonalNotes: z.string().optional(),
+  intel: z
+    .object({
+      runId: z.string().optional(),
+      mode: z.enum(['standard', 'background', 'deep_dive']).optional(),
+      snapshotAgeMinutes: z.number().min(0).optional(),
+      freshnessStatus: z.enum(['live', 'fresh', 'stale', 'expired', 'unknown']).optional(),
+      generatedAt: z.string().optional(),
+      cached: z.boolean().optional(),
+    })
+    .optional(),
 })
 
 export type MarketResearchResult = z.infer<typeof MarketResearchResultSchema>

@@ -127,6 +127,14 @@ export default function MarketResearchResultPanel({ result, headerActions }: Mar
                         <span>{formatCurrency(result.priceRangeHighEur)}</span>
                     </div>
                 </div>
+                {result.confidenceBreakdown && (
+                    <div className="mt-4 rounded-lux-card border border-lux-200 bg-lux-50/60 p-3 text-xs text-lux-700">
+                        <p className="font-semibold text-lux-800">Confidence diagnostics</p>
+                        <p className="mt-1">
+                            Evidence {result.confidenceBreakdown.evidenceCount} · Provenance {Math.round(result.confidenceBreakdown.provenanceRatio * 100)}% · Freshness {Math.round(result.confidenceBreakdown.freshnessWeight * 100)}% · Trend signal {result.trendSignal ?? 'unknown'}
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Market Indicators */}

@@ -135,7 +135,8 @@ export default function InvoicesView() {
         window.open(updated.pdfUrl, '_blank')
       }
     } catch (err) {
-      toast.error('Failed to generate PDF', { id: toastId })
+      const message = err instanceof Error ? err.message : 'Failed to generate PDF'
+      toast.error(message, { id: toastId })
     }
   }
 

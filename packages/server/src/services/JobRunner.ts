@@ -6,9 +6,11 @@
  */
 import { SystemJobRepo } from '../repos/SystemJobRepo'
 import { SupplierEmailSyncService } from './import/SupplierEmailSyncService'
+import { MarketIntelMonitorService } from './market-research/MarketIntelMonitorService'
 
 const jobRepo = new SystemJobRepo()
 const emailSyncService = new SupplierEmailSyncService()
+const marketIntelMonitorService = new MarketIntelMonitorService()
 
 export async function runJob(jobId: string): Promise<void> {
   const job = await jobRepo.getById(jobId)
@@ -51,6 +53,53 @@ export async function runJob(jobId: string): Promise<void> {
         completedAt: now,
         lastError: 'Re-execution not supported: supplier_import requires original file upload. Re-run import from the Supplier Hub.',
         updatedAt: now,
+      })
+      return
+    }
+
+    if (job.jobType === 'market_intel_monitor') {
+      const input = job.input as {
+        brand?: string
+        model?: string
+        category?: string
+        condition?: string
+        colour?: string
+        year?: string
+        notes?: string
+        currentAskPriceEur?: number
+      } | undefined
+
+      if (!input?.brand || !input?.model || !input?.category || !input?.condition) {
+        await jobRepo.set(jobId, {
+          status: 'failed',
+          completedAt: now,
+          lastError: 'market_intel_monitor requires brand, model, category, and condition',
+          updatedAt: now,
+        })
+        return
+      }
+
+      const run = await marketIntelMonitorService.runBackground({
+        brand: input.brand,
+        model: input.model,
+        category: input.category,
+        condition: input.condition,
+        colour: input.colour,
+        year: input.year,
+        notes: input.notes,
+        currentAskPriceEur: input.currentAskPriceEur,
+      })
+      const completedAt = new Date().toISOString()
+      await jobRepo.set(jobId, {
+        status: 'succeeded',
+        completedAt,
+        output: {
+          runId: run.run.id,
+          snapshotId: run.snapshot.id,
+          key: run.snapshot.key,
+          freshnessStatus: run.snapshot.freshnessStatus,
+        },
+        updatedAt: completedAt,
       })
       return
     }

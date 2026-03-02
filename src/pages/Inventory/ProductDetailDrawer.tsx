@@ -921,6 +921,8 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
   const [invoiceCustomerEmail, setInvoiceCustomerEmail] = useState('')
   const [invoiceDescription, setInvoiceDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const parsedAmount = Number(amount)
+  const hasPositiveAmount = Number.isFinite(parsedAmount) && parsedAmount > 0
 
   const fetchTransactions = useCallback(() => {
     setIsLoading(true)
@@ -972,12 +974,20 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
 
   const handleSubmit = async () => {
     if (!showModal || !amount) return
+    if (!hasPositiveAmount) {
+      toast.error('Amount must be greater than 0')
+      return
+    }
+    if (showModal === 'sale' && product.status === 'sold') {
+      toast.error('Product is already sold')
+      return
+    }
 
     setIsSubmitting(true)
     try {
       if (showModal === 'sale') {
         await apiPost(`/products/${productId}/sell-with-invoice`, {
-          amountEur: parseFloat(amount),
+          amountEur: parsedAmount,
           customerName: invoiceCustomerName || undefined,
           customerEmail: invoiceCustomerEmail || undefined,
           notes: notes || undefined,
@@ -987,7 +997,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
       } else {
         await apiPost(`/products/${productId}/transactions`, {
           type: 'adjustment',
-          amountEur: parseFloat(amount),
+          amountEur: parsedAmount,
           notes: notes || undefined,
         })
         toast.success('Adjustment recorded')
@@ -1019,6 +1029,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
         <div className="flex gap-2">
           <button
             onClick={() => handleOpenModal('sale')}
+            disabled={product.status === 'sold'}
             className="lux-btn-primary text-sm flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
           >
             <DollarSign className="h-4 w-4" />
@@ -1098,7 +1109,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
                 <label htmlFor="product-transaction-amount" className="block text-sm font-medium text-lux-700 mb-1">Amount (EUR)</label>
                 <div className="relative">
                   <span className="absolute left-px top-1/2 -translate-y-1/2 text-lux-400">€</span>
-                  <input id="product-transaction-amount" type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="lux-input pl-7" autoFocus />
+                  <input id="product-transaction-amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="lux-input pl-7" autoFocus />
                 </div>
               </div>
 
@@ -1126,7 +1137,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={handleCloseModal} disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">Cancel</button>
-                <button onClick={handleSubmit} disabled={isSubmitting || !amount} className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
+                <button onClick={handleSubmit} disabled={isSubmitting || !hasPositiveAmount} className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {showModal === 'sale' ? 'Record Sale + Invoice' : 'Record Adjustment'}
                 </button>

@@ -239,14 +239,24 @@ export default function UnifiedIntelligenceView() {
   }, [result?.comps])
 
   const confidencePct = result
-    ? result.comps.length >= 5
-      ? 90
-      : result.comps.length >= 3
-        ? 75
-        : result.comps.length >= 1
-          ? 50
-          : 25
+    ? typeof result.confidenceBreakdown?.score === 'number'
+      ? Math.round(result.confidenceBreakdown.score * 100)
+      : result.comps.length >= 5
+        ? 90
+        : result.comps.length >= 3
+          ? 75
+          : result.comps.length >= 1
+            ? 50
+            : 25
     : 0
+
+  const trendSignalLabel = result?.trendSignal === 'up'
+    ? 'Trend signal: Up'
+    : result?.trendSignal === 'down'
+      ? 'Trend signal: Down'
+      : result?.trendSignal === 'flat'
+        ? 'Trend signal: Flat'
+        : 'Trend signal: Unknown'
 
   const hasSerialDescriptionDrift = useMemo(() => {
     if (serialSession.status !== 'success' || !serialSession.query) return false
@@ -704,6 +714,14 @@ export default function UnifiedIntelligenceView() {
                   <span className="ml-2 text-lux-400">- Researched {formatRelativeDate(result.researchedAt)}</span>
                 )}
               </p>
+              {result.confidenceBreakdown && (
+                <div className="rounded-lux-card border border-lux-200 bg-lux-50/60 p-3 text-xs text-lux-700">
+                  <p className="font-medium text-lux-800">Confidence diagnostics</p>
+                  <p className="mt-1">
+                    Evidence: {result.confidenceBreakdown.evidenceCount} · Provenance: {Math.round(result.confidenceBreakdown.provenanceRatio * 100)}% · Freshness weight: {Math.round(result.confidenceBreakdown.freshnessWeight * 100)}% · {trendSignalLabel}
+                  </p>
+                </div>
+              )}
               <div className="lux-card-accent rounded-lux-card p-5 text-center">
                 <SectionLabel as="span" className="mb-1 block">Avg. selling price (second-hand)</SectionLabel>
                 <div className="text-xl sm:text-2xl font-bold text-lux-900">

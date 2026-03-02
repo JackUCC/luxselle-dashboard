@@ -67,6 +67,13 @@ export interface MarketResearchResult {
 
   // Analysis
   confidence: number
+  confidenceBreakdown?: {
+    evidenceCount: number
+    provenanceRatio: number
+    freshnessWeight: number
+    trendAgreement: number
+    score: number
+  }
   marketSummary: string
   keyInsights: string[]
   riskFactors: string[]
@@ -76,7 +83,16 @@ export interface MarketResearchResult {
 
   // Trending
   trendingScore?: number
+  trendSignal?: 'up' | 'down' | 'flat' | 'unknown'
   seasonalNotes?: string
+  intel?: {
+    runId?: string
+    mode?: 'standard' | 'background' | 'deep_dive'
+    snapshotAgeMinutes?: number
+    freshnessStatus?: 'live' | 'fresh' | 'stale' | 'expired' | 'unknown'
+    generatedAt?: string
+    cached?: boolean
+  }
 }
 
 export interface TrendingItem {
@@ -372,6 +388,8 @@ export class MarketResearchService {
     ) as MarketComparable[]
 
     const evidenceConfidence = this.confidenceFromEvidence(validComps.length, parsed.confidence)
+    const trendSignal = this.priceTrendToSignal(parsed.priceTrend)
+    const confidenceBreakdown = this.buildConfidenceBreakdown(validComps.length, evidenceConfidence, trendSignal)
     const estimatedMarketValueEur = parsed.estimatedMarketValueEur != null
       ? validatePriceEur(parsed.estimatedMarketValueEur)
       : validComps.length > 0
@@ -405,11 +423,20 @@ export class MarketResearchService {
       marketLiquidity: parsed.marketLiquidity ?? 'moderate',
       recommendation: parsed.recommendation ?? 'hold',
       confidence: evidenceConfidence,
+      confidenceBreakdown,
       marketSummary: parsed.marketSummary ?? 'Insufficient verified comparable evidence for a full market summary.',
       keyInsights: parsed.keyInsights ?? [],
       riskFactors: parsed.riskFactors ?? [],
       comparables: validComps,
+      trendSignal,
       seasonalNotes: parsed.seasonalNotes,
+      intel: {
+        mode: 'standard',
+        generatedAt: new Date().toISOString(),
+        snapshotAgeMinutes: 0,
+        freshnessStatus: 'live',
+        cached: false,
+      },
     }
   }
 
@@ -438,11 +465,26 @@ export class MarketResearchService {
       marketLiquidity: 'slow_moving',
       recommendation: 'hold',
       confidence: 0.15,
+      confidenceBreakdown: {
+        evidenceCount: 0,
+        provenanceRatio: 0,
+        freshnessWeight: 0.2,
+        trendAgreement: 0,
+        score: 0.15,
+      },
       marketSummary: reason,
       keyInsights: [],
       riskFactors: [reason],
       comparables: buildEmptyComparableFallback<MarketComparable>(),
+      trendSignal: 'unknown',
       seasonalNotes: undefined,
+      intel: {
+        mode: 'standard',
+        generatedAt: new Date().toISOString(),
+        snapshotAgeMinutes: 0,
+        freshnessStatus: 'unknown',
+        cached: false,
+      },
     }
   }
 
@@ -453,5 +495,30 @@ export class MarketResearchService {
     }
     const model = clampConfidence(modelConfidence)
     return clampConfidence(evidenceConfidence * 0.75 + model * 0.25)
+  }
+
+  private priceTrendToSignal(trend?: 'rising' | 'stable' | 'declining'): 'up' | 'down' | 'flat' | 'unknown' {
+    if (trend === 'rising') return 'up'
+    if (trend === 'declining') return 'down'
+    if (trend === 'stable') return 'flat'
+    return 'unknown'
+  }
+
+  private buildConfidenceBreakdown(
+    validCompCount: number,
+    score: number,
+    trendSignal: 'up' | 'down' | 'flat' | 'unknown',
+  ) {
+    const evidenceCount = Math.max(0, validCompCount)
+    const provenanceRatio = evidenceCount > 0 ? Math.min(1, 0.6 + evidenceCount * 0.1) : 0
+    const freshnessWeight = evidenceCount > 0 ? 1 : 0.2
+    const trendAgreement = trendSignal === 'unknown' ? 0.3 : 0.75
+    return {
+      evidenceCount,
+      provenanceRatio,
+      freshnessWeight,
+      trendAgreement,
+      score,
+    }
   }
 }

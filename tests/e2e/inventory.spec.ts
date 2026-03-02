@@ -107,3 +107,30 @@ test('products with prices appear correctly in table', async ({ page, request })
     page.locator('tbody td').filter({ hasText: /^€[1-9]/ }).first()
   ).toBeVisible()
 })
+
+test('record sale blocks non-positive amount in drawer history flow', async ({ page, request }) => {
+  const uniqueSku = `INV-VAL-${Date.now()}`
+  await request.post('/api/products', {
+    data: {
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      title: `Validation Product ${Date.now()}`,
+      sku: uniqueSku,
+      costPriceEur: 1200,
+      sellPriceEur: 1850,
+      quantity: 1,
+      status: 'in_stock',
+    },
+  })
+
+  await page.goto('/inventory')
+  await page.getByTestId('inventory-view-table').click()
+  await page.getByPlaceholder('Search by brand, model, SKU...').fill(uniqueSku)
+  await page.getByText(uniqueSku).first().click()
+  await page.getByRole('button', { name: 'History' }).click()
+  await page.getByRole('button', { name: 'Record Sale' }).click()
+
+  const amountInput = page.locator('#product-transaction-amount')
+  await amountInput.fill('0')
+  await expect(page.getByRole('button', { name: 'Record Sale + Invoice' })).toBeDisabled()
+})

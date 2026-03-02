@@ -8,11 +8,24 @@ import { ZodError } from 'zod'
 import { marketResearchRouter } from './market-research'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 
-const { mockGetTrending, mockAnalyse, mockGetCompetitorFeed, mockGetDegradedAnalysis } = vi.hoisted(() => ({
+const {
+  mockGetTrending,
+  mockAnalyse,
+  mockGetCompetitorFeed,
+  mockGetDegradedAnalysis,
+  mockListSnapshots,
+  mockRunDeepDive,
+  mockSystemJobCreate,
+  mockRunJob,
+} = vi.hoisted(() => ({
   mockGetTrending: vi.fn(),
   mockAnalyse: vi.fn(),
   mockGetCompetitorFeed: vi.fn(),
   mockGetDegradedAnalysis: vi.fn(),
+  mockListSnapshots: vi.fn(),
+  mockRunDeepDive: vi.fn(),
+  mockSystemJobCreate: vi.fn(),
+  mockRunJob: vi.fn(),
 }))
 
 vi.mock('../services/market-research/MarketResearchService', () => ({
@@ -22,6 +35,23 @@ vi.mock('../services/market-research/MarketResearchService', () => ({
     analyse = mockAnalyse
     getDegradedAnalysis = mockGetDegradedAnalysis
   },
+}))
+
+vi.mock('../services/market-research/MarketIntelMonitorService', () => ({
+  MarketIntelMonitorService: class {
+    listSnapshots = mockListSnapshots
+    runDeepDive = mockRunDeepDive
+  },
+}))
+
+vi.mock('../repos/SystemJobRepo', () => ({
+  SystemJobRepo: class {
+    create = mockSystemJobCreate
+  },
+}))
+
+vi.mock('../services/JobRunner', () => ({
+  runJob: mockRunJob,
 }))
 
 interface TestError {
@@ -249,5 +279,84 @@ describe('GET /api/market-research/competitor-feed', () => {
     expect(res.body.data.items[0].title).toBe('Chanel Classic Flap Medium')
     expect(res.body.data.items[0].priceEur).toBe(4500)
     expect(res.body.data.items[1].source).toBe('Luxury Exchange')
+  })
+})
+
+describe('GET /api/market-research/snapshots', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns latest snapshots from monitor service', async () => {
+    mockListSnapshots.mockResolvedValue([
+      {
+        id: 'snap-1',
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        generatedAt: new Date().toISOString(),
+        freshnessStatus: 'live',
+        snapshotAgeMinutes: 0,
+        result: { brand: 'Chanel', model: 'Classic Flap' },
+      },
+    ])
+
+    const res = await request(app).get('/api/market-research/snapshots')
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body.data)).toBe(true)
+    expect(res.body.data[0].id).toBe('snap-1')
+    expect(mockListSnapshots).toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/market-research/trigger-monitor', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('queues monitor job and returns 202 payload', async () => {
+    mockSystemJobCreate.mockResolvedValue({ id: 'job-1' })
+    const res = await request(app)
+      .post('/api/market-research/trigger-monitor')
+      .send({
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Handbag',
+        condition: 'excellent',
+      })
+
+    expect(res.status).toBe(202)
+    expect(res.body.data).toEqual({
+      jobId: 'job-1',
+      status: 'queued',
+    })
+    expect(mockSystemJobCreate).toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/market-research/deep-dive', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns run id and normalized result payload', async () => {
+    mockRunDeepDive.mockResolvedValue({
+      run: { id: 'run-1' },
+      snapshot: { id: 'snap-1', freshnessStatus: 'live' },
+      result: { brand: 'Chanel', model: 'Classic Flap', confidence: 0.8 },
+    })
+
+    const res = await request(app)
+      .post('/api/market-research/deep-dive')
+      .send({
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Handbag',
+        condition: 'excellent',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data.runId).toBe('run-1')
+    expect(res.body.data.snapshot.id).toBe('snap-1')
+    expect(res.body.data.result.brand).toBe('Chanel')
   })
 })

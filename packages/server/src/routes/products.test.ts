@@ -358,6 +358,103 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     expect(mockTransactionCreate).not.toHaveBeenCalled()
     expect(mockInvoiceCreate).not.toHaveBeenCalled()
   })
+
+  it('returns 409 when product is already sold', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'p1',
+      organisationId: 'default',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      costPriceEur: 1000,
+      sellPriceEur: 2200,
+      status: 'sold',
+      quantity: 1,
+    })
+
+    const res = await request(app)
+      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
+      .send({ amountEur: 2200, customerName: 'John Smith' })
+
+    expect(res.status).toBe(409)
+    expect(mockTransactionCreate).not.toHaveBeenCalled()
+    expect(mockInvoiceCreate).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when amountEur is not positive', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'p1',
+      organisationId: 'default',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      costPriceEur: 1000,
+      sellPriceEur: 2200,
+      status: 'in_stock',
+      quantity: 1,
+    })
+
+    const res = await request(app)
+      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
+      .send({ amountEur: 0, customerName: 'John Smith' })
+
+    expect(res.status).toBe(400)
+    expect(mockTransactionCreate).not.toHaveBeenCalled()
+    expect(mockInvoiceCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/products/:id/transactions sale validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns 409 when sale transaction is attempted on already sold product', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'p1',
+      organisationId: 'default',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      costPriceEur: 1000,
+      sellPriceEur: 2200,
+      status: 'sold',
+      quantity: 1,
+    })
+
+    const res = await request(app)
+      .post('/api/products/p1/transactions').set(authHeaders('operator'))
+      .send({ type: 'sale', amountEur: 2200 })
+
+    expect(res.status).toBe(409)
+    expect(mockTransactionCreate).not.toHaveBeenCalled()
+    expect(mockProductSet).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when sale transaction amount is not positive', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'p1',
+      organisationId: 'default',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      costPriceEur: 1000,
+      sellPriceEur: 2200,
+      status: 'in_stock',
+      quantity: 1,
+    })
+
+    const res = await request(app)
+      .post('/api/products/p1/transactions').set(authHeaders('operator'))
+      .send({ type: 'sale', amountEur: 0 })
+
+    expect(res.status).toBe(400)
+    expect(mockTransactionCreate).not.toHaveBeenCalled()
+  })
 })
 
 

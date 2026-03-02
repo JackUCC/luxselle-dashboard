@@ -142,6 +142,16 @@ export const PriceCheckResultSchema = z.object({
   maxBuyEur: z.number(),
   maxBidEur: z.number(),
   dataSource: z.enum(['web_search', 'ai_fallback', 'provider_unavailable']),
+  confidenceBreakdown: z
+    .object({
+      evidenceCount: z.number().min(0),
+      provenanceRatio: z.number().min(0).max(1),
+      freshnessWeight: z.number().min(0).max(1),
+      trendAgreement: z.number().min(0).max(1),
+      score: z.number().min(0).max(1),
+    })
+    .optional(),
+  trendSignal: z.enum(['up', 'down', 'flat', 'unknown']).optional(),
   researchedAt: z.string(),
   diagnostics: PriceCheckDiagnosticsSchema.optional(),
 })

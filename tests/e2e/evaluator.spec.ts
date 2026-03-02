@@ -36,6 +36,14 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
           comps: [{ title: 'Chanel Classic Flap', price: 4800, source: 'Vestiaire Collective', sourceUrl: 'https://vestiairecollective.com' }],
           maxBuyEur: 3200,
           maxBidEur: 2990,
+          confidenceBreakdown: {
+            evidenceCount: 4,
+            provenanceRatio: 0.8,
+            freshnessWeight: 0.9,
+            trendAgreement: 0.75,
+            score: 0.82,
+          },
+          trendSignal: 'flat',
         },
       }),
     })
@@ -47,6 +55,7 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
   await expect(page.getByText('Avg. selling price')).toBeVisible()
   await expect(page.getByText('Max buy target')).toBeVisible()
   await expect(page.getByText('Max bid target')).toBeVisible()
+  await expect(page.getByText('Confidence diagnostics')).toBeVisible()
 })
 
 test('shows error when price-check fails', async ({ page }) => {

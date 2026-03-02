@@ -105,3 +105,15 @@ test('mark sold flow creates invoice and keeps product sold', async ({ page, req
   await expect(page.getByText(uniqueSku)).toBeVisible()
   await expect(page.getByRole('table').getByText('Sold')).toBeVisible()
 })
+
+test('in-person invoice modal enforces positive amount', async ({ page }) => {
+  await page.goto('/invoices')
+  await page.getByTestId('invoice-create-cta').click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+
+  await page.getByLabel(/Amount paid \(incl\. VAT\)/).fill('0')
+  await page.getByLabel(/Item description/).fill('Counter sale item')
+  await page.getByRole('button', { name: 'Create Invoice' }).click()
+
+  await expect(page.getByRole('dialog')).toBeVisible()
+})

@@ -74,6 +74,9 @@ const EnvSchema = z.object({
   PRICE_CHECK_V2_ENABLED: booleanFromEnv.default(false),
   PRICE_CHECK_BROAD_STRATEGY_ENABLED: booleanFromEnv.default(false),
   PRICE_CHECK_SECONDARY_DOMAINS: z.string().optional(),
+  MARKET_INTEL_LIVE_MAX_AGE_MINUTES: z.coerce.number().int().positive().default(5),
+  MARKET_INTEL_FRESH_MAX_AGE_MINUTES: z.coerce.number().int().positive().default(60),
+  MARKET_INTEL_STALE_MAX_AGE_MINUTES: z.coerce.number().int().positive().default(1440),
 })
 
 type ParsedEnv = z.infer<typeof EnvSchema>
