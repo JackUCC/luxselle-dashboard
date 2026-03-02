@@ -127,8 +127,8 @@
 
 ### Styling & Layout
 
-- [ ] **STYLE-01**: Advanced navbar — bold visual hierarchy, smooth hover states, active route indicators, polished transitions
-- [ ] **STYLE-02**: Sidecar widget visual treatment — professional, scannable, and polished in compact `?mode=sidecar` mode
+- [x] **STYLE-01**: Advanced navbar — bold visual hierarchy, smooth hover states, active route indicators, polished transitions
+- [x] **STYLE-02**: Sidecar widget visual treatment — professional, scannable, and polished in compact `?mode=sidecar` mode
 
 ### Animations
 
@@ -152,8 +152,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STYLE-01 | Phase Polish-1 | Pending |
-| STYLE-02 | Phase Polish-1 | Pending |
+| STYLE-01 | Phase Polish-1 | Complete |
+| STYLE-02 | Phase Polish-1 | Complete |
 | ANIM-01 | Phase Polish-2 | Pending |
 | LOAD-01 | Phase Polish-2 | Pending |
 | LOAD-02 | Phase Polish-3 | Pending |
@@ -162,8 +162,8 @@
 | QA-01 | Phase Polish-4 | Pending |
 
 **Coverage:**
-- UI polish requirements: 8 total, 0 satisfied
+- UI polish requirements: 8 total, 2 satisfied
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-02 after UI polish milestone kickoff*
+*Last updated: 2026-03-02 after completing Phase Polish-1*

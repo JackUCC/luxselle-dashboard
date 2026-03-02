@@ -8,13 +8,6 @@ import { appRoutes } from '../layout/routeMeta'
 import { NAV_GROUPS } from './navGroups'
 import Drawer from '../design-system/Drawer'
 
-function exitSidecarTo(location: { pathname: string; search: string }) {
-  const params = new URLSearchParams(location.search)
-  params.delete('mode')
-  const search = params.toString()
-  return { pathname: location.pathname, search: search ? `?${search}` : '' }
-}
-
 export default function SidecarNav() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
@@ -26,30 +19,31 @@ export default function SidecarNav() {
     return `${path}?${params.toString()}`
   }
 
-  const exitTo = exitSidecarTo(location)
-
   return (
     <>
-      <nav className="sticky top-0 z-40 flex items-center gap-2 border-b border-lux-200 bg-white/95 backdrop-blur px-3 py-2">
+      <nav className="sticky top-0 z-40 flex items-center gap-2 border-b border-lux-200 bg-gradient-to-r from-white via-lux-50/85 to-white px-3 py-2.5 shadow-[0_2px_10px_rgba(15,23,42,0.06)] backdrop-blur">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-            className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-lg p-1.5 text-lux-600 transition-colors hover:bg-lux-100 hover:text-lux-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+          className="inline-flex min-h-[34px] min-w-[34px] items-center justify-center rounded-xl border border-lux-200 bg-white/95 p-1.5 text-lux-600 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-white hover:text-lux-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           aria-label="Open navigation menu"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-[18px] w-[18px]" />
         </button>
-        <div className="flex min-w-0 flex-1 items-center gap-1">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <img
             src="/luxselle-logo.svg"
             alt="Luxselle"
             className="h-4 w-auto object-contain"
           />
+          <span className="rounded-full border border-lux-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-lux-500">
+            Sidecar
+          </span>
         </div>
         <Link
           to={getExitSidecarPath('/', location.search)}
           replace
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-lux-200 px-2 py-1.5 text-ui-label font-medium text-lux-600 transition-colors hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+          className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-lux-200 bg-white px-2.5 py-1.5 text-ui-label font-semibold text-lux-700 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-lux-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           title="Exit sidecar and return to overview"
           aria-label="Exit sidecar and return to overview"
         >
@@ -66,15 +60,16 @@ export default function SidecarNav() {
         titleId="sidecar-nav-title"
       >
         <div className="space-y-5">
-          {NAV_GROUPS.map((group) => (
-            <section key={group.section}>
-              <h2 className="mb-1 px-2 text-ui-label font-semibold uppercase tracking-wider text-lux-500">
-                {group.title}
-              </h2>
-              <nav className="space-y-px" aria-label={group.title}>
-                {appRoutes
-                  .filter((route) => route.section === group.section)
-                  .map((route) => (
+          {NAV_GROUPS.map((group) => {
+            return (
+              <section key={group.section} className="px-1">
+                <h2 className="mb-1 px-2 text-ui-label font-semibold uppercase tracking-[0.14em] text-lux-500">
+                  {group.title}
+                </h2>
+                <nav className="space-y-px" aria-label={group.title}>
+                  {appRoutes
+                    .filter((route) => route.section === group.section)
+                    .map((route) => (
                       <NavLink
                         key={route.path}
                         to={toWithSidecar(route.path)}
@@ -84,20 +79,21 @@ export default function SidecarNav() {
                         onTouchStart={handleRouteWarmup(route.path)}
                         onClick={() => setDrawerOpen(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
+                          `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm font-medium transition-all duration-150 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
                             isActive
-                              ? 'bg-lux-200/80 text-lux-900'
-                              : 'text-lux-600 hover:bg-lux-100 hover:text-lux-900'
+                              ? 'border border-lux-gold/30 bg-white text-lux-900 shadow-[0_4px_12px_rgba(15,23,42,0.08)]'
+                              : 'border border-transparent text-lux-600 hover:-translate-y-0.5 hover:bg-white/80 hover:text-lux-900'
                           }`
                         }
                       >
-                        <route.icon className="h-4 w-4 shrink-0" />
+                        <route.icon className="h-4 w-4 shrink-0 text-lux-500 group-hover:text-lux-700" />
                         <span>{route.navLabel}</span>
                       </NavLink>
-                  ))}
-              </nav>
-            </section>
-          ))}
+                    ))}
+                </nav>
+              </section>
+            )
+          })}
         </div>
       </Drawer>
     </>
