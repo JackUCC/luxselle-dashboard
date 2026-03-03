@@ -124,10 +124,10 @@ export default function MarketIntelligenceWidget() {
             </button>
             <button
               type="submit"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-lux-900 text-white transition-transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-lux-gold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               aria-label="Search"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function MarketIntelligenceWidget() {
       </form>
 
       <div className="mt-5 pt-4 border-t border-lux-100">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400 mb-2">Popular</p>
+        <p className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold mb-2">Popular</p>
         <div className="flex flex-wrap gap-2">
           {POPULAR_SEARCHES.map((label) => (
             <button

@@ -504,7 +504,7 @@ export default function MarketResearchView() {
                 <div className="flex flex-nowrap overflow-x-auto no-scrollbar pb-2 items-center gap-2">
                     {previousSearches.length > 0 && (
                         <>
-                            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
+                            <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
                                 <History className="h-3 w-3" /> Recent
                             </span>
                             {previousSearches.map((p, i) => (

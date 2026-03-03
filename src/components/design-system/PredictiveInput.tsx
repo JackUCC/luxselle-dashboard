@@ -163,7 +163,7 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
           >
             {inventoryMatches.length > 0 && (
               <div>
-                <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
+                <div className="px-3 pt-2.5 pb-1 text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
                   From your inventory
                 </div>
                 {inventoryMatches.map((item, i) => (
@@ -190,7 +190,7 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
 
             {popularMatches.length > 0 && (
               <div className={inventoryMatches.length > 0 ? 'border-t border-lux-100' : ''}>
-                <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
+                <div className="px-3 pt-2.5 pb-1 text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
                   Popular items
                 </div>
                 {popularMatches.map((item, i) => {

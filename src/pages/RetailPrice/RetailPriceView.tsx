@@ -69,7 +69,7 @@ export default function RetailPriceView() {
 
       {/* Example chips */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-400">
+        <span className="flex items-center gap-1 text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
           <Sparkles className="h-3 w-3" /> Examples
         </span>
         {EXAMPLE_ITEMS.map((item) => (

@@ -63,7 +63,7 @@ export default function EurToYenWidget() {
           {fx && amount > 0 && (
             <div className="mt-4 rounded-[14px] bg-lux-50 px-4 py-3">
               <div className="flex items-baseline justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-lux-400">
+                <span className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
                   {resultLabel}
                 </span>
                 <span className="text-lg font-semibold font-mono text-lux-800">
