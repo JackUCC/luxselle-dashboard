@@ -7,6 +7,9 @@ import { MarketResearchService, type MarketResearchInput } from './MarketResearc
 import type { MarketIntelRun, MarketIntelSnapshot } from '@shared/schemas'
 import { env } from '../../config/env'
 
+const COST_PER_CALL_EUR = 0.004
+const STANDARD_ANALYSE_CALL_COUNT = 3  // expandQuery + searchMarket + extractStructuredJson
+
 const LIVE_MAX_AGE_MINUTES = env.MARKET_INTEL_LIVE_MAX_AGE_MINUTES
 const FRESH_MAX_AGE_MINUTES = env.MARKET_INTEL_FRESH_MAX_AGE_MINUTES
 const STALE_MAX_AGE_MINUTES = env.MARKET_INTEL_STALE_MAX_AGE_MINUTES
@@ -144,6 +147,12 @@ export class MarketIntelMonitorService {
         freshnessStatus,
         cached: false,
       })
+
+      const aiUsage = {
+        callCount: STANDARD_ANALYSE_CALL_COUNT,
+        provider: enrichedResult.provider,
+        estimatedCostEur: Math.round(STANDARD_ANALYSE_CALL_COUNT * COST_PER_CALL_EUR * 1000) / 1000,
+      }
 
       const snapshot = await this.snapshotRepo.upsertByKey(key, {
         organisationId: DEFAULT_ORG_ID,

@@ -794,6 +794,17 @@ export default function MarketResearchView() {
                                         </button>
                                         <button
                                             type="button"
+                                            onClick={handleTriggerMonitor}
+                                            disabled={isMonitorLoading}
+                                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-sm font-medium text-lux-700 hover:bg-lux-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                            data-testid="market-research-trigger-monitor"
+                                            title="Queue a background intelligence refresh for this item"
+                                        >
+                                            {isMonitorLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <History className="h-4 w-4" />}
+                                            Refresh
+                                        </button>
+                                        <button
+                                            type="button"
                                             onClick={handleSave}
                                             disabled={isSaving || isSaved}
                                             className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
