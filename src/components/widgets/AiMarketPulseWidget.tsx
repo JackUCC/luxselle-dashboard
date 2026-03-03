@@ -90,31 +90,25 @@ export default function AiMarketPulseWidget() {
 
   return (
     <div className="lux-card p-5 h-full min-h-0 flex flex-col animate-bento-enter stagger-9">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-amber-500" />
-          <SectionLabel>AI Market Pulse</SectionLabel>
+          <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+          <SectionLabel className="mb-0">AI Market Pulse</SectionLabel>
         </div>
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-        </span>
-      </div>
-      <div className="mb-3">
         <span
           data-testid="ai-market-pulse-freshness"
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${freshnessClass}`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold shrink-0 ${freshnessClass}`}
         >
           {freshnessLabel}
         </span>
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-2.5 flex-1">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-start gap-2.5">
-              <div className="h-4 w-4 rounded bg-lux-200/60 animate-pulse shrink-0 mt-0.5" />
-              <div className="h-4 w-full rounded bg-lux-200/60 animate-pulse" />
+            <div key={i} className="flex items-start gap-2">
+              <div className="h-3.5 w-3.5 rounded bg-lux-200/60 animate-pulse shrink-0 mt-0.5" />
+              <div className="h-3.5 w-full rounded bg-lux-200/60 animate-pulse" />
             </div>
           ))}
         </div>
@@ -123,20 +117,20 @@ export default function AiMarketPulseWidget() {
       ) : items.length === 0 ? (
         <p className="text-xs text-lux-500">No trending data available.</p>
       ) : (
-        <div className="space-y-3">
+        <ul className="space-y-2 flex-1 min-h-0 overflow-auto">
           {items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2.5">
+            <li key={i} className="flex items-start gap-2 border-b border-lux-100 pb-2 last:border-0 last:pb-0">
               <TrendIcon trend={item.priceTrend} />
               <p className="text-xs leading-snug text-lux-700">
                 <span className="font-semibold text-lux-900">{item.brand}</span>{' '}
                 {formatInsight(item)}
               </p>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       {generatedAt && (
-        <p className="mt-3 text-[11px] text-lux-400">
+        <p className="mt-2 pt-2 border-t border-lux-100 text-[11px] text-lux-400 shrink-0">
           {isStaleData(generatedAt) ? (
             <span className="text-amber-500">Data may be outdated · {formatRelativeDate(generatedAt)}</span>
           ) : (

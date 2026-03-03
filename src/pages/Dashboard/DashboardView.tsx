@@ -138,26 +138,32 @@ export default function DashboardView() {
             <ActiveSourcingWidget />
           </BentoGrid>
 
-          {/* Row 3: Inventory & Value (2-col) + AI Market Pulse */}
-          <BentoGrid columns={3}>
+          {/* Row 3: Inventory & Value | AI Market Pulse (50/50) */}
+          <BentoGrid columns={2}>
             <div
-              className={`lux-card lux-card-gold-accent p-6 h-full min-h-0 flex flex-col animate-bento-enter sm:col-span-2 ${staggerClass(4)}`}
+              className={`lux-card lux-card-gold-accent p-5 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
               data-testid="inventory-value-card"
             >
-              <SectionLabel className="mb-4">Inventory & Value</SectionLabel>
-              <p className="text-2xl sm:text-3xl font-semibold font-mono text-lux-800 leading-none">
-                <AnimatedNumber value={inventoryValue} prefix="€" />
-              </p>
-              <p className="mt-2 text-sm text-lux-500 font-medium">
-                {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'} in inventory
-              </p>
-              <div className="mt-4 pt-4 border-t border-lux-200/60">
-                <p className="text-lg font-semibold font-mono text-lux-800">
-                  <AnimatedNumber value={potentialValue} prefix="€" /> potential
-                </p>
-                <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-xs font-medium text-lux-700 mt-1.5">
-                  €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
-                </span>
+              <SectionLabel className="mb-3">Inventory & Value</SectionLabel>
+              <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">Cost</p>
+                  <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
+                    <AnimatedNumber value={inventoryValue} prefix="€" />
+                  </p>
+                  <p className="text-xs text-lux-500 mt-1">
+                    {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">Potential</p>
+                  <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
+                    <AnimatedNumber value={potentialValue} prefix="€" />
+                  </p>
+                  <p className="text-xs font-medium text-lux-600 mt-1">
+                    €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
+                  </p>
+                </div>
               </div>
             </div>
             <AiMarketPulseWidget />
