@@ -43,10 +43,10 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 
 - [x] **Phase 10: AI Reliability + Provider Diagnostics** — AI provider failures surfaced clearly in the UI; recoverable error states with actionable guidance (STAB-01) — completed 2026-03-03
 - [ ] **Phase 11: Agentic Market Intelligence** — continuous background monitoring and on-demand deep dives (INTEL-02)
-  - **Plans:** 2 plans (1/2 complete)
+  - **Plans:** 2 plans (2/2 complete)
   - Plans:
     - [x] 11-01-PLAN.md — Add per-run AI usage telemetry to MarketIntelRun schema + MonitorService unit tests (completed 2026-03-03)
-    - [ ] 11-02-PLAN.md — Market Research UI freshness indicators: mode pill, generatedAt age, background-refresh button, AiMarketPulseWidget staleness display
+    - [x] 11-02-PLAN.md — Market Research UI freshness indicators: mode pill, generatedAt age, background-refresh button, AiMarketPulseWidget staleness display (completed 2026-03-03)
 - [ ] **Phase 12: Inventory + Invoice Verification + ML Signal Improvements** — end-to-end verification of Inventory/Invoice flows + ML price prediction confidence (QUAL-01, ML-01)
 
 **First plan ready:** `.planning/phases/10-ai-reliability-provider-diagnostics/10-01-PLAN.md`
@@ -71,9 +71,9 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 | Polish-3. AI Loaders + Previews | v2.0 | 1/1 | ✅ Complete | 2026-03-02 |
 | Polish-4. Demo QA Sweep | v2.0 | 1/1 | ✅ Complete | 2026-03-02 |
 | 10. AI Reliability + Diagnostics | v3.0 | Complete | ✅ Complete | 2026-03-03 |
-| 11. Agentic Market Intelligence | v3.0 | 1/2 | 🔄 In Progress | — |
+| 11. Agentic Market Intelligence | v3.0 | 2/2 | ✅ Complete | 2026-03-03 |
 | 12. Inventory + Invoice + ML | v3.0 | 0/1 | 📋 Planned | — |
 
 ---
 
-*Roadmap last updated: 2026-03-03 after Phase 11 Plan 01 completion*
+*Roadmap last updated: 2026-03-03 after Phase 11 Plan 02 completion*

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agentic Intelligence
 status: in_progress
-stopped_at: Completed 11-01-PLAN.md (per-run AI usage telemetry for market intel runs)
-last_updated: "2026-03-03T10:34:22Z"
+stopped_at: Completed 11-02-PLAN.md (Market Research UI freshness indicators and AiMarketPulseWidget staleness)
+last_updated: "2026-03-03T10:36:00Z"
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 17
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 **Status:** In progress
 **Previous Milestone:** v2.0 UI Polish Demo Readiness — complete and archived (2026-03-03)
 **Current Milestone:** v3.0 Agentic Intelligence — Phases 10-12
-**Completed:** Phase 11, Plan 01 — AI Usage Telemetry for Market Intel Runs (2026-03-03)
-**Next Plan:** Phase 11, Plan 02 — Market Research UI freshness indicators
+**Completed:** Phase 11, Plan 02 — Market Research UI freshness indicators and background-refresh (2026-03-03)
+**Next Plan:** Phase 11, Plan 03 (or Phase 12)
 
 ## Decisions Made
 
@@ -46,10 +46,12 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 | 11-01 | COST_PER_CALL_EUR stored as constant in service, not schema | Schema validates shape only; business rules stay in service layer |
 | 11-01 | Failed runs omit aiUsage | Partial runs get no cost attribution — data integrity over convenience |
 | 11-01 | STANDARD_ANALYSE_CALL_COUNT=3 as named constant | Documents expandQuery+searchMarket+extractStructuredJson pipeline explicitly |
+| 11-02 | FreshnessBadge wraps badge and pill in flex container | Minimal layout change; mode pill only shown for background/deep_dive modes |
+| 11-02 | isStaleData threshold set at 60 minutes | Per plan spec; amber warning after 1 hour of staleness |
 
 ## Pending Todos
 
-- Proceed to Phase 11 Plan 02: Market Research UI freshness indicators (11-02-PLAN.md)
+- Proceed to Phase 11 Plan 03 or Phase 12 per ROADMAP
 - Prepare release notes covering UI polish + Sprint 4/5 hardening closure
 - Resolve full `npm run test:e2e` pretest hang in this environment (targeted suites are passing)
 
@@ -69,6 +71,6 @@ None.
 
 ## Session
 
-**Last Date:** 2026-03-03T10:34:22Z
-**Stopped At:** Completed 11-01-PLAN.md (per-run AI usage telemetry for market intel runs)
-**Resume File:** .planning/phases/11-intel-02-agentic-market-intelligence/11-02-PLAN.md
+**Last Date:** 2026-03-03T10:36:00Z
+**Stopped At:** Completed 11-02-PLAN.md (Market Research UI freshness indicators and AiMarketPulseWidget staleness)
+**Resume File:** .planning/phases/11-intel-02-agentic-market-intelligence/
