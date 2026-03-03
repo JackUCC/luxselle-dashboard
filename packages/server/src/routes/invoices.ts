@@ -339,7 +339,7 @@ router.post('/:id/generate-pdf', async (req, res, next) => {
     const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${path}`
 
     // Update invoice with new PDF URL
-    const updated = await invoiceRepo.update(invoice.id, {
+    const updated = await invoiceRepo.set(invoice.id, {
       pdfUrl,
       updatedAt: new Date().toISOString()
     })
