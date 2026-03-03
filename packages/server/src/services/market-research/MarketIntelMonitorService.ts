@@ -175,6 +175,7 @@ export class MarketIntelMonitorService {
         completedAt,
         snapshotId: snapshot.id,
         result: enrichedResult,
+        aiUsage,
         updatedAt: completedAt,
       })
 
