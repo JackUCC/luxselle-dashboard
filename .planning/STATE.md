@@ -5,16 +5,16 @@ milestone_name: Agentic Intelligence
 current_phase: 10
 current_phase_name: AI Reliability + Provider Diagnostics
 current_plan: 02
-status: in_progress
-stopped_at: "Completed 10-01-PLAN.md: AI provider failure propagation"
-last_updated: "2026-03-03T10:00:00.000Z"
+status: complete
+stopped_at: "Completed 10-02-PLAN.md: AI provider unavailable UI states"
+last_updated: "2026-03-03T10:10:00.000Z"
 last_activity: 2026-03-03
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 1
-  percent: 33
+  total_plans: 4
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -31,8 +31,8 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 **Status:** In progress
 **Previous Milestone:** v2.0 UI Polish Demo Readiness — complete and archived (2026-03-03)
 **Current Milestone:** v3.0 Agentic Intelligence — Phases 10-12
-**Completed:** Phase 10, Plan 01 — AI Provider Failure Propagation (2026-03-03)
-**Next Phase:** Phase 11 — Agentic Market Intelligence (or Phase 10 Plan 02 if exists)
+**Completed:** Phase 10, Plan 02 — AI Provider Unavailable UI States (2026-03-03)
+**Next Phase:** Phase 11 — Agentic Market Intelligence
 
 ## Decisions Made
 
@@ -46,6 +46,8 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 | 10-01 | provider_unavailable is a 200 response (not 503) | Service always returns structured result; frontend decides display |
 | 10-01 | providerError uses all-failed semantics | Partial success = usable data; only set flag when every parallel call fails |
 | 10-01 | Health probe makes live API calls per test_providers=1 | env var presence check insufficient; only live call proves connectivity |
+| 10-02 | providerStatus banner renders above (not replacing) result panel | Degraded structural output still marginally useful to user |
+| 10-02 | Red styling mirrors amber pattern for design consistency | border-red-200/bg-red-50/50 matches amber convention from ai_fallback state |
 
 ## Pending Todos
 
@@ -69,6 +71,6 @@ None.
 
 ## Session
 
-**Last Date:** 2026-03-03T10:00:00.000Z
-**Stopped At:** Completed 10-01-PLAN.md (AI provider failure propagation)
-**Resume File:** .planning/phases/11-agentic-market-intelligence/ (or next phase)
+**Last Date:** 2026-03-03T10:10:00.000Z
+**Stopped At:** Completed 10-02-PLAN.md (AI provider unavailable UI states)
+**Resume File:** .planning/phases/11-agentic-market-intelligence/
