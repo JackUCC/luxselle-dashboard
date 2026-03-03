@@ -803,6 +803,9 @@ export class AiRouter {
     if (!env.PERPLEXITY_API_KEY) {
       throw new AiRouterError('no_provider_available', 'PERPLEXITY_API_KEY is not configured')
     }
+    if (!opts.imageBase64?.trim()) {
+      throw new AiRouterError('no_provider_available', 'Image not ready — base64 is empty')
+    }
 
     const imageUrl = `data:${opts.mimeType};base64,${opts.imageBase64}`
 
@@ -820,8 +823,8 @@ export class AiRouter {
           {
             role: 'user',
             content: [
-              { type: 'input_text', text: opts.userPrompt },
-              { type: 'input_image', image_url: imageUrl },
+              { type: 'text', text: opts.userPrompt },
+              { type: 'image_url', image_url: { url: imageUrl } },
             ],
           },
         ],
