@@ -91,6 +91,7 @@ test('mark sold flow creates invoice and keeps product sold', async ({ page, req
 
   await expect(page.getByRole('heading', { name: 'Record Sale + Create Invoice' })).toBeVisible()
   await page.getByPlaceholder('e.g. John Smith').fill(uniqueBuyer)
+  await page.getByPlaceholder('Street, City, Postcode, Country').fill('Araucaria house\nGlanmire\nCork, T45tr80\nIE')
   await page.getByRole('button', { name: 'Record Sale + Invoice' }).click()
 
   await expect(page.getByRole('heading', { name: 'Record Sale + Create Invoice' })).toHaveCount(0)

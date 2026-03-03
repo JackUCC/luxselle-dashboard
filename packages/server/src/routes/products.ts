@@ -697,6 +697,7 @@ const SellWithInvoiceInputSchema = z.object({
   amountEur: z.coerce.number(),
   customerName: z.string().optional(),
   customerEmail: z.string().email().optional(),
+  customerAddress: z.string().min(1, 'Buyer address is required').refine((s) => s.trim().length > 0, 'Buyer address is required'),
   notes: z.string().optional(),
   description: z.string().optional(),
 })
@@ -831,6 +832,7 @@ router.post('/:id/sell-with-invoice', async (req, res, next) => {
       invoiceNumber,
       customerName: input.customerName?.trim() ?? '',
       customerEmail: input.customerEmail,
+      customerAddress: input.customerAddress.trim() || undefined,
       lineItems: [{
         description: lineDescription,
         quantity: 1,

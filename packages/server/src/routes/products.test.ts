@@ -265,6 +265,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
         amountEur: 2200,
         customerName: 'John Smith',
         customerEmail: 'john@example.com',
+        customerAddress: '123 Main St, Cork, IE',
         notes: 'Sold via showroom',
       })
 
@@ -288,6 +289,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       productId: 'p1',
       customerName: 'John Smith',
       customerEmail: 'john@example.com',
+      customerAddress: '123 Main St, Cork, IE',
       notes: 'Sold via showroom',
       lineItems: [expect.objectContaining({
         description: 'Classic Flap Medium (SKU: SKU-123)',
@@ -312,9 +314,34 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').send({ customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice').send({ customerName: 'John Smith', customerAddress: '123 Main St' })
 
     expect(res.status).toBe(400)
+    expect(mockBatchCommit).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when customerAddress is missing or empty', async () => {
+    mockGetById.mockResolvedValue({
+      id: 'p1',
+      organisationId: 'default',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      costPriceEur: 1000,
+      sellPriceEur: 2200,
+      status: 'in_stock',
+      quantity: 1,
+    })
+
+    const resMissing = await request(app)
+      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 2200, customerName: 'John Smith' })
+    expect(resMissing.status).toBe(400)
+    expect(mockBatchCommit).not.toHaveBeenCalled()
+
+    const resEmpty = await request(app)
+      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 2200, customerName: 'John Smith', customerAddress: '   ' })
+    expect(resEmpty.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()
   })
 
@@ -333,7 +360,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 2200, customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 2200, customerName: 'John Smith', customerAddress: '123 Main St' })
 
     expect(res.status).toBe(409)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -354,7 +381,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 0, customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 0, customerName: 'John Smith', customerAddress: '123 Main St' })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()

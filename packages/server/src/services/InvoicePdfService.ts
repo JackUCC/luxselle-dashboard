@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url)
 const pdfmake = require('pdfmake')
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const LOGO_PATH = path.join(__dirname, '..', 'assets', 'luxselle-logo.png')
+const LOGO_PATH = path.join(__dirname, '..', '..', 'assets', 'luxselle-logo.png')
 
 // Set up standard built-in PDFKit fonts
 pdfmake.setFonts({
@@ -104,7 +104,7 @@ export class InvoicePdfService {
             ])
         })
 
-        // VAT Breakdown section
+        // VAT Breakdown section (Subtotal, VAT, Total; Grand Total is shown separately below)
         const vatBreakdownBody: TableCell[][] = [
             [
                 { text: 'Subtotal (excl. VAT):', alignment: 'right', margin: [0, 2, 10, 2] },
@@ -118,10 +118,6 @@ export class InvoicePdfService {
                 { text: 'Total (incl. VAT):', alignment: 'right', margin: [0, 2, 10, 2] },
                 { text: this.formatCurrency(invoice.totalEur), alignment: 'right', margin: [0, 2, 0, 2] },
             ],
-            [
-                { text: 'Grand Total:', bold: true, alignment: 'right', margin: [0, 5, 10, 0] },
-                { text: this.formatCurrency(invoice.totalEur), bold: true, alignment: 'right', margin: [0, 5, 0, 0] },
-            ],
         ]
 
         // Footer: thank you text + company info at bottom
@@ -134,22 +130,29 @@ export class InvoicePdfService {
 
         const content: Content[] = []
 
+        // Header: left column = logo + recipient below; right column = company
+        const leftHeaderStack: Content[] = []
         if (logoDataUrl) {
-            content.push({ image: logoDataUrl, width: 180, margin: [0, 0, 0, 16] as [number, number, number, number] })
+            leftHeaderStack.push({ image: logoDataUrl, width: 180, margin: [0, 0, 0, 12] as [number, number, number, number] })
         }
+        leftHeaderStack.push({ stack: customerStack })
+        content.push({
+            columns: [
+                { stack: leftHeaderStack, width: '*' },
+                { stack: companyHeaderStack, width: 'auto' },
+            ],
+            margin: [0, 0, 0, 20] as [number, number, number, number],
+        })
 
         content.push(
-            // Header Row: Customer (Left) | Company (Right)
-            {
-                columns: [
-                    { stack: customerStack, width: '*' },
-                    { stack: companyHeaderStack, width: 'auto' },
-                ],
-                margin: [0, 0, 0, 20] as [number, number, number, number],
-            },
             // Invoice block (left-aligned)
             { stack: invoiceBlockStack, margin: [0, 0, 0, 24] as [number, number, number, number] },
-            { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
+            { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 4] as [number, number, number, number] },
+            // Gold line under Order Items
+            {
+                canvas: [{ type: 'line', x1: 0, y1: 0, x2: 450, y2: 0, lineWidth: 2, lineColor: '#B8860B' }],
+                margin: [0, 0, 0, 8] as [number, number, number, number],
+            },
         )
         content.push(
             {
@@ -163,7 +166,8 @@ export class InvoicePdfService {
                 table: { body: vatBreakdownBody },
                 margin: [0, 0, 0, 8] as [number, number, number, number],
             },
-            { text: `Grand Total: ${this.formatCurrency(invoice.totalEur)}`, bold: true, alignment: 'center', fontSize: 12, margin: [0, 8, 0, 24] as [number, number, number, number] },
+            // Grand Total right-aligned (single prominent line)
+            { text: `Grand Total: ${this.formatCurrency(invoice.totalEur)}`, bold: true, alignment: 'right', fontSize: 12, margin: [0, 8, 0, 24] as [number, number, number, number] },
         )
         if (invoice.notes) {
             content.push(

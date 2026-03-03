@@ -1002,6 +1002,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
   const [notes, setNotes] = useState('')
   const [invoiceCustomerName, setInvoiceCustomerName] = useState('')
   const [invoiceCustomerEmail, setInvoiceCustomerEmail] = useState('')
+  const [invoiceCustomerAddress, setInvoiceCustomerAddress] = useState('')
   const [invoiceDescription, setInvoiceDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const parsedAmount = Number(amount)
@@ -1030,6 +1031,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
     setNotes('')
     setInvoiceCustomerName('')
     setInvoiceCustomerEmail('')
+    setInvoiceCustomerAddress('')
     setInvoiceDescription(product.title?.trim() || `${product.brand} ${product.model}`.trim())
   }, [product.brand, product.model, product.title, sellPrice])
 
@@ -1065,6 +1067,10 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
       toast.error('Product is already sold')
       return
     }
+    if (showModal === 'sale' && !invoiceCustomerAddress.trim()) {
+      toast.error('Buyer address is required')
+      return
+    }
 
     setIsSubmitting(true)
     try {
@@ -1073,6 +1079,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
           amountEur: parsedAmount,
           customerName: invoiceCustomerName || undefined,
           customerEmail: invoiceCustomerEmail || undefined,
+          customerAddress: invoiceCustomerAddress.trim(),
           notes: notes || undefined,
           description: invoiceDescription || undefined,
         })
@@ -1210,6 +1217,10 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
                     <label htmlFor="product-transaction-customer-email" className="block text-sm font-medium text-lux-700 mb-1">Customer email (optional)</label>
                     <input id="product-transaction-customer-email" type="email" value={invoiceCustomerEmail} onChange={(e) => setInvoiceCustomerEmail(e.target.value)} placeholder="customer@example.com" className="lux-input w-full" />
                   </div>
+                  <div>
+                    <label htmlFor="product-transaction-customer-address" className="block text-sm font-medium text-lux-700 mb-1">Buyer address <span className="text-rose-500">*</span></label>
+                    <textarea id="product-transaction-customer-address" value={invoiceCustomerAddress} onChange={(e) => setInvoiceCustomerAddress(e.target.value)} placeholder="Street, City, Postcode, Country" rows={2} className="lux-input w-full resize-y" required />
+                  </div>
                 </>
               )}
 
@@ -1220,7 +1231,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={handleCloseModal} disabled={isSubmitting} className="px-4 py-2 text-sm font-medium text-lux-700 hover:text-lux-900 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">Cancel</button>
-                <button onClick={handleSubmit} disabled={isSubmitting || !hasPositiveAmount} className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
+                <button onClick={handleSubmit} disabled={isSubmitting || !hasPositiveAmount || (showModal === 'sale' && !invoiceCustomerAddress.trim())} className="lux-btn-primary flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none">
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {showModal === 'sale' ? 'Record Sale + Invoice' : 'Record Adjustment'}
                 </button>
