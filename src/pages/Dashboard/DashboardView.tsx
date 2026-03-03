@@ -131,9 +131,14 @@ export default function DashboardView() {
             <SourcingSitesWidget />
           </BentoGrid>
 
-          {/* Row 2: Currency Converter + Inventory & Potential Value (combined) */}
+          {/* Row 2: Currency Converter + Landed Cost */}
           <BentoGrid columns={3}>
             <EurToYenWidget />
+            <LandedCostWidget />
+          </BentoGrid>
+
+          {/* Row 3: Inventory & Value + Active Sourcing */}
+          <BentoGrid columns={3}>
             <div
               className={`lux-card lux-card-gold-accent p-6 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
               data-testid="inventory-value-card"
@@ -154,11 +159,6 @@ export default function DashboardView() {
                 </span>
               </div>
             </div>
-          </BentoGrid>
-
-          {/* Row 3: Landed Cost + Active Sourcing */}
-          <BentoGrid columns={3}>
-            <LandedCostWidget />
             <ActiveSourcingWidget />
           </BentoGrid>
 
