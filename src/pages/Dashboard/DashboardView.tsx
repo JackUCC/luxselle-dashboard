@@ -138,10 +138,10 @@ export default function DashboardView() {
             <ActiveSourcingWidget />
           </BentoGrid>
 
-          {/* Row 3: Inventory & Value */}
+          {/* Row 3: Inventory & Value (2-col) + AI Market Pulse */}
           <BentoGrid columns={3}>
             <div
-              className={`lux-card lux-card-gold-accent p-6 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
+              className={`lux-card lux-card-gold-accent p-6 h-full min-h-0 flex flex-col animate-bento-enter sm:col-span-2 ${staggerClass(4)}`}
               data-testid="inventory-value-card"
             >
               <SectionLabel className="mb-4">Inventory & Value</SectionLabel>
@@ -160,10 +160,6 @@ export default function DashboardView() {
                 </span>
               </div>
             </div>
-          </BentoGrid>
-
-          {/* Row 4: AI Market Pulse */}
-          <BentoGrid columns={3}>
             <AiMarketPulseWidget />
           </BentoGrid>
         </div>
