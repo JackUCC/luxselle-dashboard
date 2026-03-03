@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agentic Intelligence
-status: planning
-stopped_at: Completed 10-02-PLAN.md (AI provider unavailable UI states)
-last_updated: "2026-03-03T10:08:49.326Z"
+status: in_progress
+stopped_at: Completed 11-01-PLAN.md (per-run AI usage telemetry for market intel runs)
+last_updated: "2026-03-03T10:34:22Z"
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 17
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-**Status:** Ready to plan
+**Status:** In progress
 **Previous Milestone:** v2.0 UI Polish Demo Readiness — complete and archived (2026-03-03)
 **Current Milestone:** v3.0 Agentic Intelligence — Phases 10-12
-**Completed:** Phase 10, Plan 02 — AI Provider Unavailable UI States (2026-03-03)
-**Next Phase:** Phase 11 — Agentic Market Intelligence
+**Completed:** Phase 11, Plan 01 — AI Usage Telemetry for Market Intel Runs (2026-03-03)
+**Next Plan:** Phase 11, Plan 02 — Market Research UI freshness indicators
 
 ## Decisions Made
 
@@ -43,10 +43,13 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 | 10-01 | Health probe makes live API calls per test_providers=1 | env var presence check insufficient; only live call proves connectivity |
 | 10-02 | providerStatus banner renders above (not replacing) result panel | Degraded structural output still marginally useful to user |
 | 10-02 | Red styling mirrors amber pattern for design consistency | border-red-200/bg-red-50/50 matches amber convention from ai_fallback state |
+| 11-01 | COST_PER_CALL_EUR stored as constant in service, not schema | Schema validates shape only; business rules stay in service layer |
+| 11-01 | Failed runs omit aiUsage | Partial runs get no cost attribution — data integrity over convenience |
+| 11-01 | STANDARD_ANALYSE_CALL_COUNT=3 as named constant | Documents expandQuery+searchMarket+extractStructuredJson pipeline explicitly |
 
 ## Pending Todos
 
-- Proceed to Phase 11: Agentic Market Intelligence (INTEL-02)
+- Proceed to Phase 11 Plan 02: Market Research UI freshness indicators (11-02-PLAN.md)
 - Prepare release notes covering UI polish + Sprint 4/5 hardening closure
 - Resolve full `npm run test:e2e` pretest hang in this environment (targeted suites are passing)
 
@@ -66,6 +69,6 @@ None.
 
 ## Session
 
-**Last Date:** 2026-03-03T10:10:00.000Z
-**Stopped At:** Completed 10-02-PLAN.md (AI provider unavailable UI states)
-**Resume File:** .planning/phases/11-agentic-market-intelligence/
+**Last Date:** 2026-03-03T10:34:22Z
+**Stopped At:** Completed 11-01-PLAN.md (per-run AI usage telemetry for market intel runs)
+**Resume File:** .planning/phases/11-intel-02-agentic-market-intelligence/11-02-PLAN.md
