@@ -3,25 +3,24 @@
  * In Sidecar mode, shows QuickCheck (compact price + inventory check) instead.
  * @see docs/CODE_REFERENCE.md
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ArrowRightToLine, RefreshCw } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../../lib/api'
 import type { KPIs, ProfitSummary } from '../../types/dashboard'
-import type { ActivityEvent } from '@luxselle/shared'
 import DashboardSkeleton from './DashboardSkeleton'
 import SidecarView from '../../components/sidecar/SidecarView'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
 import PageLayout from '../../components/layout/PageLayout'
-import { AnimatedNumber, BentoGrid, Button, PageHeader, SectionLabel, StatCard } from '../../components/design-system'
+import { AnimatedNumber, BentoGrid, Button, PageHeader, SectionLabel } from '../../components/design-system'
 import MarketIntelligenceWidget from '../../components/widgets/MarketIntelligenceWidget'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
 import EurToYenWidget from '../../components/widgets/EurToYenWidget'
-import SerialCheckWidget from '../../components/widgets/SerialCheckWidget'
 import SourcingSitesWidget from '../../components/widgets/SourcingSitesWidget'
 import ActiveSourcingWidget from '../../components/widgets/ActiveSourcingWidget'
 import AiMarketPulseWidget from '../../components/widgets/AiMarketPulseWidget'
+import { staggerClass } from '../../lib/staggerClass'
 
 export default function DashboardView() {
   const navigate = useNavigate()
@@ -32,19 +31,16 @@ export default function DashboardView() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [activities, setActivities] = useState<ActivityEvent[]>([])
 
   const loadData = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
     try {
-      const [kpisRes, profitRes, activityRes] = await Promise.all([
+      const [kpisRes, profitRes] = await Promise.all([
         apiGet<{ data: KPIs }>('/dashboard/kpis'),
         apiGet<{ data: ProfitSummary }>('/dashboard/profit-summary'),
-        apiGet<{ data: ActivityEvent[] }>('/dashboard/activity?limit=10'),
       ])
       setKpis(kpisRes.data)
       setProfit(profitRes.data ?? null)
-      setActivities(activityRes.data ?? [])
       setError(null)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load dashboard'
@@ -135,34 +131,33 @@ export default function DashboardView() {
             <LandedCostWidget />
           </BentoGrid>
 
-          {/* Row 2: Currency Converter + Inventory Cost + Potential Value */}
+          {/* Row 2: Currency Converter + Inventory & Potential Value (combined) */}
           <BentoGrid columns={3}>
             <EurToYenWidget />
-            <StatCard
-              label="Inventory Cost"
-              value={<AnimatedNumber value={inventoryValue} prefix="€" />}
-              secondary={
-                <span className="text-sm text-lux-500 font-medium">
-                  {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'} in inventory
-                </span>
-              }
-              stagger={4}
-            />
-            <StatCard
-              label="Potential Value"
-              value={<AnimatedNumber value={potentialValue} prefix="€" />}
-              secondary={
-                <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-xs font-medium text-lux-700">
+            <div
+              className={`lux-card lux-card-gold-accent p-6 animate-bento-enter ${staggerClass(4)}`}
+              data-testid="inventory-value-card"
+            >
+              <SectionLabel className="mb-4">Inventory & Value</SectionLabel>
+              <p className="text-2xl sm:text-3xl font-semibold font-mono text-lux-800 leading-none">
+                <AnimatedNumber value={inventoryValue} prefix="€" />
+              </p>
+              <p className="mt-2 text-sm text-lux-500 font-medium">
+                {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'} in inventory
+              </p>
+              <div className="mt-4 pt-4 border-t border-lux-200/60">
+                <p className="text-lg font-semibold font-mono text-lux-800">
+                  <AnimatedNumber value={potentialValue} prefix="€" /> potential
+                </p>
+                <span className="inline-flex items-center rounded-full bg-white/80 border border-lux-200/60 px-2.5 py-1 text-xs font-medium text-lux-700 mt-1.5">
                   €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
                 </span>
-              }
-              stagger={5}
-            />
+              </div>
+            </div>
           </BentoGrid>
 
-          {/* Row 3: Serial Check + Sourcing Sites + Active Sourcing */}
+          {/* Row 3: Sourcing Sites + Active Sourcing */}
           <BentoGrid columns={3}>
-            <SerialCheckWidget />
             <SourcingSitesWidget />
             <ActiveSourcingWidget />
           </BentoGrid>
@@ -171,34 +166,6 @@ export default function DashboardView() {
           <BentoGrid columns={3}>
             <AiMarketPulseWidget />
           </BentoGrid>
-
-          {/* Recent Activity */}
-          <div className="lux-card p-5 space-y-3" data-testid="activity-feed">
-            <SectionLabel as="h2">Recent Activity</SectionLabel>
-            {activities.length === 0 ? (
-              <p className="text-sm text-lux-500">
-                No activity yet. Imports, retries, and status changes will appear here.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {activities.map((event) => (
-                  <li
-                    key={`${event.createdAt}-${event.entityId}`}
-                    className="flex items-start gap-3 text-sm text-lux-700"
-                  >
-                    <span className="shrink-0 rounded-full bg-lux-100 px-2 py-0.5 text-[11px] font-medium text-lux-500 uppercase tracking-wide">
-                      {event.eventType.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-lux-500 text-xs mt-0.5">
-                      {new Date(event.createdAt).toLocaleDateString(undefined, {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                      })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
       )}
     </PageLayout>

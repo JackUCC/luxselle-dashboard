@@ -87,6 +87,13 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
       }),
     })
   })
+  await page.route('**/api/dashboard/profit-summary', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { totalCost: 0, totalRevenue: 0, totalProfit: 0, soldItems: 0 } }),
+    })
+  })
 
   await page.goto('/')
 
@@ -98,7 +105,7 @@ test('dashboard skeleton appears during delayed load and then resolves', async (
 
   // Verify skeleton disappears and content loads
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
-  await expect(page.getByText('Inventory Cost')).toBeVisible()
+  await expect(page.getByTestId('inventory-value-card')).toBeVisible()
 })
 
 test('inventory missing-info filter works via URL', async ({ page }) => {
@@ -107,7 +114,7 @@ test('inventory missing-info filter works via URL', async ({ page }) => {
   await expect(page.getByText(/Showing products with missing information/)).toBeVisible()
 })
 
-test('activity feed is visible on dashboard overview', async ({ page }) => {
+test('dashboard overview loads and shows main content', async ({ page }) => {
   await page.route('**/api/dashboard/kpis', async (route) => {
     await route.fulfill({
       status: 200,
@@ -129,31 +136,11 @@ test('activity feed is visible on dashboard overview', async ({ page }) => {
       body: JSON.stringify({ data: { totalCost: 0, totalRevenue: 0, totalProfit: 0, soldItems: 0 } }),
     })
   })
-  await page.route('**/api/dashboard/activity', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [
-          {
-            organisationId: 'default',
-            createdAt: '2026-03-01T10:00:00Z',
-            updatedAt: '2026-03-01T10:00:00Z',
-            actor: 'system',
-            eventType: 'import_completed',
-            entityType: 'supplier',
-            entityId: 'sup-1',
-            payload: {},
-          },
-        ],
-      }),
-    })
-  })
 
   await page.goto('/')
 
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
-  await expect(page.getByTestId('activity-feed')).toBeVisible()
+  await expect(page.getByTestId('inventory-value-card')).toBeVisible()
 })
 
 test('dashboard intelligence widgets show snapshot freshness metadata', async ({ page }) => {

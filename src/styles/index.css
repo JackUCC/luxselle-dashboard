@@ -119,6 +119,16 @@ h3, h4, h5, h6 {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
+/* Light gold accent for emphasis (e.g. inventory/value card) */
+.lux-card-gold-accent {
+  border-left: 4px solid var(--lux-gold);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04), 2px 0 8px rgba(184, 134, 11, 0.08);
+}
+
+.lux-card-gold-accent:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.06), 2px 0 12px rgba(184, 134, 11, 0.12);
+}
+
 .lux-card.evaluator-form-card {
   display: flex;
   flex-direction: column;
