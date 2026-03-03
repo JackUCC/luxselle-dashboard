@@ -93,11 +93,11 @@ export default function ImportInventoryDrawer({ onClose, onImportComplete }: Imp
     return (
         <>
             <div
-                className="fixed inset-0 bg-lux-500/20 backdrop-blur-sm z-40 transition-opacity"
+                className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-150"
                 onClick={onClose}
             />
 
-            <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300 border-l border-lux-200">
+            <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-float z-50 flex flex-col overflow-hidden animate-slide-left border-l border-lux-200">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-lux-100 bg-lux-50/50">
                     <h2 className="text-lg font-semibold text-lux-900">Import Inventory</h2>
                     <button
