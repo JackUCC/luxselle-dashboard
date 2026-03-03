@@ -139,7 +139,7 @@ router.post('/', async (req, res, next) => {
         res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'Invalid from-sale body', parsed.error.flatten()))
         return
       }
-      const ratePct = parsed.data.vatPct ?? (await settingsRepo.getSettings())?.vatRatePct ?? 20
+      const ratePct = parsed.data.vatPct ?? (await settingsRepo.getSettings())?.vatRatePct ?? 23
       const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
       const invoiceData = buildInvoiceFromSale(parsed.data, invoiceNumber, ratePct)
       const created = await invoiceRepo.create(invoiceData as Invoice)
@@ -220,7 +220,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     await file.makePublic()
     const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${path}`
 
-    const ratePct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
+    const ratePct = (await settingsRepo.getSettings())?.vatRatePct ?? 23
     const amountEur = parseFloat(req.body?.amountEur)
     if (isNaN(amountEur) || amountEur < 0) {
       res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'amountEur must be a non-negative number'))

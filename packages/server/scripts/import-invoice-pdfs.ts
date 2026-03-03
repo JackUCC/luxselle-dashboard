@@ -63,7 +63,7 @@ async function importPdfs(sourceDir: string) {
         description: `Invoice ${displayNumber}`,
         quantity: 1,
         unitPriceEur: 0,
-        vatPct: 20,
+        vatPct: 23,
         amountEur: 0,
         sku: undefined
       }

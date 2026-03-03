@@ -795,7 +795,7 @@ router.post('/:id/sell-with-invoice', async (req, res, next) => {
       return
     }
     const now = new Date().toISOString()
-    const vatPct = (await settingsRepo.getSettings())?.vatRatePct ?? 20
+    const vatPct = (await settingsRepo.getSettings())?.vatRatePct ?? 23
     const { netEur, vatEur } = vatFromGross(input.amountEur, vatPct)
     const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
     const descriptionBase = product.title?.trim() || `${product.brand} ${product.model}`.trim()

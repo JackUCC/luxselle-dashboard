@@ -32,7 +32,7 @@ router.get('/calculate', async (req, res, next) => {
     let ratePct = ratePctQuery
     if (ratePct == null) {
       const settings = await settingsRepo.getSettings()
-      ratePct = settings?.vatRatePct ?? 20
+      ratePct = settings?.vatRatePct ?? 23
     }
     let netEur: number
     let vatEur: number
@@ -72,7 +72,7 @@ router.post('/calculate', async (req, res, next) => {
     let ratePct = ratePctBody
     if (ratePct == null) {
       const settings = await settingsRepo.getSettings()
-      ratePct = settings?.vatRatePct ?? 20
+      ratePct = settings?.vatRatePct ?? 23
     }
     let netEur: number
     let vatEur: number

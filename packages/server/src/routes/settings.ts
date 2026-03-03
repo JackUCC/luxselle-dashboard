@@ -26,7 +26,7 @@ function buildDefaultSettings(now: string) {
     baseCurrency: 'EUR',
     targetMarginPct: 35,
     fxUsdToEur: 0.92,
-    vatRatePct: 20,
+    vatRatePct: 23,
     pricingMarketCountryDefault: 'IE',
     pricingMarketMode: 'ie_first_eu_fallback',
     pricingIeSourceAllowlist: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
