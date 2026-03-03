@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { ArrowUpDown } from 'lucide-react'
 import SectionLabel from '../design-system/SectionLabel'
 import { useFxRate } from '../../hooks/useFxRate'
@@ -6,10 +6,31 @@ import { formatEur, formatJpy } from '../../lib/formatters'
 
 type Direction = 'eur-to-jpy' | 'jpy-to-eur'
 
+const EU_FLAG = '🇪🇺'
+const JP_FLAG = '🇯🇵'
+
+function formatSourceDisplay(amount: number, direction: Direction): string {
+  if (direction === 'eur-to-jpy') {
+    return amount.toLocaleString('en-GB', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })
+  }
+  return amount.toLocaleString('en-GB', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+}
+
+function sourcePrefix(direction: Direction): string {
+  return direction === 'eur-to-jpy' ? '€ ' : '¥ '
+}
+
 export default function EurToYenWidget() {
   const { data: fx, isLoading: loading } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('1000')
+  const [inputFocused, setInputFocused] = useState(false)
 
   const amount = (() => {
     const n = parseFloat(amountInput.replace(/,/g, ''))
@@ -21,8 +42,31 @@ export default function EurToYenWidget() {
     ? amount * eurToJpyRate
     : amount * jpyToEurRate
 
-  const currencySymbol = direction === 'eur-to-jpy' ? '€' : '¥'
-  const resultLabel = direction === 'eur-to-jpy' ? 'Yen (¥)' : 'Euro (€)'
+  const displayValue = inputFocused
+    ? amountInput
+    : formatSourceDisplay(amount, direction)
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/,/g, '')
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setAmountInput(raw === '' ? '' : raw)
+  }, [])
+
+  const handleBlur = useCallback(() => {
+    setInputFocused(false)
+    const n = parseFloat(amountInput.replace(/,/g, ''))
+    if (Number.isFinite(n) && n >= 0) setAmountInput(String(n))
+  }, [amountInput])
+
+  const rateLine =
+    direction === 'eur-to-jpy'
+      ? fx && `1 EUR = ${eurToJpyRate.toFixed(2)} JPY (Approx.)`
+      : fx && `1 JPY = ${jpyToEurRate.toFixed(6)} EUR (Approx.)`
+
+  const sourceLabel = direction === 'eur-to-jpy' ? 'Euro (€)' : 'Japanese Yen (¥)'
+  const sourceFlag = direction === 'eur-to-jpy' ? EU_FLAG : JP_FLAG
+  const targetLabel = direction === 'eur-to-jpy' ? 'Japanese Yen (¥)' : 'Euro (€)'
+  const targetFlag = direction === 'eur-to-jpy' ? JP_FLAG : EU_FLAG
+  const targetFormatted = direction === 'eur-to-jpy' ? formatJpy(result) : formatEur(result)
 
   return (
     <div className="lux-card p-6 h-full min-h-0 flex flex-col animate-bento-enter stagger-3">
@@ -40,39 +84,63 @@ export default function EurToYenWidget() {
 
       {loading && !fx ? (
         <div className="space-y-3">
-          <div className="h-12 rounded-lg bg-lux-200/60 animate-pulse" />
-          <div className="h-5 w-1/2 rounded bg-lux-200/60 animate-pulse" />
+          <div className="h-14 rounded-[14px] bg-lux-200/60 animate-pulse" />
+          <div className="h-5 w-1/2 rounded bg-lux-200/60 animate-pulse mx-auto" />
+          <div className="h-14 rounded-[14px] bg-lux-200/60 animate-pulse" />
         </div>
       ) : (
-        <>
-          <div className="relative">
-            <span className="absolute left-px top-1/2 -translate-y-1/2 text-lg font-medium text-lux-400">
-              {currencySymbol}
+        <div className="space-y-3">
+          {/* Source currency row (input) */}
+          <div className="rounded-[14px] bg-lux-50 px-4 py-3 flex items-center gap-3">
+            <span className="flex shrink-0 items-center gap-2" aria-hidden="true">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm">
+                {sourceFlag}
+              </span>
+              <span className="text-sm font-medium text-lux-600">{sourceLabel}</span>
             </span>
-            <input
-              id="eur-yen-input"
-              type="text"
-              inputMode="decimal"
-              placeholder="0"
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              className="lux-input h-12 pl-12 text-xl font-semibold font-mono text-lux-800"
-            />
+            <div className="flex flex-1 items-center justify-end gap-0.5">
+              <span className="text-xl font-semibold font-mono text-lux-800">
+                {sourcePrefix(direction)}
+              </span>
+              <input
+                id="eur-yen-input"
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={displayValue}
+                onChange={handleInputChange}
+                onFocus={() => setInputFocused(true)}
+                onBlur={handleBlur}
+                aria-label={
+                  direction === 'eur-to-jpy' ? 'Euro amount' : 'Japanese Yen amount'
+                }
+                className="lux-input h-10 min-w-0 flex-1 rounded-lg border-0 bg-transparent py-0 pl-0 pr-0 text-right text-xl font-semibold font-mono text-lux-800 focus:shadow-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:ring-inset"
+              />
+            </div>
           </div>
 
-          {fx && amount > 0 && (
-            <div className="mt-4 rounded-[14px] bg-lux-50 px-4 py-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
-                  {resultLabel}
-                </span>
-                <span className="text-lg font-semibold font-mono text-lux-800">
-                  {direction === 'eur-to-jpy' ? formatJpy(result) : formatEur(result)}
-                </span>
-              </div>
-            </div>
+          {/* Rate line */}
+          {rateLine && (
+            <p className="text-center text-sm text-lux-400">{rateLine}</p>
           )}
-        </>
+
+          {/* Target currency row (output) */}
+          <div
+            className="rounded-[14px] bg-lux-50 px-4 py-3 flex items-center gap-3"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span className="flex shrink-0 items-center gap-2" aria-hidden="true">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm">
+                {targetFlag}
+              </span>
+              <span className="text-sm font-medium text-lux-600">{targetLabel}</span>
+            </span>
+            <span className="ml-auto text-xl font-semibold font-mono text-lux-800 tabular-nums">
+              {targetFormatted}
+            </span>
+          </div>
+        </div>
       )}
     </div>
   )
