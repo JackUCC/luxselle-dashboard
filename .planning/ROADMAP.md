@@ -41,7 +41,7 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 
 ### 📋 v3.0 Agentic Intelligence (Planned)
 
-- [ ] **Phase 10: AI Reliability + Provider Diagnostics** — AI provider failures surfaced clearly in the UI; recoverable error states with actionable guidance (STAB-01)
+- [x] **Phase 10: AI Reliability + Provider Diagnostics** — AI provider failures surfaced clearly in the UI; recoverable error states with actionable guidance (STAB-01) — completed 2026-03-03
 - [ ] **Phase 11: Agentic Market Intelligence** — continuous background monitoring and on-demand deep dives (INTEL-02)
 - [ ] **Phase 12: Inventory + Invoice Verification + ML Signal Improvements** — end-to-end verification of Inventory/Invoice flows + ML price prediction confidence (QUAL-01, ML-01)
 
@@ -66,7 +66,7 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 | Polish-2. Animation + Skeletons | v2.0 | 1/1 | ✅ Complete | 2026-03-02 |
 | Polish-3. AI Loaders + Previews | v2.0 | 1/1 | ✅ Complete | 2026-03-02 |
 | Polish-4. Demo QA Sweep | v2.0 | 1/1 | ✅ Complete | 2026-03-02 |
-| 10. AI Reliability + Diagnostics | v3.0 | 0/1 | 📋 Planned | — |
+| 10. AI Reliability + Diagnostics | v3.0 | 1/1 | ✅ Complete | 2026-03-03 |
 | 11. Agentic Market Intelligence | v3.0 | 0/1 | 📋 Planned | — |
 | 12. Inventory + Invoice + ML | v3.0 | 0/1 | 📋 Planned | — |
 
