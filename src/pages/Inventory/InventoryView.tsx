@@ -336,266 +336,264 @@ export default function InventoryView() {
   return (
     <PageLayout variant="default">
       <section className={isSidecar ? "min-w-0 max-w-full overflow-x-clip space-y-6" : "space-y-8"}>
-      <PageHeader
-        title="Inventory"
-        purpose="Manage stock levels and product details."
-        actions={
-          <div className={isSidecar ? "grid w-full grid-cols-2 gap-2" : "flex flex-wrap items-center gap-2"}>
-            <Button
-              variant="primary"
-              size={isSidecar ? "sm" : "md"}
-              onClick={() => setShowAddDrawer(true)}
-              className="inline-flex items-center justify-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              {isSidecar ? "Add" : "Add Product"}
-            </Button>
-            <Button
-              variant="secondary"
-              size={isSidecar ? "sm" : "md"}
-              onClick={handleExportCSV}
-              disabled={filteredProducts.length === 0}
-              className="inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
-            <Button
-              variant="secondary"
-              size={isSidecar ? "sm" : "md"}
-              onClick={() => setShowImportDrawer(true)}
-              className="inline-flex items-center justify-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Import
-            </Button>
-            <button
-              type="button"
-              onClick={() => setShowClearConfirm(true)}
-              disabled={products.length === 0 || isClearing}
-              className="inline-flex items-center justify-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-              title="Delete all inventory items"
-            >
-              {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              {isSidecar ? "Clear" : "Clear all"}
-            </button>
-          </div>
-        }
-      />
-
-      {/* Search & Filters */}
-      <Card className="p-6 animate-bento-enter stagger-0">
-        <SectionLabel className="mb-4">Search & Filters</SectionLabel>
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3 flex-1">
-              <div className={`relative flex-1 ${isSidecar ? "max-w-none" : "max-w-md"}`}>
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-lux-400" />
-                <PredictiveInput
-                  ref={searchInputRef}
-                  value={query}
-                  onChange={(v) => updateParam("q", v)}
-                  onSelect={handleSearchSelect}
-                  inventoryItems={productNames}
-                  popularItems={POPULAR_SUGGESTIONS}
-                  placeholder="Search by brand, model, SKU..."
-                  ariaLabel="Search inventory"
-                  listboxLabel="Inventory search suggestions"
-                  className="lux-input pl-10 w-full"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-xs font-semibold text-lux-400">
-                  /
-                </span>
-              </div>
-
-              {/* View Toggles */}
-              <div className="flex rounded-lux-card border border-lux-200 bg-lux-50 p-1">
-                <IconButton
-                  onClick={() => setViewMode("table")}
-                  icon={<LayoutList className="h-4 w-4" />}
-                  label="Table view"
-                  className={`transition-all ${
-                    viewMode === "table"
-                      ? "bg-white shadow-sm text-lux-900"
-                      : "text-lux-400 hover:text-lux-700"
-                  }`}
-                  data-testid="inventory-view-table"
-                />
-                <IconButton
-                  onClick={() => setViewMode("grid")}
-                  icon={<LayoutGrid className="h-4 w-4" />}
-                  label="Grid view"
-                  className={`transition-all ${
-                    viewMode === "grid"
-                      ? "bg-white shadow-sm text-lux-900"
-                      : "text-lux-400 hover:text-lux-700"
-                  }`}
-                  data-testid="inventory-view-grid"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Filter dropdowns */}
-          <div className="flex flex-wrap items-center gap-3 border-t border-lux-200 pt-4">
-            <SectionLabel as="span" className="inline-flex items-center gap-1.5">
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filter by
-            </SectionLabel>
-            <div className="relative">
-              <select
-                aria-label="Filter by brand"
-                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:border-lux-gold transition-all cursor-pointer"
-                value={brandFilter}
-                onChange={(e) => updateParam("brand", e.target.value)}
+        <PageHeader
+          title="Inventory"
+          purpose="Manage stock levels and product details."
+          actions={
+            <div className={isSidecar ? "grid w-full grid-cols-2 gap-2" : "flex flex-wrap items-center gap-2"}>
+              <Button
+                variant="primary"
+                size={isSidecar ? "sm" : "md"}
+                onClick={() => setShowAddDrawer(true)}
+                className="inline-flex items-center justify-center gap-2"
               >
-                <option value="">All Brands</option>
-                {brands.map((brand) => (
-                  <option key={brand} value={brand}>
-                    {brand}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
-            </div>
-            <div className="relative">
-              <select
-                aria-label="Filter by status"
-                className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:border-lux-gold transition-all cursor-pointer"
-                value={statusFilter}
-                onChange={(e) => updateParam("status", e.target.value)}
+                <Plus className="h-4 w-4" />
+                {isSidecar ? "Add" : "Add Product"}
+              </Button>
+              <Button
+                variant="secondary"
+                size={isSidecar ? "sm" : "md"}
+                onClick={handleExportCSV}
+                disabled={filteredProducts.length === 0}
+                className="inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <option value="">All Statuses</option>
-                <option value="in_stock">In Stock</option>
-                <option value="sold">Sold</option>
-                <option value="reserved">Reserved</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
-            </div>
-            {activeFilterCount > 0 && (
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+              <Button
+                variant="secondary"
+                size={isSidecar ? "sm" : "md"}
+                onClick={() => setShowImportDrawer(true)}
+                className="inline-flex items-center justify-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Import
+              </Button>
               <button
                 type="button"
-                onClick={clearAllFilters}
-                className={`${isSidecar ? "" : "ml-auto"} inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-semibold text-lux-600 hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none`}
+                onClick={() => setShowClearConfirm(true)}
+                disabled={products.length === 0 || isClearing}
+                className="inline-flex items-center justify-center gap-2 rounded-lux-input border-2 border-rose-200 bg-white px-3 py-2 text-body-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                title="Delete all inventory items"
               >
-                <X className="h-3.5 w-3.5" />
-                Clear all ({activeFilterCount})
+                {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {isSidecar ? "Clear" : "Clear all"}
               </button>
+            </div>
+          }
+        />
+
+        {/* Search & Filters */}
+        <Card className="p-6 animate-bento-enter stagger-0">
+          <SectionLabel className="mb-4">Search & Filters</SectionLabel>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`relative flex-1 ${isSidecar ? "max-w-none" : "max-w-md"}`}>
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-lux-400" />
+                  <PredictiveInput
+                    ref={searchInputRef}
+                    value={query}
+                    onChange={(v) => updateParam("q", v)}
+                    onSelect={handleSearchSelect}
+                    inventoryItems={productNames}
+                    popularItems={POPULAR_SUGGESTIONS}
+                    placeholder="Search by brand, model, SKU..."
+                    ariaLabel="Search inventory"
+                    listboxLabel="Inventory search suggestions"
+                    className="lux-input pl-10 w-full"
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-lux-100 px-1.5 py-0.5 text-xs font-semibold text-lux-400">
+                    /
+                  </span>
+                </div>
+
+                {/* View Toggles */}
+                <div className="flex rounded-lux-card border border-lux-200 bg-lux-50 p-1">
+                  <IconButton
+                    onClick={() => setViewMode("table")}
+                    icon={<LayoutList className="h-4 w-4" />}
+                    label="Table view"
+                    className={`transition-all ${viewMode === "table"
+                        ? "bg-white shadow-sm text-lux-900"
+                        : "text-lux-400 hover:text-lux-700"
+                      }`}
+                    data-testid="inventory-view-table"
+                  />
+                  <IconButton
+                    onClick={() => setViewMode("grid")}
+                    icon={<LayoutGrid className="h-4 w-4" />}
+                    label="Grid view"
+                    className={`transition-all ${viewMode === "grid"
+                        ? "bg-white shadow-sm text-lux-900"
+                        : "text-lux-400 hover:text-lux-700"
+                      }`}
+                    data-testid="inventory-view-grid"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Filter dropdowns */}
+            <div className="flex flex-wrap items-center gap-3 border-t border-lux-200 pt-4">
+              <SectionLabel as="span" className="inline-flex items-center gap-1.5">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filter by
+              </SectionLabel>
+              <div className="relative">
+                <select
+                  aria-label="Filter by brand"
+                  className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:border-lux-gold transition-all cursor-pointer"
+                  value={brandFilter}
+                  onChange={(e) => updateParam("brand", e.target.value)}
+                >
+                  <option value="">All Brands</option>
+                  {brands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
+              </div>
+              <div className="relative">
+                <select
+                  aria-label="Filter by status"
+                  className="appearance-none rounded-lux-input border border-lux-200 bg-white pl-4 pr-10 py-2.5 text-body-sm font-medium text-lux-700 hover:border-lux-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/20 focus-visible:border-lux-gold transition-all cursor-pointer"
+                  value={statusFilter}
+                  onChange={(e) => updateParam("status", e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="in_stock">In Stock</option>
+                  <option value="sold">Sold</option>
+                  <option value="reserved">Reserved</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-lux-400 pointer-events-none" />
+              </div>
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className={`${isSidecar ? "" : "ml-auto"} inline-flex items-center gap-1 rounded-full border border-lux-200 px-3 py-1.5 text-xs font-semibold text-lux-600 hover:bg-lux-50 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none`}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear all ({activeFilterCount})
+                </button>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Missing info banner */}
+        {missingInfoFilter && (
+          <Card accent className="px-5 py-4 animate-bento-enter stagger-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-lux-700">
+                Showing products with missing information (e.g. cost/sell price or
+                category)
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete("missingInfo");
+                  setSearchParams(newParams);
+                }}
+                className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              >
+                Clear filter
+              </button>
+            </div>
+          </Card>
+        )}
+
+        {/* Summary strip */}
+        {!isLoading && !error && products.length > 0 && (
+          <div className="flex flex-wrap items-center gap-4 text-sm text-lux-600 animate-bento-enter stagger-1">
+            <span className="font-medium">
+              {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+            </span>
+            {missingInfoCount > 0 && (
+              <a
+                href="/inventory?missingInfo=1"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSearchParams((prev) => {
+                    const next = new URLSearchParams(prev);
+                    next.set("missingInfo", "1");
+                    return next;
+                  });
+                }}
+                className="font-medium text-amber-600 hover:text-amber-700 hover:underline focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm"
+              >
+                {missingInfoCount} missing info
+              </a>
             )}
           </div>
-        </div>
-      </Card>
+        )}
 
-      {/* Missing info banner */}
-      {missingInfoFilter && (
-        <Card accent className="px-5 py-4 animate-bento-enter stagger-1">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-lux-700">
-              Showing products with missing information (e.g. cost/sell price or
-              category)
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                const newParams = new URLSearchParams(searchParams);
-                newParams.delete("missingInfo");
-                setSearchParams(newParams);
-              }}
-              className="text-sm font-medium text-lux-gold hover:text-lux-800 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-            >
-              Clear filter
-            </button>
-          </div>
-        </Card>
-      )}
-
-      {/* Summary strip */}
-      {!isLoading && !error && products.length > 0 && (
-        <div className="flex flex-wrap items-center gap-4 text-sm text-lux-600 animate-bento-enter stagger-1">
-          <span className="font-medium">
-            {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
-          </span>
-          {missingInfoCount > 0 && (
-            <a
-              href="/inventory?missingInfo=1"
-              onClick={(e) => {
-                e.preventDefault();
-                setSearchParams((prev) => {
-                  const next = new URLSearchParams(prev);
-                  next.set("missingInfo", "1");
-                  return next;
-                });
-              }}
-              className="font-medium text-amber-600 hover:text-amber-700 hover:underline focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm"
-            >
-              {missingInfoCount} missing info
-            </a>
-          )}
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 px-3 py-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className={`h-3 ${i === 0 ? 'w-12' : i === 1 ? 'w-28' : i === 2 ? 'w-20' : i === 3 ? 'w-16' : 'w-14'}`} />
+        {isLoading ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 px-3 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className={`h-3 ${i === 0 ? 'w-12' : i === 1 ? 'w-28' : i === 2 ? 'w-20' : i === 3 ? 'w-16' : 'w-14'}`} />
+              ))}
+            </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-3 border-b border-lux-100">
+                <Skeleton className="h-10 w-10" variant="rect" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-40" />
+                  <Skeleton className="h-2.5 w-24" />
+                </div>
+                <Skeleton className="h-3.5 w-16" />
+                <Skeleton className="h-5 w-16 rounded-full" variant="rect" />
+              </div>
             ))}
           </div>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-3 py-3 border-b border-lux-100">
-              <Skeleton className="h-10 w-10" variant="rect" />
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-40" />
-                <Skeleton className="h-2.5 w-24" />
-              </div>
-              <Skeleton className="h-3.5 w-16" />
-              <Skeleton className="h-5 w-16 rounded-full" variant="rect" />
-            </div>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="lux-card p-8 text-center">
-          <p className="text-rose-600 font-medium">{error}</p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <Card className="border-dashed animate-bento-enter stagger-2">
-          <EmptyState
-            icon={Package}
-            title={
-              query || brandFilter || statusFilter || missingInfoFilter
-                ? "No matching products"
-                : "No products yet"
-            }
-            description={
-              query || brandFilter || statusFilter || missingInfoFilter
-                ? "Try a different search or clear your filters."
-                : "Add from Evaluator or create a product manually."
-            }
-            action={
-              !query && !brandFilter && !statusFilter && !missingInfoFilter ? (
-                <Button variant="primary" onClick={() => setShowAddDrawer(true)} className="inline-flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Add Product
-                </Button>
-              ) : (
-                <Button variant="secondary" onClick={clearAllFilters} className="inline-flex items-center gap-2">
-                  <X className="h-4 w-4" />
-                  Clear filters
-                </Button>
-              )
-            }
-          />
-        </Card>
-      ) : viewMode === "table" ? (
-        <TableShell
-          ref={shouldVirtualize ? tableContainerRef : null}
-          cardClassName="animate-bento-enter stagger-2"
-          className={isSidecar || shouldVirtualize ? "overflow-y-auto" : "overflow-y-visible"}
-          tableClassName="min-w-[920px] divide-y divide-lux-200"
-          style={{
-            ...(isSidecar ? { maxHeight: "min(70vh, 500px)" } : shouldVirtualize ? { maxHeight: "600px" } : {}),
-          } as React.CSSProperties}
-        >
+        ) : error ? (
+          <div className="lux-card p-8 text-center">
+            <p className="text-rose-600 font-medium">{error}</p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <Card className="border-dashed animate-bento-enter stagger-2">
+            <EmptyState
+              icon={Package}
+              title={
+                query || brandFilter || statusFilter || missingInfoFilter
+                  ? "No matching products"
+                  : "No products yet"
+              }
+              description={
+                query || brandFilter || statusFilter || missingInfoFilter
+                  ? "Try a different search or clear your filters."
+                  : "Add from Evaluator or create a product manually."
+              }
+              action={
+                !query && !brandFilter && !statusFilter && !missingInfoFilter ? (
+                  <Button variant="primary" onClick={() => setShowAddDrawer(true)} className="inline-flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Add Product
+                  </Button>
+                ) : (
+                  <Button variant="secondary" onClick={clearAllFilters} className="inline-flex items-center gap-2">
+                    <X className="h-4 w-4" />
+                    Clear filters
+                  </Button>
+                )
+              }
+            />
+          </Card>
+        ) : viewMode === "table" ? (
+          <TableShell
+            ref={shouldVirtualize ? tableContainerRef : null}
+            cardClassName="animate-bento-enter stagger-2"
+            className={isSidecar || shouldVirtualize ? "overflow-y-auto" : "overflow-y-visible"}
+            tableClassName="min-w-[920px] divide-y divide-lux-200"
+            style={{
+              ...(isSidecar ? { maxHeight: "min(70vh, 500px)" } : shouldVirtualize ? { maxHeight: "600px" } : {}),
+            } as React.CSSProperties}
+          >
             <thead className="bg-lux-50/80 sticky top-0 z-10 backdrop-blur-md">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-lux-500 uppercase tracking-wider">
@@ -646,7 +644,7 @@ export default function InventoryView() {
                                 <img
                                   src={product.imageUrls[0]}
                                   alt=""
-                                  className="h-full w-full object-cover"
+                                  className="h-full w-full object-contain p-1"
                                   onError={(e) => {
                                     e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL;
                                   }}
@@ -719,7 +717,7 @@ export default function InventoryView() {
                               <img
                                 src={product.imageUrls[0]}
                                 alt=""
-                                className="h-full w-full object-cover"
+                                className="h-full w-full object-contain p-1"
                                 onError={(e) => {
                                   e.currentTarget.src = PLACEHOLDER_IMAGE_SMALL;
                                 }}
@@ -777,111 +775,111 @@ export default function InventoryView() {
                 })
               )}
             </tbody>
-        </TableShell>
-      ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredProducts.map((product, index) => {
-            const isMissingInfo = hasMissingInfo(product);
-            return (
-              <div
-                key={product.id}
-                onClick={() => openProductDrawer(product.id)}
-                className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter ${staggerClass(index)} focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
-              >
-                <div className="aspect-[4/3] bg-lux-50 relative overflow-hidden rounded-t-[15px]">
-                  {product.imageUrls?.[0] && (
-                    <img
-                      src={product.imageUrls[0]}
-                      alt=""
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      onError={(e) => {
-                        e.currentTarget.src = PLACEHOLDER_IMAGE;
-                      }}
-                    />
-                  )}
-                  <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
-                    {isMissingInfo && (
-                      <Badge variant="status-warning">Missing info</Badge>
+          </TableShell>
+        ) : (
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredProducts.map((product, index) => {
+              const isMissingInfo = hasMissingInfo(product);
+              return (
+                <div
+                  key={product.id}
+                  onClick={() => openProductDrawer(product.id)}
+                  className={`lux-card group relative overflow-hidden hover:-translate-y-1 transition-all cursor-pointer animate-bento-enter ${staggerClass(index)} focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isMissingInfo ? "border-l-4 border-l-amber-400" : ""}`}
+                >
+                  <div className="aspect-[4/3] bg-lux-50 relative overflow-hidden rounded-t-[15px]">
+                    {product.imageUrls?.[0] && (
+                      <img
+                        src={product.imageUrls[0]}
+                        alt=""
+                        className="h-full w-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => {
+                          e.currentTarget.src = PLACEHOLDER_IMAGE;
+                        }}
+                      />
                     )}
-                    <Badge variant={getStatusBadgeVariant(product.status)}>
-                      {getStatusLabel(product.status)}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <SectionLabel as="span" className="mb-1">
-                    {product.brand}
-                  </SectionLabel>
-                  <h3 className="font-bold text-lux-900 text-base mb-4 line-clamp-1">
-                    {product.model}
-                  </h3>
-
-                  <div className="flex items-end justify-between border-t border-lux-200 pt-4">
-                    <div>
-                      <SectionLabel as="span">Price</SectionLabel>
-                      <div className="font-mono text-lg font-bold text-lux-900">
-                        {formatCurrency(product.sellPriceEur)}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <SectionLabel as="span">Qty</SectionLabel>
-                      <div className="text-sm font-medium text-lux-600">
-                        {product.quantity}
-                      </div>
+                    <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
+                      {isMissingInfo && (
+                        <Badge variant="status-warning">Missing info</Badge>
+                      )}
+                      <Badge variant={getStatusBadgeVariant(product.status)}>
+                        {getStatusLabel(product.status)}
+                      </Badge>
                     </div>
                   </div>
+                  <div className="p-5">
+                    <SectionLabel as="span" className="mb-1">
+                      {product.brand}
+                    </SectionLabel>
+                    <h3 className="font-bold text-lux-900 text-base mb-4 line-clamp-1">
+                      {product.model}
+                    </h3>
+
+                    <div className="flex items-end justify-between border-t border-lux-200 pt-4">
+                      <div>
+                        <SectionLabel as="span">Price</SectionLabel>
+                        <div className="font-mono text-lg font-bold text-lux-900">
+                          {formatCurrency(product.sellPriceEur)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <SectionLabel as="span">Qty</SectionLabel>
+                        <div className="text-sm font-medium text-lux-600">
+                          {product.quantity}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-      {/* Product Detail Drawer */}
-      {selectedProductId && (
-        <ProductDetailDrawer
-          productId={selectedProductId}
-          onClose={closeProductDrawer}
-          onProductUpdated={handleProductUpdated}
-          onProductDeleted={handleProductDeleted}
+        {/* Product Detail Drawer */}
+        {selectedProductId && (
+          <ProductDetailDrawer
+            productId={selectedProductId}
+            onClose={closeProductDrawer}
+            onProductUpdated={handleProductUpdated}
+            onProductDeleted={handleProductDeleted}
+          />
+        )}
+
+        {showAddDrawer && (
+          <AddProductDrawer
+            onClose={() => setShowAddDrawer(false)}
+            onProductAdded={fetchProducts}
+          />
+        )}
+
+        {showImportDrawer && (
+          <ImportInventoryDrawer
+            onClose={() => setShowImportDrawer(false)}
+            onImportComplete={fetchProducts}
+          />
+        )}
+
+        {/* Confirmation Modals */}
+        <ConfirmationModal
+          isOpen={showClearConfirm}
+          onClose={() => setShowClearConfirm(false)}
+          onConfirm={handleClearAll}
+          title="Clear Inventory"
+          message={`Are you sure you want to delete all ${products.length} items? This action cannot be undone.`}
+          confirmLabel="Clear All"
+          isConfirming={isClearing}
+          variant="danger"
         />
-      )}
 
-      {showAddDrawer && (
-        <AddProductDrawer
-          onClose={() => setShowAddDrawer(false)}
-          onProductAdded={fetchProducts}
+        <ConfirmationModal
+          isOpen={!!productToDelete}
+          onClose={() => setProductToDelete(null)}
+          onConfirm={() => productToDelete && handleDeleteProduct(productToDelete)}
+          title="Delete Product"
+          message={`Are you sure you want to delete "${productToDelete?.brand} ${productToDelete?.title || productToDelete?.model}"?`}
+          confirmLabel="Delete"
+          variant="danger"
         />
-      )}
-
-      {showImportDrawer && (
-        <ImportInventoryDrawer
-          onClose={() => setShowImportDrawer(false)}
-          onImportComplete={fetchProducts}
-        />
-      )}
-
-      {/* Confirmation Modals */}
-      <ConfirmationModal
-        isOpen={showClearConfirm}
-        onClose={() => setShowClearConfirm(false)}
-        onConfirm={handleClearAll}
-        title="Clear Inventory"
-        message={`Are you sure you want to delete all ${products.length} items? This action cannot be undone.`}
-        confirmLabel="Clear All"
-        isConfirming={isClearing}
-        variant="danger"
-      />
-
-      <ConfirmationModal
-        isOpen={!!productToDelete}
-        onClose={() => setProductToDelete(null)}
-        onConfirm={() => productToDelete && handleDeleteProduct(productToDelete)}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${productToDelete?.brand} ${productToDelete?.title || productToDelete?.model}"?`}
-        confirmLabel="Delete"
-        variant="danger"
-      />
       </section>
     </PageLayout>
   );

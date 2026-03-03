@@ -148,7 +148,7 @@ export default function SavedResearchView() {
                 title="Saved Research"
                 purpose="View and manage your saved market research analysis."
             />
-            
+
             {/* Filter Bar */}
             <div className="mb-6 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="flex w-full items-center gap-1 rounded-lg bg-lux-100 p-1 sm:w-auto">
@@ -168,7 +168,7 @@ export default function SavedResearchView() {
                         Starred
                     </button>
                 </div>
-                
+
                 <div className="w-full sm:w-48">
                     <LuxSelect
                         id="brand-filter"
@@ -294,12 +294,12 @@ export default function SavedResearchView() {
                 <Modal
                     isOpen={!!selectedItem}
                     onClose={() => setSelectedItem(null)}
-                    size="lg"
+                    size="xl"
                     titleId="saved-research-preview-title"
                 >
                     {selectedItem && (
-                        <div className="flex min-h-0 max-h-full flex-col">
-                            <div className="flex shrink-0 items-center justify-between border-b border-lux-200 px-6 py-4">
+                        <div className="flex flex-col h-full max-h-full min-h-0 bg-lux-50 overflow-hidden">
+                            <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-lux-200 bg-white/95 px-6 py-4 backdrop-blur shadow-sm">
                                 <h2 id="saved-research-preview-title" className="text-card-header font-semibold text-lux-900 min-w-0 truncate pr-3">
                                     {selectedItem.result.brand} {selectedItem.result.model}
                                 </h2>
@@ -315,8 +315,10 @@ export default function SavedResearchView() {
                                     <span className="text-sm font-medium">Close</span>
                                 </button>
                             </div>
-                            <div className="min-h-0 flex-1 overflow-y-auto p-6">
-                                <MarketResearchResultPanel result={selectedItem.result} />
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative z-0">
+                                <div className="max-w-4xl mx-auto">
+                                    <MarketResearchResultPanel result={selectedItem.result} />
+                                </div>
                             </div>
                         </div>
                     )}

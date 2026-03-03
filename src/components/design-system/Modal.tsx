@@ -8,8 +8,8 @@ export interface ModalProps {
   children: ReactNode
   /** Optional id for aria-labelledby */
   titleId?: string
-  /** max-width: 24rem standard, 32rem for confirmation, 42rem for content-heavy (e.g. saved research preview) */
-  size?: 'sm' | 'md' | 'lg'
+  /** max-width: 24rem standard, 32rem for confirmation, 42rem ('lg'), 56rem ('xl') */
+  size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export default function Modal({
@@ -45,7 +45,7 @@ export default function Modal({
       panel ? Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector)) : []
 
     const focusableOnOpen = getFocusable()
-    ;(focusableOnOpen[0] ?? panel)?.focus()
+      ; (focusableOnOpen[0] ?? panel)?.focus()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -87,27 +87,29 @@ export default function Modal({
   if (!isOpen) return null
 
   const maxW =
-    size === 'lg'
-      ? 'max-w-[min(42rem,calc(100vw-2rem))]'
-      : size === 'md'
-        ? 'max-w-md'
-        : 'max-w-sm'
+    size === 'xl'
+      ? 'max-w-[min(56rem,calc(100vw-2rem))]'
+      : size === 'lg'
+        ? 'max-w-[min(42rem,calc(100vw-2rem))]'
+        : size === 'md'
+          ? 'max-w-md'
+          : 'max-w-sm'
 
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-50 bg-black/40 transition-opacity duration-150"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-150"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
-        className="fixed inset-0 z-50 flex max-h-[100dvh] min-h-0 items-center justify-center overflow-hidden p-4"
+        className="fixed inset-0 z-50 flex py-4 sm:py-8 items-center justify-center pointer-events-none"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
       >
         <div
-          className={`flex max-h-full w-full flex-col overflow-hidden rounded-lux-modal border-2 border-lux-200 bg-white shadow-float ${maxW} animate-scale-in`}
+          className={`relative flex max-h-full w-full flex-col overflow-hidden rounded-2xl border border-lux-200 bg-white shadow-2xl ${maxW} pointer-events-auto animate-scale-in`}
           onClick={(e) => e.stopPropagation()}
           ref={panelRef}
           tabIndex={-1}

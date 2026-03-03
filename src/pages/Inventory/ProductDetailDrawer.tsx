@@ -183,7 +183,7 @@ export default function ProductDetailDrawer({
       panel ? Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector)) : []
 
     const focusableOnOpen = getFocusable()
-    ;(focusableOnOpen[0] ?? panel)?.focus()
+      ; (focusableOnOpen[0] ?? panel)?.focus()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -1169,7 +1169,7 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
         </div>
       )}
 
-      {showModal && (
+      {showModal && createPortal(
         <>
           <div className="fixed inset-0 bg-black/30 z-50" onClick={handleCloseModal} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -1227,7 +1227,8 @@ function HistoryTab({ productId, product, sellPrice, openSellInvoiceSignal, onPr
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )
