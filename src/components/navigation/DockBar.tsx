@@ -47,10 +47,7 @@ export default function DockBar() {
               {groupIndex > 0 && (
                 <div className="my-2.5 h-px w-8 bg-gradient-to-r from-transparent via-lux-300/60 to-transparent" />
               )}
-              <section className="w-full px-1 py-0.5">
-                <p className="mb-1 min-w-0 truncate text-center text-[13px] font-semibold uppercase tracking-wider text-lux-gold" title={group.title}>
-                  {group.title}
-                </p>
+              <section className="w-full px-1 py-0.5" aria-label={group.title}>
                 <div className="flex flex-col items-center gap-1">
                   {routes.map((route) => {
                     const isActive = route.path === '/'
