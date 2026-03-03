@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useId,
   useMemo,
   useRef,
@@ -8,7 +9,11 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
+
+const LUX_SELECT_DROPDOWN_MAX_HEIGHT = 240
+const LUX_SELECT_OVERLAY_Z_INDEX = 9999
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string
@@ -116,8 +121,15 @@ export function LuxSelect({
 }: LuxSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number
+    left: number
+    minWidth: number
+    openUp: boolean
+  } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const portalRef = useRef<HTMLDivElement | null>(null)
   const listboxId = useId()
   const selectedIndex = useMemo(
     () => options.findIndex(option => option.value === value),
@@ -157,6 +169,21 @@ export function LuxSelect({
     setHighlightedIndex(findFirstEnabled())
   }, [disabled, findFirstEnabled, options, selectedIndex])
 
+  useLayoutEffect(() => {
+    if (!isOpen || !triggerRef.current) {
+      setDropdownPosition(null)
+      return
+    }
+    const rect = triggerRef.current.getBoundingClientRect()
+    const openUp = rect.bottom + LUX_SELECT_DROPDOWN_MAX_HEIGHT > window.innerHeight
+    setDropdownPosition({
+      left: rect.left,
+      top: openUp ? rect.top - 4 : rect.bottom + 4,
+      minWidth: rect.width,
+      openUp,
+    })
+  }, [isOpen])
+
   const selectOptionAt = useCallback(
     (index: number) => {
       const option = options[index]
@@ -172,15 +199,21 @@ export function LuxSelect({
   useEffect(() => {
     if (!isOpen) return
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        closeMenu()
-      }
+      const target = event.target as Node
+      if (containerRef.current?.contains(target)) return
+      if (portalRef.current?.contains(target)) return
+      closeMenu()
     }
+    const handleScrollOrResize = () => closeMenu()
     document.addEventListener('mousedown', handleClickOutside)
     document.addEventListener('touchstart', handleClickOutside)
+    window.addEventListener('scroll', handleScrollOrResize, true)
+    window.addEventListener('resize', handleScrollOrResize)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
+      window.removeEventListener('scroll', handleScrollOrResize, true)
+      window.removeEventListener('resize', handleScrollOrResize)
     }
   }, [closeMenu, isOpen])
 
@@ -254,33 +287,51 @@ export function LuxSelect({
         />
       </button>
 
-      {isOpen ? (
-        <div id={listboxId} role="listbox" aria-label={ariaLabel ?? 'Options'} tabIndex={-1} className="lux-select-dropdown">
-          {options.length === 0 ? (
-            <div className="lux-select-empty">No options</div>
-          ) : (
-            options.map((option, index) => {
-              const isSelected = option.value === value
-              const isHighlighted = highlightedIndex === index
-              return (
-                <button
-                  key={`${option.value}-${option.label}`}
-                  type="button"
-                  role="option"
-                  className={`lux-select-option ${isHighlighted ? 'lux-select-option-highlighted' : ''} ${isSelected ? 'lux-select-option-selected' : ''}`.trim()}
-                  disabled={option.disabled}
-                  onMouseEnter={() => {
-                    if (!option.disabled) setHighlightedIndex(index)
-                  }}
-                  onClick={() => selectOptionAt(index)}
-                >
-                  {option.label}
-                </button>
-              )
-            })
-          )}
-        </div>
-      ) : null}
+      {isOpen &&
+        dropdownPosition &&
+        createPortal(
+          <div
+            ref={portalRef}
+            id={listboxId}
+            role="listbox"
+            aria-label={ariaLabel ?? 'Options'}
+            tabIndex={-1}
+            className="lux-select-dropdown"
+            style={{
+              position: 'fixed',
+              left: dropdownPosition.left,
+              top: dropdownPosition.top,
+              minWidth: dropdownPosition.minWidth,
+              zIndex: LUX_SELECT_OVERLAY_Z_INDEX,
+              ...(dropdownPosition.openUp ? { transform: 'translateY(-100%)' } : undefined),
+            }}
+          >
+            {options.length === 0 ? (
+              <div className="lux-select-empty">No options</div>
+            ) : (
+              options.map((option, index) => {
+                const isSelected = option.value === value
+                const isHighlighted = highlightedIndex === index
+                return (
+                  <button
+                    key={`${option.value}-${option.label}`}
+                    type="button"
+                    role="option"
+                    className={`lux-select-option ${isHighlighted ? 'lux-select-option-highlighted' : ''} ${isSelected ? 'lux-select-option-selected' : ''}`.trim()}
+                    disabled={option.disabled}
+                    onMouseEnter={() => {
+                      if (!option.disabled) setHighlightedIndex(index)
+                    }}
+                    onClick={() => selectOptionAt(index)}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
