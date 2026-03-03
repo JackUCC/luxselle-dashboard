@@ -161,7 +161,7 @@ export default function DashboardView() {
                     <AnimatedNumber
                       value={inventoryValue}
                       prefix="€"
-                      duration={800}
+                      duration={1200}
                       onComplete={() => setCostAnimated(true)}
                     />
                   </p>
@@ -175,8 +175,8 @@ export default function DashboardView() {
                     <AnimatedNumber
                       value={potentialValue}
                       prefix="€"
-                      delay={800}
-                      duration={800}
+                      delay={1200}
+                      duration={1200}
                       onComplete={() => setPotentialAnimated(true)}
                     />
                   </p>
