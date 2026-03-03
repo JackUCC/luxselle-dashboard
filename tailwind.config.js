@@ -11,7 +11,7 @@ module.exports = {
         sans: ['Inter', 'sans-serif'],
         display: ['Ibarra Real Nova', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'monospace'],
-        section: ['"SF Compact Text"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        section: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       fontSize: {
         'display-hero': ['60px', { lineHeight: 1, letterSpacing: '-0.025em' }],
