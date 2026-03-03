@@ -156,7 +156,7 @@ export default function SerialCheckerCard() {
       </div>
 
       <div className="space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 items-end">
           <div>
             <label className="block text-xs text-lux-500 mb-1">Brand</label>
             <LuxSelect
@@ -168,12 +168,14 @@ export default function SerialCheckerCard() {
               dropdownMaxHeight={180}
             />
           </div>
-          <FloatingInput
-            type="text"
-            value={serial}
-            onChange={(e) => setSerial(e.target.value)}
-            label="Serial/date code"
-          />
+          <div className="min-h-[52px] flex flex-col justify-end">
+            <FloatingInput
+              type="text"
+              value={serial}
+              onChange={(e) => setSerial(e.target.value)}
+              label="Serial/date code"
+            />
+          </div>
         </div>
         <FloatingInput
           type="text"
