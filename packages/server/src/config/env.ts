@@ -57,7 +57,6 @@ const EnvSchema = z.object({
   GITHUB_TOKEN: z.string().optional(),
   BASE_CURRENCY: z.string().default('EUR'),
   TARGET_MARGIN_PCT: z.coerce.number().default(35),
-  SKIP_AUTH: z.string().optional(), // set to 'true' to disable auth in development
   SUPPLIER_EMAIL_ENABLED: booleanFromEnv.default(false),
   GMAIL_CLIENT_ID: z.string().optional(),
   GMAIL_CLIENT_SECRET: z.string().optional(),

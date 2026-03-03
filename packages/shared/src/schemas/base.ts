@@ -8,10 +8,6 @@ import { z } from 'zod'
 
 export const DEFAULT_ORG_ID = 'default'
 
-// User roles for authorization
-export const UserRoleSchema = z.enum(['admin', 'operator', 'readOnly'])
-export type UserRole = z.infer<typeof UserRoleSchema>
-
 export const BaseDocSchema = z.object({
   organisationId: z.string(),
   createdAt: z.string(),

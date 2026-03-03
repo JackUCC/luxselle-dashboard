@@ -48,7 +48,6 @@ This document indexes all documented code in the Luxselle Dashboard: purpose, lo
 | File | Purpose | References |
 |------|--------|------------|
 | `packages/server/src/middleware/requestId.ts` | Adds `requestId` (or `x-request-id`) and `startTime`; `requestLogger` logs start/end; `logger` (JSON); `errorTracker` for error budget. | Express, crypto (randomUUID) |
-| `packages/server/src/middleware/auth.ts` | `requireAuth` (Firebase ID token), `requireRole`, `optionalAuth`, `getAuditFields`; supports `SKIP_AUTH` for dev. | firebase-admin/auth, Express |
 | `packages/server/src/middleware/idempotency.ts` | Idempotency via `X-Idempotency-Key`; stores completed response in Firestore for replay; `generateFileIdempotencyKey` for imports. **Opt-in:** not mounted by default; wire with `router.post('/path', idempotency, handler)` when needed. | Express, Firestore |
 
 ### Repos (Firestore access)

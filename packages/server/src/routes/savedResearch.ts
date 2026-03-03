@@ -8,7 +8,7 @@ import { SavedResearchService } from '../services/SavedResearchService'
 const router = Router()
 const savedResearchService = new SavedResearchService()
 
-// Helper to get userId (mocked until Auth is implemented)
+// Helper to extract userId from header
 import type { Request } from 'express'
 const getUserId = (req: Request) => (req.headers['x-user-id'] as string) || 'default-user'
 

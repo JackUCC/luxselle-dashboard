@@ -3,7 +3,7 @@
  * @see docs/CODE_REFERENCE.md
  * References: Express, multer, sharp, Firebase Storage, @shared/schemas
  */
-import { type NextFunction, type Response, Router } from 'express'
+import { type NextFunction, type Request, type Response, Router } from 'express'
 import { z } from 'zod'
 import multer from 'multer'
 import sharp from 'sharp'
@@ -24,7 +24,6 @@ import { InvoiceRepo } from '../repos/InvoiceRepo'
 import { SettingsRepo } from '../repos/SettingsRepo'
 import { db, storage } from '../config/firebase'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
-import { type AuthenticatedRequest, requireAuth, requireRole } from '../middleware/auth'
 import { vatFromGross } from '../lib/vat'
 import { parseLuxsellePdfText } from '../lib/parseLuxsellePdf'
 import {
@@ -138,7 +137,7 @@ const importUpload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 })
 
-router.post('/import', requireRole('admin'), importUpload.single('file'), async (req, res, next) => {
+router.post('/import', importUpload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No file provided'))
@@ -262,7 +261,7 @@ router.post('/import', requireRole('admin'), importUpload.single('file'), async 
 })
 
 // POST /api/products/import-pdf - Parse Luxselle inventory PDF and create products (brand, title, sku, purchase, customs, vat, selling price)
-router.post('/import-pdf', requireRole('admin'), importUpload.single('file'), async (req, res, next) => {
+router.post('/import-pdf', importUpload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No file provided'))
@@ -337,7 +336,7 @@ const DESTRUCTIVE_CONFIRM_HEADER = 'x-confirm-destructive-action'
 const DESTRUCTIVE_CONFIRM_VALUE = 'CONFIRM_CLEAR_PRODUCTS'
 
 function requireDestructiveActionConfirmation(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ): void {
@@ -358,7 +357,7 @@ function requireDestructiveActionConfirmation(
   next()
 }
 
-router.post('/clear', requireAuth, requireRole('admin'), requireDestructiveActionConfirmation, async (req, res, next) => {
+router.post('/clear', requireDestructiveActionConfirmation, async (req, res, next) => {
   try {
     const coll = db.collection('products')
     let totalDeleted = 0
@@ -372,13 +371,12 @@ router.post('/clear', requireAuth, requireRole('admin'), requireDestructiveActio
       totalDeleted += snapshot.docs.length
     }
 
-    const authReq = req as AuthenticatedRequest & { requestId?: string }
-    const requestId = authReq.requestId || (req.headers['x-request-id'] as string | undefined) || randomUUID()
+    const requestId = (req as Request & { requestId?: string }).requestId || (req.headers['x-request-id'] as string | undefined) || randomUUID()
 
     console.info(
       JSON.stringify({
         event: 'products_clear',
-        requester: authReq.user?.uid ?? 'unknown',
+        requester: 'system',
         timestamp: new Date().toISOString(),
         deletedCount: totalDeleted,
         requestId,
@@ -465,7 +463,7 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
-router.post('/', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const input = ProductInputSchema.parse(req.body)
     const now = new Date().toISOString()
@@ -514,7 +512,7 @@ router.post('/', requireAuth, requireRole('operator', 'admin'), async (req, res,
   }
 })
 
-router.put('/:id', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const input = ProductUpdateSchema.parse(req.body)
     const now = new Date().toISOString()
@@ -528,7 +526,7 @@ router.put('/:id', requireAuth, requireRole('operator', 'admin'), async (req, re
   }
 })
 
-router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await productRepo.remove(req.params.id)
     res.status(204).send()
@@ -539,7 +537,7 @@ router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) 
 
 // --- Image upload: resize with sharp, upload original + thumbnail to Firebase Storage, update product.images ---
 
-router.post('/:id/images', requireRole('operator', 'admin'), upload.single('image'), async (req, res, next) => {
+router.post('/:id/images', upload.single('image'), async (req, res, next) => {
   try {
     const { id } = req.params
     const product = await productRepo.getById(id)
@@ -619,7 +617,7 @@ router.post('/:id/images', requireRole('operator', 'admin'), upload.single('imag
 })
 
 // DELETE /api/products/:id/images/:imageId - Delete image
-router.delete('/:id/images/:imageId', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
+router.delete('/:id/images/:imageId', async (req, res, next) => {
   try {
     const { id, imageId } = req.params
     const product = await productRepo.getById(id)
@@ -703,7 +701,7 @@ const SellWithInvoiceInputSchema = z.object({
   description: z.string().optional(),
 })
 
-router.post('/:id/transactions', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/:id/transactions', async (req, res, next) => {
   try {
     const { id } = req.params
     const product = await productRepo.getById(id)
@@ -773,7 +771,7 @@ router.post('/:id/transactions', requireAuth, requireRole('operator', 'admin'), 
   }
 })
 
-router.post('/:id/sell-with-invoice', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/:id/sell-with-invoice', async (req, res, next) => {
   try {
     const { id } = req.params
     const product = await productRepo.getById(id)

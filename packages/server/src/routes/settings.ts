@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { DEFAULT_ORG_ID, SettingsSchema } from '@shared/schemas'
 import { SettingsRepo } from '../repos/SettingsRepo'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
-import { requireRole } from '../middleware/auth'
 
 const router = Router()
 const settingsRepo = new SettingsRepo()
@@ -80,7 +79,7 @@ router.get('/', async (_req, res, next) => {
   }
 })
 
-router.patch('/', requireRole('admin'), async (req, res, next) => {
+router.patch('/', async (req, res, next) => {
   try {
     const patch = SettingsPatchSchema.parse(req.body)
     const now = new Date().toISOString()

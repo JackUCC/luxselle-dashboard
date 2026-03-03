@@ -14,7 +14,6 @@ import { SourcingRequestRepo } from '../repos/SourcingRequestRepo'
 import { ActivityEventRepo } from '../repos/ActivityEventRepo'
 import { getValidNextStatuses, isValidSourcingTransition } from '../lib/sourcingStatus'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
-import { requireRole } from '../middleware/auth'
 
 const router = Router()
 const sourcingRepo = new SourcingRequestRepo()
@@ -118,7 +117,7 @@ router.get('/:id', async (req, res, next) => {
 })
 
 // Create sourcing request
-router.post('/', requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const input = SourcingRequestInputSchema.parse(req.body)
     const now = new Date().toISOString()
@@ -160,7 +159,7 @@ router.post('/', requireRole('operator', 'admin'), async (req, res, next) => {
 })
 
 // Update; status change is validated via sourcingStatus and emits activity event
-router.put('/:id', requireRole('operator', 'admin'), async (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const input = SourcingRequestUpdateSchema.parse(req.body)
     const now = new Date().toISOString()
@@ -216,7 +215,7 @@ router.put('/:id', requireRole('operator', 'admin'), async (req, res, next) => {
 })
 
 // Delete sourcing request
-router.delete('/:id', requireRole('admin'), async (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await sourcingRepo.remove(req.params.id)
     res.status(204).send()

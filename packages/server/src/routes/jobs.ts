@@ -7,7 +7,6 @@ import { Router } from 'express'
 import { SystemJobRepo } from '../repos/SystemJobRepo'
 import { runJob } from '../services/JobRunner'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
-import { requireRole } from '../middleware/auth'
 
 const router = Router()
 const jobRepo = new SystemJobRepo()
@@ -53,7 +52,7 @@ router.get('/:id', async (req, res, next) => {
 })
 
 // Retry a failed job
-router.post('/:id/retry', requireRole('admin'), async (req, res, next) => {
+router.post('/:id/retry', async (req, res, next) => {
   try {
     const job = await jobRepo.getById(req.params.id)
     if (!job) {
@@ -94,7 +93,7 @@ router.post('/:id/retry', requireRole('admin'), async (req, res, next) => {
 })
 
 // Cancel a running or queued job
-router.post('/:id/cancel', requireRole('admin'), async (req, res, next) => {
+router.post('/:id/cancel', async (req, res, next) => {
   try {
     const job = await jobRepo.getById(req.params.id)
     if (!job) {

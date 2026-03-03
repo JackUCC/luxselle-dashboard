@@ -7,57 +7,6 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import { ZodError } from 'zod'
 import { productsRouter } from './products'
 
-const resolveRoleFromRequest = (req: Request): string => {
-  const explicitRole = req.headers['x-test-role']
-  if (typeof explicitRole === 'string' && explicitRole.length > 0) {
-    return explicitRole
-  }
-
-  const authHeader = req.headers.authorization
-  if (authHeader === 'Bearer admin-token') return 'admin'
-  if (authHeader === 'Bearer operator-token') return 'operator'
-  if (authHeader === 'Bearer readOnly-token') return 'readOnly'
-
-  return 'readOnly'
-}
-
-vi.mock('../middleware/auth', () => ({
-  requireAuth: (req: Request & { user?: { uid: string; role: string; orgId: string } }, _res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization
-    if (!authHeader?.startsWith('Bearer ')) {
-      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
-      return
-    }
-    const role = resolveRoleFromRequest(req)
-    req.user = { uid: `${role}-user`, role, orgId: 'default' }
-    next()
-  },
-  requireRole: (...allowedRoles: string[]) => (req: Request & { user?: { role: string } }, _res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization
-    if (!authHeader?.startsWith('Bearer ')) {
-      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
-      return
-    }
-
-    const role = req.user?.role ?? resolveRoleFromRequest(req)
-
-    if (!allowedRoles.includes(role)) {
-      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
-      return
-    }
-
-    if (!req.user) {
-      req.user = { role }
-    }
-    next()
-  },
-}))
-
-const authHeaders = (role = 'admin') => ({
-  Authorization: 'Bearer test-token',
-  'x-test-role': role,
-})
-
 const {
   mockList,
   mockGetById,
@@ -181,7 +130,7 @@ describe('GET /api/products', () => {
 
   it('returns 200 with data array when list is empty', async () => {
     mockList.mockResolvedValue([])
-    const res = await request(app).get('/api/products').set(authHeaders('readOnly'))
+    const res = await request(app).get('/api/products')
     expect(res.status).toBe(200)
     expect(res.body.data).toBeDefined()
     expect(Array.isArray(res.body.data)).toBe(true)
@@ -201,7 +150,7 @@ describe('GET /api/products', () => {
       status: 'in_stock',
     }
     mockList.mockResolvedValue([one])
-    const res = await request(app).get('/api/products').set(authHeaders('readOnly'))
+    const res = await request(app).get('/api/products')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
     expect(res.body.data[0].brand).toBe('X')
@@ -213,7 +162,7 @@ describe('GET /api/products', () => {
       { id: 'p2', createdAt: '2024-01-01', updatedAt: '', brand: 'B', model: 'N', costPriceEur: 30, sellPriceEur: 40, status: 'in_stock' },
     ]
     mockList.mockResolvedValue(products)
-    const res = await request(app).get('/api/products?sort=__proto__').set(authHeaders('readOnly'))
+    const res = await request(app).get('/api/products?sort=__proto__')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(2)
   })
@@ -224,7 +173,7 @@ describe('GET /api/products', () => {
       { id: 'p2', createdAt: '2024-01-02', updatedAt: '', brand: 'Acne', model: 'N', costPriceEur: 30, sellPriceEur: 40, status: 'in_stock' },
     ]
     mockList.mockResolvedValue(products)
-    const res = await request(app).get('/api/products?sort=brand&dir=asc').set(authHeaders('readOnly'))
+    const res = await request(app).get('/api/products?sort=brand&dir=asc')
     expect(res.status).toBe(200)
     expect(res.body.data[0].brand).toBe('Acne')
     expect(res.body.data[1].brand).toBe('Zara')
@@ -239,32 +188,14 @@ describe('POST /api/products/clear', () => {
     mockBatchCommit.mockResolvedValue(undefined)
   })
 
-  it('rejects unauthorized requests', async () => {
-    const res = await request(app).post('/api/products/clear')
-
-    expect(res.status).toBe(401)
-    expect(mockProductsGet).not.toHaveBeenCalled()
-  })
-
-  it('rejects non-admin requests', async () => {
-    const res = await request(app)
-      .post('/api/products/clear')
-      .set('Authorization', 'Bearer operator-token')
-
-    expect(res.status).toBe(403)
-    expect(mockProductsGet).not.toHaveBeenCalled()
-  })
-
   it('rejects requests without destructive-action confirmation header', async () => {
-    const res = await request(app)
-      .post('/api/products/clear')
-      .set('Authorization', 'Bearer admin-token')
+    const res = await request(app).post('/api/products/clear')
 
     expect(res.status).toBe(400)
     expect(mockProductsGet).not.toHaveBeenCalled()
   })
 
-  it('accepts valid admin requests with confirmation header and emits audit log fields', async () => {
+  it('accepts valid requests with confirmation header and emits audit log fields', async () => {
     mockProductsGet
       .mockResolvedValueOnce({
         empty: false,
@@ -279,7 +210,6 @@ describe('POST /api/products/clear', () => {
 
     const res = await request(app)
       .post('/api/products/clear')
-      .set('Authorization', 'Bearer admin-token')
       .set('X-Confirm-Destructive-Action', 'CONFIRM_CLEAR_PRODUCTS')
       .set('X-Request-Id', 'req-1234')
 
@@ -293,7 +223,7 @@ describe('POST /api/products/clear', () => {
       deletedCount: number
       requestId: string
     }
-    expect(logPayload.requester).toBe('admin-user')
+    expect(logPayload.requester).toBe('system')
     expect(logPayload.requestId).toBe('req-1234')
     expect(logPayload.deletedCount).toBe(2)
     expect(typeof logPayload.timestamp).toBe('string')
@@ -331,8 +261,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     mockGetNextInvoiceNumber.mockResolvedValue('INV-0009')
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
-      .send({
+      .post('/api/products/p1/sell-with-invoice')      .send({
         amountEur: 2200,
         customerName: 'John Smith',
         customerEmail: 'john@example.com',
@@ -383,8 +312,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
-      .send({ customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice')      .send({ customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -405,8 +333,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
-      .send({ amountEur: 2200, customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice')      .send({ amountEur: 2200, customerName: 'John Smith' })
 
     expect(res.status).toBe(409)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -427,8 +354,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice').set(authHeaders('operator'))
-      .send({ amountEur: 0, customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice')      .send({ amountEur: 0, customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -459,8 +385,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/transactions').set(authHeaders('operator'))
-      .send({ type: 'sale', amountEur: 2200, notes: 'Sold at pop-up event' })
+      .post('/api/products/p1/transactions')      .send({ type: 'sale', amountEur: 2200, notes: 'Sold at pop-up event' })
 
     expect(res.status).toBe(201)
     expect(res.body.data.id).toBe('tx-sale-1')
@@ -485,8 +410,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/transactions').set(authHeaders('operator'))
-      .send({ type: 'sale', amountEur: 2200 })
+      .post('/api/products/p1/transactions')      .send({ type: 'sale', amountEur: 2200 })
 
     expect(res.status).toBe(409)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -507,34 +431,9 @@ describe('POST /api/products/:id/transactions sale validation', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/transactions').set(authHeaders('operator'))
-      .send({ type: 'sale', amountEur: 0 })
+      .post('/api/products/p1/transactions')      .send({ type: 'sale', amountEur: 0 })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()
-  })
-})
-
-
-describe('Products auth guards', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('returns 401 when write action is called without auth', async () => {
-    const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')
-      .send({ amountEur: 2200 })
-    expect(res.status).toBe(401)
-    expect(res.body.error.code).toBe('UNAUTHORIZED')
-  })
-
-  it('returns 403 when readOnly role calls write action', async () => {
-    const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')
-      .set(authHeaders('readOnly'))
-      .send({ amountEur: 2200 })
-    expect(res.status).toBe(403)
-    expect(res.body.error.code).toBe('FORBIDDEN')
   })
 })

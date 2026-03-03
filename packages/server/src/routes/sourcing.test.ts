@@ -3,38 +3,6 @@ import request from 'supertest'
 import express, { type Request, type Response, type NextFunction } from 'express'
 import { sourcingRouter } from './sourcing'
 
-
-vi.mock('../middleware/auth', () => ({
-  requireAuth: (req: Request, _res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization
-    if (!authHeader?.startsWith('Bearer ')) {
-      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
-      return
-    }
-    ;(req as Request & { user?: { role: string } }).user = { role: String(req.headers['x-test-role'] ?? 'readOnly') }
-    next()
-  },
-  requireRole: (...allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization
-    if (!authHeader?.startsWith('Bearer ')) {
-      next({ status: 401, code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' })
-      return
-    }
-    const role = String(req.headers['x-test-role'] ?? 'readOnly')
-    if (!allowedRoles.includes(role)) {
-      next({ status: 403, code: 'FORBIDDEN', message: 'Insufficient permissions' })
-      return
-    }
-    ;(req as Request & { user?: { role: string } }).user = { role }
-    next()
-  },
-}))
-
-const authHeaders = (role = 'admin') => ({
-  Authorization: 'Bearer test-token',
-  'x-test-role': role,
-})
-
 interface TestError {
   status?: number
   code?: string
@@ -106,8 +74,7 @@ describe('PUT /api/sourcing/:id - Status Transitions', () => {
     })
 
     const res = await request(app)
-      .put('/api/sourcing/123').set(authHeaders('operator'))
-      .send({ status: 'sourcing' })
+      .put('/api/sourcing/123')      .send({ status: 'sourcing' })
 
     expect(res.status).toBe(200)
     expect(res.body.data.status).toBe('sourcing')
@@ -128,8 +95,7 @@ describe('PUT /api/sourcing/:id - Status Transitions', () => {
     })
 
     const res = await request(app)
-      .put('/api/sourcing/123').set(authHeaders('operator'))
-      .send({ status: 'fulfilled' })
+      .put('/api/sourcing/123')      .send({ status: 'fulfilled' })
 
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('BAD_REQUEST')
@@ -157,8 +123,7 @@ describe('PUT /api/sourcing/:id - Status Transitions', () => {
     })
 
     const res = await request(app)
-      .put('/api/sourcing/123').set(authHeaders('operator'))
-      .send({ status: 'open' })
+      .put('/api/sourcing/123')      .send({ status: 'open' })
 
     expect(res.status).toBe(200)
     expect(mockCreateActivity).not.toHaveBeenCalled() // No status change event
@@ -168,8 +133,7 @@ describe('PUT /api/sourcing/:id - Status Transitions', () => {
     mockGetById.mockResolvedValue(null)
 
     const res = await request(app)
-      .put('/api/sourcing/999').set(authHeaders('operator'))
-      .send({ status: 'sourcing' })
+      .put('/api/sourcing/999')      .send({ status: 'sourcing' })
 
     expect(res.status).toBe(404)
   })
@@ -183,8 +147,7 @@ describe('DELETE /api/sourcing/:id', () => {
   it('should return 204 with no body on successful delete', async () => {
     mockRemove.mockResolvedValue(undefined)
 
-    const res = await request(app).delete('/api/sourcing/123').set(authHeaders('admin'))
-
+    const res = await request(app).delete('/api/sourcing/123')
     expect(res.status).toBe(204)
     expect(res.body).toEqual({})
     expect(mockRemove).toHaveBeenCalledWith('123')
@@ -202,8 +165,7 @@ describe('GET /api/sourcing - list with ?q= filter', () => {
       { id: '2', customerName: 'Bob Jones', queryText: 'Prada shoes', brand: 'Prada', status: 'open', priority: 'low', createdAt: '2024-01-02T00:00:00Z', budget: 300 },
     ])
 
-    const res = await request(app).get('/api/sourcing?q=gucci').set(authHeaders('readOnly'))
-
+    const res = await request(app).get('/api/sourcing?q=gucci')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
     expect(res.body.data[0].customerName).toBe('Alice Smith')
@@ -214,8 +176,7 @@ describe('GET /api/sourcing - list with ?q= filter', () => {
       { id: '1', customerName: 'Alice Smith', queryText: 'Gucci bag', brand: 'Gucci', status: 'open', priority: 'high', createdAt: '2024-01-01T00:00:00Z', budget: 500 },
     ])
 
-    const res = await request(app).get('/api/sourcing?q=hermes').set(authHeaders('readOnly'))
-
+    const res = await request(app).get('/api/sourcing?q=hermes')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(0)
     expect(res.body.total).toBe(0)
@@ -228,8 +189,7 @@ describe('GET /api/sourcing - list with ?q= filter', () => {
     ]
     mockList.mockResolvedValue(items)
 
-    const res = await request(app).get('/api/sourcing').set(authHeaders('readOnly'))
-
+    const res = await request(app).get('/api/sourcing')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(2)
     expect(res.body.total).toBe(2)
