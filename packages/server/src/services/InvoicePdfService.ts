@@ -3,23 +3,25 @@ import type { TDocumentDefinitions, Content, TableCell } from 'pdfmake/interface
 import type { Invoice, Settings } from '@shared/schemas'
 
 const require = createRequire(import.meta.url)
-const PdfPrinter = require('pdfmake');
+const pdfmake = require('pdfmake');
+
+// Set up standard built-in PDFKit fonts
+pdfmake.setFonts({
+    Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique'
+    }
+});
 
 export class InvoicePdfService {
     async generate(invoice: Invoice, settings: Settings | null): Promise<Buffer> {
         const docDefinition = this.buildDocDefinition(invoice, settings)
 
         try {
-            const printer = new PdfPrinter({});
-            const pdfDoc = printer.createPdfKitDocument(docDefinition);
-
-            return new Promise((resolve, reject) => {
-                const chunks: Buffer[] = [];
-                pdfDoc.on('data', (chunk) => chunks.push(chunk));
-                pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-                pdfDoc.on('error', reject);
-                pdfDoc.end();
-            });
+            const pdfDoc = pdfmake.createPdf(docDefinition);
+            return await pdfDoc.getBuffer();
         } catch (err) {
             console.error("PDF generation error:", err);
             throw err;
