@@ -48,6 +48,7 @@ export default function QuickCheck() {
   const [bidInput, setBidInput] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
   const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string } | null>(null)
@@ -137,6 +138,42 @@ export default function QuickCheck() {
     reader.readAsDataURL(file)
   }
 
+  // Auto-run image analysis when user selects an image (fills "Item description" so user can click Run)
+  useEffect(() => {
+    if (!imageFile) return
+    let cancelled = false
+    const run = async () => {
+      setIsAnalyzingImage(true)
+      try {
+        const formData = new FormData()
+        formData.append('image', imageFile)
+        const { data } = await apiPostFormData<{ data: { query?: string; condition?: string } }>(
+          '/pricing/analyze-image',
+          formData
+        )
+        if (!cancelled && data?.query) {
+          setQuery(data.query)
+          toast.success('Image analyzed — item description updated')
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
+          const toastMsg =
+            err instanceof ApiError && err.status === 503
+              ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter item description manually.'
+              : msg
+          toast.error(toastMsg)
+        }
+      } finally {
+        if (!cancelled) setIsAnalyzingImage(false)
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [imageFile])
+
   const handleRemoveImage = () => {
     setImageFile(null)
     setImagePreview(null)
@@ -199,15 +236,22 @@ export default function QuickCheck() {
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               <img src={imagePreview} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
               <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleFindSimilar}
-                  disabled={isFindingSimilar}
-                  className="flex min-h-[40px] items-center gap-1 rounded bg-lux-800 px-2 py-1 text-xs font-medium text-white hover:bg-lux-700 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                >
-                  {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
-                  {isFindingSimilar ? 'Finding…' : 'Find similar'}
-                </button>
+                {isAnalyzingImage ? (
+                  <span className="flex items-center gap-1 text-xs text-lux-500">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Analyzing…
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleFindSimilar}
+                    disabled={isFindingSimilar}
+                    className="flex min-h-[40px] items-center gap-1 rounded bg-lux-800 px-2 py-1 text-xs font-medium text-white hover:bg-lux-700 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  >
+                    {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
+                    {isFindingSimilar ? 'Finding…' : 'Find similar'}
+                  </button>
+                )}
                 <button type="button" onClick={handleRemoveImage} className="min-h-[40px] min-w-[40px] p-1 text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
                   <X className="h-3.5 w-3.5" />
                 </button>

@@ -26,8 +26,17 @@ function sourcePrefix(direction: Direction): string {
   return direction === 'eur-to-jpy' ? '€ ' : '¥ '
 }
 
+function formatRateDate(isoDate: string): string {
+  try {
+    const d = new Date(isoDate + 'T12:00:00Z')
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch {
+    return isoDate
+  }
+}
+
 export default function EurToYenWidget() {
-  const { data: fx, isLoading: loading } = useFxRate()
+  const { data: fx, isLoading: loading, error, refresh } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
   const [amountInput, setAmountInput] = useState('1000')
   const [inputFocused, setInputFocused] = useState(false)
@@ -88,6 +97,18 @@ export default function EurToYenWidget() {
           <div className="h-5 w-1/2 rounded bg-lux-200/60 animate-pulse mx-auto" />
           <div className="h-14 rounded-[14px] bg-lux-200/60 animate-pulse" />
         </div>
+      ) : !fx ? (
+        <div className="space-y-3 rounded-[14px] border border-lux-200 bg-lux-50 px-4 py-6 text-center">
+          <p className="text-sm text-lux-600">Couldn&apos;t load rate</p>
+          <p className="text-xs text-lux-500 mt-1">{error?.message ?? 'Network or server error'}</p>
+          <button
+            type="button"
+            onClick={() => refresh()}
+            className="mt-3 rounded-lg bg-lux-200/80 px-4 py-2 text-sm font-medium text-lux-800 hover:bg-lux-200 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+          >
+            Retry
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           {/* Source currency row (input) */}
@@ -121,7 +142,15 @@ export default function EurToYenWidget() {
 
           {/* Rate line */}
           {rateLine && (
-            <p className="text-center text-sm text-lux-400">{rateLine}</p>
+            <div className="text-center">
+              <p className="text-sm text-lux-400">{rateLine}</p>
+              {fx?.date && (
+                <p className="mt-0.5 text-xs text-lux-500">
+                  Rate as of {formatRateDate(fx.date)}
+                  {fx.source ? ` · ${fx.source}` : ''}
+                </p>
+              )}
+            </div>
           )}
 
           {/* Target currency row (output) */}

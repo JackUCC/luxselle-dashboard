@@ -110,7 +110,7 @@ const PREFERRED_PROVIDERS_BY_TASK: Record<AiTaskType, AiProvider[]> = {
   web_search: ['perplexity', 'openai'],
   structured_extraction_json: ['openai', 'perplexity'],
   freeform_generation: ['openai', 'perplexity'],
-  vision_analysis: ['openai'],
+  vision_analysis: ['openai', 'perplexity'],
 }
 
 export class AiRouter {
@@ -134,7 +134,7 @@ export class AiRouter {
     return {
       openai: Boolean(env.OPENAI_API_KEY),
       perplexity: Boolean(env.PERPLEXITY_API_KEY),
-      vision: Boolean(env.OPENAI_API_KEY),
+      vision: Boolean(env.OPENAI_API_KEY) || Boolean(env.PERPLEXITY_API_KEY),
     }
   }
 
@@ -215,6 +215,7 @@ export class AiRouter {
       task: 'vision_analysis',
       runByProvider: {
         openai: () => this.analyseVisionWithOpenAi(opts),
+        perplexity: () => this.analyseVisionWithPerplexity(opts),
       },
       validateData: (data) => {
         if (opts.schema) {
@@ -355,7 +356,9 @@ export class AiRouter {
     routingMode: AiRoutingMode,
   ): AiProvider[] {
     if (task === 'vision_analysis') {
-      return ['openai']
+      if (routingMode === 'openai') return ['openai']
+      if (routingMode === 'perplexity') return ['perplexity']
+      return PREFERRED_PROVIDERS_BY_TASK.vision_analysis
     }
 
     if (routingMode === 'openai') {
@@ -793,6 +796,56 @@ export class AiRouter {
     } catch (error) {
       throw this.normalizeError(error)
     }
+  }
+
+  private async analyseVisionWithPerplexity<T>(opts: VisionJsonOptions<T>): Promise<T> {
+    if (!env.PERPLEXITY_API_KEY) {
+      throw new AiRouterError('no_provider_available', 'PERPLEXITY_API_KEY is not configured')
+    }
+
+    const imageUrl = `data:${opts.mimeType};base64,${opts.imageBase64}`
+
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: env.PERPLEXITY_EXTRACTION_MODEL ?? 'sonar',
+        temperature: 0,
+        max_tokens: opts.maxTokens ?? 600,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'input_text', text: opts.userPrompt },
+              { type: 'input_image', image_url: imageUrl },
+            ],
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      const body = await this.readErrorBody(response)
+      throw new AiRouterError(
+        'provider_http_error',
+        `Perplexity vision failed (${response.status})${body ? ` body=${body}` : ''}`,
+        response.status,
+      )
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>
+    }
+    const content = payload.choices?.[0]?.message?.content ?? ''
+
+    return this.parseJsonWithRepair<T>({
+      provider: 'perplexity',
+      rawContent: content,
+      schema: opts.schema,
+    })
   }
 
   private async parseJsonWithRepair<T>(opts: {

@@ -21,6 +21,7 @@ import { env } from '../config/env'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 import { logger } from '../middleware/requestId'
 import { PriceCheckService } from '../services/price-check/PriceCheckService'
+import { getAiRouter } from '../services/ai/AiRouter'
 
 const router = Router()
 const pricingService = new PricingService()
@@ -179,7 +180,19 @@ router.post('/price-check', async (req, res, next) => {
   }
 })
 
-// POST /api/pricing/analyze-image - Analyze product image with AI
+const VisionAttributesSchema = z.object({
+  brand: z.string().optional().default(''),
+  model: z.string().optional().default(''),
+  category: z.string().optional().default(''),
+  condition: z.string().optional().default(''),
+  colour: z.string().optional().default(''),
+  color: z.string().optional().default(''),
+})
+
+const VISION_PROMPT =
+  'Analyze this luxury product image and extract brand, model, category, condition, and color. Return ONLY a JSON object: {"brand":"","model":"","category":"","condition":"","colour":""}'
+
+// POST /api/pricing/analyze-image - Analyze product image with AI (OpenAI or Perplexity)
 router.post('/analyze-image', upload.single('image'), async (req, res, next) => {
   try {
     if (!req.file) {
@@ -187,85 +200,46 @@ router.post('/analyze-image', upload.single('image'), async (req, res, next) => 
       return
     }
 
-    // Convert image to base64 for AI analysis
     const imageBase64 = req.file.buffer.toString('base64')
     const mimeType = req.file.mimetype
 
-    if (!env.OPENAI_API_KEY) {
-      res
-        .status(503)
-        .json(formatApiError(
-          API_ERROR_CODES.INTERNAL,
-          'Image analysis requires OpenAI vision. Configure OPENAI_API_KEY to enable this endpoint.',
-        ))
-      return
-    }
-
-    let detectedAttributes = {
-      brand: '',
-      model: '',
-      category: '',
-      condition: '',
-      colour: '',
-    }
+    const aiRouter = getAiRouter()
+    let parsed: z.infer<typeof VisionAttributesSchema>
 
     try {
-      const OpenAI = (await import('openai')).default
-      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Analyze this luxury product image and extract brand, model, category, condition, and color. Return ONLY a JSON object: {"brand":"","model":"","category":"","condition":"","colour":""}`,
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:${mimeType};base64,${imageBase64}`,
-                },
-              },
-            ],
-          },
-        ],
-        max_tokens: 300,
+      const result = await aiRouter.analyseVisionJson({
+        userPrompt: VISION_PROMPT,
+        imageBase64,
+        mimeType,
+        schema: VisionAttributesSchema,
+        maxTokens: 300,
       })
-
-      const text = response.choices[0]?.message?.content || ''
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        res
-          .status(503)
-          .json(formatApiError(API_ERROR_CODES.INTERNAL, 'Vision analysis returned invalid JSON. Please retry.'))
-        return
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>
-      detectedAttributes = {
-        brand: typeof parsed.brand === 'string' ? parsed.brand : '',
-        model: typeof parsed.model === 'string' ? parsed.model : '',
-        category: typeof parsed.category === 'string' ? parsed.category : '',
-        condition: typeof parsed.condition === 'string' ? parsed.condition : '',
-        colour:
-          typeof parsed.colour === 'string'
-            ? parsed.colour
-            : typeof parsed.color === 'string'
-              ? parsed.color
-              : '',
-      }
+      parsed = result.data
     } catch (error) {
-      logger.error('openai_vision_error', error)
+      logger.error('vision_analysis_error', error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Vision analysis is temporarily unavailable. Please retry.'
+      const friendlyMessage = message.includes('no_provider_available') || message.includes('not configured')
+        ? 'Image analysis requires an AI provider. Set OPENAI_API_KEY or PERPLEXITY_API_KEY to enable this endpoint.'
+        : message
       res
         .status(503)
-        .json(formatApiError(API_ERROR_CODES.INTERNAL, 'Vision analysis is temporarily unavailable. Please retry.'))
+        .json(formatApiError(API_ERROR_CODES.INTERNAL, friendlyMessage))
       return
     }
 
-    // Build a search-query string for the Price Check search bar (e.g. "Chanel Classic Flap Black")
+    const colour = (typeof parsed.colour === 'string' ? parsed.colour : '') ||
+      (typeof parsed.color === 'string' ? parsed.color : '')
+    const detectedAttributes = {
+      brand: typeof parsed.brand === 'string' ? parsed.brand : '',
+      model: typeof parsed.model === 'string' ? parsed.model : '',
+      category: typeof parsed.category === 'string' ? parsed.category : '',
+      condition: typeof parsed.condition === 'string' ? parsed.condition : '',
+      colour,
+    }
+
     const queryParts = [
       detectedAttributes.brand,
       detectedAttributes.model,

@@ -207,6 +207,44 @@ ${fallbackLine}` : fallbackLine))
     reader.readAsDataURL(file)
   }
 
+  // Auto-run image analysis when user selects an image
+  useEffect(() => {
+    if (!uploadedImage) return
+    let cancelled = false
+    const run = async () => {
+      setIsAnalyzingImage(true)
+      if (researchSession.status === 'error') clearResearchSession()
+      try {
+        const formData = new FormData()
+        formData.append('image', uploadedImage)
+        const { data } = await apiPostFormData<{ data: { query?: string; condition?: string } }>(
+          '/pricing/analyze-image',
+          formData
+        )
+        if (!cancelled) {
+          if (data?.query) setQuery(data.query)
+          if (data?.condition) setCondition(data.condition)
+          toast.success('Image analyzed — search updated')
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
+          const toastMsg =
+            err instanceof ApiError && err.status === 503
+              ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter search text manually.'
+              : msg
+          toast.error(toastMsg)
+        }
+      } finally {
+        if (!cancelled) setIsAnalyzingImage(false)
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [uploadedImage])
+
   const handleRemoveImage = () => {
     setUploadedImage(null)
     setImagePreview(null)
@@ -232,7 +270,11 @@ ${fallbackLine}` : fallbackLine))
       toast.success('Image analyzed — search updated')
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-      toast.error(msg)
+      const toastMsg =
+        err instanceof ApiError && err.status === 503
+          ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter search text manually.'
+          : msg
+      toast.error(toastMsg)
     } finally {
       setIsAnalyzingImage(false)
     }
