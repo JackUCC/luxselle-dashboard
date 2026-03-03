@@ -534,6 +534,130 @@ export default function UnifiedIntelligenceView() {
                 )}
               </div>
 
+              <details className="group border border-lux-200 rounded-lux-card overflow-hidden">
+                <summary className="cursor-pointer px-3 py-2 text-sm text-lux-600 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none list-none flex items-center justify-between gap-2">
+                  <span>Optional: serial/date code for age-adjusted guidance</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
+                </summary>
+                <div className="px-3 pb-3 pt-0 space-y-3 border-t border-lux-100">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs text-lux-500 mb-1">Brand</label>
+                      <LuxSelect
+                        value={brand}
+                        onValueChange={(value) => setBrand(value as SerialCheckBrand)}
+                        options={SERIAL_BRAND_OPTIONS}
+                        ariaLabel="Serial brand"
+                        preferOpenUp
+                        dropdownMaxHeight={180}
+                      />
+                    </div>
+                    <FloatingInput
+                      type="text"
+                      value={serial}
+                      onChange={(e) => setSerial(e.target.value)}
+                      label="Serial/date code"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSerialAnalysis}
+                      disabled={isSerialLoading}
+                      className="lux-btn-secondary inline-flex min-h-[44px] items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                    >
+                      {isSerialLoading ? <AiThinkingDots /> : <Sparkles className="h-4 w-4" />}
+                      {isSerialLoading ? 'Analyzing serial...' : 'Analyze serial'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSerial('')
+                        clearSerialSession()
+                      }}
+                      className="inline-flex min-h-[44px] items-center rounded-lg border border-lux-200 px-3 text-xs font-medium text-lux-500 hover:bg-lux-50 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                    >
+                      Clear serial context
+                    </button>
+                  </div>
+                  {isSerialLoading && (
+                    <AiProgressSteps
+                      isActive={isSerialLoading}
+                      steps={SERIAL_STEPS}
+                      compact
+                      title="Serial analysis progress"
+                      className="mt-2"
+                    />
+                  )}
+                  {serialError && (
+                    <div className="rounded-lux-card border border-rose-200 bg-rose-50/60 p-3 text-center">
+                      <p className="text-sm font-medium text-rose-600">{serialError}</p>
+                      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSerialAnalysis}
+                          disabled={isSerialLoading || !serial.trim() || !query.trim()}
+                          className="inline-flex min-h-[36px] items-center rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                        >
+                          Retry
+                        </button>
+                        <button
+                          type="button"
+                          onClick={clearSerialSession}
+                          className="inline-flex min-h-[36px] items-center rounded-lg px-3 py-1.5 text-xs font-medium text-lux-600 hover:bg-lux-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {hasSerialDescriptionDrift && !serialError && (
+                    <p className="text-xs text-amber-700">
+                      Description changed after serial analysis. Re-run serial analysis to refresh guidance.
+                    </p>
+                  )}
+                  {serialResult && (
+                    <div className="space-y-3">
+                      <div className={`rounded-lux-card border p-4 text-sm ${serialResult.decodeResult.success ? 'border-emerald-200 bg-emerald-50/70' : 'border-amber-200 bg-amber-50/70'}`}>
+                        <p className="font-medium text-lux-800">
+                          {serialResult.decodeResult.success && serialResult.decodeResult.year != null
+                            ? `Decode: ${serialResult.decodeResult.year}${serialResult.decodeResult.period ? ` - ${serialResult.decodeResult.period}` : ''}`
+                            : 'Decode could not be fully confirmed'}
+                        </p>
+                        <p className="mt-1 text-xs text-lux-600">{serialResult.decodeResult.message}</p>
+                        <p className="mt-1 text-xs text-lux-500">
+                          Confidence: {Math.round(serialResult.decodeResult.confidence * 100)}%
+                        </p>
+                      </div>
+                      <div className="rounded-lux-card border border-lux-200 bg-lux-50/70 p-4">
+                        <p className="text-xs text-lux-500 uppercase tracking-wide">Serial-adjusted guidance</p>
+                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                          <div>
+                            <p className="text-[11px] text-lux-500 uppercase tracking-wide">Market avg</p>
+                            <p className="text-sm font-semibold text-lux-800">
+                              {formatCurrency(serialResult.pricingGuidance.marketAverageEur)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-lux-500 uppercase tracking-wide">Estimated worth</p>
+                            <p className="text-sm font-semibold text-lux-800">
+                              {formatCurrency(serialResult.pricingGuidance.estimatedWorthEur)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-lux-500 uppercase tracking-wide">Recommended max pay</p>
+                            <p className="text-sm font-semibold text-lux-800">
+                              {formatCurrency(serialResult.pricingGuidance.recommendedMaxPayEur)}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-lux-600">{serialResult.pricingGuidance.summary}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </details>
+
               <button
                 type="submit"
                 disabled={isResearching}
@@ -565,133 +689,6 @@ export default function UnifiedIntelligenceView() {
                 </div>
               )}
             </form>
-          </div>
-
-          <div className="lux-card p-5 lg:p-6 animate-bento-enter stagger-1">
-            <SectionLabel as="h2" className="mb-2">Serial context (optional)</SectionLabel>
-            <p className="text-xs text-lux-500">
-              Add a serial/date code to tighten your max pay target with age-adjusted guidance.
-            </p>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs text-lux-500 mb-1">Brand</label>
-                <LuxSelect
-                  value={brand}
-                  onValueChange={(value) => setBrand(value as SerialCheckBrand)}
-                  options={SERIAL_BRAND_OPTIONS}
-                  ariaLabel="Serial brand"
-                />
-              </div>
-              <FloatingInput
-                type="text"
-                value={serial}
-                onChange={(e) => setSerial(e.target.value)}
-                label="Serial/date code"
-              />
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSerialAnalysis}
-                disabled={isSerialLoading}
-                className="lux-btn-secondary inline-flex min-h-[44px] items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-              >
-                {isSerialLoading ? <AiThinkingDots /> : <Sparkles className="h-4 w-4" />}
-                {isSerialLoading ? 'Analyzing serial...' : 'Analyze serial'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSerial('')
-                  clearSerialSession()
-                }}
-                className="inline-flex min-h-[44px] items-center rounded-lg border border-lux-200 px-3 text-xs font-medium text-lux-500 hover:bg-lux-50 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-              >
-                Clear serial context
-              </button>
-            </div>
-
-            {isSerialLoading && (
-              <AiProgressSteps
-                isActive={isSerialLoading}
-                steps={SERIAL_STEPS}
-                compact
-                title="Serial analysis progress"
-                className="mt-3"
-              />
-            )}
-
-            {serialError && (
-              <div className="mt-3 rounded-lux-card border border-rose-200 bg-rose-50/60 p-3 text-center">
-                <p className="text-sm font-medium text-rose-600">{serialError}</p>
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSerialAnalysis}
-                    disabled={isSerialLoading || !serial.trim() || !query.trim()}
-                    className="inline-flex min-h-[36px] items-center rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                  >
-                    Retry
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearSerialSession}
-                    className="inline-flex min-h-[36px] items-center rounded-lg px-3 py-1.5 text-xs font-medium text-lux-600 hover:bg-lux-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {hasSerialDescriptionDrift && !serialError && (
-              <p className="mt-3 text-xs text-amber-700">
-                Description changed after serial analysis. Re-run serial analysis to refresh guidance.
-              </p>
-            )}
-
-            {serialResult && (
-              <div className="mt-4 space-y-3">
-                <div className={`rounded-lux-card border p-4 text-sm ${serialResult.decodeResult.success ? 'border-emerald-200 bg-emerald-50/70' : 'border-amber-200 bg-amber-50/70'}`}>
-                  <p className="font-medium text-lux-800">
-                    {serialResult.decodeResult.success && serialResult.decodeResult.year != null
-                      ? `Decode: ${serialResult.decodeResult.year}${serialResult.decodeResult.period ? ` - ${serialResult.decodeResult.period}` : ''}`
-                      : 'Decode could not be fully confirmed'}
-                  </p>
-                  <p className="mt-1 text-xs text-lux-600">{serialResult.decodeResult.message}</p>
-                  <p className="mt-1 text-xs text-lux-500">
-                    Confidence: {Math.round(serialResult.decodeResult.confidence * 100)}%
-                  </p>
-                </div>
-
-                <div className="rounded-lux-card border border-lux-200 bg-lux-50/70 p-4">
-                  <p className="text-xs text-lux-500 uppercase tracking-wide">Serial-adjusted guidance</p>
-                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div>
-                      <p className="text-[11px] text-lux-500 uppercase tracking-wide">Market avg</p>
-                      <p className="text-sm font-semibold text-lux-800">
-                        {formatCurrency(serialResult.pricingGuidance.marketAverageEur)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] text-lux-500 uppercase tracking-wide">Estimated worth</p>
-                      <p className="text-sm font-semibold text-lux-800">
-                        {formatCurrency(serialResult.pricingGuidance.estimatedWorthEur)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] text-lux-500 uppercase tracking-wide">Recommended max pay</p>
-                      <p className="text-sm font-semibold text-lux-800">
-                        {formatCurrency(serialResult.pricingGuidance.recommendedMaxPayEur)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-xs text-lux-600">{serialResult.pricingGuidance.summary}</p>
-                </div>
-              </div>
-            )}
           </div>
 
           <LandedCostWidget

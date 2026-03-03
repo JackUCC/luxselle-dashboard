@@ -104,6 +104,10 @@ export interface LuxSelectProps {
   className?: string
   error?: boolean
   ariaLabel?: string
+  /** When true, open list above trigger unless there is not enough space above */
+  preferOpenUp?: boolean
+  /** Override default dropdown max-height (px) for a more compact list */
+  dropdownMaxHeight?: number
 }
 
 export function LuxSelect({
@@ -118,7 +122,10 @@ export function LuxSelect({
   className = '',
   error = false,
   ariaLabel,
+  preferOpenUp: preferOpenUpProp = false,
+  dropdownMaxHeight: dropdownMaxHeightProp,
 }: LuxSelectProps) {
+  const maxHeight = dropdownMaxHeightProp ?? LUX_SELECT_DROPDOWN_MAX_HEIGHT
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const [dropdownPosition, setDropdownPosition] = useState<{
@@ -175,14 +182,16 @@ export function LuxSelect({
       return
     }
     const rect = triggerRef.current.getBoundingClientRect()
-    const openUp = rect.bottom + LUX_SELECT_DROPDOWN_MAX_HEIGHT > window.innerHeight
+    const openUp = preferOpenUpProp
+      ? rect.top >= maxHeight
+      : rect.bottom + maxHeight > window.innerHeight
     setDropdownPosition({
       left: rect.left,
       top: openUp ? rect.top - 4 : rect.bottom + 4,
       minWidth: rect.width,
       openUp,
     })
-  }, [isOpen])
+  }, [isOpen, preferOpenUpProp, maxHeight])
 
   const selectOptionAt = useCallback(
     (index: number) => {
@@ -302,6 +311,7 @@ export function LuxSelect({
               left: dropdownPosition.left,
               top: dropdownPosition.top,
               minWidth: dropdownPosition.minWidth,
+              maxHeight,
               zIndex: LUX_SELECT_OVERLAY_Z_INDEX,
               ...(dropdownPosition.openUp ? { transform: 'translateY(-100%)' } : undefined),
             }}
