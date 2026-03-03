@@ -367,77 +367,95 @@ export default function InvoicesView() {
                   />
                 </div>
               </div>
-              <div className="invoice-content">
-                <div className="flex flex-col gap-6 border-b border-lux-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="text-body-sm text-lux-800">
+              <div className="invoice-content max-w-[800px] bg-white p-8 sm:p-12 shadow-sm border-t-4 border-[#c9a05b] rounded-b">
+                <header className="flex flex-col gap-4 border-b-2 border-gray-200 pb-5 mb-8 sm:flex-row sm:justify-between sm:items-start">
+                  <div className="flex items-center">
+                    <span className="text-2xl font-display font-semibold text-[#c9a05b] tracking-wide">Luxselle</span>
+                  </div>
+                  <div className="text-right">
+                    <h1 className="text-2xl sm:text-3xl font-light tracking-widest uppercase text-[#c9a05b]">Invoice</h1>
+                    <p className="mt-1 text-sm text-gray-500"><strong>Invoice ID:</strong> {selected.invoiceNumber}</p>
+                    <p className="text-sm text-gray-500"><strong>Date:</strong> {formatDate(selected.issuedAt)}</p>
+                  </div>
+                </header>
+
+                <div className="grid grid-cols-1 gap-8 mb-10 sm:grid-cols-2">
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase text-gray-800 mb-2">From</h3>
+                    <p className="font-semibold text-gray-900">Luxselle Limited</p>
+                    <p className="text-sm text-gray-600">Limenstone House, Waterfall</p>
+                    <p className="text-sm text-gray-600">Cork</p>
+                    <p className="text-sm text-gray-600">T12 WCR7</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase text-gray-800 mb-2">Bill To</h3>
                     {(selected.customerName || selected.customerAddress || selected.customerEmail) ? (
                       <>
-                        {selected.customerName && <div className="font-semibold text-lux-900">{selected.customerName}</div>}
+                        {selected.customerName && <p className="font-semibold text-gray-900">{selected.customerName}</p>}
                         {selected.customerAddress?.trim() && (
-                          <div className="mt-1 whitespace-pre-line text-lux-600">{selected.customerAddress.trim()}</div>
+                          <div className="text-sm text-gray-600 whitespace-pre-line">{selected.customerAddress.trim()}</div>
                         )}
-                        {selected.customerEmail && <div className="mt-1 text-lux-600">{selected.customerEmail}</div>}
+                        {selected.customerEmail && <p className="text-sm text-gray-600 mt-1">{selected.customerEmail}</p>}
                       </>
                     ) : (
-                      <div className="text-lux-500">—</div>
+                      <p className="text-sm text-gray-500">—</p>
                     )}
                   </div>
-                  <div className="text-right text-body-sm text-lux-600">
-                    <div className="font-semibold text-lux-900">Luxselle Limited</div>
-                    <div className="mt-1">Limenstone House</div>
-                    <div>Waterfall</div>
-                    <div>Cork</div>
-                    <div>T12 WCR7</div>
-                  </div>
                 </div>
-                <div className="mt-6">
-                  <h3 className="text-body font-semibold text-lux-900">Invoice</h3>
-                  <div className="mt-1 text-body-sm text-lux-600">Order ID: {selected.invoiceNumber}</div>
-                  <div className="text-body-sm text-lux-600">Date: {formatDate(selected.issuedAt)}</div>
-                </div>
-                <div className="mt-6">
-                  <h4 className="border-b-2 border-lux-gold pb-1 text-body-sm font-semibold text-lux-900">Order Items</h4>
-                  <TableShell asCard={false} tableClassName="min-w-[320px] text-body-sm mt-2">
-                    <thead>
-                      <tr className="border-b border-lux-200 text-left text-lux-600">
-                        <th className="pb-2 font-semibold">Product</th>
-                        <th className="pb-2 font-semibold text-right">Qty</th>
+
+                <TableShell asCard={false} tableClassName="w-full text-sm mb-8">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-[#fcfcfc]">
+                      <th className="py-3 px-4 text-left font-semibold uppercase tracking-wide text-gray-800">Product</th>
+                      <th className="py-3 px-4 text-right font-semibold uppercase tracking-wide text-gray-800">Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.lineItems.map((line, i) => (
+                      <tr key={i} className="border-b border-gray-100">
+                        <td className="py-3 px-4 text-gray-700">{line.description}</td>
+                        <td className="py-3 px-4 text-right text-gray-700">{line.quantity}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {selected.lineItems.map((line, i) => (
-                        <tr key={i} className="border-b border-lux-100">
-                          <td className="py-2">{line.description}</td>
-                          <td className="py-2 text-right">{line.quantity}</td>
-                        </tr>
-                      ))}
+                    ))}
+                  </tbody>
+                </TableShell>
+
+                <div className="flex justify-end mb-10">
+                  <table className="w-full max-w-[350px] border-none">
+                    <tbody className="text-sm">
+                      <tr>
+                        <td className="py-2 text-gray-600">Subtotal (excl. VAT):</td>
+                        <td className="py-2 text-right text-gray-700">{formatCurrency(selected.subtotalEur)}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-gray-600">VAT @ {selected.lineItems[0]?.vatPct ?? 23}%:</td>
+                        <td className="py-2 text-right text-gray-700">{formatCurrency(selected.vatEur)}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-gray-600">Total (incl. VAT):</td>
+                        <td className="py-2 text-right text-gray-700">{formatCurrency(selected.totalEur)}</td>
+                      </tr>
+                      <tr className="border-t-2 border-gray-800">
+                        <td className="pt-3 font-semibold text-gray-900">Grand Total:</td>
+                        <td className="pt-3 text-right">
+                          <span className="font-semibold text-[#c9a05b]">{formatCurrency(selected.totalEur)}</span>
+                        </td>
+                      </tr>
                     </tbody>
-                  </TableShell>
+                  </table>
                 </div>
-                <div className="mt-6">
-                  <h4 className="text-body-sm font-semibold text-lux-900">VAT Breakdown</h4>
-                  <div className="mt-2 space-y-1 text-body-sm text-lux-600">
-                    <div className="flex justify-end gap-8">
-                      <span>Subtotal (excl. VAT):</span>
-                      <span className="min-w-[6rem] text-right">{formatCurrency(selected.subtotalEur)}</span>
-                    </div>
-                    <div className="flex justify-end gap-8">
-                      <span>VAT @ {selected.lineItems[0]?.vatPct ?? 23}%:</span>
-                      <span className="min-w-[6rem] text-right">{formatCurrency(selected.vatEur)}</span>
-                    </div>
-                    <div className="flex justify-end gap-8">
-                      <span>Total (incl. VAT):</span>
-                      <span className="min-w-[6rem] text-right">{formatCurrency(selected.totalEur)}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-right">
-                  <span className="text-body font-semibold text-lux-900">Grand Total: {formatCurrency(selected.totalEur)}</span>
-                </div>
+
                 {selected.notes && (
-                  <p className="mt-6 border-t border-lux-100 pt-4 text-body-sm text-lux-500">{selected.notes}</p>
+                  <div className="mb-8">
+                    <h3 className="text-sm font-semibold uppercase text-gray-800 mb-1">Notes</h3>
+                    <p className="text-sm text-gray-600">{selected.notes}</p>
+                  </div>
                 )}
-                <p className="mt-6 text-center text-body-sm text-lux-500">Thank you for shopping with Luxselle. This is an automatically generated invoice.</p>
+
+                <footer className="border-t border-gray-200 pt-5 text-center text-sm text-gray-500">
+                  <p>Thank you for shopping with Luxselle.</p>
+                  <p className="mt-1">This is an automatically generated invoice.</p>
+                </footer>
               </div>
             </div>
           )}

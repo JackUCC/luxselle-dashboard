@@ -10,6 +10,7 @@ const pdfmake = require('pdfmake')
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOGO_PATH = path.join(__dirname, '..', '..', 'assets', 'luxselle-logo.png')
+const GOLD_ACCENT = '#c9a05b'
 
 // Set up standard built-in PDFKit fonts
 pdfmake.setFonts({
@@ -67,126 +68,152 @@ export class InvoicePdfService {
         const { name: businessName, addressLines: businessAddressLines } = this.companyBlock(settings)
         const vatPct = invoice.lineItems[0]?.vatPct ?? 23
 
-        // Customer block (Top Left)
-        const customerStack: Content[] = []
-        if (invoice.customerName) customerStack.push({ text: invoice.customerName, bold: true, fontSize: 11, margin: [0, 0, 0, 2] })
+        // Bill To (recipient)
+        const billToStack: Content[] = [{ text: 'BILL TO:', style: 'addressHeading' }]
+        if (invoice.customerName) billToStack.push({ text: invoice.customerName, bold: true, fontSize: 11, margin: [0, 4, 0, 0] })
         if (invoice.customerAddress?.trim()) {
             const addrLines = invoice.customerAddress.trim().split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
-            addrLines.forEach((line) => customerStack.push({ text: line, fontSize: 10, margin: [0, 0, 0, 1] }))
+            addrLines.forEach((line) => billToStack.push({ text: line, fontSize: 11, margin: [0, 1, 0, 0], color: '#555' }))
         }
-        if (invoice.customerEmail) customerStack.push({ text: invoice.customerEmail, fontSize: 10, margin: [0, 2, 0, 0] })
-        if (customerStack.length === 0) customerStack.push({ text: '—', fontSize: 10 })
+        if (invoice.customerEmail) billToStack.push({ text: invoice.customerEmail, fontSize: 11, margin: [0, 4, 0, 0], color: '#555' })
+        if (billToStack.length === 1) billToStack.push({ text: '—', fontSize: 11, color: '#555' })
 
-        // Company block (Top Right): Luxselle Limited + address, right-aligned
-        const companyHeaderStack: Content[] = [
-            { text: businessName, bold: true, fontSize: 11, alignment: 'right', margin: [0, 0, 0, 2] },
-            ...businessAddressLines.map((line) => ({ text: line, fontSize: 10, alignment: 'right' as const, margin: [0, 0, 0, 1] })),
+        // From (company)
+        const fromStack: Content[] = [
+            { text: 'FROM:', style: 'addressHeading' },
+            { text: businessName, bold: true, fontSize: 11, margin: [0, 4, 0, 0] },
+            ...businessAddressLines.map((line) => ({ text: line, fontSize: 11, margin: [0, 1, 0, 0] as [number, number, number, number], color: '#555' })),
         ]
 
-        // Invoice block (Left): Invoice title, Order ID, Date
-        const invoiceBlockStack: Content[] = [
-            { text: 'Invoice', style: 'invoiceTitle' },
-            { text: `Order ID: ${invoice.invoiceNumber}`, margin: [0, 4, 0, 0] },
-            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, margin: [0, 2, 0, 0] },
+        // Header: logo left | INVOICE title + Order ID + Date right
+        const headerLeft: Content[] = []
+        if (logoDataUrl) {
+            headerLeft.push({ image: logoDataUrl, width: 120, margin: [0, 0, 0, 0] as [number, number, number, number] })
+        }
+        const headerRight: Content[] = [
+            { text: 'INVOICE', style: 'invoiceTitle', alignment: 'right' as const },
+            { text: `Invoice ID: ${invoice.invoiceNumber}`, fontSize: 11, color: '#666', alignment: 'right' as const, margin: [0, 5, 0, 0] as [number, number, number, number] },
+            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, fontSize: 11, color: '#666', alignment: 'right' as const, margin: [0, 2, 0, 0] as [number, number, number, number] },
         ]
 
-        // Order Items: Product | Qty only
+        // Order Items: Product | Qty (polished table with light header)
         const orderItemsBody: TableCell[][] = [
             [
                 { text: 'Product', style: 'tableHeader' },
-                { text: 'Qty', style: 'tableHeader', alignment: 'right' },
+                { text: 'Qty', style: 'tableHeader', alignment: 'right' as const },
             ],
         ]
         invoice.lineItems.forEach((item) => {
             orderItemsBody.push([
-                item.description,
-                { text: item.quantity.toString(), alignment: 'right' },
+                { text: item.description, fontSize: 11 },
+                { text: item.quantity.toString(), alignment: 'right' as const, fontSize: 11 },
             ])
         })
 
-        // VAT Breakdown section (Subtotal, VAT, Total; Grand Total is shown separately below)
-        const vatBreakdownBody: TableCell[][] = [
+        // Totals: right-aligned table, grand total in gold
+        const totalsBody: TableCell[][] = [
             [
-                { text: 'Subtotal (excl. VAT):', alignment: 'right', margin: [0, 2, 10, 2] },
-                { text: this.formatCurrency(invoice.subtotalEur), alignment: 'right', margin: [0, 2, 0, 2] },
+                { text: 'Subtotal (excl. VAT):', fontSize: 11 },
+                { text: this.formatCurrency(invoice.subtotalEur), alignment: 'right' as const, fontSize: 11 },
             ],
             [
-                { text: `VAT @ ${vatPct}%:`, alignment: 'right', margin: [0, 2, 10, 2] },
-                { text: this.formatCurrency(invoice.vatEur), alignment: 'right', margin: [0, 2, 0, 2] },
+                { text: `VAT @ ${vatPct}%:`, fontSize: 11 },
+                { text: this.formatCurrency(invoice.vatEur), alignment: 'right' as const, fontSize: 11 },
             ],
             [
-                { text: 'Total (incl. VAT):', alignment: 'right', margin: [0, 2, 10, 2] },
-                { text: this.formatCurrency(invoice.totalEur), alignment: 'right', margin: [0, 2, 0, 2] },
+                { text: 'Total (incl. VAT):', fontSize: 11 },
+                { text: this.formatCurrency(invoice.totalEur), alignment: 'right' as const, fontSize: 11 },
             ],
-        ]
-
-        // Footer: thank you text + company info at bottom
-        const footerContent: Content[] = [
-            { text: 'Thank you for shopping with Luxselle.', margin: [0, 20, 0, 4] },
-            { text: 'This is an automatically generated invoice.', fontSize: 9, color: '#555', margin: [0, 0, 0, 16] },
-            { text: businessName, style: 'companyName' },
-            ...businessAddressLines.map((line) => ({ text: line, style: 'companyAddress' as const })),
+            [
+                { text: 'Grand Total:', style: 'grandTotalLabel' },
+                { text: this.formatCurrency(invoice.totalEur), alignment: 'right' as const, style: 'grandTotalValue' },
+            ],
         ]
 
         const content: Content[] = []
 
-        // Header: left column = logo + recipient below; right column = company
-        const leftHeaderStack: Content[] = []
-        if (logoDataUrl) {
-            leftHeaderStack.push({ image: logoDataUrl, width: 180, margin: [0, 0, 0, 12] as [number, number, number, number] })
-        }
-        leftHeaderStack.push({ stack: customerStack })
+        // Header row with bottom border
         content.push({
             columns: [
-                { stack: leftHeaderStack, width: '*' },
-                { stack: companyHeaderStack, width: 'auto' },
+                { stack: headerLeft, width: '*' },
+                { stack: headerRight, width: 'auto' },
             ],
             margin: [0, 0, 0, 20] as [number, number, number, number],
         })
+        content.push({
+            canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: '#eee' }],
+            margin: [0, 0, 0, 20] as [number, number, number, number],
+        })
 
-        content.push(
-            // Invoice block (left-aligned)
-            { stack: invoiceBlockStack, margin: [0, 0, 0, 24] as [number, number, number, number] },
-            { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 4] as [number, number, number, number] },
-            // Gold line under Order Items
-            {
-                canvas: [{ type: 'line', x1: 0, y1: 0, x2: 450, y2: 0, lineWidth: 2, lineColor: '#B8860B' }],
-                margin: [0, 0, 0, 8] as [number, number, number, number],
-            },
-        )
-        content.push(
-            {
-                table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },
-                layout: 'lightHorizontalLines',
-                margin: [0, 0, 0, 16] as [number, number, number, number],
-            },
-            { text: 'VAT Breakdown', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
-            {
-                layout: 'noBorders',
-                table: { body: vatBreakdownBody },
-                margin: [0, 0, 0, 8] as [number, number, number, number],
-            },
-            // Grand Total right-aligned (single prominent line)
-            { text: `Grand Total: ${this.formatCurrency(invoice.totalEur)}`, bold: true, alignment: 'right', fontSize: 12, margin: [0, 8, 0, 24] as [number, number, number, number] },
-        )
+        // Addresses: From | Bill To
+        content.push({
+            columns: [
+                { stack: fromStack, width: '*' },
+                { stack: billToStack, width: '*' },
+            ],
+            margin: [0, 0, 0, 40] as [number, number, number, number],
+        })
+
+        // Items table
+        content.push({
+            table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },
+            layout: 'lightHorizontalLines',
+            margin: [0, 0, 0, 30] as [number, number, number, number],
+        })
+
+        // Totals section right-aligned
+        content.push({
+            columns: [
+                { text: '', width: '*' },
+                {
+                    table: { headerRows: 0, widths: [200, 120], body: totalsBody },
+                    layout: 'noBorders',
+                    width: 320,
+                },
+            ],
+            margin: [0, 0, 0, 30] as [number, number, number, number],
+        })
+
         if (invoice.notes) {
             content.push(
-                { text: 'Notes', style: 'subheader', margin: [0, 0, 0, 5] as [number, number, number, number] },
-                { text: invoice.notes, fontSize: 10, color: '#555' },
+                { text: 'Notes', style: 'addressHeading', margin: [0, 24, 0, 8] as [number, number, number, number] },
+                { text: invoice.notes, fontSize: 11, color: '#555', margin: [0, 0, 0, 24] as [number, number, number, number] },
             )
         }
-        content.push({ stack: footerContent, margin: [0, 24, 0, 0] as [number, number, number, number] })
+
+        // Footer
+        content.push({
+            stack: [
+                {
+                    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#eee' }],
+                    margin: [0, 20, 0, 20] as [number, number, number, number],
+                },
+                { text: 'Thank you for shopping with Luxselle.', alignment: 'center' as const, fontSize: 12, color: '#888' },
+                { text: 'This is an automatically generated invoice.', alignment: 'center' as const, fontSize: 11, color: '#888', margin: [0, 4, 0, 0] as [number, number, number, number] },
+            ],
+            margin: [0, 24, 0, 0] as [number, number, number, number],
+        })
 
         return {
+            pageSize: 'A4',
+            pageMargins: [50, 50, 50, 50],
+            background: function () {
+                return {
+                    canvas: [
+                        { type: 'line', x1: 50, y1: 0, x2: 545, y2: 0, lineWidth: 5, lineColor: GOLD_ACCENT },
+                    ],
+                    margin: [0, 0, 0, 0] as [number, number, number, number],
+                }
+            },
             content,
             styles: {
-                companyName: { fontSize: 11, bold: true, lineHeight: 1.3 },
-                companyAddress: { fontSize: 10, lineHeight: 1.3 },
-                invoiceTitle: { fontSize: 20, bold: true },
-                tableHeader: { bold: true, fontSize: 10, fillColor: '#f9fafb' },
-                subheader: { fontSize: 12, bold: true },
+                addressHeading: { fontSize: 12, bold: true, color: '#333' },
+                invoiceTitle: { fontSize: 28, bold: true, color: GOLD_ACCENT, letterSpacing: 1 },
+                tableHeader: { bold: true, fontSize: 11, fillColor: '#fcfcfc', color: '#333' },
+                grandTotalLabel: { fontSize: 12, bold: true },
+                grandTotalValue: { fontSize: 12, bold: true, color: GOLD_ACCENT },
             },
-            defaultStyle: { font: 'Helvetica', fontSize: 10 },
+            defaultStyle: { font: 'Helvetica', fontSize: 10, color: '#333' },
         }
     }
 }
