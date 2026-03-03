@@ -1,9 +1,15 @@
 import { createRequire } from 'module'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import type { TDocumentDefinitions, Content, TableCell } from 'pdfmake/interfaces'
 import type { Invoice, Settings } from '@shared/schemas'
 
 const require = createRequire(import.meta.url)
-const pdfmake = require('pdfmake');
+const pdfmake = require('pdfmake')
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const LOGO_PATH = path.join(__dirname, '..', 'assets', 'luxselle-logo.png')
 
 // Set up standard built-in PDFKit fonts
 pdfmake.setFonts({
@@ -17,14 +23,21 @@ pdfmake.setFonts({
 
 export class InvoicePdfService {
     async generate(invoice: Invoice, settings: Settings | null): Promise<Buffer> {
-        const docDefinition = this.buildDocDefinition(invoice, settings)
+        let logoDataUrl: string | null = null
+        try {
+            const buffer = fs.readFileSync(LOGO_PATH)
+            logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`
+        } catch {
+            console.warn('Invoice PDF: logo not found at', LOGO_PATH, '- generating without logo')
+        }
+        const docDefinition = this.buildDocDefinition(invoice, settings, logoDataUrl)
 
         try {
-            const pdfDoc = pdfmake.createPdf(docDefinition);
-            return await pdfDoc.getBuffer();
+            const pdfDoc = pdfmake.createPdf(docDefinition)
+            return await pdfDoc.getBuffer()
         } catch (err) {
-            console.error("PDF generation error:", err);
-            throw err;
+            console.error('PDF generation error:', err)
+            throw err
         }
     }
 
@@ -50,7 +63,7 @@ export class InvoicePdfService {
         }
     }
 
-    private buildDocDefinition(invoice: Invoice, settings: Settings | null): TDocumentDefinitions {
+    private buildDocDefinition(invoice: Invoice, settings: Settings | null, logoDataUrl: string | null): TDocumentDefinitions {
         const { name: businessName, addressLines: businessAddressLines } = this.companyBlock(settings)
         const vatPct = invoice.lineItems[0]?.vatPct ?? 23
 
@@ -62,14 +75,19 @@ export class InvoicePdfService {
             addrLines.forEach((line) => customerStack.push({ text: line, fontSize: 10, margin: [0, 0, 0, 1] }))
         }
         if (invoice.customerEmail) customerStack.push({ text: invoice.customerEmail, fontSize: 10, margin: [0, 2, 0, 0] })
-        // If no customer info, placeholder
         if (customerStack.length === 0) customerStack.push({ text: '—', fontSize: 10 })
 
-        // Invoice Info (Top Right)
-        const invoiceInfoStack: Content[] = [
-            { text: 'Invoice', style: 'invoiceTitle', alignment: 'right' },
-            { text: `Order ID: ${invoice.invoiceNumber}`, alignment: 'right', margin: [0, 4, 0, 0] },
-            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, alignment: 'right', margin: [0, 2, 0, 0] },
+        // Company block (Top Right): Luxselle Limited + address, right-aligned
+        const companyHeaderStack: Content[] = [
+            { text: businessName, bold: true, fontSize: 11, alignment: 'right', margin: [0, 0, 0, 2] },
+            ...businessAddressLines.map((line) => ({ text: line, fontSize: 10, alignment: 'right' as const, margin: [0, 0, 0, 1] })),
+        ]
+
+        // Invoice block (Left): Invoice title, Order ID, Date
+        const invoiceBlockStack: Content[] = [
+            { text: 'Invoice', style: 'invoiceTitle' },
+            { text: `Order ID: ${invoice.invoiceNumber}`, margin: [0, 4, 0, 0] },
+            { text: `Date: ${this.formatDate(invoice.issuedAt)}`, margin: [0, 2, 0, 0] },
         ]
 
         // Order Items: Product | Qty only
@@ -114,32 +132,49 @@ export class InvoicePdfService {
             ...businessAddressLines.map((line) => ({ text: line, style: 'companyAddress' as const })),
         ]
 
-        return {
-            content: [
-                // Header Row: Customer (Left) | Invoice (Right)
-                {
-                    columns: [
-                        { stack: customerStack, width: '*' },
-                        { stack: invoiceInfoStack, width: 'auto' },
-                    ],
-                    margin: [0, 0, 0, 32],
-                },
+        const content: Content[] = []
 
-                { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
-                {
-                    table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },
-                    layout: 'lightHorizontalLines',
-                    margin: [0, 0, 0, 16] as [number, number, number, number],
-                },
-                { text: 'VAT Breakdown', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
-                {
-                    layout: 'noBorders',
-                    table: { body: vatBreakdownBody },
-                    margin: [0, 0, 0, 24] as [number, number, number, number],
-                },
-                ...(invoice.notes ? [{ text: 'Notes', style: 'subheader' as const, margin: [0, 0, 0, 5] as [number, number, number, number] }, { text: invoice.notes, fontSize: 10, color: '#555' }] : []),
-                { stack: footerContent, margin: [0, 24, 0, 0] as [number, number, number, number] },
-            ],
+        if (logoDataUrl) {
+            content.push({ image: logoDataUrl, width: 180, margin: [0, 0, 0, 16] as [number, number, number, number] })
+        }
+
+        content.push(
+            // Header Row: Customer (Left) | Company (Right)
+            {
+                columns: [
+                    { stack: customerStack, width: '*' },
+                    { stack: companyHeaderStack, width: 'auto' },
+                ],
+                margin: [0, 0, 0, 20] as [number, number, number, number],
+            },
+            // Invoice block (left-aligned)
+            { stack: invoiceBlockStack, margin: [0, 0, 0, 24] as [number, number, number, number] },
+            { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
+        )
+        content.push(
+            {
+                table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },
+                layout: 'lightHorizontalLines',
+                margin: [0, 0, 0, 16] as [number, number, number, number],
+            },
+            { text: 'VAT Breakdown', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
+            {
+                layout: 'noBorders',
+                table: { body: vatBreakdownBody },
+                margin: [0, 0, 0, 8] as [number, number, number, number],
+            },
+            { text: `Grand Total: ${this.formatCurrency(invoice.totalEur)}`, bold: true, alignment: 'center', fontSize: 12, margin: [0, 8, 0, 24] as [number, number, number, number] },
+        )
+        if (invoice.notes) {
+            content.push(
+                { text: 'Notes', style: 'subheader', margin: [0, 0, 0, 5] as [number, number, number, number] },
+                { text: invoice.notes, fontSize: 10, color: '#555' },
+            )
+        }
+        content.push({ stack: footerContent, margin: [0, 24, 0, 0] as [number, number, number, number] })
+
+        return {
+            content,
             styles: {
                 companyName: { fontSize: 11, bold: true, lineHeight: 1.3 },
                 companyAddress: { fontSize: 10, lineHeight: 1.3 },
