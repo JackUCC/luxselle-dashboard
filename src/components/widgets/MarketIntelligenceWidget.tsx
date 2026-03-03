@@ -72,7 +72,7 @@ export default function MarketIntelligenceWidget() {
   }
 
   return (
-    <div className="lux-card lux-card-accent p-6 sm:col-span-2 animate-bento-enter stagger-0">
+    <div className="lux-card p-6 sm:col-span-2 h-full min-h-0 flex flex-col animate-bento-enter stagger-0">
       <SectionLabel className="mb-4">Market Intelligence</SectionLabel>
 
       <form onSubmit={handleSubmit} className="relative">

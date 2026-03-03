@@ -89,7 +89,7 @@ export default function AiMarketPulseWidget() {
         : 'bg-amber-100 text-amber-800'
 
   return (
-    <div className="lux-card p-5 animate-bento-enter stagger-9">
+    <div className="lux-card p-5 h-full min-h-0 flex flex-col animate-bento-enter stagger-9">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-amber-500" />

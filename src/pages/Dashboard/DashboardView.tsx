@@ -124,7 +124,7 @@ export default function DashboardView() {
           </button>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Row 1: Market Intelligence (2-col) + Landed Cost */}
           <BentoGrid columns={3}>
             <MarketIntelligenceWidget />
@@ -135,7 +135,7 @@ export default function DashboardView() {
           <BentoGrid columns={3}>
             <EurToYenWidget />
             <div
-              className={`lux-card lux-card-gold-accent p-6 animate-bento-enter ${staggerClass(4)}`}
+              className={`lux-card lux-card-gold-accent p-6 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
               data-testid="inventory-value-card"
             >
               <SectionLabel className="mb-4">Inventory & Value</SectionLabel>
