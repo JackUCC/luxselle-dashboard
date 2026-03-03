@@ -48,7 +48,7 @@ export default function DockBar() {
                 <div className="my-2.5 h-px w-8 bg-gradient-to-r from-transparent via-lux-300/60 to-transparent" />
               )}
               <section className="w-full px-1 py-0.5">
-                <p className="mb-1 min-w-0 truncate text-center text-[13px] font-semibold uppercase tracking-[0.15em] text-lux-gold" title={group.title}>
+                <p className="mb-1 min-w-0 truncate text-center text-[13px] font-semibold uppercase tracking-wider text-lux-gold" title={group.title}>
                   {group.title}
                 </p>
                 <div className="flex flex-col items-center gap-1">

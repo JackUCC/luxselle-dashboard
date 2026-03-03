@@ -79,7 +79,7 @@ export default function AiProgressSteps({
   return (
     <div className={`rounded-lux-card border border-lux-200 bg-lux-50/70 p-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-lux-gold">{title}</p>
+        <p className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold">{title}</p>
         <p className="text-xs text-lux-500" aria-live="polite">
           {currentStepLabel}
         </p>

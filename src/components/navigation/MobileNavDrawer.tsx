@@ -144,7 +144,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
           {NAV_GROUPS.map((group) => (
             <section key={group.section} className="space-y-1">
               {group.title ? (
-                <h2 className="px-2.5 pb-1 text-[13px] font-semibold uppercase tracking-[0.14em] text-lux-gold">
+                <h2 className="px-2.5 pb-1 text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
                   {group.title}
                 </h2>
               ) : null}
