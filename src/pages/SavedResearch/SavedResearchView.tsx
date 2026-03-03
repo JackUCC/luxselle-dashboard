@@ -1,11 +1,10 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bookmark, Star, Search } from 'lucide-react'
+import { Bookmark, Star, Search, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, Button, Card, EmptyState } from '../../components/design-system'
+import { PageHeader, Button, Card, EmptyState, Modal } from '../../components/design-system'
 import { LuxSelect } from '../../components/design-system/Input'
-import Drawer from '../../components/design-system/Drawer'
 import { apiGet, apiDelete, apiPut } from '../../lib/api'
 import Skeleton from '../../components/feedback/Skeleton'
 import type { MarketResearchResult } from '../MarketResearch/types'
@@ -221,18 +220,33 @@ export default function SavedResearchView() {
                 </div>
             )}
 
-            <Drawer
+            <Modal
                 isOpen={!!selectedItem}
                 onClose={() => setSelectedItem(null)}
-                position="right"
-                title={selectedItem ? `${selectedItem.result.brand} ${selectedItem.result.model}` : ''}
+                size="lg"
+                titleId="saved-research-preview-title"
             >
                 {selectedItem && (
-                    <div className="pb-8">
-                        <MarketResearchResultPanel result={selectedItem.result} />
+                    <div className="flex max-h-[85vh] flex-col">
+                        <div className="flex shrink-0 items-center justify-between border-b border-lux-200 px-6 py-4">
+                            <h2 id="saved-research-preview-title" className="text-card-header font-semibold text-lux-900">
+                                {selectedItem.result.brand} {selectedItem.result.model}
+                            </h2>
+                            <button
+                                type="button"
+                                className="rounded-lg p-1 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                                onClick={() => setSelectedItem(null)}
+                                aria-label="Close"
+                            >
+                                <X className="h-5 w-5" aria-hidden="true" />
+                            </button>
+                        </div>
+                        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+                            <MarketResearchResultPanel result={selectedItem.result} />
+                        </div>
                     </div>
                 )}
-            </Drawer>
+            </Modal>
         </PageLayout>
     )
 }

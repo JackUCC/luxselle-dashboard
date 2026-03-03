@@ -7,8 +7,8 @@ export interface ModalProps {
   children: ReactNode
   /** Optional id for aria-labelledby */
   titleId?: string
-  /** max-width: 24rem standard, 32rem for confirmation */
-  size?: 'sm' | 'md'
+  /** max-width: 24rem standard, 32rem for confirmation, 42rem for content-heavy (e.g. saved research preview) */
+  size?: 'sm' | 'md' | 'lg'
 }
 
 export default function Modal({
@@ -85,7 +85,7 @@ export default function Modal({
 
   if (!isOpen) return null
 
-  const maxW = size === 'md' ? 'max-w-md' : 'max-w-sm'
+  const maxW = size === 'lg' ? 'max-w-2xl' : size === 'md' ? 'max-w-md' : 'max-w-sm'
 
   return (
     <>
