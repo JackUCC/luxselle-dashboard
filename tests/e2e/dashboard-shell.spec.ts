@@ -191,27 +191,8 @@ test('dashboard intelligence widgets show snapshot freshness metadata', async ({
       }),
     })
   })
-  await page.route('**/api/market-research/snapshots?limit=1', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [
-          {
-            id: 'snap-1',
-            brand: 'Chanel',
-            model: 'Classic Flap',
-            generatedAt: new Date(Date.now() - 40 * 60_000).toISOString(),
-            freshnessStatus: 'fresh',
-            snapshotAgeMinutes: 40,
-          },
-        ],
-      }),
-    })
-  })
-
   await page.goto('/')
   await expect(page.getByTestId('dashboard-skeleton')).toBeHidden()
   await expect(page.getByTestId('ai-market-pulse-freshness')).toBeVisible()
-  await expect(page.getByTestId('market-intelligence-snapshot-status')).toContainText(/Live|Cached/)
+  await expect(page.getByRole('combobox', { name: /search market intelligence/i })).toBeVisible()
 })

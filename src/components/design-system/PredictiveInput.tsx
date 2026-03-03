@@ -11,6 +11,8 @@ interface PredictiveInputProps {
   ariaLabel?: string
   listboxLabel?: string
   className?: string
+  onFocus?: React.FocusEventHandler<HTMLInputElement>
+  onBlur?: React.FocusEventHandler<HTMLInputElement>
 }
 
 const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
@@ -26,6 +28,8 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
       ariaLabel,
       listboxLabel,
       className,
+      onFocus,
+      onBlur,
     },
     forwardedRef,
   ) {
@@ -134,9 +138,11 @@ const PredictiveInput = forwardRef<HTMLInputElement, PredictiveInputProps>(
             onChange(e.target.value)
             setIsOpen(true)
           }}
-          onFocus={() => {
+          onFocus={(e) => {
             if (q.length > 0 && allMatches.length > 0) setIsOpen(true)
+            onFocus?.(e)
           }}
+          onBlur={onBlur}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={className ?? 'lux-input'}
