@@ -13,7 +13,7 @@ export default function DockBar() {
 
   return (
     <nav
-      className="fixed left-4 top-1/2 z-50 hidden min-w-0 -translate-y-1/2 overflow-hidden xl:flex xl:w-28 2xl:w-32 flex-col items-center rounded-[24px] border border-white/70 bg-gradient-to-b from-white/95 to-lux-50/70 px-3 py-4 shadow-glass-lg backdrop-blur-2xl"
+      className="fixed left-4 top-1/2 z-50 hidden min-w-0 -translate-y-1/2 overflow-visible xl:flex xl:w-28 2xl:w-32 flex-col items-center rounded-[24px] border border-white/70 bg-gradient-to-b from-white/95 to-lux-50/70 px-3 py-4 shadow-glass-lg backdrop-blur-2xl"
       data-testid="dock-bar"
       aria-label="Main navigation"
     >
@@ -104,7 +104,7 @@ export default function DockBar() {
                               <route.icon className="h-5 w-5" />
                             </span>
                           </motion.span>
-                          <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 opacity-0 shadow-soft transition-all duration-200 ease-out group-hover:ml-3 group-hover:opacity-100 delay-75">
+                          <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 opacity-0 shadow-soft transition-all duration-200 ease-out group-hover:ml-3 group-hover:opacity-100 delay-75">
                             {route.navLabel}
                           </span>
                         </NavLink>
