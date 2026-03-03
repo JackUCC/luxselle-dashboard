@@ -4,11 +4,25 @@ interface AnimatedNumberProps {
   value: number | string
   prefix?: string
   suffix?: string
+  /** Animation duration in ms. Default 800. */
+  duration?: number
+  /** Delay before starting animation in ms. */
+  delay?: number
+  /** Called when animation completes. */
+  onComplete?: () => void
 }
 
-export default function AnimatedNumber({ value, prefix = '', suffix = '' }: AnimatedNumberProps) {
+export default function AnimatedNumber({
+  value,
+  prefix = '',
+  suffix = '',
+  duration = 800,
+  delay = 0,
+  onComplete,
+}: AnimatedNumberProps) {
   const [display, setDisplay] = useState('—')
-  const ref = useRef<HTMLSpanElement>(null)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
   useEffect(() => {
     if (value === null || value === undefined) return
@@ -18,33 +32,50 @@ export default function AnimatedNumber({ value, prefix = '', suffix = '' }: Anim
       return
     }
 
-    const duration = 800
-    const start = performance.now()
-    let raf: number
+    const rafRef = { current: 0 }
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-    const animate = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      const current = numVal * eased
+    const runAnimation = () => {
+      const start = performance.now()
 
-      if (numVal >= 1000) {
-        setDisplay(`${prefix}${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}${suffix}`)
-      } else if (numVal >= 1) {
-        setDisplay(`${prefix}${current.toFixed(1)}${suffix}`)
-      } else {
-        setDisplay(`${prefix}${current.toFixed(2)}${suffix}`)
+      const animate = (now: number) => {
+        const elapsed = now - start
+        const progress = Math.min(elapsed / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        const current = numVal * eased
+
+        if (numVal >= 1000) {
+          setDisplay(`${prefix}${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}${suffix}`)
+        } else if (numVal >= 1) {
+          setDisplay(`${prefix}${current.toFixed(1)}${suffix}`)
+        } else {
+          setDisplay(`${prefix}${current.toFixed(2)}${suffix}`)
+        }
+
+        if (progress < 1) {
+          rafRef.current = requestAnimationFrame(animate)
+        } else {
+          onCompleteRef.current?.()
+        }
       }
 
-      if (progress < 1) raf = requestAnimationFrame(animate)
+      rafRef.current = requestAnimationFrame(animate)
     }
 
-    raf = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(raf)
-  }, [value, prefix, suffix])
+    if (delay > 0) {
+      timeoutId = setTimeout(runAnimation, delay)
+    } else {
+      runAnimation()
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      cancelAnimationFrame(rafRef.current)
+    }
+  }, [value, prefix, suffix, duration, delay])
 
   return (
-    <span ref={ref} className="tabular-nums">
+    <span className="tabular-nums">
       {display}
     </span>
   )

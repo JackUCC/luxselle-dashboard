@@ -31,6 +31,8 @@ export default function DashboardView() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [costAnimated, setCostAnimated] = useState(false)
+  const [potentialAnimated, setPotentialAnimated] = useState(false)
 
   const loadData = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setIsLoading(true)
@@ -54,6 +56,13 @@ export default function DashboardView() {
   useEffect(() => {
     if (!isSidecar) loadData()
   }, [isSidecar, loadData])
+
+  useEffect(() => {
+    if (kpis) {
+      setCostAnimated(false)
+      setPotentialAnimated(false)
+    }
+  }, [kpis])
 
   if (isSidecar) {
     return <SidecarView />
@@ -141,7 +150,7 @@ export default function DashboardView() {
           {/* Row 3: Inventory & Value | AI Market Pulse (50/50) */}
           <BentoGrid columns={2}>
             <div
-              className={`lux-card lux-card-gold-accent p-5 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
+              className={`lux-card p-5 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
               data-testid="inventory-value-card"
             >
               <SectionLabel className="mb-3">Inventory & Value</SectionLabel>
@@ -149,7 +158,12 @@ export default function DashboardView() {
                 <div className="pr-4 flex flex-col">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">Cost</p>
                   <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
-                    <AnimatedNumber value={inventoryValue} prefix="€" />
+                    <AnimatedNumber
+                      value={inventoryValue}
+                      prefix="€"
+                      duration={450}
+                      onComplete={() => setCostAnimated(true)}
+                    />
                   </p>
                   <p className="text-sm font-medium text-lux-600 mt-2">
                     {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'}
@@ -158,11 +172,19 @@ export default function DashboardView() {
                 <div className="pl-4 border-l border-lux-200 flex flex-col">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">Potential</p>
                   <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
-                    <AnimatedNumber value={potentialValue} prefix="€" />
+                    <AnimatedNumber
+                      value={potentialValue}
+                      prefix="€"
+                      delay={450}
+                      duration={500}
+                      onComplete={() => setPotentialAnimated(true)}
+                    />
                   </p>
-                  <p className="text-sm font-semibold text-lux-700 mt-2">
-                    €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
-                  </p>
+                  {potentialAnimated && (
+                    <p className="text-sm font-semibold text-lux-700 mt-2 animate-slide-up">
+                      €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
