@@ -125,10 +125,10 @@ export default function DashboardView() {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Row 1: Market Intelligence (2-col) + Landed Cost */}
+          {/* Row 1: Market Intelligence (2-col) + Sourcing Sites */}
           <BentoGrid columns={3}>
             <MarketIntelligenceWidget />
-            <LandedCostWidget />
+            <SourcingSitesWidget />
           </BentoGrid>
 
           {/* Row 2: Currency Converter + Inventory & Potential Value (combined) */}
@@ -156,9 +156,9 @@ export default function DashboardView() {
             </div>
           </BentoGrid>
 
-          {/* Row 3: Sourcing Sites + Active Sourcing */}
+          {/* Row 3: Landed Cost + Active Sourcing */}
           <BentoGrid columns={3}>
-            <SourcingSitesWidget />
+            <LandedCostWidget />
             <ActiveSourcingWidget />
           </BentoGrid>
 
