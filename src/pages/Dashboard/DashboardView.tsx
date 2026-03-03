@@ -156,7 +156,7 @@ export default function DashboardView() {
               <SectionLabel className="mb-3">Inventory & Value</SectionLabel>
               <div className="grid grid-cols-2 gap-0 flex-1 min-h-0">
                 <div className="pr-4 flex flex-col">
-                  <p className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold">Cost</p>
+                  <p className="text-[14px] font-semibold uppercase tracking-wider text-lux-800">Cost</p>
                   <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
                     <AnimatedNumber
                       value={inventoryValue}
@@ -170,7 +170,7 @@ export default function DashboardView() {
                   </p>
                 </div>
                 <div className="pl-4 border-l border-lux-200 flex flex-col">
-                  <p className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold">Potential</p>
+                  <p className="text-[13px] font-semibold uppercase tracking-wider text-lux-800">Potential</p>
                   <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
                     <AnimatedNumber
                       value={potentialValue}

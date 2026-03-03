@@ -42,7 +42,7 @@ export default function LandedCostWidget({
     <div className="lux-card p-6 h-full min-h-0 flex flex-col animate-bento-enter stagger-1">
       <SectionLabel className="mb-4">Landed Cost Calculator</SectionLabel>
 
-      <label className="mb-2 block text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
+      <label className="mb-2 flex flex-col justify-end items-start text-[13px] font-semibold uppercase tracking-wider text-lux-800 font-system-ui">
         Bid Price
       </label>
       <div className="relative">
@@ -60,7 +60,7 @@ export default function LandedCostWidget({
       </div>
 
       <div className="mt-5 flex items-baseline justify-between border-t border-lux-200/60 pt-4">
-        <span className="text-[13px] font-semibold uppercase tracking-wider text-lux-gold">
+        <span className="text-[13px] font-semibold uppercase tracking-wider text-lux-800">
           Est. Landed
         </span>
         <span className="text-xl font-semibold font-mono text-lux-800">

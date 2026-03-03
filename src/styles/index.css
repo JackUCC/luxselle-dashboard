@@ -79,6 +79,10 @@ body {
   color: var(--lux-text);
 }
 
+/* Optional font stacks for widget labels / timestamps */
+.font-system-ui { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
+.font-sf-pro-text { font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif; }
+
 /* Display typography: serif for H1/H2 only */
 h1, h2 {
   font-family: var(--font-display);

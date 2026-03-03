@@ -130,11 +130,13 @@ export default function AiMarketPulseWidget() {
         </ul>
       )}
       {generatedAt && (
-        <p className="mt-2 pt-2 border-t border-lux-100 text-[13px] text-lux-gold shrink-0">
+        <p className="mt-2 pt-2 border-t border-lux-100 text-lux-800 shrink-0">
           {isStaleData(generatedAt) ? (
             <span className="text-amber-500">Data may be outdated · {formatRelativeDate(generatedAt)}</span>
           ) : (
-            <span>Updated {formatRelativeDate(generatedAt)}</span>
+            <span className="flex justify-end items-end text-[11px] text-lux-800 font-sf-pro-text">
+              Updated {formatRelativeDate(generatedAt)}
+            </span>
           )}
         </p>
       )}
