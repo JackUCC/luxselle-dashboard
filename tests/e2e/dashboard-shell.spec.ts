@@ -107,28 +107,6 @@ test('inventory missing-info filter works via URL', async ({ page }) => {
   await expect(page.getByText(/Showing products with missing information/)).toBeVisible()
 })
 
-test('dock bar navigates to /jobs', async ({ page }) => {
-  await page.setViewportSize({ width: 1720, height: 1000 })
-  await page.goto('/')
-
-  const dock = page.getByTestId('dock-bar')
-  await expect(dock).toBeVisible()
-
-  await dock.getByRole('link', { name: 'Jobs' }).click()
-  await expect(page).toHaveURL('/jobs')
-})
-
-test('mobile nav drawer navigates to /jobs', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
-
-  await page.getByTestId('mobile-nav-toggle').click()
-  await expect(page.getByTestId('mobile-nav-drawer')).toBeVisible()
-
-  await page.getByTestId('mobile-nav-drawer').getByRole('link', { name: 'Jobs' }).click()
-  await expect(page).toHaveURL('/jobs')
-})
-
 test('activity feed is visible on dashboard overview', async ({ page }) => {
   await page.route('**/api/dashboard/kpis', async (route) => {
     await route.fulfill({

@@ -66,9 +66,4 @@ export const queryKeys = {
     status: ['dashboard', 'status'] as const,
     profit: ['dashboard', 'profit'] as const,
   },
-  jobs: {
-    all: ['jobs'] as const,
-    list: (filters?: Record<string, unknown>) => ['jobs', 'list', filters] as const,
-    detail: (id: string) => ['jobs', 'detail', id] as const,
-  },
 }

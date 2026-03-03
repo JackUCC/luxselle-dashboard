@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export interface PageLayoutProps {
   children: ReactNode
-  /** 'default' = full width (Inventory/Sourcing/Jobs/Invoices), 'narrow' = max-w-2xl, 'content' = max-w-6xl */
+  /** 'default' = full width (Inventory/Sourcing/Invoices), 'narrow' = max-w-2xl, 'content' = max-w-6xl */
   variant?: 'default' | 'narrow' | 'content'
   className?: string
 }

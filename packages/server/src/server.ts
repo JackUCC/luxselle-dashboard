@@ -12,7 +12,6 @@ import { productsRouter } from './routes/products'
 import { pricingRouter } from './routes/pricing'
 import { dashboardRouter } from './routes/dashboard'
 import { sourcingRouter } from './routes/sourcing'
-import { jobsRouter } from './routes/jobs'
 import { vatRouter } from './routes/vat'
 import { invoicesRouter } from './routes/invoices'
 import { settingsRouter } from './routes/settings'
@@ -226,7 +225,6 @@ app.use('/api/products', productsRouter)
 app.use('/api/pricing', pricingRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/sourcing', sourcingRouter)
-app.use('/api/jobs', jobsRouter)
 app.use('/api/vat', vatRouter)
 app.use('/api/invoices', invoicesRouter)
 app.use('/api/settings', settingsRouter)
