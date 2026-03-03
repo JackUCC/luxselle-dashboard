@@ -229,11 +229,7 @@ ${fallbackLine}` : fallbackLine))
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-          const toastMsg =
-            err instanceof ApiError && err.status === 503
-              ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter search text manually.'
-              : msg
-          toast.error(toastMsg)
+          toast.error(msg)
         }
       } finally {
         if (!cancelled) setIsAnalyzingImage(false)
@@ -270,11 +266,7 @@ ${fallbackLine}` : fallbackLine))
       toast.success('Image analyzed — search updated')
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-      const toastMsg =
-        err instanceof ApiError && err.status === 503
-          ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter search text manually.'
-          : msg
-      toast.error(toastMsg)
+      toast.error(msg)
     } finally {
       setIsAnalyzingImage(false)
     }

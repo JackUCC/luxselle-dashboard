@@ -110,7 +110,8 @@ const PREFERRED_PROVIDERS_BY_TASK: Record<AiTaskType, AiProvider[]> = {
   web_search: ['perplexity', 'openai'],
   structured_extraction_json: ['openai', 'perplexity'],
   freeform_generation: ['openai', 'perplexity'],
-  vision_analysis: ['openai', 'perplexity'],
+  // Perplexity does not support base64 image input for vision; use OpenAI only.
+  vision_analysis: ['openai'],
 }
 
 export class AiRouter {

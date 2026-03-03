@@ -258,11 +258,7 @@ export default function UnifiedIntelligenceView() {
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-          const toastMsg =
-            err instanceof ApiError && err.status === 503
-              ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter search text manually.'
-              : msg
-          toast.error(toastMsg)
+          toast.error(msg)
         }
       } finally {
         if (!cancelled) setIsAnalyzingImage(false)
@@ -298,11 +294,7 @@ export default function UnifiedIntelligenceView() {
       toast.success('Image analyzed and search updated')
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-      const toastMsg =
-        err instanceof ApiError && err.status === 503
-          ? 'Image analysis unavailable. Set OPENAI_API_KEY or PERPLEXITY_API_KEY on the server, or enter search text manually.'
-          : msg
-      toast.error(toastMsg)
+      toast.error(msg)
     } finally {
       setIsAnalyzingImage(false)
     }
