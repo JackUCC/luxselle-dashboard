@@ -33,14 +33,7 @@ import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
-import {
-  decodeSerialToYear,
-  SERIAL_CHECK_BRANDS,
-  type DecodeResult,
-  type SerialCheckBrand,
-} from '../../lib/serialDateDecoder'
-import { calculateSerialPricingGuidance } from '../../lib/serialValuation'
-import type { PriceCheckResult, SerialDecodeResult, SerialPricingGuidance } from '@shared/schemas'
+import type { PriceCheckResult } from '@shared/schemas'
 import { deriveSourcingDecision, type DecisionTone } from '../../lib/sourcingDecision'
 import ConfidenceDiagnosticsPanel from './ConfidenceDiagnosticsPanel'
 import ResearchDataSourceBadge from './ResearchDataSourceBadge'
@@ -59,19 +52,6 @@ interface PriceCheckResearchQuery {
   notes?: string
 }
 
-interface SerialCheckQuery {
-  serial: string
-  brand: SerialCheckBrand
-  description: string
-}
-
-interface SerialCheckSessionResult {
-  decodeResult: DecodeResult
-  pricingGuidance: SerialPricingGuidance
-  marketAverageEur: number
-  compsCount: number
-}
-
 const CONDITION_OPTIONS = [
   { value: '', label: 'Any' },
   { value: 'new', label: 'New / Pristine' },
@@ -81,18 +61,10 @@ const CONDITION_OPTIONS = [
   { value: 'used', label: 'Used' },
 ]
 
-const SERIAL_BRAND_OPTIONS = SERIAL_CHECK_BRANDS.map((brand) => ({ value: brand, label: brand }))
-
 const PRICE_CHECK_STEPS: AiProgressStep[] = [
   { label: 'Searching listings', detail: 'Scanning Irish and EU marketplaces for comparables.' },
   { label: 'Analysing price fit', detail: 'Reviewing condition and title relevance.' },
   { label: 'Building sourcing report', detail: 'Calculating targets and confidence.' },
-]
-
-const SERIAL_STEPS: AiProgressStep[] = [
-  { label: 'Decoding serial', detail: 'Applying brand-specific date/serial patterns.' },
-  { label: 'Cross-checking with AI', detail: 'Running AI fallback when confidence is low.' },
-  { label: 'Merging market guidance', detail: 'Combining decode output with price baseline.' },
 ]
 
 function getDecisionToneStyles(tone: DecisionTone): {
@@ -140,8 +112,6 @@ export default function UnifiedIntelligenceView() {
   const [query, setQuery] = useState('')
   const [condition, setCondition] = useState('')
   const [notes, setNotes] = useState('')
-  const [serial, setSerial] = useState('')
-  const [brand, setBrand] = useState<SerialCheckBrand>('Louis Vuitton')
   const [uploadedImage, setUploadedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
@@ -163,21 +133,9 @@ export default function UnifiedIntelligenceView() {
     clear: clearResearchSession,
   } = useResearchSession<PriceCheckResult, PriceCheckResearchQuery>('buy-box')
 
-  const {
-    session: serialSession,
-    startLoading: startSerialLoading,
-    setSuccess: setSerialSuccess,
-    setError: setSerialError,
-    clear: clearSerialSession,
-  } = useResearchSession<SerialCheckSessionResult, SerialCheckQuery>('serial-check')
-
   const isResearching = researchSession.status === 'loading'
   const priceCheckError = researchSession.status === 'error' ? (researchSession.error ?? 'Research failed') : null
   const result = researchSession.status === 'success' ? (researchSession.result ?? null) : null
-
-  const isSerialLoading = serialSession.status === 'loading'
-  const serialError = serialSession.status === 'error' ? (serialSession.error ?? 'Could not run serial analysis') : null
-  const serialResult = serialSession.status === 'success' ? (serialSession.result ?? null) : null
 
   const runResearch = useCallback(async (q: string, opts?: { condition?: string; notes?: string }) => {
     const researchQuery: PriceCheckResearchQuery = {
@@ -210,13 +168,6 @@ export default function UnifiedIntelligenceView() {
     setCondition(persistedQuery.condition ?? '')
     setNotes(persistedQuery.notes ?? '')
   }, [researchSession.query])
-
-  useEffect(() => {
-    const persistedSerialQuery = serialSession.query
-    if (!persistedSerialQuery) return
-    setSerial(persistedSerialQuery.serial)
-    setBrand(persistedSerialQuery.brand)
-  }, [serialSession.query])
 
   useEffect(() => {
     const urlQuery = searchParams.get('q')
@@ -260,21 +211,13 @@ export default function UnifiedIntelligenceView() {
         ? 'Trend signal: Flat'
         : 'Trend signal: Unknown'
 
-  const hasSerialDescriptionDrift = useMemo(() => {
-    if (serialSession.status !== 'success' || !serialSession.query) return false
-    return serialSession.query.description.trim() !== query.trim()
-  }, [serialSession.query, serialSession.status, query])
-
   const decision = deriveSourcingDecision({
     maxBidEur: result?.maxBidEur,
     maxBuyEur: result?.maxBuyEur,
-    serialRecommendedMaxPayEur: serialResult?.pricingGuidance.recommendedMaxPayEur,
   })
 
   const decisionStyles = getDecisionToneStyles(decision.tone)
-  const decisionSuggestionLabel = decision.constrainedBy === 'serial-check'
-    ? 'Serial-adjusted max pay'
-    : 'Price-check max bid'
+  const decisionSuggestionLabel = 'Price-check max bid'
 
   if (isSidecar) {
     return (
@@ -352,80 +295,6 @@ export default function UnifiedIntelligenceView() {
       return
     }
     runResearch(q, { condition, notes: notes.trim() })
-  }
-
-  const handleSerialAnalysis = async () => {
-    const normalizedSerial = serial.trim()
-    const normalizedDescription = query.trim()
-
-    if (!normalizedDescription) {
-      toast.error('Enter item description first, then run serial analysis')
-      return
-    }
-
-    if (!normalizedSerial) {
-      toast.error('Serial check is optional, but you need a serial/date code to run it')
-      return
-    }
-
-    const serialQuery: SerialCheckQuery = {
-      serial: normalizedSerial,
-      brand,
-      description: normalizedDescription,
-    }
-
-    startSerialLoading(serialQuery)
-
-    try {
-      let decoded = decodeSerialToYear(normalizedSerial, brand)
-
-      if (decoded.source === 'rule_based' && (decoded.precision === 'unknown' || decoded.confidence < 0.7)) {
-        try {
-          const { data } = await apiPost<{ data: SerialDecodeResult }>('/ai/serial-decode', {
-            serial: normalizedSerial,
-            brand,
-            itemDescription: normalizedDescription,
-          })
-          decoded = data
-        } catch {
-          // Keep rule-based decode when AI decode is unavailable.
-        }
-      }
-
-      let marketAverage = result?.averageSellingPriceEur ?? 0
-      let compsCount = result?.comps.length ?? 0
-
-      if (marketAverage <= 0) {
-        const { data: marketData } = await apiPost<{ data: PriceCheckResult }>('/pricing/price-check', {
-          query: normalizedDescription,
-          condition: condition || undefined,
-          notes: notes.trim() || undefined,
-        })
-        marketAverage = marketData.averageSellingPriceEur
-        compsCount = marketData.comps.length
-      }
-
-      const guidance = calculateSerialPricingGuidance({
-        marketAverageEur: marketAverage,
-        decode: decoded,
-      })
-
-      setSerialSuccess(
-        {
-          decodeResult: decoded,
-          pricingGuidance: guidance,
-          marketAverageEur: marketAverage,
-          compsCount,
-        },
-        serialQuery
-      )
-
-      toast.success('Serial context updated')
-    } catch (error) {
-      const message = error instanceof ApiError ? error.message : 'Could not run serial analysis'
-      setSerialError(message, serialQuery)
-      toast.error(message)
-    }
   }
 
   return (
@@ -533,130 +402,6 @@ export default function UnifiedIntelligenceView() {
                   </div>
                 )}
               </div>
-
-              <details className="group border border-lux-200 rounded-lux-card overflow-hidden">
-                <summary className="cursor-pointer px-3 py-2 text-sm text-lux-600 hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none list-none flex items-center justify-between gap-2">
-                  <span>Optional: serial/date code for age-adjusted guidance</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
-                </summary>
-                <div className="px-3 pb-3 pt-0 space-y-3 border-t border-lux-100">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-xs text-lux-500 mb-1">Brand</label>
-                      <LuxSelect
-                        value={brand}
-                        onValueChange={(value) => setBrand(value as SerialCheckBrand)}
-                        options={SERIAL_BRAND_OPTIONS}
-                        ariaLabel="Serial brand"
-                        preferOpenUp
-                        dropdownMaxHeight={180}
-                      />
-                    </div>
-                    <FloatingInput
-                      type="text"
-                      value={serial}
-                      onChange={(e) => setSerial(e.target.value)}
-                      label="Serial/date code"
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSerialAnalysis}
-                      disabled={isSerialLoading}
-                      className="lux-btn-secondary inline-flex min-h-[44px] items-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                    >
-                      {isSerialLoading ? <AiThinkingDots /> : <Sparkles className="h-4 w-4" />}
-                      {isSerialLoading ? 'Analyzing serial...' : 'Analyze serial'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSerial('')
-                        clearSerialSession()
-                      }}
-                      className="inline-flex min-h-[44px] items-center rounded-lg border border-lux-200 px-3 text-xs font-medium text-lux-500 hover:bg-lux-50 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                    >
-                      Clear serial context
-                    </button>
-                  </div>
-                  {isSerialLoading && (
-                    <AiProgressSteps
-                      isActive={isSerialLoading}
-                      steps={SERIAL_STEPS}
-                      compact
-                      title="Serial analysis progress"
-                      className="mt-2"
-                    />
-                  )}
-                  {serialError && (
-                    <div className="rounded-lux-card border border-rose-200 bg-rose-50/60 p-3 text-center">
-                      <p className="text-sm font-medium text-rose-600">{serialError}</p>
-                      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleSerialAnalysis}
-                          disabled={isSerialLoading || !serial.trim() || !query.trim()}
-                          className="inline-flex min-h-[36px] items-center rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        >
-                          Retry
-                        </button>
-                        <button
-                          type="button"
-                          onClick={clearSerialSession}
-                          className="inline-flex min-h-[36px] items-center rounded-lg px-3 py-1.5 text-xs font-medium text-lux-600 hover:bg-lux-100 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        >
-                          Dismiss
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {hasSerialDescriptionDrift && !serialError && (
-                    <p className="text-xs text-amber-700">
-                      Description changed after serial analysis. Re-run serial analysis to refresh guidance.
-                    </p>
-                  )}
-                  {serialResult && (
-                    <div className="space-y-3">
-                      <div className={`rounded-lux-card border p-4 text-sm ${serialResult.decodeResult.success ? 'border-emerald-200 bg-emerald-50/70' : 'border-amber-200 bg-amber-50/70'}`}>
-                        <p className="font-medium text-lux-800">
-                          {serialResult.decodeResult.success && serialResult.decodeResult.year != null
-                            ? `Decode: ${serialResult.decodeResult.year}${serialResult.decodeResult.period ? ` - ${serialResult.decodeResult.period}` : ''}`
-                            : 'Decode could not be fully confirmed'}
-                        </p>
-                        <p className="mt-1 text-xs text-lux-600">{serialResult.decodeResult.message}</p>
-                        <p className="mt-1 text-xs text-lux-500">
-                          Confidence: {Math.round(serialResult.decodeResult.confidence * 100)}%
-                        </p>
-                      </div>
-                      <div className="rounded-lux-card border border-lux-200 bg-lux-50/70 p-4">
-                        <p className="text-xs text-lux-500 uppercase tracking-wide">Serial-adjusted guidance</p>
-                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                          <div>
-                            <p className="text-[11px] text-lux-500 uppercase tracking-wide">Market avg</p>
-                            <p className="text-sm font-semibold text-lux-800">
-                              {formatCurrency(serialResult.pricingGuidance.marketAverageEur)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[11px] text-lux-500 uppercase tracking-wide">Estimated worth</p>
-                            <p className="text-sm font-semibold text-lux-800">
-                              {formatCurrency(serialResult.pricingGuidance.estimatedWorthEur)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[11px] text-lux-500 uppercase tracking-wide">Recommended max pay</p>
-                            <p className="text-sm font-semibold text-lux-800">
-                              {formatCurrency(serialResult.pricingGuidance.recommendedMaxPayEur)}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="mt-2 text-xs text-lux-600">{serialResult.pricingGuidance.summary}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </details>
 
               <button
                 type="submit"
@@ -898,7 +643,7 @@ export default function UnifiedIntelligenceView() {
                 </p>
                 {decision.constrainedBy !== 'none' && (
                   <p className="mt-1 text-xs text-lux-500">
-                    Constraint source: {decision.constrainedBy === 'serial-check' ? 'Serial check' : 'Price check'}
+                    Constraint source: Price check
                   </p>
                 )}
                 {decision.notes.length > 0 && (

@@ -236,24 +236,30 @@ export class MarketResearchService {
     }
   }
 
-  /** Recent listings from Irish/EU competitors (Designer Exchange, Luxury Exchange, Siopella). */
+  /**
+   * Recent listings from Irish/EU competitors (Designer Exchange, Luxury Exchange, Siopella).
+   * Uses multi-query search (Irish + EU + broader) for better coverage. Best results with PERPLEXITY_API_KEY set.
+   */
   async getCompetitorFeed(): Promise<CompetitorFeedResult> {
     try {
-      const searchResponse = await this.searchService.searchMarket(
-        'luxury handbag bag pre-owned for sale',
-        {
-          domains: ['designerexchange.ie', 'luxuryexchange.ie', 'siopaella.com'],
-          userLocation: { country: 'IE' },
-        },
+      const searchResponse = await this.searchService.searchMarketMulti(
+        'pre-owned designer handbags Ireland',
+        { userLocation: { country: 'IE' } },
       )
 
       if (!searchResponse.rawText && searchResponse.annotations.length === 0) {
         return { items: [], generatedAt: new Date().toISOString() }
       }
 
-      const searchContext = searchResponse.rawText
+      const maxSearchContextChars = 12_000
+      const maxSourceUrls = 40
+      const trimmedRawText = searchResponse.rawText.length > maxSearchContextChars
+        ? `${searchResponse.rawText.slice(0, maxSearchContextChars)}\n\n[Search results truncated for extraction]`
+        : searchResponse.rawText
+      const trimmedAnnotations = searchResponse.annotations.slice(0, maxSourceUrls)
+      const searchContext = trimmedRawText
         + '\n\nSource URLs:\n'
-        + searchResponse.annotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
+        + trimmedAnnotations.map((a) => `- ${a.title}: ${a.url}`).join('\n')
 
       const routed = await this.aiRouter.extractStructuredJson<z.infer<typeof CompetitorFeedExtractionSchema>>({
         systemPrompt: COMPETITOR_FEED_SYSTEM_PROMPT,
@@ -273,11 +279,19 @@ export class MarketResearchService {
           condition: item.condition ?? undefined,
         }))
         .filter((item) => item.title && item.priceEur > 0 && hasValidEvidenceSourceUrl(item.sourceUrl))
+        .sort((a, b) => {
+          const dateA = a.listedAt ? new Date(a.listedAt).getTime() : 0
+          const dateB = b.listedAt ? new Date(b.listedAt).getTime() : 0
+          if (dateA === 0 && dateB === 0) return 0
+          if (dateA === 0) return 1
+          if (dateB === 0) return -1
+          return dateB - dateA
+        })
 
       return { items, generatedAt: new Date().toISOString() }
     } catch (error) {
       logger.error('competitor_feed_search_error', error)
-      return { items: [], generatedAt: new Date().toISOString() }
+      throw error
     }
   }
 

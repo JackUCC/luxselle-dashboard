@@ -280,6 +280,15 @@ describe('GET /api/market-research/competitor-feed', () => {
     expect(res.body.data.items[0].priceEur).toBe(4500)
     expect(res.body.data.items[1].source).toBe('Luxury Exchange')
   })
+
+  it('returns 500 with error body when getCompetitorFeed throws', async () => {
+    mockGetCompetitorFeed.mockRejectedValue(new Error('Search failed'))
+    const res = await request(app).get('/api/market-research/competitor-feed')
+    expect(res.status).toBe(500)
+    expect(res.body.error).toBeDefined()
+    expect(res.body.error.code).toBeDefined()
+    expect(res.body.error.message).toBeDefined()
+  })
 })
 
 describe('GET /api/market-research/snapshots', () => {

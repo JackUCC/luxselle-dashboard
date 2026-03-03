@@ -46,24 +46,9 @@ const BRAND_MODELS: Record<string, string[]> = {
 
 import type { MarketComparable, MarketComparablePayload, MarketResearchResult, MarketResearchResultPayload } from './types'
 import FreshnessBadge from './FreshnessBadge'
+import { SerialCheckerCard } from '../../components/widgets'
 
 // ─── Types ─────────────────────────────────────────────────────
-interface TrendingItem {
-    brand: string
-    model: string
-    category: string
-    demandLevel: string
-    priceTrend: string
-    avgPriceEur: number
-    searchVolume: 'high' | 'medium' | 'low'
-}
-
-interface TrendingResult {
-    provider: string
-    items: TrendingItem[]
-    generatedAt: string
-}
-
 /** Competitor feed item (Designer Exchange, Luxury Exchange, Siopella). */
 interface CompetitorFeedItem {
     title: string
@@ -164,7 +149,7 @@ const MARKET_RESEARCH_STEPS: AiProgressStep[] = [
     { label: 'Building recommendation', detail: 'Generating summary, pricing range, and guidance.' },
 ]
 
-import MarketResearchResultPanel, { TREND_CONFIG } from './MarketResearchResultPanel'
+import MarketResearchResultPanel from './MarketResearchResultPanel'
 
 // ─── Competitor feed helpers ───────────────────────────────────
 const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
@@ -245,9 +230,8 @@ export default function MarketResearchView() {
     const researchError = researchSession.status === 'error' ? (researchSession.error ?? 'Analysis failed') : null
     const error = researchError ?? feedError
 
-    const [trending, setTrending] = useState<TrendingResult | null>(null)
-    const [isTrendingLoading, setIsTrendingLoading] = useState(false)
     const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
+    const [competitorFeedError, setCompetitorFeedError] = useState<string | null>(null)
     const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
     const [competitorRefreshKey, setCompetitorRefreshKey] = useState(0)
     const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
@@ -274,33 +258,22 @@ export default function MarketResearchView() {
         [availableModels],
     )
 
-    // Pre-load trending and competitor feed on mount
-    useEffect(() => {
-        let cancelled = false
-        const load = async () => {
-            setIsTrendingLoading(true)
-            try {
-                const { data } = await apiGet<{ data: TrendingResult }>('/market-research/trending')
-                if (!cancelled) setTrending(data)
-            } catch {
-                if (!cancelled) setTrending(null)
-            } finally {
-                if (!cancelled) setIsTrendingLoading(false)
-            }
-        }
-        load()
-        return () => { cancelled = true }
-    }, [])
-
     useEffect(() => {
         let cancelled = false
         const load = async () => {
             setIsCompetitorLoading(true)
+            setCompetitorFeedError(null)
             try {
                 const { data } = await apiGet<{ data: CompetitorFeedResult }>('/market-research/competitor-feed')
-                if (!cancelled) setCompetitorFeed(data)
-            } catch {
-                if (!cancelled) setCompetitorFeed(null)
+                if (!cancelled) {
+                    setCompetitorFeed(data)
+                    setCompetitorFeedError(null)
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setCompetitorFeedError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Temporarily unavailable')
+                    // Keep previous competitorFeed so user can still see last successful result
+                }
             } finally {
                 if (!cancelled) setIsCompetitorLoading(false)
             }
@@ -473,21 +446,6 @@ export default function MarketResearchView() {
             } finally {
                 setIsSaving(false)
             }
-        }
-    }
-
-    const loadTrending = async () => {
-        setIsTrendingLoading(true)
-        setFeedError(null)
-        try {
-            const { data } = await apiGet<{ data: TrendingResult }>('/market-research/trending')
-            setTrending(data)
-        } catch (err) {
-            const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to load trends'
-            setFeedError(msg)
-            toast.error(msg)
-        } finally {
-            setIsTrendingLoading(false)
         }
     }
 
@@ -866,72 +824,9 @@ export default function MarketResearchView() {
                 </div>
             </div>
 
-            {/* ─── Full-width: Trending + Competitor side by side ─── */}
+            {/* ─── Full-width: Serial Check + Competitor side by side ─── */}
             <div className="grid gap-6 lg:grid-cols-2">
-                {/* Trending Now */}
-                <div className="lux-card p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em]">
-                            <Zap className="h-4 w-4 text-amber-500" />
-                            Trending Now
-                        </div>
-                        <button
-                            onClick={loadTrending}
-                            disabled={isTrendingLoading}
-                            className="text-xs text-lux-600 hover:text-lux-900 font-medium flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        >
-                            {isTrendingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
-                            Refresh
-                        </button>
-                    </div>
-
-                    {trending ? (
-                        <div className="space-y-1">
-                            {trending.items.map((item, i) => {
-                                const trendCfg = TREND_CONFIG[item.priceTrend as keyof typeof TREND_CONFIG] ?? TREND_CONFIG.stable
-                                const TrendIcon = trendCfg.icon
-                                return (
-                                    <button
-                                        key={i}
-                                        onClick={() => quickResearch(item.brand, item.model)}
-                                        className="group flex min-h-[44px] w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-lux-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                    >
-                                        <div className="min-w-0">
-                                            <div className="text-xs font-medium text-lux-800 truncate group-hover:text-lux-900 transition-colors">
-                                                {item.brand} {item.model}
-                                            </div>
-                                            <div className="text-xs text-lux-400">{item.category}</div>
-                                        </div>
-                                        <div className="flex items-center gap-3 shrink-0">
-                                            <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.avgPriceEur)}</span>
-                                            <TrendIcon className={`h-4 w-4 ${trendCfg.color}`} />
-                                        </div>
-                                    </button>
-                                )
-                            })}
-                            <p className="text-xs text-lux-400 text-center pt-2 uppercase tracking-wider">
-                                via {trending.provider} · Irish & EU · {new Date(trending.generatedAt).toLocaleTimeString()}
-                            </p>
-                        </div>
-                    ) : isTrendingLoading ? (
-                        <div className="space-y-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="flex items-center justify-between py-2.5 px-3">
-                                    <div className="space-y-1.5 flex-1">
-                                        <Skeleton className="h-3.5 w-32" />
-                                        <Skeleton className="h-2.5 w-20" />
-                                    </div>
-                                    <Skeleton className="h-3.5 w-16" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 text-lux-400">
-                            <Zap className="h-6 w-6 mx-auto mb-2 opacity-20" />
-                            <p className="text-xs">Click Refresh to load trends</p>
-                        </div>
-                    )}
-                </div>
+                <SerialCheckerCard />
 
                 {/* Competitor Activity */}
                 <div className="lux-card p-6">
@@ -966,45 +861,69 @@ export default function MarketResearchView() {
                         </div>
                     ) : competitorFeed && competitorFeed.items.length > 0 ? (
                         <div className="space-y-1 max-h-80 overflow-y-auto no-scrollbar">
-                            {competitorFeed.items.map((item, i) => {
-                                const badge = SOURCE_BADGE[item.source]
-                                const dateLabel = relativeDate(item.listedAt)
-                                const meta = [item.condition, dateLabel].filter(Boolean).join(' · ')
+                            {(() => {
+                                const counts: Record<string, number> = {}
+                                competitorFeed.items.forEach((item) => { counts[item.source] = (counts[item.source] ?? 0) + 1 })
+                                const summaryParts = Object.entries(counts)
+                                    .sort(([a], [b]) => a.localeCompare(b))
+                                    .map(([source, n]) => `${n} ${source}`)
+                                const summaryLine = `${competitorFeed.items.length} listing${competitorFeed.items.length === 1 ? '' : 's'}: ${summaryParts.join(', ')}`
+                                const sourceOrder = ['Designer Exchange', 'Luxury Exchange', 'Siopella']
+                                const bySource = sourceOrder.map((source) => competitorFeed.items.filter((item) => item.source === source)).filter((group) => group.length > 0)
                                 return (
-                                    <div
-                                        key={i}
-                                        className="flex items-center gap-2 py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
-                                    >
-                                        {badge && (
-                                            <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none ${badge.className}`}>
-                                                {badge.label}
-                                            </span>
+                                    <>
+                                        <p className="text-[10px] text-lux-400 mb-2">{summaryLine}</p>
+                                        {bySource.flatMap((group) =>
+                                            group.map((item, i) => {
+                                                const badge = SOURCE_BADGE[item.source]
+                                                const dateLabel = relativeDate(item.listedAt)
+                                                const meta = [item.condition, dateLabel].filter(Boolean).join(' · ')
+                                                return (
+                                                    <div
+                                                        key={`${item.source}-${i}-${item.title}`}
+                                                        className="flex items-center gap-2 py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
+                                                    >
+                                                        {badge && (
+                                                            <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none ${badge.className}`}>
+                                                                {badge.label}
+                                                            </span>
+                                                        )}
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="text-xs font-medium text-lux-800 truncate">{item.title}</div>
+                                                            {meta && <div className="text-[10px] text-lux-400 mt-0.5">{meta}</div>}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
+                                                            {item.sourceUrl && (
+                                                                <a
+                                                                    href={item.sourceUrl}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1 text-lux-400 transition-colors hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                                    aria-label="Open listing"
+                                                                    title={`Open listing: ${item.title}`}
+                                                                >
+                                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }),
                                         )}
-                                        <div className="min-w-0 flex-1">
-                                            <div className="text-xs font-medium text-lux-800 truncate">{item.title}</div>
-                                            {meta && <div className="text-[10px] text-lux-400 mt-0.5">{meta}</div>}
-                                        </div>
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
-                                            {item.sourceUrl && (
-                                                <a
-                                                    href={item.sourceUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1 text-lux-400 transition-colors hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                                    aria-label="Open listing"
-                                                    title={`Open listing: ${item.title}`}
-                                                >
-                                                    <ExternalLink className="h-3.5 w-3.5" />
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
+                                        {competitorFeedError && (
+                                            <p className="text-xs text-amber-600 pt-2">Last refresh failed. Showing previous results.</p>
+                                        )}
+                                        <p className="text-xs text-lux-400 text-center pt-2">
+                                            Updated {new Date(competitorFeed.generatedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                                        </p>
+                                    </>
                                 )
-                            })}
-                            <p className="text-xs text-lux-400 text-center pt-2">
-                                Updated {new Date(competitorFeed.generatedAt).toLocaleTimeString()}
-                            </p>
+                            })()}
+                        </div>
+                    ) : competitorFeedError ? (
+                        <div className="text-center py-8 text-amber-600 text-xs">
+                            {competitorFeedError}
                         </div>
                     ) : (
                         <div className="text-center py-8 text-lux-400 text-xs">

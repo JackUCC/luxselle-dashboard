@@ -67,6 +67,7 @@ Return ONLY a valid JSON object (no markdown):
 
 RULES:
 - Every item must include a sourceUrl from the provided search data.
+- Only output items whose sourceUrl domain is designerexchange.ie, luxuryexchange.ie, or siopaella.com; ignore other domains.
 - Only extract listings with a clear price in EUR or a convertible currency.
 - Maximum 10 items total.
 - Prefer items with direct product page URLs over homepage links.
