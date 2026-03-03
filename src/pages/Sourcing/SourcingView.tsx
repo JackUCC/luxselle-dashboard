@@ -10,7 +10,7 @@ import type { SourcingRequest } from '@shared/schemas'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 import { staggerClass } from '../../lib/staggerClass'
 import PageLayout from '../../components/layout/PageLayout'
-import { Button, Card, EmptyState, FilterChipGroup, PageHeader, SectionLabel } from '../../components/design-system'
+import { Button, Card, EmptyState, FilterChipGroup, Modal, PageHeader, SectionLabel } from '../../components/design-system'
 import Skeleton from '../../components/feedback/Skeleton'
 
 type SourcingRequestWithId = SourcingRequest & { id: string }
@@ -274,171 +274,166 @@ export default function SourcingView() {
         ariaLabel="Filter by status"
       />
 
-      {/* Create Form Overlay */}
-      {showCreateForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="create-sourcing-title"
-            className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in"
+      {/* Create Form Modal */}
+      <Modal
+        isOpen={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        size="md"
+        titleId="create-sourcing-title"
+      >
+        <div className="flex items-center justify-between border-b border-lux-200 px-6 py-4">
+          <h2 id="create-sourcing-title" className="text-lg font-bold text-lux-900">New Sourcing Request</h2>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(false)}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            aria-label="Close request form"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 id="create-sourcing-title" className="text-lg font-bold text-lux-900">New Sourcing Request</h2>
-              <button 
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                aria-label="Close request form"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="create-sourcing-customer-name" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
-                    Customer Name *
-                  </label>
-                  <input
-                    id="create-sourcing-customer-name"
-                    type="text"
-                    name="customerName"
-                    value={formData.customerName}
-                    onChange={handleChange}
-                    required
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="create-sourcing-brand" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
-                    Brand
-                  </label>
-                  <input
-                    id="create-sourcing-brand"
-                    type="text"
-                    name="brand"
-                    value={formData.brand}
-                    onChange={handleChange}
-                    className="lux-input"
-                  />
-                </div>
-              </div>
-
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="create-sourcing-query" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
-                  Query / Description *
+                <label htmlFor="create-sourcing-customer-name" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  Customer Name *
                 </label>
-                <textarea
-                  id="create-sourcing-query"
-                  name="queryText"
-                  value={formData.queryText}
+                <input
+                  id="create-sourcing-customer-name"
+                  type="text"
+                  name="customerName"
+                  value={formData.customerName}
                   onChange={handleChange}
                   required
-                  rows={3}
                   className="lux-input"
                 />
               </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="create-sourcing-budget" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
-                    Budget (EUR) *
-                  </label>
-                  <input
-                    id="create-sourcing-budget"
-                    type="number"
-                    name="budget"
-                    value={formData.budget}
-                    onChange={handleChange}
-                    required
-                    className="lux-input"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="create-sourcing-priority" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
-                    Priority
-                  </label>
-                  <select
-                    id="create-sourcing-priority"
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    className="lux-input"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
+              <div>
+                <label htmlFor="create-sourcing-brand" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  Brand
+                </label>
+                <input
+                  id="create-sourcing-brand"
+                  type="text"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  className="lux-input"
+                />
               </div>
+            </div>
 
-              <div className="pt-4 flex gap-3">
+            <div>
+              <label htmlFor="create-sourcing-query" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                Query / Description *
+              </label>
+              <textarea
+                id="create-sourcing-query"
+                name="queryText"
+                value={formData.queryText}
+                onChange={handleChange}
+                required
+                rows={3}
+                className="lux-input"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="create-sourcing-budget" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  Budget (EUR) *
+                </label>
+                <input
+                  id="create-sourcing-budget"
+                  type="number"
+                  name="budget"
+                  value={formData.budget}
+                  onChange={handleChange}
+                  required
+                  className="lux-input"
+                />
+              </div>
+              <div>
+                <label htmlFor="create-sourcing-priority" className="block text-xs font-medium text-lux-700 mb-1.5 uppercase tracking-wide">
+                  Priority
+                </label>
+                <select
+                  id="create-sourcing-priority"
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="lux-input"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                className="lux-btn-secondary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="lux-btn-primary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Request'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* Edit Form Modal */}
+      <Modal
+        isOpen={!!editingRequest}
+        onClose={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
+        size="md"
+        titleId="edit-sourcing-title"
+      >
+        <div className="flex items-center justify-between border-b border-lux-200 px-6 py-4">
+          <h2 id="edit-sourcing-title" className="text-lg font-bold text-lux-900">Edit Sourcing Request</h2>
+          <button
+            type="button"
+            onClick={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-6">
+          {showDeleteConfirm ? (
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-lux-600">Delete this sourcing request? This cannot be undone.</p>
+              <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={() => setShowDeleteConfirm(false)}
                   className="lux-btn-secondary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="lux-btn-primary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                 >
-                  {isSubmitting ? 'Creating...' : 'Create Request'}
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  {isDeleting ? 'Deleting…' : 'Delete'}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Form Overlay */}
-      {editingRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-sourcing-title"
-            className="w-full max-w-lg rounded-lux-card bg-white p-6 shadow-glass-lg animate-fade-in"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 id="edit-sourcing-title" className="text-lg font-bold text-lux-900">Edit Sourcing Request</h2>
-              <button
-                type="button"
-                onClick={() => { setEditingRequest(null); setShowDeleteConfirm(false) }}
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
-
-            {showDeleteConfirm ? (
-              <div className="space-y-4 py-2">
-                <p className="text-sm text-lux-600">Delete this sourcing request? This cannot be undone.</p>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="lux-btn-secondary flex-1 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                  >
-                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    {isDeleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            ) : (
+          ) : (
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -580,10 +575,9 @@ export default function SourcingView() {
                 </button>
               </div>
             </form>
-            )}
-          </div>
+          )}
         </div>
-      )}
+      </Modal>
 
       {/* Requests Pipeline */}
       <div>

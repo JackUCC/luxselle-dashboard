@@ -1,8 +1,10 @@
 /**
  * Product detail side drawer: view/edit product, images, transactions; uses apiGet, apiPut, apiPost, apiDelete.
+ * Rendered via portal to body so position:fixed is viewport-relative and not affected by route transform/overflow.
  * @see docs/CODE_REFERENCE.md
  */
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { useScrollLock } from '../../lib/useScrollLock'
 import {
@@ -77,7 +79,12 @@ export default function ProductDetailDrawer({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [openSellInvoiceSignal, setOpenSellInvoiceSignal] = useState(0)
 
-  useScrollLock(true)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const onCloseRef = useRef(onClose)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+  onCloseRef.current = onClose
+
+  useScrollLock(!!productId)
 
   // Fetch product data
   useEffect(() => {
@@ -156,18 +163,90 @@ export default function ProductDetailDrawer({
     }
   }, [product, onClose, onProductDeleted])
 
+  // Focus trap, Escape to close, and tab containment (mirrors design-system Drawer)
+  useEffect(() => {
+    if (!productId) return
+
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const panel = panelRef.current
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',')
+
+    const getFocusable = () =>
+      panel ? Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector)) : []
+
+    const focusableOnOpen = getFocusable()
+    ;(focusableOnOpen[0] ?? panel)?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCloseRef.current()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const focusable = getFocusable()
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+        return
+      }
+
+      if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      previousFocusRef.current?.focus()
+    }
+  }, [productId])
+
   if (!productId) return null
 
-  return (
+  const drawerContent = (
     <>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-150"
         onClick={onClose}
+        aria-hidden="true"
       />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-float z-50 flex flex-col overflow-hidden animate-slide-left border-l border-lux-200">
+      {/* Drawer: viewport-safe width and containment for layout/paint isolation */}
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Product details"
+        tabIndex={-1}
+        className="fixed right-0 top-0 h-full bg-white shadow-float z-50 flex flex-col overflow-hidden animate-slide-left border-l border-lux-200"
+        style={{
+          width: 'min(100vw, 36rem)',
+          maxWidth: '100vw',
+          contain: 'layout paint',
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-lux-200 bg-lux-50/80">
           <div className="flex items-center gap-3">
@@ -350,6 +429,8 @@ export default function ProductDetailDrawer({
       />
     </>
   )
+
+  return createPortal(drawerContent, document.body)
 }
 
 // === Tab Components ===

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useScrollLock } from '../../lib/useScrollLock'
 
 export interface ModalProps {
@@ -85,9 +86,14 @@ export default function Modal({
 
   if (!isOpen) return null
 
-  const maxW = size === 'lg' ? 'max-w-2xl' : size === 'md' ? 'max-w-md' : 'max-w-sm'
+  const maxW =
+    size === 'lg'
+      ? 'max-w-[min(42rem,calc(100vw-2rem))]'
+      : size === 'md'
+        ? 'max-w-md'
+        : 'max-w-sm'
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-50 bg-black/40 transition-opacity duration-150"
@@ -95,13 +101,13 @@ export default function Modal({
         aria-hidden="true"
       />
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 flex max-h-[100dvh] min-h-0 items-center justify-center overflow-hidden p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
       >
         <div
-          className={`w-full overflow-hidden rounded-lux-modal border-2 border-lux-200 bg-white shadow-float ${maxW} animate-scale-in`}
+          className={`flex max-h-full w-full flex-col overflow-hidden rounded-lux-modal border-2 border-lux-200 bg-white shadow-float ${maxW} animate-scale-in`}
           onClick={(e) => e.stopPropagation()}
           ref={panelRef}
           tabIndex={-1}
@@ -109,6 +115,7 @@ export default function Modal({
           {children}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }

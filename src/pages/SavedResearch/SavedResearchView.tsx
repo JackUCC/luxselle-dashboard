@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bookmark, Star, Search, X } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -6,7 +6,9 @@ import PageLayout from '../../components/layout/PageLayout'
 import { PageHeader, Button, Card, EmptyState, Modal } from '../../components/design-system'
 import { LuxSelect } from '../../components/design-system/Input'
 import { apiGet, apiDelete, apiPut } from '../../lib/api'
+import { useScrollLock } from '../../lib/useScrollLock'
 import Skeleton from '../../components/feedback/Skeleton'
+import { useLayoutMode } from '../../lib/LayoutModeContext'
 import type { MarketResearchResult } from '../MarketResearch/types'
 import { AnimatePresence } from 'framer-motion'
 import SavedResearchCard from './SavedResearchCard'
@@ -24,16 +26,48 @@ export interface SavedResearchItem {
     result: MarketResearchResult
 }
 
+const NARROW_VIEWPORT_BREAKPOINT = 640
+
 export default function SavedResearchView() {
     const navigate = useNavigate()
+    const { isSidecar } = useLayoutMode()
     const [items, setItems] = useState<SavedResearchItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [reloadKey, setReloadKey] = useState(0)
     const [filter, setFilter] = useState<'all' | 'starred'>('all')
     const [brandFilter, setBrandFilter] = useState<string>('all')
-    
+    const [isNarrowViewport, setIsNarrowViewport] = useState(() =>
+        typeof window !== 'undefined' ? window.matchMedia(`(max-width: ${NARROW_VIEWPORT_BREAKPOINT - 1}px)`).matches : false
+    )
     const [selectedItem, setSelectedItem] = useState<SavedResearchItem | null>(null)
+    const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+    useEffect(() => {
+        const mq = window.matchMedia(`(max-width: ${NARROW_VIEWPORT_BREAKPOINT - 1}px)`)
+        const handler = () => setIsNarrowViewport(mq.matches)
+        mq.addEventListener('change', handler)
+        return () => mq.removeEventListener('change', handler)
+    }, [])
+
+    const useDrawer = isSidecar || isNarrowViewport
+
+    useScrollLock(!!selectedItem)
+
+    useEffect(() => {
+        if (selectedItem) {
+            closeButtonRef.current?.focus()
+        }
+    }, [selectedItem])
+
+    useEffect(() => {
+        if (!selectedItem || !useDrawer) return
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setSelectedItem(null)
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [selectedItem, useDrawer])
 
     useEffect(() => {
         let cancelled = false
@@ -220,33 +254,74 @@ export default function SavedResearchView() {
                 </div>
             )}
 
-            <Modal
-                isOpen={!!selectedItem}
-                onClose={() => setSelectedItem(null)}
-                size="lg"
-                titleId="saved-research-preview-title"
-            >
-                {selectedItem && (
-                    <div className="flex max-h-[85vh] flex-col">
+            {/* Preview: drawer on narrow/sidecar, modal otherwise */}
+            {useDrawer && selectedItem && (
+                <>
+                    <div
+                        className="fixed inset-0 z-50 bg-black/40 transition-opacity duration-150"
+                        onClick={() => setSelectedItem(null)}
+                        aria-hidden="true"
+                    />
+                    <div
+                        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[min(42rem,100vw)] flex-col overflow-hidden border-l border-lux-200 bg-white shadow-float animate-slide-left"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="saved-research-preview-title"
+                    >
                         <div className="flex shrink-0 items-center justify-between border-b border-lux-200 px-6 py-4">
-                            <h2 id="saved-research-preview-title" className="text-card-header font-semibold text-lux-900">
+                            <h2 id="saved-research-preview-title" className="text-card-header font-semibold text-lux-900 min-w-0 truncate pr-3">
                                 {selectedItem.result.brand} {selectedItem.result.model}
                             </h2>
                             <button
+                                ref={closeButtonRef}
                                 type="button"
-                                className="rounded-lg p-1 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                                className="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
                                 onClick={() => setSelectedItem(null)}
-                                aria-label="Close"
+                                aria-label="Close (Escape)"
+                                title="Close (Esc)"
                             >
                                 <X className="h-5 w-5" aria-hidden="true" />
+                                <span className="text-sm font-medium">Close</span>
                             </button>
                         </div>
                         <div className="min-h-0 flex-1 overflow-y-auto p-6">
                             <MarketResearchResultPanel result={selectedItem.result} />
                         </div>
                     </div>
-                )}
-            </Modal>
+                </>
+            )}
+            {!useDrawer && (
+                <Modal
+                    isOpen={!!selectedItem}
+                    onClose={() => setSelectedItem(null)}
+                    size="lg"
+                    titleId="saved-research-preview-title"
+                >
+                    {selectedItem && (
+                        <div className="flex min-h-0 max-h-full flex-col">
+                            <div className="flex shrink-0 items-center justify-between border-b border-lux-200 px-6 py-4">
+                                <h2 id="saved-research-preview-title" className="text-card-header font-semibold text-lux-900 min-w-0 truncate pr-3">
+                                    {selectedItem.result.brand} {selectedItem.result.model}
+                                </h2>
+                                <button
+                                    ref={closeButtonRef}
+                                    type="button"
+                                    className="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-lux-500 hover:bg-lux-100 hover:text-lux-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
+                                    onClick={() => setSelectedItem(null)}
+                                    aria-label="Close (Escape)"
+                                    title="Close (Esc)"
+                                >
+                                    <X className="h-5 w-5" aria-hidden="true" />
+                                    <span className="text-sm font-medium">Close</span>
+                                </button>
+                            </div>
+                            <div className="min-h-0 flex-1 overflow-y-auto p-6">
+                                <MarketResearchResultPanel result={selectedItem.result} />
+                            </div>
+                        </div>
+                    )}
+                </Modal>
+            )}
         </PageLayout>
     )
 }

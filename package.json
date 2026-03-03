@@ -10,7 +10,7 @@
     "packages/shared"
   ],
   "scripts": {
-    "dev": "npx concurrently -k \"npm run emulators\" \"npm run dev --workspace=@luxselle/server\" \"npm run dev:client\"",
+    "dev": "npx concurrently -k \"npm run emulators\" \"SKIP_AUTH=true npm run dev --workspace=@luxselle/server\" \"npm run dev:client\"",
     "dev:e2e": "bash scripts/dev-e2e.sh",
     "dev:client": "vite --config config/vite.config.ts",
     "build": "vite build --config config/vite.config.ts",

@@ -465,7 +465,7 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
-router.post('/', requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const input = ProductInputSchema.parse(req.body)
     const now = new Date().toISOString()
@@ -514,7 +514,7 @@ router.post('/', requireRole('operator', 'admin'), async (req, res, next) => {
   }
 })
 
-router.put('/:id', requireRole('operator', 'admin'), async (req, res, next) => {
+router.put('/:id', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const input = ProductUpdateSchema.parse(req.body)
     const now = new Date().toISOString()
@@ -528,7 +528,7 @@ router.put('/:id', requireRole('operator', 'admin'), async (req, res, next) => {
   }
 })
 
-router.delete('/:id', requireRole('admin'), async (req, res, next) => {
+router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) => {
   try {
     await productRepo.remove(req.params.id)
     res.status(204).send()
@@ -619,7 +619,7 @@ router.post('/:id/images', requireRole('operator', 'admin'), upload.single('imag
 })
 
 // DELETE /api/products/:id/images/:imageId - Delete image
-router.delete('/:id/images/:imageId', requireRole('operator', 'admin'), async (req, res, next) => {
+router.delete('/:id/images/:imageId', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const { id, imageId } = req.params
     const product = await productRepo.getById(id)
@@ -703,7 +703,7 @@ const SellWithInvoiceInputSchema = z.object({
   description: z.string().optional(),
 })
 
-router.post('/:id/transactions', requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/:id/transactions', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const { id } = req.params
     const product = await productRepo.getById(id)
@@ -773,7 +773,7 @@ router.post('/:id/transactions', requireRole('operator', 'admin'), async (req, r
   }
 })
 
-router.post('/:id/sell-with-invoice', requireRole('operator', 'admin'), async (req, res, next) => {
+router.post('/:id/sell-with-invoice', requireAuth, requireRole('operator', 'admin'), async (req, res, next) => {
   try {
     const { id } = req.params
     const product = await productRepo.getById(id)
