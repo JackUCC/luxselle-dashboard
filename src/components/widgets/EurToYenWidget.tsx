@@ -26,15 +26,6 @@ function sourcePrefix(direction: Direction): string {
   return direction === 'eur-to-jpy' ? '€ ' : '¥ '
 }
 
-function formatRateDate(isoDate: string): string {
-  try {
-    const d = new Date(isoDate + 'T12:00:00Z')
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-  } catch {
-    return isoDate
-  }
-}
-
 export default function EurToYenWidget() {
   const { data: fx, isLoading: loading, error, refresh } = useFxRate()
   const [direction, setDirection] = useState<Direction>('eur-to-jpy')
@@ -68,8 +59,8 @@ export default function EurToYenWidget() {
 
   const rateLine =
     direction === 'eur-to-jpy'
-      ? fx && `1 EUR = ${eurToJpyRate.toFixed(2)} JPY (Approx.)`
-      : fx && `1 JPY = ${jpyToEurRate.toFixed(6)} EUR (Approx.)`
+      ? fx && `1 EUR = ${eurToJpyRate.toFixed(2)} JPY`
+      : fx && `1 JPY = ${jpyToEurRate.toFixed(6)} EUR`
 
   const sourceLabel = direction === 'eur-to-jpy' ? 'Euro (€)' : 'Japanese Yen (¥)'
   const sourceFlag = direction === 'eur-to-jpy' ? EU_FLAG : JP_FLAG
@@ -144,12 +135,6 @@ export default function EurToYenWidget() {
           {rateLine && (
             <div className="text-center">
               <p className="text-sm text-lux-400">{rateLine}</p>
-              {fx?.date && (
-                <p className="mt-0.5 text-xs text-lux-500">
-                  Rate as of {formatRateDate(fx.date)}
-                  {fx.source ? ` · ${fx.source}` : ''}
-                </p>
-              )}
             </div>
           )}
 
