@@ -38,6 +38,11 @@ export const MarketIntelRunSchema = BaseDocSchema.extend({
   completedAt: z.string().optional(),
   error: z.string().optional(),
   snapshotId: z.string().optional(),
+  aiUsage: z.object({
+    callCount: z.number().int().nonnegative(),
+    provider: z.string(),
+    estimatedCostEur: z.number().nonnegative(),
+  }).optional(),
   result: MarketResearchResultSchema.optional(),
 })
 

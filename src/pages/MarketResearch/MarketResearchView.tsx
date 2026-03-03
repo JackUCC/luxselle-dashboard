@@ -257,6 +257,7 @@ export default function MarketResearchView() {
     const [isStarred, setIsStarred] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [isDeepDiveLoading, setIsDeepDiveLoading] = useState(false)
+    const [isMonitorLoading, setIsMonitorLoading] = useState(false)
 
     const availableModels = useMemo(() => {
         if (!formData.brand) return []
@@ -399,6 +400,22 @@ export default function MarketResearchView() {
             toast.error(msg)
         } finally {
             setIsDeepDiveLoading(false)
+        }
+    }
+
+    const handleTriggerMonitor = async () => {
+        if (!formData.brand || !formData.model) return
+        setIsMonitorLoading(true)
+        try {
+            await apiPost('/market-research/trigger-monitor', {
+                ...formData,
+                currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
+            })
+            toast.success('Background refresh queued')
+        } catch {
+            toast.error('Failed to queue background refresh')
+        } finally {
+            setIsMonitorLoading(false)
         }
     }
 
@@ -741,6 +758,8 @@ export default function MarketResearchView() {
                                     <FreshnessBadge
                                         status={result.intel?.freshnessStatus}
                                         snapshotAgeMinutes={result.intel?.snapshotAgeMinutes}
+                                        mode={result.intel?.mode}
+                                        generatedAt={result.intel?.generatedAt}
                                     />
                                 </div>
                                 <TypewriterText
