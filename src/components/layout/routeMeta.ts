@@ -1,14 +1,15 @@
 import {
   Bookmark,
-  Box,
   CircleDollarSign,
-  Globe,
   House,
   Receipt,
+  ShoppingBag,
   Tags,
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
+
+import BagFinderIcon from '../icons/BagFinderIcon'
 
 export type AppNavSection = 'check' | 'manage'
 
@@ -26,8 +27,8 @@ export const appRoutes: RouteMeta[] = [
   { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'check' },
   { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'check' },
   { path: '/saved-research', label: 'Saved Research', navLabel: 'Saved Research', icon: Bookmark, section: 'check' },
-  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: Box, section: 'manage' },
-  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: Globe, section: 'manage' },
+  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: ShoppingBag, section: 'manage' },
+  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: BagFinderIcon as unknown as LucideIcon, section: 'manage' },
   { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'manage' },
 ]
 
