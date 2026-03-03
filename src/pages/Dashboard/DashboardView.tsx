@@ -131,13 +131,14 @@ export default function DashboardView() {
             <SourcingSitesWidget />
           </BentoGrid>
 
-          {/* Row 2: Currency Converter + Landed Cost */}
+          {/* Row 2: Currency Converter + Landed Cost + Active Sourcing */}
           <BentoGrid columns={3}>
             <EurToYenWidget />
             <LandedCostWidget />
+            <ActiveSourcingWidget />
           </BentoGrid>
 
-          {/* Row 3: Inventory & Value + Active Sourcing */}
+          {/* Row 3: Inventory & Value */}
           <BentoGrid columns={3}>
             <div
               className={`lux-card lux-card-gold-accent p-6 h-full min-h-0 flex flex-col animate-bento-enter ${staggerClass(4)}`}
@@ -159,7 +160,6 @@ export default function DashboardView() {
                 </span>
               </div>
             </div>
-            <ActiveSourcingWidget />
           </BentoGrid>
 
           {/* Row 4: AI Market Pulse */}
