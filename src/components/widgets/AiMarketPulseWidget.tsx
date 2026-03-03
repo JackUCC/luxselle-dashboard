@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { apiGet } from '../../lib/api'
+import { formatRelativeDate } from '../../lib/formatters'
 import SectionLabel from '../design-system/SectionLabel'
 
 interface TrendingItem {
@@ -35,6 +36,12 @@ function TrendIcon({ trend }: { trend: string }) {
   if (trend === 'rising') return <TrendingUp className="h-4 w-4 shrink-0 text-emerald-500" />
   if (trend === 'declining') return <TrendingDown className="h-4 w-4 shrink-0 text-rose-500" />
   return <Minus className="h-4 w-4 shrink-0 text-amber-500" />
+}
+
+function isStaleData(generatedAt: string | null): boolean {
+  if (!generatedAt) return false
+  const ageMs = Date.now() - new Date(generatedAt).getTime()
+  return ageMs > 60 * 60 * 1000  // 60 minutes
 }
 
 function formatInsight(item: TrendingItem): string {
@@ -127,6 +134,15 @@ export default function AiMarketPulseWidget() {
             </div>
           ))}
         </div>
+      )}
+      {generatedAt && (
+        <p className="mt-3 text-[11px] text-lux-400">
+          {isStaleData(generatedAt) ? (
+            <span className="text-amber-500">Data may be outdated · {formatRelativeDate(generatedAt)}</span>
+          ) : (
+            <span>Updated {formatRelativeDate(generatedAt)}</span>
+          )}
+        </p>
       )}
     </div>
   )
