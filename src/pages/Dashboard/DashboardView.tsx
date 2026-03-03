@@ -145,22 +145,22 @@ export default function DashboardView() {
               data-testid="inventory-value-card"
             >
               <SectionLabel className="mb-3">Inventory & Value</SectionLabel>
-              <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-                <div>
+              <div className="grid grid-cols-2 gap-0 flex-1 min-h-0">
+                <div className="pr-4 flex flex-col">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">Cost</p>
                   <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
                     <AnimatedNumber value={inventoryValue} prefix="€" />
                   </p>
-                  <p className="text-xs text-lux-500 mt-1">
+                  <p className="text-sm font-medium text-lux-600 mt-2">
                     {kpis?.totalInventoryItems ?? 0} {(kpis?.totalInventoryItems ?? 0) === 1 ? 'bag' : 'bags'}
                   </p>
                 </div>
-                <div>
+                <div className="pl-4 border-l border-lux-200 flex flex-col">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-lux-400">Potential</p>
                   <p className="text-xl sm:text-2xl font-semibold font-mono text-lux-800 leading-tight mt-0.5">
                     <AnimatedNumber value={potentialValue} prefix="€" />
                   </p>
-                  <p className="text-xs font-medium text-lux-600 mt-1">
+                  <p className="text-sm font-semibold text-lux-700 mt-2">
                     €{margin.toLocaleString(undefined, { maximumFractionDigits: 0 })} margin
                   </p>
                 </div>
