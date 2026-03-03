@@ -16,7 +16,7 @@ export default function SectionLabel({
   return (
     <Tag
       id={id}
-      className={`text-[13px] font-semibold uppercase tracking-[0.04em] text-lux-600 ${className}`.trim()}
+      className={`font-section text-xl font-bold uppercase tracking-[0.04em] text-black flex items-center justify-center ${className}`.trim()}
     >
       {children}
     </Tag>
