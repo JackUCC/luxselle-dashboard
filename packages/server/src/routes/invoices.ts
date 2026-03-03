@@ -154,7 +154,7 @@ router.post('/', async (req, res, next) => {
         return
       }
       const ratePct = (await settingsRepo.getSettings())?.vatRatePct ?? 23
-      const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
+      const invoiceNumber = parsed.data.sku ? `INV-${parsed.data.sku}` : await invoiceRepo.getNextInvoiceNumber()
       const invoiceData = buildInvoiceFromInPerson(parsed.data, invoiceNumber, ratePct)
       const created = await invoiceRepo.create(invoiceData as Invoice)
       res.status(201).json(created)

@@ -261,7 +261,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     mockGetNextInvoiceNumber.mockResolvedValue('INV-0009')
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')      .send({
+      .post('/api/products/p1/sell-with-invoice').send({
         amountEur: 2200,
         customerName: 'John Smith',
         customerEmail: 'john@example.com',
@@ -277,7 +277,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
       type: 'sale',
       productId: 'p1',
       amountEur: 2200,
-      notes: 'Sold via showroom',
+      notes: 'Sold via showroom (SKU: SKU-123)',
     }))
     const productWrite = mockBatchSet.mock.calls.find(([ref]) => ref.id === 'p1')
     expect(productWrite?.[1]).toEqual(expect.objectContaining({ status: 'sold' }))
@@ -312,7 +312,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')      .send({ customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice').send({ customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -333,7 +333,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')      .send({ amountEur: 2200, customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 2200, customerName: 'John Smith' })
 
     expect(res.status).toBe(409)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -354,7 +354,7 @@ describe('POST /api/products/:id/sell-with-invoice', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/sell-with-invoice')      .send({ amountEur: 0, customerName: 'John Smith' })
+      .post('/api/products/p1/sell-with-invoice').send({ amountEur: 0, customerName: 'John Smith' })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -385,7 +385,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/transactions')      .send({ type: 'sale', amountEur: 2200, notes: 'Sold at pop-up event' })
+      .post('/api/products/p1/transactions').send({ type: 'sale', amountEur: 2200, notes: 'Sold at pop-up event' })
 
     expect(res.status).toBe(201)
     expect(res.body.data.id).toBe('tx-sale-1')
@@ -410,7 +410,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/transactions')      .send({ type: 'sale', amountEur: 2200 })
+      .post('/api/products/p1/transactions').send({ type: 'sale', amountEur: 2200 })
 
     expect(res.status).toBe(409)
     expect(mockBatchCommit).not.toHaveBeenCalled()
@@ -431,7 +431,7 @@ describe('POST /api/products/:id/transactions sale validation', () => {
     })
 
     const res = await request(app)
-      .post('/api/products/p1/transactions')      .send({ type: 'sale', amountEur: 0 })
+      .post('/api/products/p1/transactions').send({ type: 'sale', amountEur: 0 })
 
     expect(res.status).toBe(400)
     expect(mockBatchCommit).not.toHaveBeenCalled()

@@ -1,29 +1,25 @@
+import { createRequire } from 'module'
 import type { TDocumentDefinitions, Content, TableCell } from 'pdfmake/interfaces'
 import type { Invoice, Settings } from '@shared/schemas'
-import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
-
-const fonts = {
-    Helvetica: {
-        normal: 'Helvetica',
-        bold: 'Helvetica-Bold',
-        italics: 'Helvetica-Oblique',
-        bolditalics: 'Helvetica-BoldOblique',
-    },
-}
+const PdfPrinter = require('pdfmake');
 
 export class InvoicePdfService {
     async generate(invoice: Invoice, settings: Settings | null): Promise<Buffer> {
         const docDefinition = this.buildDocDefinition(invoice, settings)
-        
+
         try {
-            const pdfMake = require('pdfmake');
-            pdfMake.setFonts(fonts);
-            
-            const generator = pdfMake.createPdf(docDefinition);
-            const buffer = await generator.getBuffer();
-            return buffer;
+            const printer = new PdfPrinter({});
+            const pdfDoc = printer.createPdfKitDocument(docDefinition);
+
+            return new Promise((resolve, reject) => {
+                const chunks: Buffer[] = [];
+                pdfDoc.on('data', (chunk) => chunks.push(chunk));
+                pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+                pdfDoc.on('error', reject);
+                pdfDoc.end();
+            });
         } catch (err) {
             console.error("PDF generation error:", err);
             throw err;
@@ -126,21 +122,21 @@ export class InvoicePdfService {
                     ],
                     margin: [0, 0, 0, 32],
                 },
-                
-                { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] },
+
+                { text: 'Order Items', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
                 {
                     table: { headerRows: 1, widths: ['*', 'auto'], body: orderItemsBody },
                     layout: 'lightHorizontalLines',
-                    margin: [0, 0, 0, 16],
+                    margin: [0, 0, 0, 16] as [number, number, number, number],
                 },
-                { text: 'VAT Breakdown', style: 'subheader', margin: [0, 0, 0, 6] },
+                { text: 'VAT Breakdown', style: 'subheader', margin: [0, 0, 0, 6] as [number, number, number, number] },
                 {
                     layout: 'noBorders',
                     table: { body: vatBreakdownBody },
-                    margin: [0, 0, 0, 24],
+                    margin: [0, 0, 0, 24] as [number, number, number, number],
                 },
-                ...(invoice.notes ? [{ text: 'Notes', style: 'subheader' as const, margin: [0, 0, 0, 5] }, { text: invoice.notes, fontSize: 10, color: '#555' }] : []),
-                { stack: footerContent, margin: [0, 24, 0, 0] },
+                ...(invoice.notes ? [{ text: 'Notes', style: 'subheader' as const, margin: [0, 0, 0, 5] as [number, number, number, number] }, { text: invoice.notes, fontSize: 10, color: '#555' }] : []),
+                { stack: footerContent, margin: [0, 24, 0, 0] as [number, number, number, number] },
             ],
             styles: {
                 companyName: { fontSize: 11, bold: true, lineHeight: 1.3 },

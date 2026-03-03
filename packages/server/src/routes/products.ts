@@ -797,9 +797,14 @@ router.post('/:id/sell-with-invoice', async (req, res, next) => {
     const now = new Date().toISOString()
     const vatPct = (await settingsRepo.getSettings())?.vatRatePct ?? 23
     const { netEur, vatEur } = vatFromGross(input.amountEur, vatPct)
-    const invoiceNumber = await invoiceRepo.getNextInvoiceNumber()
+    const invoiceNumber = product.sku ? `INV-${product.sku}` : await invoiceRepo.getNextInvoiceNumber()
     const descriptionBase = product.title?.trim() || `${product.brand} ${product.model}`.trim()
     const lineDescription = input.description?.trim() || (product.sku ? `${descriptionBase} (SKU: ${product.sku})` : descriptionBase)
+
+    const transactionNotes = [
+      input.notes,
+      product.sku ? `(SKU: ${product.sku})` : ''
+    ].filter(Boolean).join(' ').trim()
 
     const transactionRef = db.collection('transactions').doc()
     const transactionData = TransactionSchema.parse({
@@ -810,7 +815,7 @@ router.post('/:id/sell-with-invoice', async (req, res, next) => {
       productId: id,
       amountEur: input.amountEur,
       occurredAt: now,
-      notes: input.notes ?? '',
+      notes: transactionNotes,
     })
     const transaction = { id: transactionRef.id, ...transactionData }
     const updatedProduct = {
