@@ -13,7 +13,6 @@ import {
     Loader2,
     ExternalLink,
     ChevronRight,
-    Zap,
     History,
     Store,
     Bookmark,
@@ -579,15 +578,15 @@ export default function MarketResearchView() {
                             <div className="mx-1 h-4 w-px bg-lux-200 shrink-0" />
                         </>
                     )}
-                    <span className="flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-amber-500">
-                        <Zap className="h-3 w-3" /> Trending
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-lux-gold">
+                        <Sparkles className="h-3 w-3" /> Trending
                     </span>
                     {KEY_TRENDING_BAGS.map(({ brand, model }) => (
                         <button
                             key={`trend-${brand}-${model}`}
                             type="button"
                             onClick={() => quickResearch(brand, model)}
-                            className="shrink-0 min-h-[44px] rounded-full border border-amber-200 bg-amber-50/60 px-3 py-2 sm:py-1 text-xs font-medium text-lux-800 hover:bg-amber-100 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                            className="shrink-0 min-h-[44px] rounded-full border border-lux-200 bg-white px-3 py-2 sm:py-1 text-xs font-medium text-lux-700 hover:bg-lux-50 hover:border-lux-300 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                         >
                             {brand} {model}
                         </button>
