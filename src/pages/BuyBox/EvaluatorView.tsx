@@ -17,10 +17,11 @@ import AiProgressSteps, { type AiProgressStep } from '../../components/feedback/
 import LiveResultPreview from '../../components/feedback/LiveResultPreview'
 import ImageLightbox from '../../components/feedback/ImageLightbox'
 import { useLayoutMode } from '../../lib/LayoutModeContext'
+import { ITEM_DESCRIPTION_EXAMPLES } from '../../lib/itemDescriptionExamples'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, SectionLabel } from '../../components/design-system'
+import { PageHeader, RotatingExamples, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 import type { PriceCheckResult } from '@shared/schemas'
 
@@ -375,7 +376,7 @@ ${fallbackLine}` : fallbackLine))
                   label="Search for item"
                   leadingAdornment={<Search className="h-4 w-4 text-lux-400" />}
                 />
-                <p className="mt-1 text-xs text-lux-400">e.g. Chanel Classic Flap Medium Black</p>
+                <RotatingExamples prefix="e.g. " examples={ITEM_DESCRIPTION_EXAMPLES} />
               </div>
 
               <div>

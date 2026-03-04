@@ -31,9 +31,10 @@ import { useLayoutMode } from '../../lib/LayoutModeContext'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, SectionLabel } from '../../components/design-system'
+import { PageHeader, RotatingExamples, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 import type { PriceCheckResult } from '@shared/schemas'
+import { ITEM_DESCRIPTION_EXAMPLES } from '../../lib/itemDescriptionExamples'
 import { deriveSourcingDecision, type DecisionTone } from '../../lib/sourcingDecision'
 import ConfidenceDiagnosticsPanel from './ConfidenceDiagnosticsPanel'
 import ResearchDataSourceBadge from './ResearchDataSourceBadge'
@@ -393,9 +394,11 @@ export default function UnifiedIntelligenceView() {
                   label="Item description"
                   leadingAdornment={<Search className="h-4 w-4 text-lux-400" />}
                 />
-                <p className="mt-1 text-xs text-lux-400">
-                  Use a detailed description for best results, e.g. "Chanel Classic Flap Medium, black caviar, gold hardware"
-                </p>
+                <RotatingExamples
+                  prefix="Use a detailed description for best results, e.g. "
+                  examples={ITEM_DESCRIPTION_EXAMPLES}
+                  intervalMs={3500}
+                />
               </div>
 
               <div>

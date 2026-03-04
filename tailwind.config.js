@@ -121,6 +121,10 @@ module.exports = {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(400%)' },
         },
+        'lux-flip-roll': {
+          from: { opacity: '0', transform: 'rotateX(90deg) translateY(8px)' },
+          to: { opacity: '1', transform: 'rotateX(0deg) translateY(0)' },
+        },
       },
       animation: {
         'fade-in': 'lux-fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
@@ -133,6 +137,7 @@ module.exports = {
         'float': 'lux-float 3s ease-in-out infinite',
         'dot-bounce': 'lux-dot-bounce 1.4s ease-in-out infinite',
         'progress-indeterminate': 'lux-progress-indeterminate 1.5s ease-in-out infinite',
+        'flip-roll': 'lux-flip-roll 450ms cubic-bezier(0.16, 1, 0.3, 1) both',
       },
     },
   },

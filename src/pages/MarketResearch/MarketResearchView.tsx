@@ -918,7 +918,7 @@ export default function MarketResearchView() {
                                     .sort(([a], [b]) => a.localeCompare(b))
                                     .map(([source, n]) => `${n} ${source}`)
                                 const summaryLine = `${competitorFeed.items.length} listing${competitorFeed.items.length === 1 ? '' : 's'}: ${summaryParts.join(', ')}`
-                                const sourceOrder = ['Designer Exchange', 'Luxury Exchange', 'Siopaella'] // Note: changed Siopella to Siopaella to match schema
+                                const sourceOrder = ['Designer Exchange', 'Luxury Exchange', 'Siopella']
                                 const bySource = sourceOrder.map((source) => competitorFeed.items.filter((item) => item.source === source)).filter((group) => group.length > 0)
                                 return (
                                     <>

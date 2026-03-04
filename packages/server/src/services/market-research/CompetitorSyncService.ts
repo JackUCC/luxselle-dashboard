@@ -23,7 +23,7 @@ interface ShopifyProduct {
 const COMPETITORS = [
     { name: 'Designer Exchange', url: 'https://www.designerexchange.ie' },
     { name: 'Luxury Exchange', url: 'https://luxuryexchange.ie' },
-    { name: 'Siopaella', url: 'https://www.siopaella.com' },
+    { name: 'Siopella', url: 'https://www.siopaella.com' },
 ]
 
 export class CompetitorSyncService {

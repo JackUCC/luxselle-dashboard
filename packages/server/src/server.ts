@@ -24,6 +24,10 @@ import { savedResearchRouter } from './routes/savedResearch'
 import { API_ERROR_CODES, formatApiError, ApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
 import { getAiRouter } from './services/ai/AiRouter'
+import cron from 'node-cron'
+import { runJob } from './services/JobRunner'
+import { SystemJobRepo } from './repos/SystemJobRepo'
+import { DEFAULT_ORG_ID } from '@shared/schemas'
 
 const app = express()
 
@@ -331,6 +335,32 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (env.AI_ROUTING_MODE === 'dynamic' && !openaiKey && !perplexityKey) {
       logger.error('ai_no_providers', {
         message: 'AI_ROUTING_MODE=dynamic but neither OPENAI_API_KEY nor PERPLEXITY_API_KEY is set. All AI features will fail.',
+      })
+    }
+  })
+
+  // Schedule background jobs
+  const systemJobRepo = new SystemJobRepo()
+
+  // Run competitor sync every 4 hours
+  cron.schedule('0 */4 * * *', async () => {
+    logger.info('cron_competitor_sync_started')
+    try {
+      const now = new Date().toISOString()
+      const job = await systemJobRepo.create({
+        organisationId: DEFAULT_ORG_ID,
+        createdAt: now,
+        updatedAt: now,
+        jobType: 'competitor_sync',
+        status: 'queued',
+        queuedAt: now,
+        retryCount: 0,
+        maxRetries: 1,
+      })
+      await runJob(job.id)
+    } catch (err) {
+      logger.error('cron_competitor_sync_failed', {
+        message: err instanceof Error ? err.message : String(err)
       })
     }
   })

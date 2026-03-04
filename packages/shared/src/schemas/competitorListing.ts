@@ -4,7 +4,7 @@ import { BaseDocSchema } from './base'
 export const CompetitorListingSourceSchema = z.enum([
     'Designer Exchange',
     'Luxury Exchange',
-    'Siopaella',
+    'Siopella',
 ])
 export type CompetitorListingSource = z.infer<typeof CompetitorListingSourceSchema>
 
