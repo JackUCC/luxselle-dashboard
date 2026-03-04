@@ -17,16 +17,7 @@ export default function WideScreenSideRail() {
       className="sticky top-0 hidden h-screen w-56 flex-col border-r border-lux-200 bg-white px-3 py-4 xl:flex"
       data-testid="wide-screen-side-rail"
     >
-      <div className="flex items-center gap-2 px-2.5 mb-1">
-        <img
-          src="/luxselle-logo.svg"
-          alt="Luxselle"
-          className="h-7 w-auto max-w-[100px] object-contain object-left"
-        />
-        <span className="text-xs font-medium uppercase tracking-widest text-lux-400">Engine</span>
-      </div>
-
-      <div className="mt-6 flex-1 space-y-5 overflow-y-auto pb-3 no-scrollbar [contain:layout]">
+      <div className="flex-1 space-y-5 overflow-y-auto pb-3 no-scrollbar [contain:layout]">
         {NAV_GROUPS.map((group) => (
           <section key={group.section} className="space-y-0.5">
             {group.title ? (

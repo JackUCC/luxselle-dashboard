@@ -17,26 +17,6 @@ export default function DockBar() {
       data-testid="dock-bar"
       aria-label="Main navigation"
     >
-      <motion.div
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: staggerIndex++ * 0.05 }}
-      >
-        <NavLink
-          to="/"
-          className="group mb-2 flex h-[64px] w-[64px] items-center justify-center rounded-[16px] border border-white/80 bg-white/95 transition-transform duration-200 hover:scale-105 hover:[filter:drop-shadow(0_0_8px_rgb(184_134_11_/_0.35))] focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:ring-offset-2 focus-visible:outline-none"
-          title="Luxselle"
-        >
-          <img
-            src="/luxselle-logo.svg"
-            alt="Luxselle"
-            className="h-auto w-[60px] max-w-[60px] object-contain transition-all duration-200 group-hover:[filter:brightness(0.92)_sepia(0.28)_saturate(1.35)_hue-rotate(4deg)]"
-          />
-        </NavLink>
-      </motion.div>
-
-      <div className="my-1.5 h-px w-9 bg-gradient-to-r from-transparent via-lux-300/60 to-transparent" />
-
       <LayoutGroup>
         {NAV_GROUPS.map((group, groupIndex) => {
           const routes = appRoutes.filter((r) => r.section === group.section)

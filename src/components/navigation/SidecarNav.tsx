@@ -30,16 +30,9 @@ export default function SidecarNav() {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <img
-            src="/luxselle-logo.svg"
-            alt="Luxselle"
-            className="h-4 w-auto object-contain"
-          />
-          <span className="rounded-full border border-lux-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-lux-500">
-            Sidecar
-          </span>
-        </div>
+        <span className="flex min-w-0 flex-1 rounded-full border border-lux-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-lux-500">
+          Sidecar
+        </span>
         <Link
           to={getExitSidecarPath('/', location.search)}
           replace

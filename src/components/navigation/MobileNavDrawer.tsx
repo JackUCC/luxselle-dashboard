@@ -122,14 +122,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
         data-testid="mobile-nav-drawer"
       >
         <div className="flex h-12 items-center justify-between border-b border-lux-200 px-4">
-          <div className="flex items-center gap-2">
-            <img
-              src="/luxselle-logo.svg"
-              alt="Luxselle"
-              className="h-6 w-auto max-w-[90px] object-contain object-left"
-            />
-            <span className="text-xs font-medium uppercase tracking-widest text-lux-400">Engine</span>
-          </div>
+          <span className="text-xs font-medium uppercase tracking-widest text-lux-400">Engine</span>
           <button
             type="button"
             onClick={onClose}

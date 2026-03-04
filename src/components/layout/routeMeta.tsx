@@ -1,6 +1,5 @@
 import {
   Bookmark,
-  House,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -20,6 +19,11 @@ function navIcon(src: string) {
   )) as unknown as LucideIcon
 }
 
+/** Luxselle logo as nav icon (no mix-blend, displays as designed). */
+const luxselleLogoIcon = (({ className, ...props }: { className?: string }) => (
+  <NavImageIcon src="/luxselle-logo.svg" alt="Luxselle" className={className ?? ''} {...props} />
+)) as unknown as LucideIcon
+
 export interface RouteMeta {
   path: string
   label: string
@@ -29,7 +33,7 @@ export interface RouteMeta {
 }
 
 export const appRoutes: RouteMeta[] = [
-  { path: '/', label: 'Overview', navLabel: 'Overview', icon: House, section: 'check' },
+  { path: '/', label: 'Overview', navLabel: 'Overview', icon: luxselleLogoIcon, section: 'check' },
   { path: '/evaluate', label: 'Sourcing Intelligence', navLabel: 'Evaluate', icon: navIcon('/nav-icons/price-checker.png'), section: 'check' },
   { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: navIcon('/nav-icons/retail-price.png'), section: 'check' },
   { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: navIcon('/nav-icons/market-research.png'), section: 'check' },
