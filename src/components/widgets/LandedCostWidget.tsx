@@ -45,11 +45,8 @@ export default function LandedCostWidget({
       <label className="mb-2 flex flex-col justify-end items-start text-[13px] font-semibold uppercase tracking-wider text-lux-800 font-system-ui">
         Bid Price
       </label>
-      <div className="relative">
-        <span
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xl font-semibold font-mono text-lux-500 pointer-events-none select-none"
-          aria-hidden
-        >
+      <div className="flex items-center rounded-lux-input border border-lux-200 bg-[#F5F5F7] h-12 overflow-hidden transition-[border-color,box-shadow] focus-within:border-lux-gold focus-within:shadow-[0_0_0_3px_rgba(184,134,11,0.2)]">
+        <span className="pl-4 text-xl font-semibold font-mono text-lux-500 flex-shrink-0" aria-hidden>
           €
         </span>
         <input
@@ -58,7 +55,7 @@ export default function LandedCostWidget({
           placeholder="0.00"
           value={bidInput}
           onChange={(e) => setBidInput(e.target.value)}
-          className="lux-input h-12 pl-11 pr-4 text-xl font-semibold font-mono text-lux-800 placeholder:text-lux-400"
+          className="flex-1 min-w-0 h-full border-0 bg-transparent pl-3 pr-4 text-xl font-semibold font-mono text-lux-800 placeholder:text-lux-400 focus:outline-none focus:ring-0"
         />
       </div>
 
