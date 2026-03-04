@@ -39,14 +39,17 @@ export default function LandedCostWidget({
   }, [hasSuggestion, suggestedBid])
 
   return (
-    <div className="lux-card p-6 h-full min-h-0 flex flex-col animate-bento-enter stagger-1">
+    <div className="lux-card p-6 self-start flex flex-col animate-bento-enter stagger-1">
       <SectionLabel className="mb-4">Landed Cost Calculator</SectionLabel>
 
       <label className="mb-2 flex flex-col justify-end items-start text-[13px] font-semibold uppercase tracking-wider text-lux-800 font-system-ui">
         Bid Price
       </label>
       <div className="relative">
-        <span className="absolute left-px top-1/2 -translate-y-1/2 text-sm font-medium text-lux-400">
+        <span
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xl font-semibold font-mono text-lux-500 pointer-events-none select-none"
+          aria-hidden
+        >
           €
         </span>
         <input
@@ -55,7 +58,7 @@ export default function LandedCostWidget({
           placeholder="0.00"
           value={bidInput}
           onChange={(e) => setBidInput(e.target.value)}
-          className="lux-input h-12 pl-8 text-xl font-semibold font-mono text-lux-800"
+          className="lux-input h-12 pl-9 pr-4 text-xl font-semibold font-mono text-lux-800 placeholder:text-lux-400"
         />
       </div>
 
