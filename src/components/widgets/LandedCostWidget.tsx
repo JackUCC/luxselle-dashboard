@@ -58,7 +58,7 @@ export default function LandedCostWidget({
           placeholder="0.00"
           value={bidInput}
           onChange={(e) => setBidInput(e.target.value)}
-          className="lux-input h-12 pl-9 pr-4 text-xl font-semibold font-mono text-lux-800 placeholder:text-lux-400"
+          className="lux-input h-12 pl-11 pr-4 text-xl font-semibold font-mono text-lux-800 placeholder:text-lux-400"
         />
       </div>
 
