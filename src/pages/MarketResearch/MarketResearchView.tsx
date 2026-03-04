@@ -45,6 +45,7 @@ const BRAND_MODELS: Record<string, string[]> = {
 }
 
 import type { MarketComparable, MarketComparablePayload, MarketResearchResult, MarketResearchResultPayload } from './types'
+import type { CompetitorListing } from '@shared/schemas'
 import FreshnessBadge from './FreshnessBadge'
 import { SerialCheckerCard } from '../../components/widgets'
 
@@ -288,7 +289,7 @@ export default function MarketResearchView() {
     const researchError = researchSession.status === 'error' ? (researchSession.error ?? 'Analysis failed') : null
     const error = researchError ?? feedError
 
-    const [competitorFeed, setCompetitorFeed] = useState<CompetitorFeedResult | null>(null)
+    const [competitorFeed, setCompetitorFeed] = useState<{ items: CompetitorListing[]; generatedAt: string } | null>(null)
     const [competitorFeedError, setCompetitorFeedError] = useState<string | null>(null)
     const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
     const [competitorRefreshKey, setCompetitorRefreshKey] = useState(0)
@@ -322,7 +323,7 @@ export default function MarketResearchView() {
             setIsCompetitorLoading(true)
             setCompetitorFeedError(null)
             try {
-                const { data } = await apiGet<{ data: CompetitorFeedResult }>('/market-research/competitor-feed')
+                const { data } = await apiGet<{ data: { items: CompetitorListing[]; generatedAt: string } }>('/market-research/competitor-feed')
                 if (!cancelled) {
                     setCompetitorFeed(data)
                     setCompetitorFeedError(null)
@@ -909,7 +910,7 @@ export default function MarketResearchView() {
                             ))}
                         </div>
                     ) : competitorFeed && competitorFeed.items.length > 0 ? (
-                        <div className="space-y-1 max-h-80 overflow-y-auto no-scrollbar">
+                        <div className="space-y-1 max-h-[800px] overflow-y-auto no-scrollbar">
                             {(() => {
                                 const counts: Record<string, number> = {}
                                 competitorFeed.items.forEach((item) => { counts[item.source] = (counts[item.source] ?? 0) + 1 })
@@ -917,44 +918,66 @@ export default function MarketResearchView() {
                                     .sort(([a], [b]) => a.localeCompare(b))
                                     .map(([source, n]) => `${n} ${source}`)
                                 const summaryLine = `${competitorFeed.items.length} listing${competitorFeed.items.length === 1 ? '' : 's'}: ${summaryParts.join(', ')}`
-                                const sourceOrder = ['Designer Exchange', 'Luxury Exchange', 'Siopella']
+                                const sourceOrder = ['Designer Exchange', 'Luxury Exchange', 'Siopaella'] // Note: changed Siopella to Siopaella to match schema
                                 const bySource = sourceOrder.map((source) => competitorFeed.items.filter((item) => item.source === source)).filter((group) => group.length > 0)
                                 return (
                                     <>
-                                        <p className="text-[10px] text-lux-400 mb-2">{summaryLine}</p>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-[10px] text-lux-400">{summaryLine}</p>
+                                        </div>
                                         {bySource.flatMap((group) =>
                                             group.map((item, i) => {
                                                 const badge = SOURCE_BADGE[item.source]
-                                                const dateLabel = relativeDate(item.listedAt)
+                                                const dateLabel = item.listedAt ? relativeDate(item.listedAt) : undefined
                                                 const meta = [item.condition, dateLabel].filter(Boolean).join(' · ')
                                                 return (
                                                     <div
-                                                        key={`${item.source}-${i}-${item.title}`}
-                                                        className="flex items-center gap-2 py-2.5 px-3 rounded-xl hover:bg-lux-50 transition-colors"
+                                                        key={`${item.source}-${i}-${item.externalId}`}
+                                                        className={`flex gap-3 py-3 px-3 rounded-xl hover:bg-lux-50 transition-colors ${!item.isAvailable ? 'opacity-60 grayscale' : ''}`}
                                                     >
-                                                        {badge && (
-                                                            <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none ${badge.className}`}>
-                                                                {badge.label}
-                                                            </span>
+                                                        {item.imageUrl ? (
+                                                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-lux-100 bg-white">
+                                                                <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-lux-100 bg-lux-50">
+                                                                <Store className="h-5 w-5 text-lux-300" />
+                                                            </div>
                                                         )}
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="text-xs font-medium text-lux-800 truncate">{item.title}</div>
-                                                            {meta && <div className="text-[10px] text-lux-400 mt-0.5">{meta}</div>}
+
+                                                        <div className="min-w-0 flex-1 py-0.5 flex flex-col justify-center">
+                                                            <div className="text-xs font-medium text-lux-800 line-clamp-2 leading-snug">{item.title}</div>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                {badge && (
+                                                                    <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold leading-none ${badge.className}`}>
+                                                                        {badge.label}
+                                                                    </span>
+                                                                )}
+                                                                {meta && <div className="text-[10px] text-lux-400">{meta}</div>}
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1 shrink-0">
-                                                            <span className="text-xs font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
-                                                            {item.sourceUrl && (
-                                                                <a
-                                                                    href={item.sourceUrl}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1 text-lux-400 transition-colors hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                                                    aria-label="Open listing"
-                                                                    title={`Open listing: ${item.title}`}
-                                                                >
-                                                                    <ExternalLink className="h-3.5 w-3.5" />
-                                                                </a>
-                                                            )}
+
+                                                        <div className="flex flex-col items-end gap-1 shrink-0 justify-center">
+                                                            <span className="text-sm font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
+
+                                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                                {!item.isAvailable && (
+                                                                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-700 uppercase tracking-wider">
+                                                                        Sold Out
+                                                                    </span>
+                                                                )}
+                                                                {item.handle && (
+                                                                    <a
+                                                                        href={item.handle}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="flex items-center justify-center rounded p-1 text-lux-400 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
+                                                                        aria-label="Open listing"
+                                                                    >
+                                                                        <ExternalLink className="h-3 w-3" />
+                                                                    </a>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )
@@ -963,7 +986,7 @@ export default function MarketResearchView() {
                                         {competitorFeedError && (
                                             <p className="text-xs text-amber-600 pt-2">Last refresh failed. Showing previous results.</p>
                                         )}
-                                        <p className="text-xs text-lux-400 text-center pt-2">
+                                        <p className="text-xs text-lux-400 text-center pt-2 pb-4">
                                             Updated {new Date(competitorFeed.generatedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                                         </p>
                                     </>

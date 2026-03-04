@@ -13,11 +13,13 @@ function formatEur(value: number): string {
 interface LandedCostWidgetProps {
   suggestedBid?: number | null
   suggestionLabel?: string
+  stretch?: boolean
 }
 
 export default function LandedCostWidget({
   suggestedBid = null,
   suggestionLabel = 'Suggested bid target',
+  stretch = false,
 }: LandedCostWidgetProps) {
   const [bidInput, setBidInput] = useState('')
 
@@ -38,8 +40,9 @@ export default function LandedCostWidget({
     setBidInput(Math.round(suggestedBid as number).toString())
   }, [hasSuggestion, suggestedBid])
 
+  const layoutClass = stretch ? 'h-full min-h-0 flex flex-col' : 'self-start flex flex-col'
   return (
-    <div className="lux-card p-6 h-full min-h-0 flex flex-col animate-bento-enter stagger-1">
+    <div className={`lux-card p-6 animate-bento-enter stagger-1 ${layoutClass}`}>
       <SectionLabel className="mb-4">Landed Cost Calculator</SectionLabel>
 
       <label className="mb-2 flex flex-col justify-end items-start text-[13px] font-semibold uppercase tracking-wider text-lux-800 font-system-ui">

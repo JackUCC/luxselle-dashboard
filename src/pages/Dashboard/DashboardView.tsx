@@ -143,7 +143,7 @@ export default function DashboardView() {
           {/* Row 2: Currency Converter + Landed Cost + Active Sourcing */}
           <BentoGrid columns={3}>
             <EurToYenWidget />
-            <LandedCostWidget />
+            <LandedCostWidget stretch />
             <ActiveSourcingWidget />
           </BentoGrid>
 

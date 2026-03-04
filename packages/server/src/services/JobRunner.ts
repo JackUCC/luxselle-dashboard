@@ -7,10 +7,12 @@
 import { SystemJobRepo } from '../repos/SystemJobRepo'
 import { SupplierEmailSyncService } from './import/SupplierEmailSyncService'
 import { MarketIntelMonitorService } from './market-research/MarketIntelMonitorService'
+import { CompetitorSyncService } from './market-research/CompetitorSyncService'
 
 const jobRepo = new SystemJobRepo()
 const emailSyncService = new SupplierEmailSyncService()
 const marketIntelMonitorService = new MarketIntelMonitorService()
+const competitorSyncService = new CompetitorSyncService()
 
 export async function runJob(jobId: string): Promise<void> {
   const job = await jobRepo.getById(jobId)
@@ -100,6 +102,32 @@ export async function runJob(jobId: string): Promise<void> {
           freshnessStatus: run.snapshot.freshnessStatus,
         },
         updatedAt: completedAt,
+      })
+      return
+    }
+
+    if (job.jobType === 'competitor_sync') {
+      const results = await competitorSyncService.syncAll()
+      const totalNew = results.reduce((acc, r) => acc + (r.newCount || 0), 0)
+      const totalUpdated = results.reduce((acc, r) => acc + (r.updatedCount || 0), 0)
+      const totalSoldOut = results.reduce((acc, r) => acc + (r.soldOutCount || 0), 0)
+      const totalProcessed = results.reduce((acc, r) => acc + (r.totalFetched || 0), 0)
+
+      const success = results.every(r => r.success !== false)
+
+      await jobRepo.set(jobId, {
+        status: success ? 'succeeded' : 'failed',
+        completedAt: now,
+        progress: {
+          total: totalProcessed,
+          processed: totalProcessed,
+          created: totalNew,
+          updated: totalUpdated,
+          skipped: totalSoldOut, // tracking sold out in skipped or errors isn't perfect, just logging it
+          errors: results.filter(r => r.success === false).map((r, i) => ({ index: i, message: String(r.error) })),
+        },
+        output: { results, summary: { totalNew, totalUpdated, totalSoldOut } },
+        updatedAt: now,
       })
       return
     }
