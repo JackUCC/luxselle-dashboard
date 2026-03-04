@@ -1,7 +1,4 @@
-import {
-  Bookmark,
-  type LucideIcon,
-} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import NavImageIcon from '../icons/NavImageIcon'
 
@@ -24,6 +21,11 @@ const luxselleLogoIcon = (({ className, ...props }: { className?: string }) => (
   <NavImageIcon src="/luxselle-logo.svg" alt="Luxselle" className={className ?? ''} {...props} />
 )) as unknown as LucideIcon
 
+/** Saved Research (save search) bookmark icon — no mix-blend, displays as designed. */
+const savedResearchIcon = (({ className, ...props }: { className?: string }) => (
+  <NavImageIcon src="/nav-icons/saved-research.png" alt="Saved Research" className={className ?? ''} {...props} />
+)) as unknown as LucideIcon
+
 export interface RouteMeta {
   path: string
   label: string
@@ -37,7 +39,7 @@ export const appRoutes: RouteMeta[] = [
   { path: '/evaluate', label: 'Sourcing Intelligence', navLabel: 'Evaluate', icon: navIcon('/nav-icons/price-checker.png'), section: 'check' },
   { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: navIcon('/nav-icons/retail-price.png'), section: 'check' },
   { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: navIcon('/nav-icons/market-research.png'), section: 'check' },
-  { path: '/saved-research', label: 'Saved Research', navLabel: 'Saved Research', icon: Bookmark, section: 'check' },
+  { path: '/saved-research', label: 'Saved Research', navLabel: 'Saved Research', icon: savedResearchIcon, section: 'check' },
   { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: navIcon('/nav-icons/inventory.png'), section: 'manage' },
   { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: navIcon('/nav-icons/sourcing.png'), section: 'manage' },
   { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: navIcon('/nav-icons/invoice.png'), section: 'manage' },
