@@ -39,7 +39,7 @@ export default function LandedCostWidget({
   }, [hasSuggestion, suggestedBid])
 
   return (
-    <div className="lux-card p-6 self-start flex flex-col animate-bento-enter stagger-1">
+    <div className="lux-card p-6 h-full min-h-0 flex flex-col animate-bento-enter stagger-1">
       <SectionLabel className="mb-4">Landed Cost Calculator</SectionLabel>
 
       <label className="mb-2 flex flex-col justify-end items-start text-[13px] font-semibold uppercase tracking-wider text-lux-800 font-system-ui">
