@@ -154,8 +154,8 @@ import MarketResearchResultPanel from './MarketResearchResultPanel'
 // ─── Competitor feed helpers ───────────────────────────────────
 const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
     'Designer Exchange': { label: 'DE', className: 'bg-blue-100 text-blue-700' },
-    'Luxury Exchange':   { label: 'LE', className: 'bg-amber-100 text-amber-700' },
-    'Siopella':          { label: 'S',  className: 'bg-emerald-100 text-emerald-700' },
+    'Luxury Exchange': { label: 'LE', className: 'bg-amber-100 text-amber-700' },
+    'Siopella': { label: 'S', className: 'bg-emerald-100 text-emerald-700' },
 }
 
 function relativeDate(isoDate?: string): string | null {
@@ -192,7 +192,7 @@ function normalizeMarketResearchResult(result: MarketResearchResult): MarketRese
 
 // ─── Brand tiers for cross-brand suggestions ──────────────────
 const BRAND_TIERS: Record<string, string[]> = {
-    ultra:   ['Chanel', 'Hermès'],
+    ultra: ['Chanel', 'Hermès'],
     premium: ['Louis Vuitton', 'Dior', 'Gucci', 'Prada', 'Bottega Veneta', 'Fendi', 'Givenchy', 'Loewe'],
 }
 
@@ -216,7 +216,65 @@ function generateSuggestions(brand: string, model: string): { brand: string; mod
 // Component
 // ═════════════════════════════════════════════════════════════════
 export default function MarketResearchView() {
+    const [quickPasteText, setQuickPasteText] = useState('')
     const [formData, setFormData] = useState<MarketResearchFormData>(DEFAULT_FORM_DATA)
+
+    const handleQuickPaste = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const text = e.target.value
+        setQuickPasteText(text)
+
+        let nextBrand = formData.brand
+        let nextModel = formData.model
+        let nextCondition = formData.condition
+
+        const lowerText = text.toLowerCase()
+
+        for (const b of Object.keys(BRAND_MODELS)) {
+            if (lowerText.includes(b.toLowerCase())) {
+                nextBrand = b
+                break
+            }
+        }
+
+        if (nextBrand) {
+            for (const m of BRAND_MODELS[nextBrand] || []) {
+                if (lowerText.includes(m.toLowerCase())) {
+                    nextModel = m
+                    break
+                }
+            }
+        } else {
+            for (const [b, models] of Object.entries(BRAND_MODELS)) {
+                for (const m of models) {
+                    if (lowerText.includes(m.toLowerCase())) {
+                        nextBrand = b
+                        nextModel = m
+                        break
+                    }
+                }
+                if (nextModel) break
+            }
+        }
+
+        if (lowerText.includes('excellent') || lowerText.includes('pristine')) {
+            nextCondition = 'excellent'
+        } else if (lowerText.includes('good') || lowerText.includes('great')) {
+            nextCondition = 'good'
+        } else if (lowerText.includes('fair')) {
+            nextCondition = 'fair'
+        } else if (lowerText.includes('used') || lowerText.includes('worn')) {
+            nextCondition = 'used'
+        } else if (lowerText.includes('new') || lowerText.includes('nwt')) {
+            nextCondition = 'new'
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            brand: nextBrand,
+            model: nextModel,
+            condition: nextCondition,
+        }))
+    }
     const {
         session: researchSession,
         startLoading: startResearchLoading,
@@ -548,7 +606,18 @@ export default function MarketResearchView() {
 
                         <form onSubmit={handleAnalyse} className="space-y-4">
                             <div>
-                                <label htmlFor="mr-brand" className="block text-xs font-medium text-lux-600 mb-1.5">Brand *</label>
+                                <FloatingInput
+                                    id="mr-quick-paste"
+                                    type="text"
+                                    name="quickPaste"
+                                    value={quickPasteText}
+                                    onChange={handleQuickPaste}
+                                    label="Paste listing title or bag name"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="mr-brand" className="block text-xs font-medium text-lux-600 mb-1.5">Brand</label>
                                 <LuxSelect
                                     id="mr-brand"
                                     name="brand"
@@ -556,7 +625,6 @@ export default function MarketResearchView() {
                                     onValueChange={(value) => handleSelectChange('brand', value)}
                                     options={brandOptions}
                                     placeholder="Select Brand"
-                                    required
                                     ariaLabel="Brand"
                                 />
                             </div>
@@ -564,7 +632,7 @@ export default function MarketResearchView() {
                             <div>
                                 {modelOptions.length > 0 ? (
                                     <>
-                                        <label htmlFor="mr-model" className="block text-xs font-medium text-lux-600 mb-1.5">Model *</label>
+                                        <label htmlFor="mr-model" className="block text-xs font-medium text-lux-600 mb-1.5">Model</label>
                                         <LuxSelect
                                             id="mr-model"
                                             name="model"
@@ -573,7 +641,6 @@ export default function MarketResearchView() {
                                             options={modelOptions}
                                             placeholder="Select Model"
                                             disabled={!formData.brand}
-                                            required
                                             ariaLabel="Model"
                                         />
                                     </>
@@ -584,38 +651,22 @@ export default function MarketResearchView() {
                                         name="model"
                                         value={formData.model}
                                         onChange={handleChange}
-                                        label="Model *"
-                                        required
+                                        label="Model"
                                         disabled={!formData.brand}
                                     />
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label htmlFor="mr-category" className="block text-xs font-medium text-lux-600 mb-1.5">Category *</label>
-                                    <LuxSelect
-                                        id="mr-category"
-                                        name="category"
-                                        value={formData.category}
-                                        onValueChange={(value) => handleSelectChange('category', value)}
-                                        options={CATEGORY_OPTIONS}
-                                        required
-                                        ariaLabel="Category"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="mr-condition" className="block text-xs font-medium text-lux-600 mb-1.5">Condition *</label>
-                                    <LuxSelect
-                                        id="mr-condition"
-                                        name="condition"
-                                        value={formData.condition}
-                                        onValueChange={(value) => handleSelectChange('condition', value)}
-                                        options={CONDITION_OPTIONS}
-                                        required
-                                        ariaLabel="Condition"
-                                    />
-                                </div>
+                            <div>
+                                <label htmlFor="mr-condition" className="block text-xs font-medium text-lux-600 mb-1.5">Condition</label>
+                                <LuxSelect
+                                    id="mr-condition"
+                                    name="condition"
+                                    value={formData.condition}
+                                    onValueChange={(value) => handleSelectChange('condition', value)}
+                                    options={CONDITION_OPTIONS}
+                                    ariaLabel="Condition"
+                                />
                             </div>
 
                             <div>
@@ -634,7 +685,7 @@ export default function MarketResearchView() {
 
                             <button
                                 type="submit"
-                                disabled={isLoading || !formData.brand || !formData.model}
+                                disabled={isLoading || (!formData.brand && !quickPasteText)}
                                 className="lux-btn-primary w-full py-3 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
                             >
                                 {isLoading ? (
@@ -698,11 +749,11 @@ export default function MarketResearchView() {
                                 </div>
                             </div>
                         ) : (
-                        <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-lux-400">
-                            <BarChart3 className="h-14 w-14 mb-4 opacity-20 animate-float" />
-                            <p className="text-lg font-medium">Ready to research</p>
-                            <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
-                        </div>
+                            <div className="lux-card border-dashed border-2 min-h-[500px] flex flex-col items-center justify-center text-lux-400">
+                                <BarChart3 className="h-14 w-14 mb-4 opacity-20 animate-float" />
+                                <p className="text-lg font-medium">Ready to research</p>
+                                <p className="text-sm opacity-60 mt-1 max-w-sm text-center">Select a product or use a quick-select above. Market data from Irish & EU suppliers (Designer Exchange, Luxury Exchange, Siopella, Vestiaire).</p>
+                            </div>
                         )
                     ) : (
                         <div className="space-y-5">
@@ -710,8 +761,8 @@ export default function MarketResearchView() {
                             <div className="relative lux-card p-5 overflow-hidden border-l-2 lux-market-accent-border">
                                 <div className="flex items-center justify-between gap-2 mb-2">
                                     <div className="flex items-center gap-1.5 text-xs font-semibold text-lux-400 uppercase tracking-wide">
-                                    <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
-                                    AI Analysis
+                                        <Sparkles className="h-3.5 w-3.5 text-lux-gold" />
+                                        AI Analysis
                                     </div>
                                     <FreshnessBadge
                                         status={result.intel?.freshnessStatus}
@@ -736,8 +787,8 @@ export default function MarketResearchView() {
                                 </div>
                             )}
 
-                            <MarketResearchResultPanel 
-                                result={result} 
+                            <MarketResearchResultPanel
+                                result={result}
                                 headerActions={
                                     <div className="flex flex-wrap items-center gap-2 pt-2 sm:border-l sm:border-lux-200/50 sm:pl-6 sm:pt-0">
                                         <button
@@ -765,11 +816,10 @@ export default function MarketResearchView() {
                                             type="button"
                                             onClick={handleSave}
                                             disabled={isSaving || isSaved}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${
-                                                isSaved 
-                                                    ? 'bg-lux-100 text-lux-800' 
-                                                    : 'bg-white border border-lux-200 text-lux-700 hover:bg-lux-50'
-                                            }`}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none ${isSaved
+                                                ? 'bg-lux-100 text-lux-800'
+                                                : 'bg-white border border-lux-200 text-lux-700 hover:bg-lux-50'
+                                                }`}
                                         >
                                             {isSaving ? (
                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -782,9 +832,8 @@ export default function MarketResearchView() {
                                             type="button"
                                             onClick={handleToggleStar}
                                             disabled={isSaving}
-                                            className={`p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${
-                                                isStarred ? 'text-lux-gold bg-lux-50' : 'text-lux-400 hover:text-lux-600 hover:bg-lux-50'
-                                            }`}
+                                            className={`p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30 ${isStarred ? 'text-lux-gold bg-lux-50' : 'text-lux-400 hover:text-lux-600 hover:bg-lux-50'
+                                                }`}
                                             title={isStarred ? "Remove star" : "Star this research"}
                                         >
                                             <Star className={`h-5 w-5 ${isStarred ? 'fill-lux-gold' : ''}`} />

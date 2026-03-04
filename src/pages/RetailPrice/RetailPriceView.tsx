@@ -21,8 +21,6 @@ const EXAMPLE_ITEMS = [
   'Chanel Classic Flap Medium, black caviar, gold hardware',
   'Hermès Birkin 25, Togo leather, gold hardware',
   'Louis Vuitton Neverfull MM, Monogram canvas',
-  'Rolex Submariner Date 126610LN',
-  'Gucci Ace Sneakers, white leather',
 ]
 
 export default function RetailPriceView() {
