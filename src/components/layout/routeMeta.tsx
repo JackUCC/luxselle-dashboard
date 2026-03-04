@@ -8,10 +8,15 @@ import NavImageIcon from '../icons/NavImageIcon'
 
 export type AppNavSection = 'check' | 'manage'
 
-/** Wraps a nav image path into a component compatible with routeMeta.icon */
+/** Wraps a nav image path into a component compatible with routeMeta.icon. Uses mix-blend-mode to make black backgrounds transparent. */
 function navIcon(src: string) {
-  return ((props: { className?: string }) => (
-    <NavImageIcon src={src} alt="" {...props} />
+  return (({ className, ...props }: { className?: string }) => (
+    <NavImageIcon
+      src={src}
+      alt=""
+      className={`mix-blend-screen ${className ?? ''}`.trim()}
+      {...props}
+    />
   )) as unknown as LucideIcon
 }
 
