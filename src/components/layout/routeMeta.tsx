@@ -1,17 +1,19 @@
 import {
   Bookmark,
-  CircleDollarSign,
   House,
-  Receipt,
-  ShoppingBag,
-  Tags,
-  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 
-import BagFinderIcon from '../icons/BagFinderIcon'
+import NavImageIcon from '../icons/NavImageIcon'
 
 export type AppNavSection = 'check' | 'manage'
+
+/** Wraps a nav image path into a component compatible with routeMeta.icon */
+function navIcon(src: string) {
+  return ((props: { className?: string }) => (
+    <NavImageIcon src={src} alt="" {...props} />
+  )) as unknown as LucideIcon
+}
 
 export interface RouteMeta {
   path: string
@@ -23,13 +25,13 @@ export interface RouteMeta {
 
 export const appRoutes: RouteMeta[] = [
   { path: '/', label: 'Overview', navLabel: 'Overview', icon: House, section: 'check' },
-  { path: '/evaluate', label: 'Sourcing Intelligence', navLabel: 'Evaluate', icon: CircleDollarSign, section: 'check' },
-  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: Tags, section: 'check' },
-  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: TrendingUp, section: 'check' },
+  { path: '/evaluate', label: 'Sourcing Intelligence', navLabel: 'Evaluate', icon: navIcon('/nav-icons/price-checker.png'), section: 'check' },
+  { path: '/retail-price', label: 'Retail Price', navLabel: 'Retail Price', icon: navIcon('/nav-icons/retail-price.png'), section: 'check' },
+  { path: '/market-research', label: 'Market Research', navLabel: 'Market Research', icon: navIcon('/nav-icons/market-research.png'), section: 'check' },
   { path: '/saved-research', label: 'Saved Research', navLabel: 'Saved Research', icon: Bookmark, section: 'check' },
-  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: ShoppingBag, section: 'manage' },
-  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: BagFinderIcon as unknown as LucideIcon, section: 'manage' },
-  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: Receipt, section: 'manage' },
+  { path: '/inventory', label: 'Inventory', navLabel: 'Inventory', icon: navIcon('/nav-icons/inventory.png'), section: 'manage' },
+  { path: '/sourcing', label: 'Sourcing', navLabel: 'Sourcing', icon: navIcon('/nav-icons/sourcing.png'), section: 'manage' },
+  { path: '/invoices', label: 'Invoices', navLabel: 'Invoices', icon: navIcon('/nav-icons/invoice.png'), section: 'manage' },
 ]
 
 const formatLabel = (value: string) =>
