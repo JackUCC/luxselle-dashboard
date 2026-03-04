@@ -67,6 +67,7 @@ export default function EvaluatorView() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [refineOpen, setRefineOpen] = useState(false)
   const [formulaOpen, setFormulaOpen] = useState(false)
   const [isFindingSimilar, setIsFindingSimilar] = useState(false)
@@ -202,9 +203,37 @@ ${fallbackLine}` : fallbackLine))
     const file = e.target.files?.[0]
     if (!file || !file.type.startsWith('image/')) return
     setUploadedImage(file)
+    setVisualResults(null)
     const reader = new FileReader()
     reader.onloadend = () => setImagePreview(reader.result as string)
     reader.readAsDataURL(file)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file?.type.startsWith('image/')) {
+      setUploadedImage(file)
+      setVisualResults(null)
+      const reader = new FileReader()
+      reader.onloadend = () => setImagePreview(reader.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
   }
 
   // Auto-run image analysis when user selects an image
@@ -356,6 +385,13 @@ ${fallbackLine}` : fallbackLine))
                 {imagePreview ? (
                   <div className="relative aspect-video rounded-lux-card overflow-hidden border border-lux-200">
                     <img src={imagePreview} alt="Upload" className="w-full h-full object-cover" />
+                    {isAnalyzingImage && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-lux-card" aria-live="polite">
+                        <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                        <p className="text-sm font-medium text-white">Analyzing your bag…</p>
+                        <p className="text-xs text-white/80 mt-0.5">Identifying style and condition</p>
+                      </div>
+                    )}
                     <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
                       <div className="flex flex-wrap items-center gap-1">
                         <button
@@ -383,12 +419,22 @@ ${fallbackLine}` : fallbackLine))
                     </div>
                   </div>
                 ) : (
-                  <label className="block border-2 border-dashed border-lux-200 rounded-lux-card p-6 text-center cursor-pointer hover:border-lux-300 transition-colors">
-                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                    <Upload className="mx-auto h-8 w-8 text-lux-400 mb-2" />
-                    <p className="text-sm text-lux-500">Drop image or click to upload</p>
-                    <p className="text-xs text-lux-400 mt-1">AI will suggest search text</p>
-                  </label>
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    className={`block border-2 border-dashed rounded-lux-card p-6 text-center cursor-pointer transition-colors ${
+                      isDragOver ? 'border-lux-gold/50 bg-lux-50' : 'border-lux-200 hover:border-lux-300'
+                    }`}
+                    aria-label="Drop image or click to upload"
+                  >
+                    <label className="cursor-pointer block">
+                      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                      <Upload className="mx-auto h-8 w-8 text-lux-400 mb-2" />
+                      <p className="text-sm text-lux-500">Drop image or click to upload</p>
+                      <p className="text-xs text-lux-400 mt-1">AI will suggest search text</p>
+                    </label>
+                  </div>
                 )}
               </div>
 

@@ -67,6 +67,7 @@ function useTypingPlaceholder(phrases: string[], paused: boolean) {
 export default function MarketIntelligenceWidget() {
   const [query, setQuery] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -90,13 +91,45 @@ export default function MarketIntelligenceWidget() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (file?.type.startsWith('image/')) {
       navigate('/evaluate', { state: { imageFile: file } })
     }
   }
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file?.type.startsWith('image/')) {
+      navigate('/evaluate', { state: { imageFile: file } })
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
   return (
-    <div className="lux-card p-6 sm:col-span-2 h-full min-h-0 flex flex-col animate-bento-enter stagger-0">
+    <div
+      className={`lux-card p-6 sm:col-span-2 h-full min-h-0 flex flex-col animate-bento-enter stagger-0 transition-colors ${
+        isDragOver ? 'ring-2 ring-lux-gold/40 bg-lux-50/80' : ''
+      }`}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      role="region"
+      aria-label="Market Intelligence - search or drop image"
+    >
       <SectionLabel className="mb-4">Market Intelligence</SectionLabel>
 
       <form onSubmit={handleSubmit} className="relative">
