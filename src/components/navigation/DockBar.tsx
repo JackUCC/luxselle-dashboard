@@ -98,7 +98,7 @@ export default function DockBar() {
                                   : 'text-lux-500 group-hover:bg-lux-100/90 group-hover:text-lux-800'
                               }`}
                             >
-                              <route.icon className="h-5 w-5" />
+                              <route.icon className="h-6 w-6" />
                             </span>
                           </motion.span>
                           <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 opacity-0 shadow-soft transition-all duration-200 ease-out group-hover:ml-3 group-hover:opacity-100 delay-75">

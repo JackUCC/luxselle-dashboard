@@ -44,7 +44,7 @@ export default function WideScreenSideRail() {
                     end={route.path === '/'}
                     className={navLinkClass}
                   >
-                    <route.icon className={`h-[15px] w-[15px] shrink-0 ${route.path === pathname ? 'text-white/70' : 'text-lux-400 group-hover:text-lux-600'}`} />
+                    <route.icon className={`h-[18px] w-[18px] shrink-0 ${route.path === pathname ? 'text-white/70' : 'text-lux-400 group-hover:text-lux-600'}`} />
                     <span>{route.navLabel}</span>
                   </NavLink>
                 ))}

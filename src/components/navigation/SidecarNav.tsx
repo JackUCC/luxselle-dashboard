@@ -86,7 +86,7 @@ export default function SidecarNav() {
                           }`
                         }
                       >
-                        <route.icon className="h-4 w-4 shrink-0 text-lux-500 group-hover:text-lux-700" />
+                        <route.icon className="h-5 w-5 shrink-0 text-lux-500 group-hover:text-lux-700" />
                         <span>{route.navLabel}</span>
                       </NavLink>
                     ))}
