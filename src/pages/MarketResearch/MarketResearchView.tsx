@@ -44,26 +44,10 @@ const BRAND_MODELS: Record<string, string[]> = {
 }
 
 import type { MarketComparable, MarketComparablePayload, MarketResearchResult, MarketResearchResultPayload } from './types'
-import type { CompetitorListing } from '@shared/schemas'
 import FreshnessBadge from './FreshnessBadge'
 import { SerialCheckerCard } from '../../components/widgets'
 
 // ─── Types ─────────────────────────────────────────────────────
-/** Competitor feed item (Designer Exchange, Luxury Exchange, Siopella). */
-interface CompetitorFeedItem {
-    title: string
-    priceEur: number
-    source: string
-    sourceUrl?: string
-    listedAt?: string
-    condition?: string
-}
-
-interface CompetitorFeedResult {
-    items: CompetitorFeedItem[]
-    generatedAt: string
-}
-
 interface DeepDiveResponse {
     data: {
         runId: string
@@ -150,21 +134,6 @@ const MARKET_RESEARCH_STEPS: AiProgressStep[] = [
 ]
 
 import MarketResearchResultPanel from './MarketResearchResultPanel'
-
-// ─── Competitor feed helpers ───────────────────────────────────
-const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
-    'Designer Exchange': { label: 'DE', className: 'bg-blue-100 text-blue-700' },
-    'Luxury Exchange': { label: 'LE', className: 'bg-amber-100 text-amber-700' },
-    'Siopella': { label: 'S', className: 'bg-emerald-100 text-emerald-700' },
-}
-
-function relativeDate(isoDate?: string): string | null {
-    if (!isoDate) return null
-    const days = Math.floor((Date.now() - new Date(isoDate).getTime()) / 86_400_000)
-    if (days <= 0) return 'Today'
-    if (days === 1) return 'Yesterday'
-    return `${days}d ago`
-}
 
 // ─── Helpers ───────────────────────────────────────────────────
 const normalizeComparableImage = (comparable: MarketComparablePayload): MarketComparable => ({
@@ -282,16 +251,11 @@ export default function MarketResearchView() {
         setError: setResearchError,
         clear: clearResearchSession,
     } = useResearchSession<MarketResearchResult, MarketResearchFormData>('market-research')
-    const [feedError, setFeedError] = useState<string | null>(null)
     const isLoading = researchSession.status === 'loading'
     const result = researchSession.status === 'success' ? (researchSession.result ?? null) : null
     const researchError = researchSession.status === 'error' ? (researchSession.error ?? 'Analysis failed') : null
-    const error = researchError ?? feedError
+    const error = researchError
 
-    const [competitorFeed, setCompetitorFeed] = useState<{ items: CompetitorListing[]; generatedAt: string } | null>(null)
-    const [competitorFeedError, setCompetitorFeedError] = useState<string | null>(null)
-    const [isCompetitorLoading, setIsCompetitorLoading] = useState(false)
-    const [competitorRefreshKey, setCompetitorRefreshKey] = useState(0)
     const [previousSearches, setPreviousSearches] = useState<{ brand: string; model: string }[]>([])
 
     const [savedId, setSavedId] = useState<string | null>(null)
@@ -315,30 +279,6 @@ export default function MarketResearchView() {
         () => availableModels.map(model => ({ value: model, label: model })),
         [availableModels],
     )
-
-    useEffect(() => {
-        let cancelled = false
-        const load = async () => {
-            setIsCompetitorLoading(true)
-            setCompetitorFeedError(null)
-            try {
-                const { data } = await apiGet<{ data: { items: CompetitorListing[]; generatedAt: string } }>('/market-research/competitor-feed')
-                if (!cancelled) {
-                    setCompetitorFeed(data)
-                    setCompetitorFeedError(null)
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    setCompetitorFeedError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Temporarily unavailable')
-                    // Keep previous competitorFeed so user can still see last successful result
-                }
-            } finally {
-                if (!cancelled) setIsCompetitorLoading(false)
-            }
-        }
-        load()
-        return () => { cancelled = true }
-    }, [competitorRefreshKey])
 
     // Restore previous searches from localStorage
     useEffect(() => {
@@ -376,7 +316,6 @@ export default function MarketResearchView() {
 
     const handleAnalyse = async (e: React.FormEvent) => {
         e.preventDefault()
-        setFeedError(null)
         startResearchLoading(formData)
         try {
             const { data } = await apiPost<{ data: MarketResearchResultPayload }>('/market-research/analyse', {
@@ -411,7 +350,6 @@ export default function MarketResearchView() {
     const handleDeepDive = async () => {
         if (!formData.brand || !formData.model) return
         setIsDeepDiveLoading(true)
-        setFeedError(null)
         try {
             const { data } = await apiPost<DeepDiveResponse>('/market-research/deep-dive', {
                 ...formData,
@@ -507,17 +445,12 @@ export default function MarketResearchView() {
         }
     }
 
-    const loadCompetitorFeed = () => {
-        setCompetitorRefreshKey((k) => k + 1)
-    }
-
     const quickResearch = (brand: string, model: string) => {
         setFormData(prev => ({ ...prev, brand, model }))
         clearResearchSession()
     }
 
     const handleDismissError = () => {
-        setFeedError(null)
         if (researchSession.status === 'error') {
             clearResearchSession()
         }
@@ -873,135 +806,9 @@ export default function MarketResearchView() {
                 </div>
             </div>
 
-            {/* ─── Full-width: Serial Check + Competitor side by side ─── */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            {/* ─── Full-width: Serial Check ─── */}
+            <div className="mt-6">
                 <SerialCheckerCard />
-
-                {/* Competitor Activity */}
-                <div className="lux-card p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-[12px] font-semibold text-lux-400 uppercase tracking-[0.06em]">
-                            <Store className="h-4 w-4" />
-                            Competitor Activity
-                        </div>
-                        <button
-                            onClick={loadCompetitorFeed}
-                            disabled={isCompetitorLoading}
-                            className="text-xs text-lux-600 hover:text-lux-900 font-medium flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        >
-                            {isCompetitorLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
-                            Refresh
-                        </button>
-                    </div>
-                    {isCompetitorLoading ? (
-                        <div className="space-y-2">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="flex items-center justify-between py-2.5 px-3">
-                                    <div className="space-y-1.5 flex-1">
-                                        <Skeleton className="h-3.5 w-40" />
-                                        <Skeleton className="h-2.5 w-24" />
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Skeleton className="h-3.5 w-14" />
-                                        <Skeleton className="h-8 w-8 rounded-lg" variant="rect" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : competitorFeed && competitorFeed.items.length > 0 ? (
-                        <div className="space-y-1 max-h-[800px] overflow-y-auto no-scrollbar">
-                            {(() => {
-                                const counts: Record<string, number> = {}
-                                competitorFeed.items.forEach((item) => { counts[item.source] = (counts[item.source] ?? 0) + 1 })
-                                const summaryParts = Object.entries(counts)
-                                    .sort(([a], [b]) => a.localeCompare(b))
-                                    .map(([source, n]) => `${n} ${source}`)
-                                const summaryLine = `${competitorFeed.items.length} listing${competitorFeed.items.length === 1 ? '' : 's'}: ${summaryParts.join(', ')}`
-                                const sourceOrder = ['Designer Exchange', 'Luxury Exchange', 'Siopella']
-                                const bySource = sourceOrder.map((source) => competitorFeed.items.filter((item) => item.source === source)).filter((group) => group.length > 0)
-                                return (
-                                    <>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <p className="text-[10px] text-lux-400">{summaryLine}</p>
-                                        </div>
-                                        {bySource.flatMap((group) =>
-                                            group.map((item, i) => {
-                                                const badge = SOURCE_BADGE[item.source]
-                                                const dateLabel = item.listedAt ? relativeDate(item.listedAt) : undefined
-                                                const meta = [item.condition, dateLabel].filter(Boolean).join(' · ')
-                                                return (
-                                                    <div
-                                                        key={`${item.source}-${i}-${item.externalId}`}
-                                                        className={`flex gap-3 py-3 px-3 rounded-xl hover:bg-lux-50 transition-colors ${!item.isAvailable ? 'opacity-60 grayscale' : ''}`}
-                                                    >
-                                                        {item.imageUrl ? (
-                                                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-lux-100 bg-white">
-                                                                <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-lux-100 bg-lux-50">
-                                                                <Store className="h-5 w-5 text-lux-300" />
-                                                            </div>
-                                                        )}
-
-                                                        <div className="min-w-0 flex-1 py-0.5 flex flex-col justify-center">
-                                                            <div className="text-xs font-medium text-lux-800 line-clamp-2 leading-snug">{item.title}</div>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                {badge && (
-                                                                    <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-bold leading-none ${badge.className}`}>
-                                                                        {badge.label}
-                                                                    </span>
-                                                                )}
-                                                                {meta && <div className="text-[10px] text-lux-400">{meta}</div>}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex flex-col items-end gap-1 shrink-0 justify-center">
-                                                            <span className="text-sm font-semibold text-lux-800">{formatCurrency(item.priceEur)}</span>
-
-                                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                                {!item.isAvailable && (
-                                                                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-700 uppercase tracking-wider">
-                                                                        Sold Out
-                                                                    </span>
-                                                                )}
-                                                                {item.handle && (
-                                                                    <a
-                                                                        href={item.handle}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        className="flex items-center justify-center rounded p-1 text-lux-400 hover:text-lux-700 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                                                                        aria-label="Open listing"
-                                                                    >
-                                                                        <ExternalLink className="h-3 w-3" />
-                                                                    </a>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            }),
-                                        )}
-                                        {competitorFeedError && (
-                                            <p className="text-xs text-amber-600 pt-2">Last refresh failed. Showing previous results.</p>
-                                        )}
-                                        <p className="text-xs text-lux-400 text-center pt-2 pb-4">
-                                            Updated {new Date(competitorFeed.generatedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
-                                        </p>
-                                    </>
-                                )
-                            })()}
-                        </div>
-                    ) : competitorFeedError ? (
-                        <div className="text-center py-8 text-amber-600 text-xs">
-                            {competitorFeedError}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 text-lux-400 text-xs">
-                            No competitor listings available.
-                        </div>
-                    )}
-                </div>
             </div>
         </PageLayout>
     )

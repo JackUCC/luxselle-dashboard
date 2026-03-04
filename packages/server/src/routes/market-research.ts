@@ -9,7 +9,6 @@ import { MarketResearchService } from '../services/market-research/MarketResearc
 import { MarketIntelMonitorService } from '../services/market-research/MarketIntelMonitorService'
 import { logger } from '../middleware/requestId'
 import { runJob } from '../services/JobRunner'
-import { CompetitorListingRepo } from '../repos/CompetitorListingRepo'
 import { SystemJobRepo } from '../repos/SystemJobRepo'
 import { DEFAULT_ORG_ID } from '@shared/schemas'
 
@@ -17,7 +16,6 @@ const router = Router()
 const marketResearchService = new MarketResearchService()
 const marketIntelMonitorService = new MarketIntelMonitorService()
 const systemJobRepo = new SystemJobRepo()
-const competitorListingRepo = new CompetitorListingRepo()
 
 const MarketResearchInputSchema = z.object({
     brand: z.string().min(1),
@@ -95,6 +93,7 @@ router.post('/trigger-monitor', async (req, res, next) => {
             updatedAt: now,
             jobType: 'market_intel_monitor',
             status: 'queued',
+            lastError: '',
             queuedAt: now,
             retryCount: 0,
             maxRetries: 3,
@@ -157,57 +156,5 @@ router.get('/trending', async (_req, res, next) => {
     }
 })
 
-// GET /api/market-research/competitor-feed — recent listings from Irish competitors
-router.get('/competitor-feed', async (req, res, next) => {
-    try {
-        const limitType = req.query.limit
-        const limit = typeof limitType === 'string' ? parseInt(limitType, 10) : 20
-        const items = await competitorListingRepo.getRecentListings(limit)
-
-        res.json({
-            data: {
-                items,
-                generatedAt: new Date().toISOString()
-            }
-        })
-    } catch (error) {
-        next(error)
-    }
-})
-
-// POST /api/market-research/sync-competitors — trigger background competitor sync
-router.post('/sync-competitors', async (_req, res, next) => {
-    try {
-        const now = new Date().toISOString()
-        const job = await systemJobRepo.create({
-            organisationId: DEFAULT_ORG_ID,
-            createdAt: now,
-            updatedAt: now,
-            jobType: 'competitor_sync',
-            status: 'queued',
-            queuedAt: now,
-            retryCount: 0,
-            maxRetries: 1,
-        })
-
-        setImmediate(() => {
-            Promise.resolve(runJob(job.id)).catch((err) => {
-                logger.error('competitor_sync_job_failed', {
-                    jobId: job.id,
-                    message: err instanceof Error ? err.message : String(err),
-                })
-            })
-        })
-
-        res.status(202).json({
-            data: {
-                jobId: job.id,
-                status: 'queued',
-            },
-        })
-    } catch (error) {
-        next(error)
-    }
-})
 
 export { router as marketResearchRouter }
