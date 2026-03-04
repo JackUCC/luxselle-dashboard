@@ -167,8 +167,12 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                         }`
                       }
                     >
-                      <route.icon className="h-6 w-6 shrink-0" />
-                      <span>{route.navLabel}</span>
+                      {({ isActive }) => (
+                        <>
+                          <route.icon className={`h-6 w-6 shrink-0 ${!isActive ? 'invert' : ''}`} />
+                          <span>{route.navLabel}</span>
+                        </>
+                      )}
                     </NavLink>
                   ))}
               </nav>
