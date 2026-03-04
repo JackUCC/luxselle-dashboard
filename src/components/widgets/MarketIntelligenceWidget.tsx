@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Camera, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import SectionLabel from '../design-system/SectionLabel'
 import PredictiveInput from '../design-system/PredictiveInput'
 import { POPULAR_SUGGESTIONS } from '../../lib/searchSuggestions'
@@ -67,13 +67,11 @@ function useTypingPlaceholder(phrases: string[], paused: boolean) {
 export default function MarketIntelligenceWidget() {
   const [query, setQuery] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
   const navigate = useNavigate()
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const typingPlaceholder = useTypingPlaceholder(TYPING_PHRASES, inputFocused)
   const showTypingEffect = !query.trim() && !inputFocused
-  const placeholder = showTypingEffect ? typingPlaceholder : 'Search brand, model, SKU, or paste image...'
+  const placeholder = showTypingEffect ? typingPlaceholder : 'Search brand, model, or SKU...'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,50 +83,11 @@ export default function MarketIntelligenceWidget() {
     navigate(`/evaluate?q=${encodeURIComponent(label)}&run=1`)
   }
 
-  const handleImageClick = () => {
-    fileRef.current?.click()
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file?.type.startsWith('image/')) {
-      navigate('/evaluate', { state: { imageFile: file } })
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file?.type.startsWith('image/')) {
-      navigate('/evaluate', { state: { imageFile: file } })
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = 'copy'
-    setIsDragOver(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-  }
-
   return (
     <div
-      className={`lux-card p-6 sm:col-span-2 h-full min-h-0 flex flex-col animate-bento-enter stagger-0 transition-colors ${
-        isDragOver ? 'ring-2 ring-lux-gold/40 bg-lux-50/80' : ''
-      }`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
+      className="lux-card p-6 sm:col-span-2 h-full min-h-0 flex flex-col animate-bento-enter stagger-0 transition-colors"
       role="region"
-      aria-label="Market Intelligence - search or drop image"
+      aria-label="Market Intelligence - search"
     >
       <SectionLabel className="mb-4">Market Intelligence</SectionLabel>
 
@@ -148,14 +107,6 @@ export default function MarketIntelligenceWidget() {
           />
           <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <button
-              type="button"
-              onClick={handleImageClick}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-lux-400 transition-colors hover:bg-lux-100 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-              aria-label="Upload image for visual search"
-            >
-              <Camera className="h-4 w-4" />
-            </button>
-            <button
               type="submit"
               className="flex h-8 w-8 items-center justify-center rounded-full bg-lux-gold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
               aria-label="Search"
@@ -164,15 +115,6 @@ export default function MarketIntelligenceWidget() {
             </button>
           </div>
         </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-          title="Upload image for visual search"
-          aria-label="Upload image for visual search"
-        />
       </form>
 
       <div className="mt-5 pt-4 border-t border-lux-100">

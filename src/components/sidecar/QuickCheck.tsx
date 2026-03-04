@@ -1,23 +1,14 @@
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Search, Loader2, Package, Calculator, Upload, ImageIcon, X } from 'lucide-react'
-import { apiGet, apiPost, apiPostFormData, ApiError } from '../../lib/api'
+import { Search, Loader2, Package, Calculator } from 'lucide-react'
+import { apiGet, apiPost, ApiError } from '../../lib/api'
 import { calculateSimpleLandedCost, DEFAULT_AUCTION_PCT, DEFAULT_CUSTOMS_PCT, DEFAULT_VAT_PCT } from '../../lib/landedCost'
 import { formatCurrency, parseNumericInput } from '../../lib/formatters'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import AiThinkingDots from '../feedback/AiThinkingDots'
 import AiProgressSteps, { type AiProgressStep } from '../feedback/AiProgressSteps'
 import LiveResultPreview from '../feedback/LiveResultPreview'
-import ImageLightbox from '../feedback/ImageLightbox'
 import type { PriceCheckResult } from '@shared/schemas'
-
-interface VisualSearchResult {
-  productId?: string
-  supplierItemId?: string
-  imageUrl?: string
-  title?: string
-  score: number
-}
 
 interface InventoryMatch {
   id: string
@@ -46,14 +37,6 @@ const QUICK_CHECK_STEPS: AiProgressStep[] = [
 export default function QuickCheck() {
   const [query, setQuery] = useState('')
   const [bidInput, setBidInput] = useState('')
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [isFindingSimilar, setIsFindingSimilar] = useState(false)
-  const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
-  const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string } | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const {
     session: quickCheckSession,
     startLoading: startQuickCheckLoading,
@@ -129,103 +112,6 @@ export default function QuickCheck() {
     }
   }
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !file.type.startsWith('image/')) return
-    setImageFile(file)
-    setVisualResults(null)
-    const reader = new FileReader()
-    reader.onloadend = () => setImagePreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file?.type.startsWith('image/')) {
-      setImageFile(file)
-      setVisualResults(null)
-      const reader = new FileReader()
-      reader.onloadend = () => setImagePreview(reader.result as string)
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = 'copy'
-    setIsDragOver(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-  }
-
-  // Auto-run image analysis when user selects an image (fills "Item description" so user can click Run)
-  useEffect(() => {
-    if (!imageFile) return
-    let cancelled = false
-    const run = async () => {
-      setIsAnalyzingImage(true)
-      try {
-        const formData = new FormData()
-        formData.append('image', imageFile)
-        const { data } = await apiPostFormData<{ data: { query?: string; condition?: string } }>(
-          '/pricing/analyze-image',
-          formData
-        )
-        if (!cancelled && data?.query) {
-          setQuery(data.query)
-          toast.success('Image analyzed — item description updated')
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-          toast.error(msg)
-        }
-      } finally {
-        if (!cancelled) setIsAnalyzingImage(false)
-      }
-    }
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [imageFile])
-
-  const handleRemoveImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-    setVisualResults(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const handleFindSimilar = async () => {
-    if (!imageFile) return
-    setIsFindingSimilar(true)
-    setVisualResults(null)
-    try {
-      const formData = new FormData()
-      formData.append('image', imageFile)
-      const { data } = await apiPostFormData<{ data: { results: VisualSearchResult[] } }>(
-        '/search/visual',
-        formData
-      )
-      setVisualResults(data?.results ?? [])
-      toast.success(data?.results?.length ? `Found ${data.results.length} similar` : 'No similar items')
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Find similar failed'
-      toast.error(msg)
-    } finally {
-      setIsFindingSimilar(false)
-    }
-  }
-
   return (
     <div className="min-w-0 max-w-full space-y-2 overflow-x-clip">
       <form onSubmit={handleSearch} className="rounded-lux-card border border-lux-200 bg-white p-2.5">
@@ -254,91 +140,7 @@ export default function QuickCheck() {
         </div>
         <p className="mt-1 text-xs text-lux-500">Summary first, with details available below when needed.</p>
 
-        <div className="mt-2 pt-2 border-t border-lux-200 bg-lux-50/50 rounded-lg px-2 py-2 min-h-[72px] flex flex-col justify-center">
-          <label className="text-xs font-medium text-lux-700 block">Or search by image</label>
-          {imagePreview ? (
-            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              <div className="relative shrink-0">
-                <img src={imagePreview} alt="" className="h-10 w-10 rounded object-cover" />
-                {isAnalyzingImage && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded bg-black/50" aria-live="polite">
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1">
-                {isAnalyzingImage ? (
-                  <span className="flex items-center gap-1 text-xs text-lux-500">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Analyzing…
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleFindSimilar}
-                    disabled={isFindingSimilar}
-                    className="flex min-h-[40px] items-center gap-1 rounded bg-lux-800 px-2 py-1 text-xs font-medium text-white hover:bg-lux-700 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                  >
-                    {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
-                    {isFindingSimilar ? 'Finding…' : 'Find similar'}
-                  </button>
-                )}
-                <button type="button" onClick={handleRemoveImage} className="min-h-[40px] min-w-[40px] p-1 text-lux-400 hover:text-lux-600 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none" aria-label="Remove image">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              className={`mt-1.5 flex min-h-[44px] items-center gap-2 rounded border border-dashed px-2 py-2 cursor-pointer transition-colors ${
-                isDragOver ? 'border-lux-gold/50 bg-lux-100' : 'border-lux-200 bg-white hover:border-lux-300'
-              }`}
-              aria-label="Drop image or click to upload"
-            >
-              <label className="cursor-pointer flex items-center gap-2 flex-1">
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                <Upload className="h-3.5 w-3.5 text-lux-400 shrink-0" />
-                <span className="text-xs text-lux-500">Drop image or click to upload</span>
-              </label>
-            </div>
-          )}
-        </div>
       </form>
-
-      {visualResults !== null && (
-        <div className="rounded-lux-card border border-lux-200 bg-white p-2.5">
-          <p className="text-xs font-medium text-lux-700 mb-2">Visually similar</p>
-          {visualResults.length === 0 ? (
-            <p className="text-xs text-lux-500">No similar items in index.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto min-[360px]:grid-cols-2 min-[420px]:grid-cols-3">
-              {visualResults.slice(0, 9).map((r, i) => (
-                <div key={i} className="rounded border border-lux-100 overflow-hidden">
-                  {r.imageUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => setLightboxImage({ url: r.imageUrl ?? '', title: r.title, subtitle: `${Math.round(r.score * 100)}% match` })}
-                      className="group relative block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
-                      aria-label={`Preview image for ${r.title ?? 'visual result'}`}
-                    >
-                      <img src={r.imageUrl} alt={r.title ?? 'Visual result'} className="w-full aspect-square object-cover" />
-                      <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
-                    </button>
-                  ) : (
-                    <div className="w-full aspect-square bg-lux-100 flex items-center justify-center">
-                      <ImageIcon className="h-5 w-5 text-lux-400" />
-                    </div>
-                  )}
-                  <p className="truncate text-xs text-lux-600 px-1 py-0.5" title={r.title}>{r.title ?? '—'}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {isResearching && (
         <div className="space-y-2 rounded-lux-card border border-lux-200 bg-white px-2.5 py-2 text-xs text-lux-600">
@@ -462,13 +264,6 @@ export default function QuickCheck() {
           Paste a full listing title and run a quick check. You will get price targets, landed estimate, and inventory context in one place.
         </div>
       )}
-      <ImageLightbox
-        isOpen={Boolean(lightboxImage)}
-        imageUrl={lightboxImage?.url ?? null}
-        title={lightboxImage?.title}
-        subtitle={lightboxImage?.subtitle}
-        onClose={() => setLightboxImage(null)}
-      />
     </div>
   )
 }

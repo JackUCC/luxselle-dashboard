@@ -19,7 +19,6 @@ import { marketResearchRouter } from './routes/market-research'
 import { aiRouter } from './routes/ai'
 import { suppliersRouter } from './routes/suppliers'
 import { fxRouter } from './routes/fx'
-import { searchRouter } from './routes/search'
 import { savedResearchRouter } from './routes/savedResearch'
 import { API_ERROR_CODES, formatApiError, ApiError } from './lib/errors'
 import { requestId, requestLogger, type RequestWithId, logger, errorTracker } from './middleware/requestId'
@@ -236,7 +235,6 @@ app.use('/api/market-research', marketResearchRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/suppliers', suppliersRouter)
 app.use('/api/fx', fxRouter)
-app.use('/api/search', searchRouter)
 app.use('/api/saved-research', savedResearchRouter)
 
 app.use('/api', (_req, res) => {

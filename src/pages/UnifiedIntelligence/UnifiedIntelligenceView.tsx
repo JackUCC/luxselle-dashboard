@@ -15,10 +15,8 @@ import {
   Loader2,
   Search,
   Sparkles,
-  Upload,
-  X,
 } from 'lucide-react'
-import { apiPost, apiPostFormData, ApiError } from '../../lib/api'
+import { apiPost, ApiError } from '../../lib/api'
 import { formatCurrency, formatRelativeDate } from '../../lib/formatters'
 import { CalculatorWidget } from '../../components/widgets'
 import LandedCostWidget from '../../components/widgets/LandedCostWidget'
@@ -39,13 +37,7 @@ import { deriveSourcingDecision, type DecisionTone } from '../../lib/sourcingDec
 import ConfidenceDiagnosticsPanel from './ConfidenceDiagnosticsPanel'
 import ResearchDataSourceBadge from './ResearchDataSourceBadge'
 
-interface VisualSearchResult {
-  productId?: string
-  supplierItemId?: string
-  imageUrl?: string
-  title?: string
-  score: number
-}
+
 
 interface PriceCheckResearchQuery {
   query: string
@@ -115,18 +107,11 @@ export default function UnifiedIntelligenceView() {
   const [query, setQuery] = useState('')
   const [condition, setCondition] = useState('')
   const [notes, setNotes] = useState('')
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [isFindingSimilar, setIsFindingSimilar] = useState(false)
   const [refineOpen, setRefineOpen] = useState(false)
   const [formulaOpen, setFormulaOpen] = useState(false)
-  const [visualResults, setVisualResults] = useState<VisualSearchResult[] | null>(null)
   const [failedCompImages, setFailedCompImages] = useState<Record<number, boolean>>({})
   const [loadedCompImages, setLoadedCompImages] = useState<Record<number, boolean>>({})
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string; subtitle?: string; sourceUrl?: string } | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const autoRanQueryRef = useRef<string | null>(null)
 
   const {
@@ -195,176 +180,6 @@ export default function UnifiedIntelligenceView() {
     setLoadedCompImages({})
   }, [result?.comps])
 
-  // Consume image passed from control centre (MarketIntelligenceWidget)
-  useEffect(() => {
-    const file = location.state?.imageFile as File | undefined
-    if (!file || !(file instanceof File) || !file.type.startsWith('image/')) return
-    setUploadedImage(file)
-    const reader = new FileReader()
-    reader.onloadend = () => setImagePreview(reader.result as string)
-    reader.readAsDataURL(file)
-    toast.success('Image loaded — analyzing…')
-    navigate(location.pathname, { replace: true, state: {} })
-  }, [location.state?.imageFile, location.pathname, navigate])
-
-  const confidencePct = result
-    ? typeof result.confidenceBreakdown?.score === 'number'
-      ? Math.round(result.confidenceBreakdown.score * 100)
-      : result.comps.length >= 5
-        ? 90
-        : result.comps.length >= 3
-          ? 75
-          : result.comps.length >= 1
-            ? 50
-            : 25
-    : 0
-
-  const trendSignalLabel = result?.trendSignal === 'up'
-    ? 'Trend signal: Up'
-    : result?.trendSignal === 'down'
-      ? 'Trend signal: Down'
-      : result?.trendSignal === 'flat'
-        ? 'Trend signal: Flat'
-        : 'Trend signal: Unknown'
-
-  const decision = deriveSourcingDecision({
-    maxBidEur: result?.maxBidEur,
-    maxBuyEur: result?.maxBuyEur,
-  })
-
-  const decisionStyles = getDecisionToneStyles(decision.tone)
-  const decisionSuggestionLabel = 'Price-check max bid'
-
-  if (isSidecar) {
-    return (
-      <div className="min-w-0 max-w-full overflow-x-clip">
-        <SidecarView initialTab="quick" />
-      </div>
-    )
-  }
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !file.type.startsWith('image/')) return
-    setUploadedImage(file)
-    setVisualResults(null)
-    const reader = new FileReader()
-    reader.onloadend = () => setImagePreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file?.type.startsWith('image/')) {
-      setUploadedImage(file)
-      setVisualResults(null)
-      const reader = new FileReader()
-      reader.onloadend = () => setImagePreview(reader.result as string)
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = 'copy'
-    setIsDragOver(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-  }
-
-  // Auto-run image analysis when user selects an image
-  useEffect(() => {
-    if (!uploadedImage) return
-    let cancelled = false
-    const run = async () => {
-      setIsAnalyzingImage(true)
-      if (researchSession.status === 'error') clearResearchSession()
-      try {
-        const formData = new FormData()
-        formData.append('image', uploadedImage)
-        const { data } = await apiPostFormData<{ data: { query?: string; condition?: string } }>(
-          '/pricing/analyze-image',
-          formData
-        )
-        if (!cancelled) {
-          if (data?.query) setQuery(data.query)
-          if (data?.condition) setCondition(data.condition)
-          toast.success('Image analyzed and search updated')
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-          toast.error(msg)
-        }
-      } finally {
-        if (!cancelled) setIsAnalyzingImage(false)
-      }
-    }
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [uploadedImage])
-
-  const handleRemoveImage = () => {
-    setUploadedImage(null)
-    setImagePreview(null)
-    setVisualResults(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const handleAnalyzeImage = async () => {
-    if (!uploadedImage) return
-    setIsAnalyzingImage(true)
-    if (researchSession.status === 'error') clearResearchSession()
-
-    try {
-      const formData = new FormData()
-      formData.append('image', uploadedImage)
-      const { data } = await apiPostFormData<{ data: { query?: string; condition?: string } }>(
-        '/pricing/analyze-image',
-        formData
-      )
-      if (data?.query) setQuery(data.query)
-      if (data?.condition) setCondition(data.condition)
-      toast.success('Image analyzed and search updated')
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analyze failed'
-      toast.error(msg)
-    } finally {
-      setIsAnalyzingImage(false)
-    }
-  }
-
-  const handleFindSimilar = async () => {
-    if (!uploadedImage) return
-    setIsFindingSimilar(true)
-    setVisualResults(null)
-    try {
-      const formData = new FormData()
-      formData.append('image', uploadedImage)
-      const { data } = await apiPostFormData<{ data: { results: VisualSearchResult[] } }>(
-        '/search/visual',
-        formData
-      )
-      setVisualResults(data?.results ?? [])
-      toast.success(data?.results?.length ? `Found ${data.results.length} similar items` : 'No similar items found')
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Find similar failed'
-      toast.error(msg)
-    } finally {
-      setIsFindingSimilar(false)
-    }
-  }
-
   const handleResearch = async (e: React.FormEvent) => {
     e.preventDefault()
     const q = query.trim()
@@ -396,71 +211,6 @@ export default function UnifiedIntelligenceView() {
                   rotatingLabelExamples={ITEM_DESCRIPTION_EXAMPLES}
                   rotatingLabelIntervalMs={3500}
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-lux-400 mb-1.5">
-                  Or upload image
-                </label>
-                {imagePreview ? (
-                  <div className="relative aspect-video rounded-lux-card overflow-hidden border border-lux-200">
-                    <img src={imagePreview} alt="Upload preview" className="w-full h-full object-cover" />
-                    {isAnalyzingImage && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-lux-card" aria-live="polite">
-                        <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
-                        <p className="text-sm font-medium text-white">Analyzing your bag…</p>
-                        <p className="text-xs text-white/80 mt-0.5">Identifying style and condition</p>
-                      </div>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-1 bg-black/50 px-2 py-1.5">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={handleAnalyzeImage}
-                          disabled={isAnalyzingImage}
-                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 min-h-[44px] px-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        >
-                          {isAnalyzingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                          {isAnalyzingImage ? 'Analyzing...' : 'Analyze with AI'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleFindSimilar}
-                          disabled={isFindingSimilar}
-                          className="text-xs text-white hover:text-lux-200 flex items-center gap-1 min-h-[44px] px-2 focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        >
-                          {isFindingSimilar ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3 w-3" />}
-                          {isFindingSimilar ? 'Finding...' : 'Find similar'}
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="text-white hover:text-rose-300 min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none"
-                        aria-label="Remove image"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    className={`block border-2 border-dashed rounded-lux-card p-6 text-center cursor-pointer transition-colors ${
-                      isDragOver ? 'border-lux-gold/50 bg-lux-50' : 'border-lux-200 hover:border-lux-300'
-                    }`}
-                    aria-label="Drop image or click to upload"
-                  >
-                    <label className="cursor-pointer block">
-                      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                      <Upload className="mx-auto h-8 w-8 text-lux-400 mb-2" />
-                      <p className="text-sm text-lux-500">Drop image or click to upload</p>
-                      <p className="text-xs text-lux-400 mt-1">AI can suggest search text before research</p>
-                    </label>
-                  </div>
-                )}
               </div>
 
               <div className="border border-lux-200 rounded-lux-card overflow-hidden">
@@ -750,52 +500,6 @@ export default function UnifiedIntelligenceView() {
               </div>
             </div>
           </div>
-
-          {visualResults !== null && (
-            <div className="lux-card p-6 animate-bento-enter stagger-4">
-              <SectionLabel className="mb-2">Visual Matches</SectionLabel>
-              <p className="text-sm text-lux-500 mb-4">From your inventory and supplier catalogs.</p>
-              {visualResults.length === 0 ? (
-                <p className="text-sm text-lux-500">
-                  No similar items in the index yet. Add product images or import supplier catalogs.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {visualResults.map((visualResult, index) => (
-                    <div key={index} className="rounded-lux-card border border-lux-200 overflow-hidden bg-white">
-                      {visualResult.imageUrl ? (
-                        <button
-                          type="button"
-                          onClick={() => setLightboxImage({ url: visualResult.imageUrl ?? '', title: visualResult.title, subtitle: `${Math.round(visualResult.score * 100)}% match` })}
-                          className="group relative block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
-                          aria-label={`Preview image for ${visualResult.title ?? 'visual result'}`}
-                        >
-                          <img src={visualResult.imageUrl} alt={visualResult.title ?? 'Visual result'} className="w-full aspect-square object-cover" />
-                          <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
-                        </button>
-                      ) : (
-                        <div className="w-full aspect-square bg-lux-50 flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-lux-400" />
-                        </div>
-                      )}
-                      <div className="p-2">
-                        <p className="text-xs text-lux-800 truncate" title={visualResult.title}>{visualResult.title ?? '-'}</p>
-                        <p className="text-xs text-lux-500">{Math.round(visualResult.score * 100)}% match</p>
-                        {visualResult.productId && (
-                          <a
-                            href={`/inventory?highlight=${visualResult.productId}`}
-                            className="text-xs text-lux-gold hover:underline mt-0.5 inline-block focus-visible:ring-2 focus-visible:ring-lux-gold/30 focus-visible:outline-none rounded-sm"
-                          >
-                            View in Inventory
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
         </div>
       </div>

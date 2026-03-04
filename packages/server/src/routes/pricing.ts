@@ -5,7 +5,6 @@
  */
 import { Router } from 'express'
 import { z } from 'zod'
-import multer from 'multer'
 import {
   DEFAULT_ORG_ID,
   EvaluationSchema,
@@ -21,7 +20,6 @@ import { env } from '../config/env'
 import { API_ERROR_CODES, formatApiError } from '../lib/errors'
 import { logger } from '../middleware/requestId'
 import { PriceCheckService } from '../services/price-check/PriceCheckService'
-import { getAiRouter } from '../services/ai/AiRouter'
 
 const router = Router()
 const pricingService = new PricingService()
@@ -39,19 +37,6 @@ function isAiUnavailableError(error: unknown): boolean {
     message.includes('perplexity_api_key is not configured')
   )
 }
-
-// Multer config for image uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true)
-    } else {
-      cb(new Error('Only image files are allowed'))
-    }
-  },
-})
 
 const PricingAnalysisInputSchema = z.object({
   brand: z.string(),
@@ -176,79 +161,6 @@ router.post('/price-check', async (req, res, next) => {
         .json(formatApiError(API_ERROR_CODES.INTERNAL, 'AI providers are unavailable for price check. Configure OPENAI_API_KEY and/or PERPLEXITY_API_KEY.'))
       return
     }
-    next(error)
-  }
-})
-
-const VisionAttributesSchema = z.object({
-  brand: z.string().optional().default(''),
-  model: z.string().optional().default(''),
-  category: z.string().optional().default(''),
-  condition: z.string().optional().default(''),
-  colour: z.string().optional().default(''),
-  color: z.string().optional().default(''),
-})
-
-const VISION_PROMPT =
-  'Analyze this luxury product image and extract brand, model, category, condition, and color. Return ONLY a JSON object: {"brand":"","model":"","category":"","condition":"","colour":""}'
-
-// POST /api/pricing/analyze-image - Analyze product image with AI (OpenAI or Perplexity)
-router.post('/analyze-image', upload.single('image'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      res.status(400).json(formatApiError(API_ERROR_CODES.VALIDATION, 'No image provided'))
-      return
-    }
-
-    const imageBase64 = req.file.buffer.toString('base64')
-    const mimeType = req.file.mimetype
-
-    const aiRouter = getAiRouter()
-    let parsed: z.infer<typeof VisionAttributesSchema>
-
-    try {
-      const result = await aiRouter.analyseVisionJson({
-        userPrompt: VISION_PROMPT,
-        imageBase64,
-        mimeType,
-        schema: VisionAttributesSchema,
-        maxTokens: 300,
-      })
-      parsed = result.data
-    } catch (error) {
-      logger.error('vision_analysis_error', error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Vision analysis is temporarily unavailable. Please retry.'
-      const friendlyMessage = message.includes('no_provider_available') || message.includes('not configured')
-        ? 'Image analysis requires an AI provider. Set OPENAI_API_KEY or PERPLEXITY_API_KEY to enable this endpoint.'
-        : message
-      res
-        .status(503)
-        .json(formatApiError(API_ERROR_CODES.INTERNAL, friendlyMessage))
-      return
-    }
-
-    const colour = (typeof parsed.colour === 'string' ? parsed.colour : '') ||
-      (typeof parsed.color === 'string' ? parsed.color : '')
-    const detectedAttributes = {
-      brand: typeof parsed.brand === 'string' ? parsed.brand : '',
-      model: typeof parsed.model === 'string' ? parsed.model : '',
-      category: typeof parsed.category === 'string' ? parsed.category : '',
-      condition: typeof parsed.condition === 'string' ? parsed.condition : '',
-      colour,
-    }
-
-    const queryParts = [
-      detectedAttributes.brand,
-      detectedAttributes.model,
-      detectedAttributes.colour,
-    ].filter(Boolean)
-    const query = queryParts.join(' ')
-
-    res.json({ data: { ...detectedAttributes, query } })
-  } catch (error) {
     next(error)
   }
 })
