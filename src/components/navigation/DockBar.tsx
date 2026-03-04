@@ -75,7 +75,7 @@ export default function DockBar() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.96 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                            className="relative flex h-11 w-11 items-center justify-center"
+                            className="relative flex h-12 w-12 items-center justify-center"
                           >
                             {isActive && (
                               <motion.div
@@ -92,13 +92,13 @@ export default function DockBar() {
                               />
                             )}
                             <span
-                              className={`relative z-10 flex h-11 w-11 items-center justify-center rounded-[14px] transition-colors duration-150 ${
+                              className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-[14px] transition-colors duration-150 ${
                                 isActive
                                   ? 'text-lux-900'
                                   : 'text-lux-500 group-hover:bg-lux-100/90 group-hover:text-lux-800'
                               }`}
                             >
-                              <route.icon className="h-6 w-6" />
+                              <route.icon className="h-8 w-8" />
                             </span>
                           </motion.span>
                           <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-xs font-medium text-lux-700 opacity-0 shadow-soft transition-all duration-200 ease-out group-hover:ml-3 group-hover:opacity-100 delay-75">

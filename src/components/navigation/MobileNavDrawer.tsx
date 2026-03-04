@@ -167,7 +167,7 @@ export default function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps)
                         }`
                       }
                     >
-                      <route.icon className={`h-[18px] w-[18px] shrink-0`} />
+                      <route.icon className="h-6 w-6 shrink-0" />
                       <span>{route.navLabel}</span>
                     </NavLink>
                   ))}

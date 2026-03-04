@@ -28,7 +28,7 @@ export default function SidecarNav() {
           className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-lux-200 bg-white/95 p-2 text-lux-600 transition-all hover:-translate-y-0.5 hover:border-lux-300 hover:bg-white hover:text-lux-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lux-gold/30"
           aria-label="Open navigation menu"
         >
-          <Menu className="h-[18px] w-[18px]" />
+          <Menu className="h-5 w-5" />
         </button>
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <img
@@ -47,7 +47,7 @@ export default function SidecarNav() {
           title="Exit sidecar and return to overview"
           aria-label="Exit sidecar and return to overview"
         >
-          <ArrowLeftToLine className="h-3.5 w-3.5" />
+          <ArrowLeftToLine className="h-4 w-4" />
           <span className="hidden min-[380px]:inline">Exit</span>
         </Link>
       </nav>

@@ -151,7 +151,7 @@ const AppContent = () => {
           aria-label="Open navigation menu"
           data-testid="mobile-nav-toggle"
         >
-          <Menu className="h-4 w-4" />
+          <Menu className="h-5 w-5" />
         </button>
         {routeMeta ? (
           <span className="min-w-0 truncate text-xs font-medium text-lux-800" data-testid="mobile-page-title">
