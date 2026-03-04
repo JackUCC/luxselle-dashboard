@@ -21,7 +21,7 @@ import { ITEM_DESCRIPTION_EXAMPLES } from '../../lib/itemDescriptionExamples'
 import { useResearchSession } from '../../lib/ResearchSessionContext'
 import { sanitizeImageUrl } from '../../lib/sanitizeImageUrl'
 import PageLayout from '../../components/layout/PageLayout'
-import { PageHeader, RotatingExamples, SectionLabel } from '../../components/design-system'
+import { PageHeader, SectionLabel } from '../../components/design-system'
 import { FloatingInput, LuxSelect } from '../../components/design-system/Input'
 import type { PriceCheckResult } from '@shared/schemas'
 
@@ -375,8 +375,9 @@ ${fallbackLine}` : fallbackLine))
                   onChange={(e) => setQuery(e.target.value)}
                   label="Search for item"
                   leadingAdornment={<Search className="h-4 w-4 text-lux-400" />}
+                  rotatingLabelExamples={ITEM_DESCRIPTION_EXAMPLES}
+                  rotatingLabelIntervalMs={3500}
                 />
-                <RotatingExamples prefix="e.g. " examples={ITEM_DESCRIPTION_EXAMPLES} />
               </div>
 
               <div>

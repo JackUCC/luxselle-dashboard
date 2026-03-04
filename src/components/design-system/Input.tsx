@@ -38,6 +38,29 @@ export default function Input({
   )
 }
 
+function usePrefersReducedMotion(): boolean {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches)
+    }
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', onChange)
+      return () => mediaQuery.removeEventListener('change', onChange)
+    }
+    mediaQuery.addListener(onChange)
+    return () => mediaQuery.removeListener(onChange)
+  }, [])
+
+  return prefersReducedMotion
+}
+
 export interface FloatingInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'placeholder'> {
   label: string
   className?: string
@@ -45,6 +68,9 @@ export interface FloatingInputProps extends Omit<InputHTMLAttributes<HTMLInputEl
   error?: boolean
   leadingAdornment?: ReactNode
   trailingAdornment?: ReactNode
+  /** When provided, shows rotating examples with flip-roll in label when input is empty */
+  rotatingLabelExamples?: readonly string[]
+  rotatingLabelIntervalMs?: number
 }
 
 export function FloatingInput({
@@ -54,7 +80,10 @@ export function FloatingInput({
   error = false,
   leadingAdornment,
   trailingAdornment,
+  rotatingLabelExamples,
+  rotatingLabelIntervalMs = 3500,
   id,
+  value = '',
   ...rest
 }: FloatingInputProps) {
   const generatedId = useId()
@@ -62,6 +91,42 @@ export function FloatingInput({
   const errorClass = getInputErrorClass(error)
   const hasLeadingAdornment = leadingAdornment != null
   const hasTrailingAdornment = trailingAdornment != null
+  const prefersReducedMotion = usePrefersReducedMotion()
+
+  const [rotatingIndex, setRotatingIndex] = useState(0)
+  const strValue = typeof value === 'string' ? value : String(value ?? '')
+  const hasValue = strValue.trim().length > 0
+  const useRotatingLabel = rotatingLabelExamples != null && rotatingLabelExamples.length > 0 && !hasValue
+  const effectiveInterval = prefersReducedMotion ? 0 : rotatingLabelIntervalMs
+  const examples = rotatingLabelExamples ?? []
+
+  useEffect(() => {
+    if (!useRotatingLabel || effectiveInterval <= 0 || examples.length <= 1) return
+    const id = setInterval(() => {
+      setRotatingIndex((i) => (i + 1) % examples.length)
+    }, effectiveInterval)
+    return () => clearInterval(id)
+  }, [useRotatingLabel, effectiveInterval, examples.length])
+
+  const rotatingExample = useRotatingLabel
+    ? (examples[rotatingIndex % examples.length] ?? examples[0])
+    : null
+
+  const labelContent = useRotatingLabel && rotatingExample ? (
+    <span
+      className="inline-block min-h-[1.25rem] overflow-hidden align-bottom max-w-full"
+      style={{ perspective: prefersReducedMotion ? undefined : '200px' }}
+    >
+      <span
+        key={rotatingIndex}
+        className={prefersReducedMotion ? '' : 'animate-flip-roll inline-block'}
+      >
+        &quot;{rotatingExample}&quot;
+      </span>
+    </span>
+  ) : (
+    label
+  )
 
   return (
     <div
@@ -72,12 +137,14 @@ export function FloatingInput({
       ) : null}
       <input
         {...rest}
+        value={value}
         id={inputId}
+        aria-label={useRotatingLabel ? label : undefined}
         className={`lux-input lux-floating-input-field ${errorClass} ${inputClassName}`.trim()}
         placeholder=" "
       />
       <label htmlFor={inputId} className="lux-floating-label">
-        {label}
+        {labelContent}
       </label>
       {hasTrailingAdornment ? (
         <span className="lux-floating-adornment lux-floating-adornment-right">{trailingAdornment}</span>

@@ -1,6 +1,6 @@
 /**
  * Curated luxury item description examples for evaluator/price-check hints.
- * Used by RotatingExamples in UnifiedIntelligenceView and EvaluatorView.
+ * Used by FloatingInput rotatingLabelExamples in UnifiedIntelligenceView and EvaluatorView.
  */
 export const ITEM_DESCRIPTION_EXAMPLES = [
   'Chanel Classic Flap Medium, black caviar, gold hardware',
