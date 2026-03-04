@@ -126,6 +126,37 @@ export default function UnifiedIntelligenceView() {
   const priceCheckError = researchSession.status === 'error' ? (researchSession.error ?? 'Research failed') : null
   const result = researchSession.status === 'success' ? (researchSession.result ?? null) : null
 
+  const decision = useMemo(
+    () =>
+      deriveSourcingDecision({
+        maxBidEur: result?.maxBidEur ?? null,
+        maxBuyEur: result?.maxBuyEur ?? null,
+      }),
+    [result?.maxBidEur, result?.maxBuyEur],
+  )
+
+  const decisionStyles = useMemo(() => getDecisionToneStyles(decision.tone), [decision.tone])
+
+  const confidencePct = useMemo(
+    () => (result?.confidenceBreakdown?.score != null ? Math.round(result.confidenceBreakdown.score * 100) : 0),
+    [result?.confidenceBreakdown?.score],
+  )
+
+  const trendSignalLabel = useMemo(() => {
+    if (!result?.trendSignal || result.trendSignal === 'unknown') return ''
+    const labels: Record<string, string> = {
+      up: '📈 Prices trending up',
+      down: '📉 Prices trending down',
+      flat: '➡️ Prices stable',
+    }
+    return labels[result.trendSignal] ?? ''
+  }, [result?.trendSignal])
+
+  const decisionSuggestionLabel = useMemo(() => {
+    if (!decision.recommendedMaxPayEur) return undefined
+    return `AI suggests max €${Math.round(decision.recommendedMaxPayEur)}`
+  }, [decision.recommendedMaxPayEur])
+
   const runResearch = useCallback(async (q: string, opts?: { condition?: string; notes?: string }) => {
     const researchQuery: PriceCheckResearchQuery = {
       query: q,
