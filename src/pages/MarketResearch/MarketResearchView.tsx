@@ -364,9 +364,9 @@ export default function MarketResearchView() {
             setResearchSuccess(normalizedResult, formData)
             toast.success(`Deep-dive complete (run ${data.runId.slice(0, 8)})`)
         } catch (err) {
-            const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Deep-dive failed'
-            setResearchError(msg, formData)
+            const msg = err instanceof ApiError ? err.message : 'Deep-dive failed — AI provider timed out. Try again.'
             toast.error(msg)
+            // Do not call setResearchError — keep the existing result visible
         } finally {
             setIsDeepDiveLoading(false)
         }
@@ -638,6 +638,11 @@ export default function MarketResearchView() {
                             )}
                         </form>
                     </div>
+
+                    {/* Serial Checker Card on the left hand side below the form */}
+                    <div className="mt-6">
+                        <SerialCheckerCard />
+                    </div>
                 </div>
 
                 {/* ─── Results panel ─── */}
@@ -804,11 +809,6 @@ export default function MarketResearchView() {
                         </div>
                     )}
                 </div>
-            </div>
-
-            {/* ─── Full-width: Serial Check ─── */}
-            <div className="mt-6">
-                <SerialCheckerCard />
             </div>
         </PageLayout>
     )
