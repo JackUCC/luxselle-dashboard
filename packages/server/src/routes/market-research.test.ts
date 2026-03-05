@@ -368,4 +368,48 @@ describe('POST /api/market-research/deep-dive', () => {
     expect(res.body.data.snapshot.id).toBe('snap-1')
     expect(res.body.data.result.brand).toBe('Chanel')
   })
+
+  it('returns 200 with degraded payload when runDeepDive throws (e.g. AI timeout)', async () => {
+    mockRunDeepDive.mockRejectedValue(new Error('perplexity web_search timed out'))
+    mockGetDegradedAnalysis.mockReturnValue({
+      provider: 'hybrid',
+      providerStatus: 'unavailable',
+      brand: 'Chanel',
+      model: 'Classic Flap',
+      estimatedMarketValueEur: 0,
+      priceRangeLowEur: 0,
+      priceRangeHighEur: 0,
+      suggestedBuyPriceEur: 0,
+      suggestedSellPriceEur: 0,
+      demandLevel: 'moderate',
+      priceTrend: 'stable',
+      marketLiquidity: 'slow_moving',
+      recommendation: 'hold',
+      confidence: 0.15,
+      marketSummary: 'Deep-dive temporarily unavailable — AI providers timed out.',
+      keyInsights: [],
+      riskFactors: ['Deep-dive temporarily unavailable — AI providers timed out.'],
+      comparables: [],
+    })
+
+    const res = await request(app)
+      .post('/api/market-research/deep-dive')
+      .set('Content-Type', 'application/json')
+      .send({
+        brand: 'Chanel',
+        model: 'Classic Flap',
+        category: 'Handbag',
+        condition: 'excellent',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data.runId).toBe('degraded')
+    expect(res.body.data.snapshot).toBeNull()
+    expect(res.body.data.result.providerStatus).toBe('unavailable')
+    expect(res.body.data.result.marketSummary).toBe('Deep-dive temporarily unavailable — AI providers timed out.')
+    expect(mockGetDegradedAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ brand: 'Chanel', model: 'Classic Flap' }),
+      'Deep-dive temporarily unavailable — AI providers timed out.',
+    )
+  })
 })

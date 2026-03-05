@@ -131,8 +131,14 @@ router.post('/trigger-monitor', async (req, res, next) => {
 
 // POST /api/market-research/deep-dive — run enriched on-demand analysis and persist snapshot/run telemetry
 router.post('/deep-dive', async (req, res, next) => {
+    let input: z.infer<typeof DeepDiveInputSchema>
     try {
-        const input = DeepDiveInputSchema.parse(req.body)
+        input = DeepDiveInputSchema.parse(req.body)
+    } catch (parseError) {
+        next(parseError)
+        return
+    }
+    try {
         const { run, result, snapshot } = await marketIntelMonitorService.runDeepDive(input)
         res.json({
             data: {
@@ -142,7 +148,24 @@ router.post('/deep-dive', async (req, res, next) => {
             },
         })
     } catch (error) {
-        next(error)
+        logger.warn('deep_dive_fallback', {
+            message: error instanceof Error ? error.message : String(error),
+        })
+        try {
+            const degraded = marketResearchService.getDegradedAnalysis(
+                input,
+                'Deep-dive temporarily unavailable — AI providers timed out.',
+            )
+            res.status(200).json({
+                data: {
+                    runId: 'degraded',
+                    result: degraded,
+                    snapshot: null,
+                },
+            })
+        } catch {
+            next(error)
+        }
     }
 })
 
