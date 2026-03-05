@@ -257,4 +257,65 @@ describe('AiRouter', () => {
 
     expect(result.data).toEqual({ value: 42 })
   })
+
+  it('extracts multi-line complex JSON from markdown fence (production-like payload)', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    const complexPayload = {
+      estimatedMarketValueEur: 3500,
+      recommendation: 'buy',
+      comparables: [{ title: 'Chanel Flap', priceEur: 3200, source: 'Designer Exchange' }],
+    }
+    const fencedContent = '```json\n' + JSON.stringify(complexPayload, null, 2) + '\n```'
+
+    chatCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: fencedContent } }],
+    })
+
+    const result = await router.extractStructuredJson({
+      systemPrompt: 'Return ONLY valid JSON.',
+      userPrompt: 'extract market research',
+    })
+
+    expect(result.data).toEqual(complexPayload)
+  })
+
+  it('extracts fence-wrapped JSON that validates against Zod schema', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    chatCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '```json\n{"recommendation":"buy","confidence":0.85}\n```' } }],
+    })
+
+    const schema = z.object({
+      recommendation: z.enum(['buy', 'hold', 'pass']),
+      confidence: z.number(),
+    })
+
+    const result = await router.extractStructuredJson({
+      systemPrompt: 'Return ONLY valid JSON.',
+      userPrompt: 'extract recommendation',
+      schema,
+    })
+
+    expect(result.data).toEqual({ recommendation: 'buy', confidence: 0.85 })
+  })
+
+  it('extracts JSON from fence without language tag', async () => {
+    const { AiRouter } = await import('./AiRouter')
+    const router = new AiRouter()
+
+    chatCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '```\n{"status":"ok"}\n```' } }],
+    })
+
+    const result = await router.extractStructuredJson({
+      systemPrompt: 'Return ONLY valid JSON.',
+      userPrompt: 'return status',
+    })
+
+    expect(result.data).toEqual({ status: 'ok' })
+  })
 })

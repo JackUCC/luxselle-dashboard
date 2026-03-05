@@ -196,7 +196,8 @@ app.get('/api/health', async (req, res) => {
           choices?: Array<{ message?: { content?: string } }>
         }
         const content = payload.choices?.[0]?.message?.content ?? ''
-        JSON.parse(content)
+        const cleaned = content.trim().replace(/^```(?:json|JSON)?\s*\n?([\s\S]*?)\n?\s*```$/, '$1').trim()
+        JSON.parse(cleaned)
         providerTests.perplexity_extraction = { ok: true, latencyMs: Date.now() - extractStartedAt }
       } catch (error) {
         providerTests.perplexity_extraction = {

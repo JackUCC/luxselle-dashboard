@@ -880,13 +880,20 @@ export class AiRouter {
     return validated.data
   }
 
+  private stripMarkdownFences(raw: string): string {
+    const trimmed = raw.trim()
+    const fencePattern = /^```(?:json|JSON)?\s*\n?([\s\S]*?)\n?\s*```$/
+    const match = trimmed.match(fencePattern)
+    return match ? match[1].trim() : trimmed
+  }
+
   private tryParseJson(rawContent: string):
     | { success: true; data: unknown }
     | { success: false; error: string } {
     const candidates: string[] = []
-    const trimmed = rawContent.trim()
-    if (trimmed) {
-      candidates.push(trimmed)
+    const stripped = this.stripMarkdownFences(rawContent)
+    if (stripped) {
+      candidates.push(stripped)
     }
     const match = rawContent.match(/\{[\s\S]*\}/)
     if (match?.[0] && !candidates.includes(match[0])) {
