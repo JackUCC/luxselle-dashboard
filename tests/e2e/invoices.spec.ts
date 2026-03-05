@@ -114,7 +114,7 @@ test('in-person invoice modal enforces positive amount', async ({ page }) => {
   await expect(dialog).toBeVisible()
 
   await page.getByLabel(/Amount paid \(incl\. VAT\)/).fill('0')
-  await page.getByLabel(/Item description/).fill('Counter sale item')
+  await page.getByRole('textbox', { name: /Item description/i }).fill('Counter sale item')
   await dialog.getByRole('button', { name: /create invoice/i }).click()
 
   await expect(dialog).toBeVisible()

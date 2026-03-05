@@ -221,6 +221,14 @@ export default function UnifiedIntelligenceView() {
     runResearch(q, { condition, notes: notes.trim() })
   }
 
+  if (isSidecar) {
+    return (
+      <div className="min-w-0 max-w-full overflow-x-clip">
+        <SidecarView initialTab="quick" />
+      </div>
+    )
+  }
+
   return (
     <PageLayout variant="content">
       <PageHeader

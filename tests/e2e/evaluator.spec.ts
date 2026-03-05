@@ -50,7 +50,7 @@ test('evaluator flow adds item and receives into inventory', async ({ page }) =>
   )
 
   await page.goto('/evaluate')
-  await page.getByLabel(/Item description/i).fill(query)
+  await page.getByRole('textbox', { name: /Item description/i }).fill(query)
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByText('Avg. selling price')).toBeVisible()
   await expect(page.getByText('Max buy target')).toBeVisible()
@@ -64,7 +64,7 @@ test('shows error when price-check fails', async ({ page }) => {
   )
 
   await page.goto('/evaluate')
-  await page.getByLabel(/Item description/i).fill('Chanel Classic Flap')
+  await page.getByRole('textbox', { name: /Item description/i }).fill('Chanel Classic Flap')
   await page.getByRole('button', { name: 'Research market' }).click()
   await expect(page.getByTestId('price-check-inline-error')).toBeVisible()
 })
@@ -93,7 +93,7 @@ test('nav routing works for all main routes', async ({ page }) => {
   // Navigate to unified evaluator
   await dock.getByRole('link', { name: 'Evaluate' }).click()
   await expect(page).toHaveURL(/\/evaluate(\?|$)/)
-  await expect(page.getByLabel(/Item description/i)).toBeVisible()
+  await expect(page.getByRole('textbox', { name: /Item description/i })).toBeVisible()
 
   // Navigate to Sourcing
   await dock.getByRole('link', { name: 'Sourcing' }).click()
@@ -146,7 +146,7 @@ test('invoices page create in-person invoice button opens form', async ({ page }
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Create in-person invoice' })).toBeVisible()
   await expect(page.getByLabel(/Amount paid \(incl\. VAT\)/)).toBeVisible()
-  await expect(page.getByLabel(/Item description/)).toBeVisible()
+  await expect(page.getByRole('textbox', { name: /Item description/i })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
 })

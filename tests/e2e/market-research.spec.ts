@@ -24,7 +24,7 @@ test.afterEach(async ({ request }) => {
 
 test('run research shows result or loading then content', async ({ page }) => {
   const selectOption = async (label: string, option: string | RegExp) => {
-    await page.getByRole('button', { name: label }).click()
+    await page.getByRole('button', { name: label, exact: true }).click()
     await page.getByRole('option', { name: option }).first().click()
   }
 
@@ -60,7 +60,6 @@ test('run research shows result or loading then content', async ({ page }) => {
 
   await selectOption('Brand', 'Chanel')
   await selectOption('Model', 'Classic Flap')
-  await selectOption('Category', 'Handbag')
   await selectOption('Condition', /Excellent/)
 
   await page.getByRole('button', { name: 'Research Market' }).click()
@@ -71,7 +70,7 @@ test('run research shows result or loading then content', async ({ page }) => {
 
 test('deep-dive updates freshness badge and keeps results visible', async ({ page }) => {
   const selectOption = async (label: string, option: string | RegExp) => {
-    await page.getByRole('button', { name: label }).click()
+    await page.getByRole('button', { name: label, exact: true }).click()
     await page.getByRole('option', { name: option }).first().click()
   }
 
@@ -157,7 +156,6 @@ test('deep-dive updates freshness badge and keeps results visible', async ({ pag
 
   await selectOption('Brand', 'Chanel')
   await selectOption('Model', 'Classic Flap')
-  await selectOption('Category', 'Handbag')
   await selectOption('Condition', /Excellent/)
   await page.getByRole('button', { name: 'Research Market' }).click()
 
