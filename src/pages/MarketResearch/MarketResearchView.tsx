@@ -48,19 +48,6 @@ import FreshnessBadge from './FreshnessBadge'
 import { SerialCheckerCard } from '../../components/widgets'
 
 // ─── Types ─────────────────────────────────────────────────────
-interface DeepDiveResponse {
-    data: {
-        runId: string
-        result: MarketResearchResultPayload
-        snapshot: {
-            id: string
-            generatedAt: string
-            freshnessStatus: 'live' | 'fresh' | 'stale' | 'expired' | 'unknown'
-            snapshotAgeMinutes: number
-        }
-    }
-}
-
 interface MarketResearchFormData {
     brand: string
     model: string
@@ -262,7 +249,6 @@ export default function MarketResearchView() {
     const [isSaved, setIsSaved] = useState(false)
     const [isStarred, setIsStarred] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
-    const [isDeepDiveLoading, setIsDeepDiveLoading] = useState(false)
     const [isMonitorLoading, setIsMonitorLoading] = useState(false)
 
     const availableModels = useMemo(() => {
@@ -344,31 +330,6 @@ export default function MarketResearchView() {
             const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Analysis failed'
             setResearchError(msg, formData)
             toast.error(msg)
-        }
-    }
-
-    const handleDeepDive = async () => {
-        if (!formData.brand || !formData.model) return
-        setIsDeepDiveLoading(true)
-        try {
-            const { data } = await apiPost<DeepDiveResponse>('/market-research/deep-dive', {
-                ...formData,
-                mode: 'deep_dive',
-                currentAskPriceEur: formData.currentAskPriceEur ? Number(formData.currentAskPriceEur) : undefined,
-            })
-
-            const normalizedResult = normalizeMarketResearchResult({
-                ...data.result,
-                comparables: data.result.comparables.map(normalizeComparableImage),
-            })
-            setResearchSuccess(normalizedResult, formData)
-            toast.success(`Deep-dive complete (run ${data.runId.slice(0, 8)})`)
-        } catch (err) {
-            const msg = err instanceof ApiError ? err.message : 'Deep-dive failed — AI provider timed out. Try again.'
-            toast.error(msg)
-            // Do not call setResearchError — keep the existing result visible
-        } finally {
-            setIsDeepDiveLoading(false)
         }
     }
 
@@ -729,16 +690,6 @@ export default function MarketResearchView() {
                                 result={result}
                                 headerActions={
                                     <div className="flex flex-wrap items-center gap-2 pt-2 sm:border-l sm:border-lux-200/50 sm:pl-6 sm:pt-0">
-                                        <button
-                                            type="button"
-                                            onClick={handleDeepDive}
-                                            disabled={isDeepDiveLoading}
-                                            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-lux-200 bg-white px-3 py-1.5 text-sm font-medium text-lux-700 hover:bg-lux-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                            data-testid="market-research-deep-dive"
-                                        >
-                                            {isDeepDiveLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                                            Deep-dive
-                                        </button>
                                         <button
                                             type="button"
                                             onClick={handleTriggerMonitor}
