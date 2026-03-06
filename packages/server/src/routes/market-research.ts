@@ -169,6 +169,16 @@ router.post('/deep-dive', async (req, res, next) => {
     }
 })
 
+// GET /api/market-research/competitor-feed — recent competitor listings
+router.get('/competitor-feed', async (_req, res, next) => {
+    try {
+        const result = await marketResearchService.getCompetitorFeed()
+        res.json({ data: result })
+    } catch (error) {
+        next(error)
+    }
+})
+
 // GET /api/market-research/trending — trending luxury items
 router.get('/trending', async (_req, res, next) => {
     try {
