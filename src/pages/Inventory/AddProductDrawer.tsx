@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import { useScrollLock } from '../../lib/useScrollLock'
 import {
@@ -95,15 +96,22 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
         }
     }
 
-    return (
+    const drawerContent = (
         <>
             <div
                 className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-150"
                 onClick={onClose}
+                aria-hidden="true"
             />
 
-            <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-float z-50 flex flex-col overflow-hidden animate-slide-left border-l border-lux-200">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-lux-100 bg-lux-50/50">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Add new product"
+                className="fixed right-0 top-0 h-screen w-full max-w-xl bg-white shadow-float z-50 flex flex-col overflow-hidden animate-slide-left border-l border-lux-200"
+                style={{ width: 'min(100vw, 36rem)', maxWidth: '100vw', contain: 'layout paint' }}
+            >
+                <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-lux-100 bg-lux-50/50">
                     <h2 className="text-lg font-semibold text-lux-900">Add New Product</h2>
                     <button
                         onClick={onClose}
@@ -114,7 +122,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                     </button>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto p-6">
+                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6">
                     <div className="space-y-6">
                         {/* Image Upload */}
                         <div className="flex flex-col items-center justify-center">
@@ -384,4 +392,6 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
             </div>
         </>
     )
+
+    return createPortal(drawerContent, document.body)
 }
