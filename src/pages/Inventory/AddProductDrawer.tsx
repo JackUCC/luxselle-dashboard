@@ -114,7 +114,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 min-h-0 overflow-y-auto p-6">
                     <div className="space-y-6">
                         {/* Image Upload */}
                         <div className="flex flex-col items-center justify-center">
@@ -360,7 +360,7 @@ export default function AddProductDrawer({ onClose, onProductAdded }: AddProduct
                     </div>
                 </div>
 
-                <div className="border-t border-lux-100 px-6 py-4 bg-lux-50/50 flex items-center justify-end gap-3">
+                <div className="flex-shrink-0 border-t border-lux-100 px-6 py-4 bg-lux-50/50 flex items-center justify-end gap-3">
                     <button
                         onClick={onClose}
                         disabled={isSubmitting}
